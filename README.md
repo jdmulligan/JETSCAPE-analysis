@@ -45,7 +45,7 @@ installing a long list of pre-reqs or worrying about interference with software 
     - `docker run` starts the docker container from a pre-defined image jdmulligan/jetscape-base:v1test, which will be downloaded if necessary.
     - `-it` runs the container with an interactive shell.
     - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user/shared), through which you can transfer files to and from the container. You can edit the locations as you like.
-    - `--name` (optional) sets a name for your container, for convenience.
+    - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
 
 3. Build JETSCAPE as usual:
     ```
