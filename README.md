@@ -64,7 +64,7 @@ When you generate output files, you should then pass these through the shared fo
 Some useful commands:
 - To see the containers you have running, and get their ID: `docker container ls`
 - To stop the container: `docker stop <container>` or `exit`
-- To re-start the container: `docker start <container>`
+- To re-start the container: `docker start -ai <container>`
 - To put a running container into detatched mode: `Ctrl-p Ctrl-q`, and to re-attach: `docker attach <container>` 
 
 #### Option 2: Full JETSCAPE environment
