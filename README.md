@@ -32,7 +32,7 @@ installing a long list of pre-reqs or worrying about interference with software 
     ```
     mkdir ~/jetscape-user
     cd ~/jetscape-user
-    git clone git@github.com:JETSCAPE/JETSCAPE.git
+    git clone https://github.com/JETSCAPE/JETSCAPE.git
     ```
 
 2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
