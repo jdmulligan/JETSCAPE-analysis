@@ -26,7 +26,7 @@ installing a long list of pre-reqs or worrying about interference with software 
 
 ### Step 2: Run JETSCAPE
 
-#### Option 1: JETSCAPE pre-req environment (default)
+#### Option 1: JETSCAPE pre-req environment (recommended)
 
 1. Make a directory on your machine (which will be shared with the docker container), and clone JETSCAPE into it. 
     ```
@@ -38,7 +38,7 @@ installing a long list of pre-reqs or worrying about interference with software 
 2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
 
     ```
-    docker run -it -v ~/jetscape-user:/home/jetscape-user --name jetscapeContainer jdmulligan/jetscape-base:v1test
+    docker run -it -v ~/jetscape-user:/home/jetscape-user --name jetscapeContainer --user $(id -u):$(id -g) jdmulligan/jetscape-base:v1test
     ```
 
     This is what the `docker run` command does:
@@ -46,6 +46,7 @@ installing a long list of pre-reqs or worrying about interference with software 
     - `-it` runs the container with an interactive shell.
     - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user/shared), through which you can transfer files to and from the container. You can edit the locations as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
+    - `--user $(id -u):$(id -g)` runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared).
 
 3. Build JETSCAPE as usual:
     ```
@@ -84,6 +85,13 @@ Instead, you may wish to run a docker container that already has JETSCAPE pre-co
     ```
 
 *That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites pre-installed. You can pass files from your machine to the docker container through the shared folder (~/jetscape-user on your machine, /home/jetscape-user/shared in the docker container).
+
+A note on user permissions: In the Option 2 workflow, we can’t run the docker container with the same user permissions as your host user, since the JETSCAPE files are created by the container's user docker-user (which has UID 1234). If you have file permission issues with the shared folder, you may wish to make a common group for the container and host users, and use this group’s permissions for the shared folder. For example on the host:
+```
+chown :1234 ~/shared
+chmod 775 ~/shared
+adduser $USER 1234
+```
 
 ========================================================================================
 
