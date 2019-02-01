@@ -26,7 +26,7 @@ installing a long list of pre-reqs or worrying about interference with software 
 
 ### Step 2: Run JETSCAPE
 
-The workflow will be as follows: The docker container itself will contain only the pre-requisite environment to build JETSCAPE, but will not actually contain JETSCAPE itself. Rather, we will create a directory on our own machine with the JETSCAPE code, and share this directory with the docker container. This will allow us to build and run JETSCAPE inside the docker container, but to easily edit macros and access the output files on our own machine. 
+The docker container will contain only the pre-requisite environment to build JETSCAPE, but will not actually contain JETSCAPE itself. Rather, we will create a directory on our own machine with the JETSCAPE code, and share this directory with the docker container. This will allow us to build and run JETSCAPE inside the docker container, but to easily edit macros and access the output files on our own machine. 
 
 1. Make a directory on your machine (which will be shared with the docker container), and clone JETSCAPE into it. 
     ```
@@ -35,7 +35,7 @@ The workflow will be as follows: The docker container itself will contain only t
     git clone https://github.com/JETSCAPE/JETSCAPE.git
     ```
 
-2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
+2. Create and start a docker container that contains all of the JETSCAPE pre-reqs: 
 
     **macOS:**
     ```
@@ -48,7 +48,7 @@ The workflow will be as follows: The docker container itself will contain only t
     ```
 
     This is what the `docker run` command does:
-    - `docker run` starts the docker container from a pre-defined image jdmulligan/jetscape-base:v1, which will be downloaded if necessary.
+    - `docker run` creates and starts a new docker container from a pre-defined image jdmulligan/jetscape-base:v1, which will be downloaded if necessary.
     - `-it` runs the container with an interactive shell.
     - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user), through which you can transfer files to and from the container. You can edit the locations as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
@@ -70,6 +70,7 @@ Some useful commands:
 - To stop the container: `docker stop <container>` or `exit`
 - To re-start the container: `docker start -ai <container>`
 - To put a running container into detatched mode: `Ctrl-p Ctrl-q`, and to re-attach: `docker attach <container>` 
+- To delete a container: `docker container rm <container>`
 
 ========================================================================================
 
