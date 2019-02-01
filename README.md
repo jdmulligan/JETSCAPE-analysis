@@ -38,11 +38,11 @@ installing a long list of pre-reqs or worrying about interference with software 
 2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
 
     ```
-    docker run -it -v ~/jetscape-user:/home/jetscape-user --name jetscapeContainer --user $(id -u):$(id -g) jdmulligan/jetscape-base:v1test
+    docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape --user $(id -u):$(id -g) jdmulligan/jetscape-base:v1
     ```
 
     This is what the `docker run` command does:
-    - `docker run` starts the docker container from a pre-defined image jdmulligan/jetscape-base:v1test, which will be downloaded if necessary.
+    - `docker run` starts the docker container from a pre-defined image jdmulligan/jetscape-base:v1, which will be downloaded if necessary.
     - `-it` runs the container with an interactive shell.
     - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user/shared), through which you can transfer files to and from the container. You can edit the locations as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
@@ -81,7 +81,7 @@ Instead, you may wish to run a docker container that already has JETSCAPE pre-co
 2. Start the docker container: 
 
     ```
-    docker run -it -v ~/jetscape-user:/home/jetscape-user/shared --name jetscapeContainer jdmulligan/jetscape-deploy:v1test
+    docker run -it -v ~/jetscape-user:/home/jetscape-user/shared --name jetscapeContainer jdmulligan/jetscape-deploy:v1
     ```
 
 *That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites pre-installed. You can pass files from your machine to the docker container through the shared folder (~/jetscape-user on your machine, /home/jetscape-user/shared in the docker container).
