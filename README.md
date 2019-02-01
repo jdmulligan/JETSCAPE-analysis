@@ -37,12 +37,12 @@ The workflow will be as follows: The docker container itself will contain only t
 
 2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
 
-    macOS
+    *macOS:*
     ```
     docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape jdmulligan/jetscape-base:v1
     ```
     
-    linux
+    *linux:*
     ```
     docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape --user $(id -u):$(id -g) jdmulligan/jetscape-base:v1
     ```
@@ -52,7 +52,7 @@ The workflow will be as follows: The docker container itself will contain only t
     - `-it` runs the container with an interactive shell.
     - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user/shared), through which you can transfer files to and from the container. You can edit the locations as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
-    - `--user $(id -u):$(id -g)` (only needed on linux) runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared).
+    - `--user $(id -u):$(id -g)` (only needed on linux) runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared). Note that the prompt will display "I have no name!", which is normal.
 
 3. Build JETSCAPE as usual:
     ```
