@@ -37,12 +37,12 @@ The workflow will be as follows: The docker container itself will contain only t
 
 2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
 
-    *macOS:*
+    **macOS:**
     ```
     docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape jdmulligan/jetscape-base:v1
     ```
     
-    *linux:*
+    **linux:**
     ```
     docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape --user $(id -u):$(id -g) jdmulligan/jetscape-base:v1
     ```
@@ -66,7 +66,7 @@ The workflow will be as follows: The docker container itself will contain only t
 *That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites installed. You can run JETSCAPE executables or edit and re-compile code. Moreover, since we set up the jetscape-user folder to be shared between your host and the docker container, you can do text-editing etc. on your host machine, and then immediately build JETSCAPE in the docker container. Output files are also immediately accessible on your host machine for analysis (the docker container doesn't contain ROOT or other analysis tools -- only what is necessary to produce output files from JETSCAPE).
 
 Some useful commands:
-- To see the containers you have running, and get their ID: `docker container ls`
+- To see the containers you have running, and get their ID: `docker container ls` (`-a` to see also stopped containers)
 - To stop the container: `docker stop <container>` or `exit`
 - To re-start the container: `docker start -ai <container>`
 - To put a running container into detatched mode: `Ctrl-p Ctrl-q`, and to re-attach: `docker attach <container>` 
