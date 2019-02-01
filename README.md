@@ -26,7 +26,7 @@ installing a long list of pre-reqs or worrying about interference with software 
 
 ### Step 2: Run JETSCAPE
 
-#### Option 1: JETSCAPE pre-req environment (recommended)
+The workflow will be as follows: The docker container itself will contain only the pre-requisite environment to build JETSCAPE, but will not actually contain JETSCAPE itself. Rather, we will create a directory on our own machine with the JETSCAPE code, and share this directory with the docker container. This will allow us to build and run JETSCAPE inside the docker container, but to easily edit macros and access the output files on our own machine. 
 
 1. Make a directory on your machine (which will be shared with the docker container), and clone JETSCAPE into it. 
     ```
@@ -37,6 +37,12 @@ installing a long list of pre-reqs or worrying about interference with software 
 
 2. Start a docker container that contains all of the JETSCAPE pre-reqs: 
 
+    macOS
+    ```
+    docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape jdmulligan/jetscape-base:v1
+    ```
+    
+    linux
     ```
     docker run -it -v ~/jetscape-user:/home/jetscape-user --name myJetscape --user $(id -u):$(id -g) jdmulligan/jetscape-base:v1
     ```
@@ -46,7 +52,7 @@ installing a long list of pre-reqs or worrying about interference with software 
     - `-it` runs the container with an interactive shell.
     - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user/shared), through which you can transfer files to and from the container. You can edit the locations as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
-    - `--user $(id -u):$(id -g)` runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared).
+    - `--user $(id -u):$(id -g)` (only needed on linux) runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared).
 
 3. Build JETSCAPE as usual:
     ```
@@ -57,41 +63,13 @@ installing a long list of pre-reqs or worrying about interference with software 
     make -j4
     ```
 
-*That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites installed. You can run JETSCAPE executables or edit and re-compile code. Moreover, since we set up the jetscape-user folder to be shared between your host and the docker container, you can do text-editing etc. on your host machine, and then immediately build JETSCAPE in the docker container.
-
-When you generate output files, you should then pass these through the shared folder to your personal machine for analysis 
-(the docker container doesn't contain ROOT or other analysis tools -- only what is necessary to produce output files from JETSCAPE).
+*That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites installed. You can run JETSCAPE executables or edit and re-compile code. Moreover, since we set up the jetscape-user folder to be shared between your host and the docker container, you can do text-editing etc. on your host machine, and then immediately build JETSCAPE in the docker container. Output files are also immediately accessible on your host machine for analysis (the docker container doesn't contain ROOT or other analysis tools -- only what is necessary to produce output files from JETSCAPE).
 
 Some useful commands:
 - To see the containers you have running, and get their ID: `docker container ls`
 - To stop the container: `docker stop <container>` or `exit`
 - To re-start the container: `docker start -ai <container>`
 - To put a running container into detatched mode: `Ctrl-p Ctrl-q`, and to re-attach: `docker attach <container>` 
-
-#### Option 2: Full JETSCAPE environment
-
-Instead, you may wish to run a docker container that already has JETSCAPE pre-compiled. This is convenient if you wish to deploy JETSCAPE onto an external machine for production purposes rather than testing/development.
-
-1. Make a directory on your host machine, to be shared with the docker container. For example:
-
-    ```
-    mkdir ~/jetscape-user
-    ```
-
-2. Start the docker container: 
-
-    ```
-    docker run -it -v ~/jetscape-user:/home/jetscape-user/shared --name jetscapeContainer jdmulligan/jetscape-deploy:v1
-    ```
-
-*That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites pre-installed. You can pass files from your machine to the docker container through the shared folder (~/jetscape-user on your machine, /home/jetscape-user/shared in the docker container).
-
-A note on user permissions: In the Option 2 workflow, we can’t run the docker container with the same user permissions as your host user, since the JETSCAPE files are created by the container's user docker-user (which has UID 1234). If you have file permission issues with the shared folder, you may wish to make a common group for the container and host users, and use this group’s permissions for the shared folder. For example on the host:
-```
-chown :1234 ~/shared
-chmod 775 ~/shared
-adduser $USER 1234
-```
 
 ========================================================================================
 
