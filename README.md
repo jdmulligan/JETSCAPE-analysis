@@ -50,7 +50,7 @@ The workflow will be as follows: The docker container itself will contain only t
     This is what the `docker run` command does:
     - `docker run` starts the docker container from a pre-defined image jdmulligan/jetscape-base:v1, which will be downloaded if necessary.
     - `-it` runs the container with an interactive shell.
-    - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user/shared), through which you can transfer files to and from the container. You can edit the locations as you like.
+    - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user), through which you can transfer files to and from the container. You can edit the locations as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
     - `--user $(id -u):$(id -g)` (only needed on linux) runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared). Note that the prompt will display "I have no name!", which is normal.
 
