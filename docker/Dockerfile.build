@@ -39,8 +39,9 @@ RUN curl -SL http://home.thep.lu.se/~torbjorn/pythia8/pythia8240.tgz \
 
 # Set up a user group
 ARG username=jetscape-user
-RUN groupadd ${username} \
-&& useradd --create-home --home-dir /home/${username} -g ${username} ${username}
+ARG id=1234
+RUN groupadd -g ${id} ${username} \
+&& useradd --create-home --home-dir /home/${username} -u ${id} -g ${username} ${username}
 USER ${username}
 ENV HOME /home/${username}
 WORKDIR ${HOME}

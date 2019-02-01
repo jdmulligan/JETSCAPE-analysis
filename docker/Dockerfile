@@ -1,5 +1,5 @@
 # Build from the jetscape-base image
-FROM jdmulligan/jetscape-base:v1test
+FROM jdmulligan/jetscape-base:v1
 
 # Clone JETSCAPE and download external packages
 RUN mkdir ./JETSCAPE && cd JETSCAPE \
