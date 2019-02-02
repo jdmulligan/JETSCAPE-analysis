@@ -2,7 +2,7 @@
 
 Docker is a software tool that allows one to deploy an application in a portable environment. 
 A docker "image" can be created for the application, allowing any user to run a docker "container" from this image.
-We have prepared docker images for the JETSCAPE environment, which allow you to use JETSCAPE on macOS or linux without
+We have prepared a docker image for the JETSCAPE environment, which allows you to use JETSCAPE on macOS or linux without
 installing a long list of pre-reqs or worrying about interference with software you already have installed.
 
 ### Step 1: Install Docker
@@ -50,7 +50,7 @@ The docker container will contain only the pre-requisite environment to build JE
     This is what the `docker run` command does:
     - `docker run` creates and starts a new docker container from a pre-defined image jdmulligan/jetscape-base:v1, which will be downloaded if necessary.
     - `-it` runs the container with an interactive shell.
-    - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user), through which you can transfer files to and from the container. You can edit the locations as you like.
+    - `-v` mounts a shared folder between your machine (at ~/jetscape-user) and the container (at /home/jetscape-user), through which you can transfer files to and from the container. You can edit the location of the folder on your machine as you like.
     - `--name` (optional) sets a name for your container, for convenience. Edit it as you like.
     - `--user $(id -u):$(id -g)` (only needed on linux) runs the docker container with the same user permissions as the current user on your machine (since docker uses the same kernel as your host machine, the UIDs are shared). Note that the prompt will display "I have no name!", which is normal.
 
@@ -63,7 +63,7 @@ The docker container will contain only the pre-requisite environment to build JE
     make -j4
     ```
 
-*That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites installed. You can run JETSCAPE executables or edit and re-compile code. Moreover, since we set up the jetscape-user folder to be shared between your host and the docker container, you can do text-editing etc. on your host machine, and then immediately build JETSCAPE in the docker container. Output files are also immediately accessible on your host machine for analysis (the docker container doesn't contain ROOT or other analysis tools -- only what is necessary to produce output files from JETSCAPE).
+*That's it!* You are now inside the docker container, with JETSCAPE and all of its prequisites installed. You can run JETSCAPE executables or edit and re-compile code. Moreover, since we set up the jetscape-user folder to be shared between your host and the docker container, you can do text-editing etc. on your host machine, and then immediately build JETSCAPE in the docker container. Output files are also immediately accessible on your host machine for analysis.
 
 Some useful commands:
 - To see the containers you have running, and get their ID: `docker container ls` (`-a` to see also stopped containers)
