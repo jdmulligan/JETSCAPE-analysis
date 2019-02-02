@@ -9,6 +9,7 @@ doxygen \
 emacs \
 #g++ \
 gsl-bin \
+hdf5-tools \
 less \
 libboost-all-dev \
 libgsl-dev \
