@@ -1,0 +1,7 @@
+# Run parameters
+PtHatBins: [5, 7, 10]
+outputDir: "TestOutput"
+
+# Analysis parameters
+
+# Plotting parameters
