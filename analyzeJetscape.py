@@ -25,6 +25,7 @@ import sys
 import argparse
 import yaml
 import subprocess
+import fileinput
 
 # Data analysis and plotting
 import ROOT
@@ -85,6 +86,17 @@ def runJetscape(PtHatBins, outputDir, fileFormat):
       outputDirBin = outputDirBin + '/'
     if not os.path.exists(outputDirBin):
       os.makedirs(outputDirBin)
+
+    # Set pT-hat values in Jetscape User XML configuration
+    for line in fileinput.input('/home/jetscape-user/JETSCAPE/config/jetscape_user.xml', inplace=True):
+      if 'pTHatMin' in line:
+        print('      <pTHatMin>{}</pTHatMin>'.format(PtHatMin))
+      elif 'pTHatMax' in line:
+        print('      <pTHatMax>{}</pTHatMax>'.format(PtHatMax))
+      else:
+        print(line, end='')
+    cmd = 'cp /home/jetscape-user/JETSCAPE/config/jetscape_user.xml {}'.format(outputDirBin)
+    subprocess.run(cmd, check=True, shell=True)
 
     # Call Jetscape executable
     logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
