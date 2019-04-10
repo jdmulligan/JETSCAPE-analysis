@@ -36,7 +36,7 @@ ROOT.gROOT.SetBatch(True)
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
-def doJetAnalysis(configFile, run, analyze, plot, fileFormat):
+def doJetscapeAnalysis(configFile, run, analyze, plot, fileFormat):
   
   # Read config file and create output directory, if needed
   with open(configFile, 'r') as stream:
@@ -120,9 +120,23 @@ def analyzeOutput(PtHatBins, outputDir, fileFormat):
       print('PtHat: {} - {}'.format(PtHatMin, PtHatMax))
     else:
       continue
+        
+    # Get outputDir for each bin
+    outputDirBin = '{}{}'.format(outputDir, bin)
+    if not outputDirBin.endswith('/'):
+      outputDirBin = outputDirBin + '/'
+    if not os.path.exists(outputDirBin):
+      print('outputDirBin {}'.format(bin) does not exist!')
   
-    cmd = '../JETSCAPE/build/readerTestHepMC test_out.hepmc'
-    #subprocess.run(cmd, check=True, shell=True)
+    # Read HepMC output and get hadrons
+    # Do jet finding
+    # Write jet pT to histogram (or, use tree?)
+  
+    cmd = '/home/jetscape-user/JETSCAPE/build/readerTestHepMC {}test_out.hepmc'.format(outputDirBin)
+    subprocess.run(cmd, check=True, shell=True)
+
+  # Scale and merge all pthard bins into a single output file
+
 
 # ---------------------------------------------------------
 def plotAnalysis(outputDir, fileFormat):
@@ -162,4 +176,4 @@ if __name__ == '__main__':
     print("File \"{0}\" does not exist! Exiting!".format(args.configFile))
     sys.exit(0)
 
-doJetAnalysis(configFile = args.configFile, run = args.run, analyze = args.analyze, plot = args.plot, fileFormat = args.imageFormat)
+doJetscapeAnalysis(configFile = args.configFile, run = args.run, analyze = args.analyze, plot = args.plot, fileFormat = args.imageFormat)
