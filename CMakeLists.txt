@@ -132,7 +132,7 @@ add_subdirectory(./src)
 ###########################
 ### Binary location     ###
 ###########################
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/..)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
 ###########################
 ### Executables         ###
