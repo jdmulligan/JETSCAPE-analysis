@@ -1,5 +1,8 @@
 #include "TFile.h"
 
+#include "fastjet/ClusterSequence.hh"
+#include "fastjet/Selector.hh"
+
 #include "JetscapeAnalysis.h"
 
 //-----------------------------------------------------------------
@@ -10,7 +13,10 @@ JetscapeAnalysis::JetscapeAnalysis():
   hCrossSection(nullptr),
   hHadronN(nullptr),
   hHadronPt(nullptr),
-  hHadronEtaPhi(nullptr)
+  hHadronEtaPhi(nullptr),
+  hJetN(nullptr),
+  hJetPt(nullptr),
+  hJetEtaPhi(nullptr)
 {
 }
 
@@ -30,6 +36,10 @@ void JetscapeAnalysis::Init()
   hHadronPt = new TH1F("hHadronPt", "hHadronPt", 2000, 0, 200);
   hHadronEtaPhi = new TH2F("hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -6.28, 6.28);
   
+  hJetN = new TH1F("hJetN", "hJetN", 1000, 0, 1000);
+  hJetPt = new TH1F("hJetPt", "hJetPt", 2000, 0, 200);
+  hJetEtaPhi = new TH2F("hJetEtaPhi", "hJetEtaPhi", 100, -5, 5, 100, -6.28, 6.28);
+  
 }
 
 //-----------------------------------------------------------------
@@ -41,21 +51,65 @@ void JetscapeAnalysis::AnalyzeEvent(HepMC::GenEvent &event) {
   // Get list of hadrons
   std::vector<HepMC::GenParticlePtr> hadrons = GetHadrons(event);
   
-  // Loop through hadrons, do stuff
+  // Loop through hadrons, do jet finding
+  double jetR = 0.2;
+  double minJetPt = 1.;
+  fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, jetR);
+  std::vector<fastjet::PseudoJet> fjHadrons;
   for (auto hadron : hadrons) {
     
+    // Fill some basic hadron info
     int pid = hadron->pid();
     
     HepMC::FourVector momentum = hadron->momentum();
     double pt = momentum.pt();
     double eta = momentum.eta();
-    double phi = momentum.phi();
+    double phi = momentum.phi(); // [-pi, pi]
     
     hHadronPt->Fill(pt);
     hHadronEtaPhi->Fill(eta, phi);
     
+    // Fill fastjet constituents
+    double px = momentum.px();
+    double py = momentum.py();
+    double pz = momentum.pz();
+    double e = momentum.e();
+    fjHadrons.push_back(fastjet::PseudoJet(px, py, pz, e));
+    
   }
   hHadronN->Fill(hadrons.size());
+  
+  // Jet finding
+  fastjet::ClusterSequence cs(fjHadrons, jetDef);
+  std::vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(minJetPt));
+                        
+  // Jet selection
+  fastjet::Selector select_pt = fastjet::SelectorPtMin(1.);
+  fastjet::Selector select_eta = fastjet::SelectorAbsEtaMax(1.);
+  fastjet::Selector selection = select_pt && select_eta;
+  std::vector<fastjet::PseudoJet> jets_accepted = selection(jets);
+
+  // Loop through jets
+  hJetN->Fill(jets_accepted.size());
+  for (auto jet : jets_accepted) {
+    double jetPt = jet.pt();
+    double jetEta = jet.eta();
+    double jetPhi = jet.phi(); // [0, 2pi]
+    
+    hJetPt->Fill(jetPt);
+    hJetEtaPhi->Fill(jetEta, jetPhi);
+    
+    // Loop through jet constituents
+    std::vector<fastjet::PseudoJet> constituents = jet.constituents();
+    for (auto constituent : constituents ) {
+      double constituentPt = constituent.pt();
+    }
+    
+  }
+
+  fjHadrons.clear();
+  
+  
   
   // How to identify the final state partons?
   
@@ -88,6 +142,10 @@ void JetscapeAnalysis::WriteOutput()
   hHadronN->Write();
   hHadronPt->Write();
   hHadronEtaPhi->Write();
+  
+  hJetN->Write();
+  hJetPt->Write();
+  hJetEtaPhi->Write();
 
   f->Close();
 }
@@ -107,9 +165,8 @@ void JetscapeAnalysis::GetEventInfo(HepMC::GenEvent &event) {
   
   // Print some basic info for first event
   if (fEventID == 0) {
-    std::cout << "Event: " << fEventID << std::endl;
+    
     std::cout << "xsec: " << fCrossSection << " +/- " << xsec_error << "pb" << std::endl;
-    // Note that PYTHIA improves its accuracy by Monte Carlo integration in the course of the run, so the values associated with the last generated event should be the most accurate ones.
     
     // Get heavy ion attributes
     std::shared_ptr<HepMC::GenHeavyIon> heavyIon = event.attribute<HepMC::GenHeavyIon>("GenHeavyIon");

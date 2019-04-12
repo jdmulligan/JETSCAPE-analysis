@@ -11,6 +11,7 @@
 class JetscapeAnalysis {
 
   public:
+  
     // Default constructor
     JetscapeAnalysis();
     
@@ -38,6 +39,10 @@ class JetscapeAnalysis {
     TH1F* hHadronN;
     TH1F* hHadronPt;
     TH2F* hHadronEtaPhi;
+  
+    TH1F* hJetN;
+    TH1F* hJetPt;
+    TH2F* hJetEtaPhi;  
     
 };
 

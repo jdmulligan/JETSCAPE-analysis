@@ -15,4 +15,4 @@ FILE(GLOB JetscapeAnalysis *.cxx)
 set (SOURCES  ${SOURCES}  ${JetscapeAnalysis} )
 
 add_library(JetscapeAnalysis SHARED ${SOURCES})
-target_link_libraries(JetscapeAnalysis ${ROOT_LIBRARIES} -L${HEPMC_LIB_DIR} -lHepMC)
+target_link_libraries(JetscapeAnalysis ${ROOT_LIBRARIES} -L${HEPMC_LIB_DIR} -lHepMC libfastjet.so)
