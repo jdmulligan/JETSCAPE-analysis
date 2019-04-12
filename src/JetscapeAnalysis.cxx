@@ -1,4 +1,7 @@
 #include "TFile.h"
+#include "TH1D.h"
+#include "TH1.h"
+#include "TH2.h"
 
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/Selector.hh"
@@ -8,16 +11,13 @@
 //-----------------------------------------------------------------
 // Default constructor
 JetscapeAnalysis::JetscapeAnalysis():
+  fHistos(),
   fEventID(0),
   fCrossSection(0),
-  hCrossSection(nullptr),
-  hHadronN(nullptr),
-  hHadronPt(nullptr),
-  hHadronEtaPhi(nullptr),
-  hJetN(nullptr),
-  hJetPt(nullptr),
-  hJetEtaPhi(nullptr)
+  fJetR()
 {
+  fHistos = new THashList();
+  fHistos->SetName("histos");
 }
 
 //-----------------------------------------------------------------
@@ -28,88 +28,67 @@ JetscapeAnalysis::~JetscapeAnalysis()
 //-----------------------------------------------------------------
 void JetscapeAnalysis::Init()
 {
+  
   // Create histograms
   
-  hCrossSection = new TH1F("hCrossSection", "hCrossSection", 10000, 0, 100);
+  // Event histograms
+  CreateTH1("hCrossSection", "hCrossSection", 10000, 0, 100);
   
-  hHadronN = new TH1F("hHadronN", "hHadronN", 1000, 0, 1000);
-  hHadronPt = new TH1F("hHadronPt", "hHadronPt", 2000, 0, 200);
-  hHadronEtaPhi = new TH2F("hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -6.28, 6.28);
+  // Hadron histograms
+  CreateTH1("hHadronN", "hHadronN", 1000, 0, 1000);
+  CreateTH1("hHadronPt", "hHadronPt", 2000, 0, 200);
+  CreateTH2("hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -6.28, 6.28);
   
-  hJetN = new TH1F("hJetN", "hJetN", 1000, 0, 1000);
-  hJetPt = new TH1F("hJetPt", "hJetPt", 2000, 0, 200);
-  hJetEtaPhi = new TH2F("hJetEtaPhi", "hJetEtaPhi", 100, -5, 5, 100, -6.28, 6.28);
+  // Jet histograms
+  for (auto jetR : fJetR) {
+    
+    std::string histname = FormJetHistoName("N", jetR);
+    CreateTH1(histname.c_str(), histname.c_str(), 1000, 0, 1000);
+
+    histname = FormJetHistoName("Pt", jetR);
+    CreateTH1(histname.c_str(), histname.c_str(), 2000, 0, 200);
+
+    histname = FormJetHistoName("EtaPhi", jetR);
+    CreateTH2(histname.c_str(), histname.c_str(), 100, -5, 5, 100, -6.28, 6.28);
+    
+  }
   
 }
 
 //-----------------------------------------------------------------
-void JetscapeAnalysis::AnalyzeEvent(HepMC::GenEvent &event) {
+void JetscapeAnalysis::AnalyzeEvent(const HepMC::GenEvent &event) {
   
-  // Get some event info
+  // Print and store basic event info
   GetEventInfo(event);
   
-  // Get list of hadrons
-  std::vector<HepMC::GenParticlePtr> hadrons = GetHadrons(event);
+  // Get list of hadrons from the event, and fill some histograms
+  const std::vector<HepMC::GenParticlePtr> hadrons = GetHadrons(event);
+  FillHadronHistograms(hadrons);
   
-  // Loop through hadrons, do jet finding
+  // Perform jet finding
   double jetR = 0.2;
   double minJetPt = 1.;
-  fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, jetR);
-  std::vector<fastjet::PseudoJet> fjHadrons;
-  for (auto hadron : hadrons) {
-    
-    // Fill some basic hadron info
-    int pid = hadron->pid();
-    
-    HepMC::FourVector momentum = hadron->momentum();
-    double pt = momentum.pt();
-    double eta = momentum.eta();
-    double phi = momentum.phi(); // [-pi, pi]
-    
-    hHadronPt->Fill(pt);
-    hHadronEtaPhi->Fill(eta, phi);
-    
-    // Fill fastjet constituents
-    double px = momentum.px();
-    double py = momentum.py();
-    double pz = momentum.pz();
-    double e = momentum.e();
-    fjHadrons.push_back(fastjet::PseudoJet(px, py, pz, e));
-    
-  }
-  hHadronN->Fill(hadrons.size());
+  double absEtaMax = 1.;
   
-  // Jet finding
-  fastjet::ClusterSequence cs(fjHadrons, jetDef);
-  std::vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(minJetPt));
+  std::vector<fastjet::PseudoJet> fjHadrons = FillFastjetConstituents(hadrons);
+  for (auto jetR : fJetR) {
+    
+    fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, jetR);
+    fastjet::ClusterSequence cs(fjHadrons, jetDef);
+    std::vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(minJetPt));
                         
-  // Jet selection
-  fastjet::Selector select_pt = fastjet::SelectorPtMin(1.);
-  fastjet::Selector select_eta = fastjet::SelectorAbsEtaMax(1.);
-  fastjet::Selector selection = select_pt && select_eta;
-  std::vector<fastjet::PseudoJet> jets_accepted = selection(jets);
-
-  // Loop through jets
-  hJetN->Fill(jets_accepted.size());
-  for (auto jet : jets_accepted) {
-    double jetPt = jet.pt();
-    double jetEta = jet.eta();
-    double jetPhi = jet.phi(); // [0, 2pi]
+    // Apply selection on jet: Pt, eta
+    std::vector<fastjet::PseudoJet> jets_accepted = GetAcceptedJets(jets, minJetPt, absEtaMax);
     
-    hJetPt->Fill(jetPt);
-    hJetEtaPhi->Fill(jetEta, jetPhi);
+    // Fill some jet histograms
+    FillJetHistograms(jets_accepted, jetR);
     
-    // Loop through jet constituents
-    std::vector<fastjet::PseudoJet> constituents = jet.constituents();
-    for (auto constituent : constituents ) {
-      double constituentPt = constituent.pt();
-    }
-    
+    jets.clear();
+    jets_accepted.clear();
   }
 
+  // Clean up
   fjHadrons.clear();
-  
-  
   
   // How to identify the final state partons?
   
@@ -132,26 +111,25 @@ void JetscapeAnalysis::AnalyzeEvent(HepMC::GenEvent &event) {
 // Create output file and write histograms
 void JetscapeAnalysis::WriteOutput()
 {
-
-  TFile* f = new TFile("AnalysisResults.root", "RECREATE");
-
+  
   // Fill cross-section with last event's value, which is most accurate
-  hCrossSection->Fill(fCrossSection/(1e9));
-  hCrossSection->Write();
-  
-  hHadronN->Write();
-  hHadronPt->Write();
-  hHadronEtaPhi->Write();
-  
-  hJetN->Write();
-  hJetPt->Write();
-  hJetEtaPhi->Write();
+  FillTH1("hCrossSection", fCrossSection/(1e9));
 
+  // Create output file
+  TFile* f = new TFile("AnalysisResults.root", "RECREATE");
+  
+  // Write all histograms in fHistos list
+  TIter next(fHistos);
+  TObject* obj = 0;
+  while ((obj = next())) {
+    obj->Write();
+  }
+  
   f->Close();
 }
 
 //-----------------------------------------------------------------
-void JetscapeAnalysis::GetEventInfo(HepMC::GenEvent &event) {
+void JetscapeAnalysis::GetEventInfo(const HepMC::GenEvent &event) {
   
   // Get cross-section
   std::shared_ptr<HepMC::GenCrossSection> crossSection = event.attribute<HepMC::GenCrossSection>("GenCrossSection");
@@ -186,7 +164,7 @@ void JetscapeAnalysis::GetEventInfo(HepMC::GenEvent &event) {
 //-----------------------------------------------------------------
 // Get list of hadrons.
 // Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
-std::vector<HepMC::GenParticlePtr> JetscapeAnalysis::GetHadrons(HepMC::GenEvent &event) {
+std::vector<HepMC::GenParticlePtr> JetscapeAnalysis::GetHadrons(const HepMC::GenEvent &event) {
   
   std::vector<HepMC::GenParticlePtr> hadrons;
   for (auto vertex : event.vertices()) {
@@ -200,4 +178,155 @@ std::vector<HepMC::GenParticlePtr> JetscapeAnalysis::GetHadrons(HepMC::GenEvent 
   
   return hadrons;
   
+}
+
+//-----------------------------------------------------------------
+// Fill hadron histograms
+void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons) {
+  
+  // Loop through hadrons
+  for (auto hadron : hadrons) {
+    
+    // Fill some basic hadron info
+    int pid = hadron->pid();
+    
+    HepMC::FourVector momentum = hadron->momentum();
+    double pt = momentum.pt();
+    double eta = momentum.eta();
+    double phi = momentum.phi(); // [-pi, pi]
+    
+    FillTH1("hHadronPt", pt);
+    FillTH2("hHadronEtaPhi", eta, phi);
+    
+  }
+  FillTH1("hHadronN", hadrons.size());
+  
+}
+
+//-----------------------------------------------------------------
+// Fill hadrons into vector of fastjet pseudojets
+std::vector<fastjet::PseudoJet> JetscapeAnalysis::FillFastjetConstituents(const std::vector<HepMC::GenParticlePtr> hadrons) {
+  
+  std::vector<fastjet::PseudoJet> fjConstituents;
+  for (auto hadron : hadrons) {
+    
+    HepMC::FourVector momentum = hadron->momentum();
+    double px = momentum.px();
+    double py = momentum.py();
+    double pz = momentum.pz();
+    double e = momentum.e();
+    fjConstituents.push_back(fastjet::PseudoJet(px, py, pz, e));
+    
+  }
+  return fjConstituents;
+}
+
+
+//-----------------------------------------------------------------
+// Apply jet selection
+std::vector<fastjet::PseudoJet> JetscapeAnalysis::GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets, double minPt, double absEtaMax) {
+  
+  fastjet::Selector select_pt = fastjet::SelectorPtMin(minPt);
+  fastjet::Selector select_eta = fastjet::SelectorAbsEtaMax(absEtaMax);
+  fastjet::Selector selection = select_pt && select_eta;
+  return selection(jets);
+  
+}
+
+//-----------------------------------------------------------------
+// Fill jet histograms
+void JetscapeAnalysis::FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR) {
+  
+  std::string histname = FormJetHistoName("N", jetR);
+  FillTH1(histname.c_str(), jets.size());
+  
+  for (auto jet : jets) {
+    
+    double jetPt = jet.pt();
+    double jetEta = jet.eta();
+    double jetPhi = jet.phi(); // [0, 2pi]
+    
+    histname = FormJetHistoName("Pt", jetR);
+    FillTH1(histname.c_str(), jetPt);
+    
+    histname = FormJetHistoName("EtaPhi", jetR);
+    FillTH2(histname.c_str(), jetEta, jetPhi);
+    
+    // Loop through jet constituents
+    std::vector<fastjet::PseudoJet> constituents = jet.constituents();
+    for (auto constituent : constituents ) {
+      double constituentPt = constituent.pt();
+    }
+  
+  }
+
+}
+
+//-----------------------------------------------------------------
+std::string JetscapeAnalysis::FormJetHistoName(const char* title, double jetR) {
+  
+  std::string hname = "hJet0";
+  std::string jetR_str = GetRLabel(jetR);
+  hname.append(jetR_str);
+  hname.append("_");
+  hname.append(title);
+  return hname;
+  
+}
+
+//-----------------------------------------------------------------
+std::string JetscapeAnalysis::GetRLabel(double jetR) {
+  
+  int jetR_int = jetR*100;
+  std::string jetR_str = std::to_string(jetR_int);
+  return jetR_str;
+  
+}
+
+//-----------------------------------------------------------------
+TH1* JetscapeAnalysis::CreateTH1(const char* name, const char* title, int nbins, double xmin, double xmax)
+{
+  if(fHistos->FindObject(name)){
+    Printf("Histogram already exists: %s", name);
+    return 0;
+  }
+  
+  TH1* h = new TH1D(name, title, nbins, xmin, xmax);
+  fHistos->Add(h);
+  return h;
+}
+
+//-----------------------------------------------------------------
+TH2* JetscapeAnalysis::CreateTH2(const char* name, const char* title, int nbinsx, double xmin, double xmax, int nbinsy, double ymin, double ymax)
+{
+  if(fHistos->FindObject(name)){
+    Printf("Histogram already exists: %s", name);
+    return 0;
+  }
+  
+  TH2* h = new TH2D(name, title, nbinsx, xmin, xmax, nbinsy, ymin, ymax);
+  fHistos->Add(h);
+  return h;
+}
+
+//-----------------------------------------------------------------
+void JetscapeAnalysis::FillTH1(const char *name, double x) {
+  
+  TH1* hist = dynamic_cast<TH1*>(fHistos->FindObject(name));
+  if(!hist){
+    Printf("Histogram Fill not found: %s", name);
+    return;
+  }
+  hist->Fill(x);
+}
+
+//-----------------------------------------------------------------
+void JetscapeAnalysis::FillTH2(const char *name, double x, double y) {
+  
+  TH2* hist = dynamic_cast<TH2*>(fHistos->FindObject(name));
+  if(!hist){
+    Printf("Histogram Fill not found: %s", name);
+    return;
+  }
+  hist->Fill(x, y);
 }

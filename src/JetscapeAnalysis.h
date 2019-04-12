@@ -5,9 +5,13 @@
 #include "HepMC/GenParticle.h"
 #include "HepMC/GenVertex.h"
 
-#include "TH1.h"
-#include "TH2.h"
-  
+#include "fastjet/PseudoJet.hh"
+
+#include "THashList.h"
+
+class TH1;
+class TH2;
+
 class JetscapeAnalysis {
 
   public:
@@ -20,30 +24,37 @@ class JetscapeAnalysis {
   
     // Main analysis functions, called by steering macro
     void Init();
-    void AnalyzeEvent(HepMC::GenEvent &event);
+    void AnalyzeEvent(const HepMC::GenEvent &event);
     void WriteOutput();
+  
+    // Setters
+    void SetJetR(std::vector<double> r) { fJetR = r; }
   
   protected:
   
     // Helper functions
-    void GetEventInfo(HepMC::GenEvent &event);
-    std::vector<HepMC::GenParticlePtr> GetHadrons(HepMC::GenEvent &event);
+    void                                   GetEventInfo(const HepMC::GenEvent &event);
+    std::vector<HepMC::GenParticlePtr>     GetHadrons(const HepMC::GenEvent &event);
+    void                                   FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons);
+  
+    std::vector<fastjet::PseudoJet>        FillFastjetConstituents(const std::vector<HepMC::GenParticlePtr> hadrons);
+    std::vector<fastjet::PseudoJet>        GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets, double minPt, double absEtaMax);
+    void                                   FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR);
   
     // Data members
-    unsigned int fEventID;
-    float fCrossSection;
+    unsigned int                           fEventID;
+    float                                  fCrossSection;
+    std::vector<double>                    fJetR;
   
-    // Histograms
-    TH1F* hCrossSection;
+    // Histogram management (based loosely on THistManager http://alidoc.cern.ch/AliPhysics/master/class_t_hist_manager.html)
+    THashList *fHistos;                   ///< List of histograms
+    std::string GetRLabel(double jetR);
+    std::string FormJetHistoName(const char* title, double jetR);
+    TH1* CreateTH1(const char *name, const char *title, int nbins, double xmin, double xmax);
+    TH2* CreateTH2(const char* name, const char* title, int nbinsx, double xmin, double xmax, int nbinsy, double ymin, double ymax);
+    void FillTH1(const char *name, double x);
+    void FillTH2(const char *name, double x, double y);
   
-    TH1F* hHadronN;
-    TH1F* hHadronPt;
-    TH2F* hHadronEtaPhi;
-  
-    TH1F* hJetN;
-    TH1F* hJetPt;
-    TH2F* hJetEtaPhi;  
-    
 };
 
 #endif

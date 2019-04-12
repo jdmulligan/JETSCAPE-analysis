@@ -15,8 +15,11 @@ int main(int argc, char** argv)
     
   HepMC::ReaderAscii reader(argv[1]);
   
-  // Initialize analysis task
+  // Configure analysis task
   JetscapeAnalysis* analyzer = new JetscapeAnalysis();
+  analyzer->SetJetR({0.2, 0.4});
+  
+  // Initialize analysis task
   analyzer->Init();
 
   // Loop over HepMC events, and call analysis task to process them
