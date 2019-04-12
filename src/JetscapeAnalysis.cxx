@@ -10,9 +10,10 @@
 
 //-----------------------------------------------------------------
 // Default constructor
-JetscapeAnalysis::JetscapeAnalysis():
+JetscapeAnalysis::JetscapeAnalysis(int bin):
   fHistos(),
   fEventID(0),
+  fPtHatBin(bin),
   fCrossSection(0),
   fJetR(),
   fMinJetPt(0),
@@ -34,7 +35,8 @@ void JetscapeAnalysis::Init()
   // Create histograms
 
   // Event histograms
-  CreateTH1("hCrossSection", "hCrossSection", 10000, 0, 100);
+  CreateTH1("hCrossSection", "hCrossSection", 20, 0, 20);
+  CreateTH1("hNEvents", "hNEvents", 20, 0, 20);
   
   // Hadron histograms
   CreateTH1("hHadronN", "hHadronN", 1000, 0, 1000);
@@ -174,7 +176,8 @@ void JetscapeAnalysis::WriteOutput()
 {
   
   // Fill cross-section with last event's value, which is most accurate
-  FillTH1("hCrossSection", fCrossSection/(1e9));
+  FillTH1("hCrossSection", fPtHatBin, fCrossSection/(1e9));
+  FillTH1("hNEvents", fPtHatBin, fEventID);
   
   // Create output file
   TFile* f = new TFile("AnalysisResults.root", "RECREATE");
@@ -307,14 +310,14 @@ TH2* JetscapeAnalysis::CreateTH2(const char* name, const char* title, int nbinsx
 }
 
 //-----------------------------------------------------------------
-void JetscapeAnalysis::FillTH1(const char *name, double x) {
+void JetscapeAnalysis::FillTH1(const char *name, double x, double weight) {
   
   TH1* hist = dynamic_cast<TH1*>(fHistos->FindObject(name));
   if(!hist){
     Printf("Histogram Fill not found: %s", name);
     return;
   }
-  hist->Fill(x);
+  hist->Fill(x, weight);
 }
 
 //-----------------------------------------------------------------

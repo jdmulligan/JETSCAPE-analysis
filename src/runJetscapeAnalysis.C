@@ -14,9 +14,10 @@ int main(int argc, char** argv)
 {
     
   HepMC::ReaderAscii reader(argv[1]);
+  int bin = atoi(argv[2]);
   
   // Configure analysis task
-  JetscapeAnalysis* analyzer = new JetscapeAnalysis();
+  JetscapeAnalysis* analyzer = new JetscapeAnalysis(bin);
   analyzer->SetJetR({0.2, 0.4});
   
   // Initialize analysis task

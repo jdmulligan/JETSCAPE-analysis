@@ -17,7 +17,7 @@ class JetscapeAnalysis {
   public:
   
     // Default constructor
-    JetscapeAnalysis();
+    JetscapeAnalysis(int bin);
     
     // Destructor
     virtual ~JetscapeAnalysis();
@@ -29,8 +29,8 @@ class JetscapeAnalysis {
   
     // Setters
     void SetJetR(std::vector<double> r) { fJetR = r; }
-    void SetMinJetPt(double d;) { fMinJetPt = d; }
-    void SetAbsJetEtaMax(double d;) {fAbsJetEtaMax = d; }
+    void SetMinJetPt(double d) { fMinJetPt = d; }
+    void SetAbsJetEtaMax(double d) {fAbsJetEtaMax = d; }
 
   protected:
   
@@ -45,6 +45,7 @@ class JetscapeAnalysis {
   
     // Data members
     unsigned int                           fEventID;
+    unsigned int                           fPtHatBin;
     float                                  fCrossSection;
     std::vector<double>                    fJetR;
     double                                 fMinJetPt;
@@ -56,7 +57,7 @@ class JetscapeAnalysis {
     std::string FormJetHistoName(const char* title, double jetR);
     TH1* CreateTH1(const char *name, const char *title, int nbins, double xmin, double xmax);
     TH2* CreateTH2(const char* name, const char* title, int nbinsx, double xmin, double xmax, int nbinsy, double ymin, double ymax);
-    void FillTH1(const char *name, double x);
+    void FillTH1(const char *name, double x, double weight=1.);
     void FillTH2(const char *name, double x, double y);
   
 };
