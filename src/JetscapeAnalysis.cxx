@@ -14,7 +14,9 @@ JetscapeAnalysis::JetscapeAnalysis():
   fHistos(),
   fEventID(0),
   fCrossSection(0),
-  fJetR()
+  fJetR(),
+  fMinJetPt(0),
+  fAbsJetEtaMax(1)
 {
   fHistos = new THashList();
   fHistos->SetName("histos");
@@ -28,9 +30,9 @@ JetscapeAnalysis::~JetscapeAnalysis()
 //-----------------------------------------------------------------
 void JetscapeAnalysis::Init()
 {
-  
+
   // Create histograms
-  
+
   // Event histograms
   CreateTH1("hCrossSection", "hCrossSection", 10000, 0, 100);
   
@@ -66,19 +68,15 @@ void JetscapeAnalysis::AnalyzeEvent(const HepMC::GenEvent &event) {
   FillHadronHistograms(hadrons);
   
   // Perform jet finding
-  double jetR = 0.2;
-  double minJetPt = 1.;
-  double absEtaMax = 1.;
-  
   std::vector<fastjet::PseudoJet> fjHadrons = FillFastjetConstituents(hadrons);
   for (auto jetR : fJetR) {
     
     fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, jetR);
     fastjet::ClusterSequence cs(fjHadrons, jetDef);
-    std::vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(minJetPt));
+    std::vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(fMinJetPt));
                         
     // Apply selection on jet: Pt, eta
-    std::vector<fastjet::PseudoJet> jets_accepted = GetAcceptedJets(jets, minJetPt, absEtaMax);
+    std::vector<fastjet::PseudoJet> jets_accepted = GetAcceptedJets(jets);
     
     // Fill some jet histograms
     FillJetHistograms(jets_accepted, jetR);
@@ -108,13 +106,76 @@ void JetscapeAnalysis::AnalyzeEvent(const HepMC::GenEvent &event) {
 }
 
 //-----------------------------------------------------------------
+// Fill hadron histograms
+void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons) {
+  
+  // Loop through hadrons
+  for (auto hadron : hadrons) {
+    
+    // Fill some basic hadron info
+    int pid = hadron->pid();
+    
+    HepMC::FourVector momentum = hadron->momentum();
+    double pt = momentum.pt();
+    double eta = momentum.eta();
+    double phi = momentum.phi(); // [-pi, pi]
+    
+    FillTH1("hHadronPt", pt);
+    FillTH2("hHadronEtaPhi", eta, phi);
+    
+  }
+  FillTH1("hHadronN", hadrons.size());
+  
+}
+
+//-----------------------------------------------------------------
+// Fill jet histograms
+void JetscapeAnalysis::FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR) {
+  
+  std::string histname = FormJetHistoName("N", jetR);
+  FillTH1(histname.c_str(), jets.size());
+  
+  for (auto jet : jets) {
+    
+    double jetPt = jet.pt();
+    double jetEta = jet.eta();
+    double jetPhi = jet.phi(); // [0, 2pi]
+    
+    histname = FormJetHistoName("Pt", jetR);
+    FillTH1(histname.c_str(), jetPt);
+    
+    histname = FormJetHistoName("EtaPhi", jetR);
+    FillTH2(histname.c_str(), jetEta, jetPhi);
+    
+    // Loop through jet constituents
+    std::vector<fastjet::PseudoJet> constituents = jet.constituents();
+    for (auto constituent : constituents ) {
+      double constituentPt = constituent.pt();
+    }
+    
+  }
+  
+}
+
+//-----------------------------------------------------------------
+// Apply jet selection
+std::vector<fastjet::PseudoJet> JetscapeAnalysis::GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets) {
+  
+  fastjet::Selector select_pt = fastjet::SelectorPtMin(fMinJetPt);
+  fastjet::Selector select_eta = fastjet::SelectorAbsEtaMax(fAbsJetEtaMax);
+  fastjet::Selector selection = select_pt && select_eta;
+  return selection(jets);
+  
+}
+
+//-----------------------------------------------------------------
 // Create output file and write histograms
 void JetscapeAnalysis::WriteOutput()
 {
   
   // Fill cross-section with last event's value, which is most accurate
   FillTH1("hCrossSection", fCrossSection/(1e9));
-
+  
   // Create output file
   TFile* f = new TFile("AnalysisResults.root", "RECREATE");
   
@@ -181,29 +242,6 @@ std::vector<HepMC::GenParticlePtr> JetscapeAnalysis::GetHadrons(const HepMC::Gen
 }
 
 //-----------------------------------------------------------------
-// Fill hadron histograms
-void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons) {
-  
-  // Loop through hadrons
-  for (auto hadron : hadrons) {
-    
-    // Fill some basic hadron info
-    int pid = hadron->pid();
-    
-    HepMC::FourVector momentum = hadron->momentum();
-    double pt = momentum.pt();
-    double eta = momentum.eta();
-    double phi = momentum.phi(); // [-pi, pi]
-    
-    FillTH1("hHadronPt", pt);
-    FillTH2("hHadronEtaPhi", eta, phi);
-    
-  }
-  FillTH1("hHadronN", hadrons.size());
-  
-}
-
-//-----------------------------------------------------------------
 // Fill hadrons into vector of fastjet pseudojets
 std::vector<fastjet::PseudoJet> JetscapeAnalysis::FillFastjetConstituents(const std::vector<HepMC::GenParticlePtr> hadrons) {
   
@@ -219,47 +257,6 @@ std::vector<fastjet::PseudoJet> JetscapeAnalysis::FillFastjetConstituents(const 
     
   }
   return fjConstituents;
-}
-
-
-//-----------------------------------------------------------------
-// Apply jet selection
-std::vector<fastjet::PseudoJet> JetscapeAnalysis::GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets, double minPt, double absEtaMax) {
-  
-  fastjet::Selector select_pt = fastjet::SelectorPtMin(minPt);
-  fastjet::Selector select_eta = fastjet::SelectorAbsEtaMax(absEtaMax);
-  fastjet::Selector selection = select_pt && select_eta;
-  return selection(jets);
-  
-}
-
-//-----------------------------------------------------------------
-// Fill jet histograms
-void JetscapeAnalysis::FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR) {
-  
-  std::string histname = FormJetHistoName("N", jetR);
-  FillTH1(histname.c_str(), jets.size());
-  
-  for (auto jet : jets) {
-    
-    double jetPt = jet.pt();
-    double jetEta = jet.eta();
-    double jetPhi = jet.phi(); // [0, 2pi]
-    
-    histname = FormJetHistoName("Pt", jetR);
-    FillTH1(histname.c_str(), jetPt);
-    
-    histname = FormJetHistoName("EtaPhi", jetR);
-    FillTH2(histname.c_str(), jetEta, jetPhi);
-    
-    // Loop through jet constituents
-    std::vector<fastjet::PseudoJet> constituents = jet.constituents();
-    for (auto constituent : constituents ) {
-      double constituentPt = constituent.pt();
-    }
-  
-  }
-
 }
 
 //-----------------------------------------------------------------

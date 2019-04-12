@@ -29,7 +29,9 @@ class JetscapeAnalysis {
   
     // Setters
     void SetJetR(std::vector<double> r) { fJetR = r; }
-  
+    void SetMinJetPt(double d;) { fMinJetPt = d; }
+    void SetAbsJetEtaMax(double d;) {fAbsJetEtaMax = d; }
+
   protected:
   
     // Helper functions
@@ -38,13 +40,15 @@ class JetscapeAnalysis {
     void                                   FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons);
   
     std::vector<fastjet::PseudoJet>        FillFastjetConstituents(const std::vector<HepMC::GenParticlePtr> hadrons);
-    std::vector<fastjet::PseudoJet>        GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets, double minPt, double absEtaMax);
+    std::vector<fastjet::PseudoJet>        GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets);
     void                                   FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR);
   
     // Data members
     unsigned int                           fEventID;
     float                                  fCrossSection;
     std::vector<double>                    fJetR;
+    double                                 fMinJetPt;
+    double                                 fAbsJetEtaMax;
   
     // Histogram management (based loosely on THistManager http://alidoc.cern.ch/AliPhysics/master/class_t_hist_manager.html)
     THashList *fHistos;                   ///< List of histograms
