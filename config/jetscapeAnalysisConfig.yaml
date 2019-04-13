@@ -1,6 +1,6 @@
 # Run parameters
 PtHatBins: [50, 70, 100]
-outputDir: "TestOutput"
+outputDir: "/home/jetscape-user/JETSCAPE-analysis/TestOutput"
 
 # Analysis parameters
 

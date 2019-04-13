@@ -17,7 +17,7 @@ class JetscapeAnalysis {
   public:
   
     // Default constructor
-    JetscapeAnalysis(int bin);
+    JetscapeAnalysis(int bin, std::string outputDirBin);
     
     // Destructor
     virtual ~JetscapeAnalysis();
@@ -44,6 +44,7 @@ class JetscapeAnalysis {
     void                                   FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR);
   
     // Data members
+    std::string                            fOutputDirBin;
     unsigned int                           fEventID;
     unsigned int                           fPtHatBin;
     float                                  fCrossSection;

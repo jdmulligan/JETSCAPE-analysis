@@ -10,8 +10,9 @@
 
 //-----------------------------------------------------------------
 // Default constructor
-JetscapeAnalysis::JetscapeAnalysis(int bin):
+JetscapeAnalysis::JetscapeAnalysis(int bin, std::string outputDirBin):
   fHistos(),
+  fOutputDirBin(outputDirBin),
   fEventID(0),
   fPtHatBin(bin),
   fCrossSection(0),
@@ -180,7 +181,8 @@ void JetscapeAnalysis::WriteOutput()
   FillTH1("hNEvents", fPtHatBin, fEventID);
   
   // Create output file
-  TFile* f = new TFile("AnalysisResults.root", "RECREATE");
+  std::string outputFilename = fOutputDirBin.append("AnalysisResults.root");
+  TFile* f = new TFile(outputFilename.c_str(), "RECREATE");
   
   // Write all histograms in fHistos list
   TIter next(fHistos);

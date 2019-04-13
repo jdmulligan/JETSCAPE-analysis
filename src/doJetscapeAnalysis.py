@@ -29,6 +29,7 @@ import fileinput
 
 # Data analysis and plotting
 import ROOT
+import scaleHistograms
 
 # Prevent ROOT from stealing focus when plotting
 ROOT.gROOT.SetBatch(True)
@@ -48,6 +49,7 @@ def doJetscapeAnalysis(configFile, run, analyze, plot, fileFormat):
     outputDir = outputDir + '/'
   if not os.path.exists(outputDir):
     os.makedirs(outputDir)
+  print('Output directory: {}'.format(outputDir))
 
   # Get pT-hat bin list
   PtHatBins = config['PtHatBins']
@@ -126,22 +128,24 @@ def analyzeOutput(PtHatBins, outputDir, fileFormat):
     if not outputDirBin.endswith('/'):
       outputDirBin = outputDirBin + '/'
     if not os.path.exists(outputDirBin):
-      print('outputDirBin {}'.format(bin) does not exist!')
+      print('outputDirBin {} does not exist!'.format(bin))
   
-    # Read HepMC output and get hadrons
-    # Do jet finding
-    # Write jet pT to histogram (or, use tree?)
-  
-    cmd = '/home/jetscape-user/JETSCAPE/build/readerTestHepMC {}test_out.hepmc'.format(outputDirBin)
+    # Read HepMC output, get hadrons, do jet finding, and write histograms to ROOT file
+    cmd = '/home/jetscape-user/JETSCAPE-analysis/build/runJetscapeAnalysis {} {}'.format(bin, outputDirBin)
     subprocess.run(cmd, check=True, shell=True)
 
-  # Scale and merge all pthard bins into a single output file
-
+    # Scale histograms according to pthard bins cross-section
+    print('Scaling pt-hat bins...')
+    scaleHistograms.scaleHistograms(outputDirBin, bin)
+            
+  # Merge all pthard bins into a single output file
+  cmd = 'hadd {}AnalysisResultsFinal.root {}*/AnalysisResults.root'.format(outputDir, outputDir)
+  subprocess.run(cmd, check=True, shell=True)
 
 # ---------------------------------------------------------
 def plotAnalysis(outputDir, fileFormat):
 
-  print('plot')
+  print('Plotting histograms...')
 
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
