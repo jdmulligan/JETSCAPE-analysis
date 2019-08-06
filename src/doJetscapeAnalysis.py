@@ -26,6 +26,7 @@ import argparse
 import yaml
 import subprocess
 import fileinput
+import shutil
 
 # Data analysis and plotting
 import ROOT
@@ -37,7 +38,7 @@ ROOT.gROOT.SetBatch(True)
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
-def doJetscapeAnalysis(configFile, run, analyze, plot, fileFormat):
+def doJetscapeAnalysis(configFile, xmlUserFile, xmlMasterFile, run, analyze, plot, fileFormat):
   
   # Read config file and create output directory, if needed
   with open(configFile, 'r') as stream:
@@ -59,7 +60,7 @@ def doJetscapeAnalysis(configFile, run, analyze, plot, fileFormat):
 
   if run:   # Must be run inside Jetscape environment
     print("Run Jetscape events for all pT-hat bins!")
-    runJetscape(PtHatBins, outputDir, fileFormat)
+    runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat)
 
   if analyze:   # Must be run in environment with: HepMC, ROOT
     print("Analyze Jetscape output for all pT-hat bins!")
@@ -70,7 +71,7 @@ def doJetscapeAnalysis(configFile, run, analyze, plot, fileFormat):
     plotAnalysis(outputDir, fileFormat)
 
 # ---------------------------------------------------------
-def runJetscape(PtHatBins, outputDir, fileFormat):
+def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
 
   # Loop through pT-hat bins
   for bin, PtHatMin in enumerate(PtHatBins):
@@ -90,25 +91,23 @@ def runJetscape(PtHatBins, outputDir, fileFormat):
       os.makedirs(outputDirBin)
 
     # Set pT-hat values in Jetscape User XML configuration
-    for line in fileinput.input('/home/jetscape-user/JETSCAPE/config/jetscape_user.xml', inplace=True):
+    for line in fileinput.input(xmlUserFile, inplace=True):
       if 'pTHatMin' in line:
         print('      <pTHatMin>{}</pTHatMin>'.format(PtHatMin))
       elif 'pTHatMax' in line:
         print('      <pTHatMax>{}</pTHatMax>'.format(PtHatMax))
       else:
         print(line, end='')
-    cmd = 'cp /home/jetscape-user/JETSCAPE/config/jetscape_user.xml {}'.format(outputDirBin)
-    subprocess.run(cmd, check=True, shell=True)
+    shutil.copyfile(xmlUserFile, '{}{}'.format(outputDirBin, 'jetscape_user.xml'))
+    shutil.copyfile(xmlMasterFile, '{}{}'.format(outputDirBin, 'jetscape_master.xml'))
 
-    # Call Jetscape executable
+    # Call Jetscape executable, and write output to pT-hat bin directory
     logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
+    os.chdir(outputDirBin)
     with open(logfileName, 'w') as logfile:
-      cmd = 'cd /home/jetscape-user/JETSCAPE/build && ./runJetscape'
+      cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape {} {}'.format(xmlUserFile, xmlMasterFile)
       subprocess.run(cmd, check=True, shell=True, stdout=logfile)
-
-    # Move output file into pT-hat bin directory
-    cmd = 'mv /home/jetscape-user/JETSCAPE/build/test_out.hepmc {}'.format(outputDirBin)
-    subprocess.run(cmd, check=True, shell=True)
+    os.chdir(outputDir)
 
 # ---------------------------------------------------------
 def analyzeOutput(PtHatBins, outputDir, fileFormat):
@@ -157,6 +156,14 @@ if __name__ == '__main__':
                       type=str, metavar="configFile",
                       default="config.yaml",
                       help="Path of config file for jetscape analysis")
+  parser.add_argument("-u", "--xmlUserFile", action="store",
+                      type=str, metavar="xmlUserFile",
+                      default="/home/jetscape-user/JETSCAPE/config/jetscape_user.xml",
+                      help="Path of JETSCAPE XML user file for jetscape analysis")
+  parser.add_argument("-m", "--xmlMasterFile", action="store",
+                      type=str, metavar="xmlMasterFile",
+                      default="/home/jetscape-user/JETSCAPE/config/jetscape_master.xml",
+                      help="Path of JETSCAPE XML master file for jetscape analysis")
   parser.add_argument("--run", action="store_true",
                       help="Whether to launch running of jetscape events")
   parser.add_argument("--analyze", action="store_true",
@@ -169,15 +176,26 @@ if __name__ == '__main__':
                       help="Image format to save plots in, e.g. \".pdf\" or \".png\"")
   
   # Parse the arguments
-  args = parser.parse_args()
-  
+  args = parser.parse_args()  
   print("Configuring...")
-  print("configFile: \"{0}\"".format(args.configFile))
-  print("imageFormat: \"{0}\"".format(args.imageFormat))
-  
+
   # If invalid configFile is given, exit
+  print("configFile: \"{0}\"".format(args.configFile))
   if not os.path.exists(args.configFile):
     print("File \"{0}\" does not exist! Exiting!".format(args.configFile))
     sys.exit(0)
+  
+  if args.run:
+    print("XML user file: \"{0}\"".format(args.xmlUserFile))
+    print("XML master file: \"{0}\"".format(args.xmlMasterFile))
+    if not os.path.exists(args.xmlUserFile):
+      print("File \"{0}\" does not exist! Exiting!".format(args.xmlUserFile))
+      sys.exit(0)
+    if not os.path.exists(args.xmlMasterFile):
+      print("File \"{0}\" does not exist! Exiting!".format(args.xmlMasterFile))
+      sys.exit(0)
 
-doJetscapeAnalysis(configFile = args.configFile, run = args.run, analyze = args.analyze, plot = args.plot, fileFormat = args.imageFormat)
+  if args.plot:
+    print("imageFormat: \"{0}\"".format(args.imageFormat))
+      
+doJetscapeAnalysis(configFile = args.configFile, xmlUserFile = args.xmlUserFile, xmlMasterFile = args.xmlMasterFile, run = args.run, analyze = args.analyze, plot = args.plot, fileFormat = args.imageFormat)
