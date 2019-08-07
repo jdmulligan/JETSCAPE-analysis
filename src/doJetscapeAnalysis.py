@@ -73,7 +73,7 @@ def doJetscapeAnalysis(configFile, xmlUserFile, xmlMasterFile, run, analyze, plo
 # ---------------------------------------------------------
 def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
 
-  # Loop through pT-hat bins
+  # Loop through pT-hat bins and create directory structure with XML files for each bin
   for bin, PtHatMin in enumerate(PtHatBins):
     
     # Set min,max of pT-hat bin
@@ -101,9 +101,13 @@ def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
     shutil.copyfile(xmlUserFile, '{}{}'.format(outputDirBin, 'jetscape_user.xml'))
     shutil.copyfile(xmlMasterFile, '{}{}'.format(outputDirBin, 'jetscape_master.xml'))
 
-    # Call Jetscape executable, and write output to pT-hat bin directory
-    logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
+  # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory    
+  for bin, PtHatMin in enumerate(PtHatBins):
+
+    outputDirBin = '{}{}'.format(outputDir, bin)
     os.chdir(outputDirBin)
+
+    logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
     with open(logfileName, 'w') as logfile:
       cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape {} {}'.format(xmlUserFile, xmlMasterFile)
       subprocess.run(cmd, check=True, shell=True, stdout=logfile)
