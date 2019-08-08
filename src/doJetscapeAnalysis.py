@@ -125,7 +125,7 @@ def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir):
     # Run Jetscape executable
     logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
     with open(logfileName, 'w') as logfile:
-      cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape {} {}'.format(xmlUserFile, xmlMasterFile)
+      cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape jetscape_user.xml jetscape_master.xml'
       subprocess.run(cmd, check=True, shell=True, stdout=logfile)
     os.chdir(outputDir)
 
