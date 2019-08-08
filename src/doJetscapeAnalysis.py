@@ -79,7 +79,6 @@ def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
     # Set min,max of pT-hat bin
     if bin < ( len(PtHatBins) -1 ):
       PtHatMax = PtHatBins[bin+1]
-      print('PtHat: {} - {}'.format(PtHatMin, PtHatMax))
     else:
       continue
     
@@ -104,9 +103,18 @@ def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
   # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory    
   for bin, PtHatMin in enumerate(PtHatBins):
 
+    # Only iterate over lower bin edges
+    if bin < ( len(PtHatBins) -1 ):
+      PtHatMax = PtHatBins[bin+1]
+      print('PtHat: {} - {}'.format(PtHatMin, PtHatMax))
+    else:
+      continue
+
+    # cd into bin directory in order to write Jetscape output there
     outputDirBin = '{}{}'.format(outputDir, bin)
     os.chdir(outputDirBin)
 
+    # Run Jetscape executable
     logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
     with open(logfileName, 'w') as logfile:
       cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape {} {}'.format(xmlUserFile, xmlMasterFile)
