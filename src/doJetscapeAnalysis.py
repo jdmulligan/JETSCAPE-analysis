@@ -9,7 +9,7 @@
 #     --run         Generate jetscape events by calling runJetscape
 #     --analyze     Analyze Jetscape output file into a ROOT file
 #     --plot        Make plots from the ROOT file
-# For example: python doJetAnalysis.py -c myConfig.yaml --run
+# For example: python doJetscapeAnalysis.py -c myConfig.yaml --run
 #
 # Requirements: (automatically satisfied by the Jetscape docker container)
 #     * python 3.5 or higher
@@ -31,6 +31,7 @@ import shutil
 # Data analysis and plotting
 import ROOT
 import scaleHistograms
+import plotResults
 
 # Prevent ROOT from stealing focus when plotting
 ROOT.gROOT.SetBatch(True)
@@ -38,7 +39,7 @@ ROOT.gROOT.SetBatch(True)
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
-def doJetscapeAnalysis(configFile, xmlUserFile, xmlMasterFile, run, analyze, plot, fileFormat):
+def doJetscapeAnalysis(configFile, xmlUserFile, xmlMasterFile, run, analyze, plot):
   
   # Read config file and create output directory, if needed
   with open(configFile, 'r') as stream:
@@ -60,18 +61,25 @@ def doJetscapeAnalysis(configFile, xmlUserFile, xmlMasterFile, run, analyze, plo
 
   if run:   # Must be run inside Jetscape environment
     print("Run Jetscape events for all pT-hat bins!")
-    runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat)
+    runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir)
 
   if analyze:   # Must be run in environment with: HepMC, ROOT
     print("Analyze Jetscape output for all pT-hat bins!")
-    analyzeOutput(PtHatBins, outputDir, fileFormat)
+    analyzeOutput(PtHatBins, outputDir)
     
   if plot:   # Must be run in environment with: ROOT
     print("Plot histograms!")
-    plotAnalysis(outputDir, fileFormat)
+    
+    outputDir_pp = config['outputDir_pp']
+    outputDir_AA = config['outputDir_AA']
+    nEvents_pp = config['nEvents_pp']
+    nEvents_AA = config['nEvents_AA']
+    fileFormat = config['fileFormat']
+    
+    plotAnalysis(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
 
 # ---------------------------------------------------------
-def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
+def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir):
 
   # Loop through pT-hat bins and create directory structure with XML files for each bin
   for bin, PtHatMin in enumerate(PtHatBins):
@@ -122,7 +130,7 @@ def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir, fileFormat):
     os.chdir(outputDir)
 
 # ---------------------------------------------------------
-def analyzeOutput(PtHatBins, outputDir, fileFormat):
+def analyzeOutput(PtHatBins, outputDir):
   
   # Loop through pT-hat bins
   for bin, PtHatMin in enumerate(PtHatBins):
@@ -154,9 +162,10 @@ def analyzeOutput(PtHatBins, outputDir, fileFormat):
   subprocess.run(cmd, check=True, shell=True)
 
 # ---------------------------------------------------------
-def plotAnalysis(outputDir, fileFormat):
+def plotAnalysis(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
 
   print('Plotting histograms...')
+  plotResults.plotResults(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
 
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
@@ -182,11 +191,7 @@ if __name__ == '__main__':
                       help="Whether to analyze output of jetscape events")
   parser.add_argument("--plot", action="store_true",
                       help="Whether to plot output of jetscape analysis")
-  parser.add_argument("-i", "--imageFormat", action="store",
-                      type=str, metavar="imageFormat",
-                      default=".pdf",
-                      help="Image format to save plots in, e.g. \".pdf\" or \".png\"")
-  
+
   # Parse the arguments
   args = parser.parse_args()  
   print("Configuring...")
@@ -196,7 +201,7 @@ if __name__ == '__main__':
   if not os.path.exists(args.configFile):
     print("File \"{0}\" does not exist! Exiting!".format(args.configFile))
     sys.exit(0)
-  
+
   if args.run:
     print("XML user file: \"{0}\"".format(args.xmlUserFile))
     print("XML master file: \"{0}\"".format(args.xmlMasterFile))
@@ -210,4 +215,4 @@ if __name__ == '__main__':
   if args.plot:
     print("imageFormat: \"{0}\"".format(args.imageFormat))
       
-doJetscapeAnalysis(configFile = args.configFile, xmlUserFile = args.xmlUserFile, xmlMasterFile = args.xmlMasterFile, run = args.run, analyze = args.analyze, plot = args.plot, fileFormat = args.imageFormat)
+doJetscapeAnalysis(configFile = args.configFile, xmlUserFile = args.xmlUserFile, xmlMasterFile = args.xmlMasterFile, run = args.run, analyze = args.analyze, plot = args.plot)

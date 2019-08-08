@@ -1,7 +1,13 @@
 # Run parameters
-PtHatBins: [50, 70, 100]
-outputDir: "/home/jetscape-user/JETSCAPE-analysis/TestOutput"
+PtHatBins: [5, 7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235, 1000]
+
+outputDir: "/home/jetscape-user/JETSCAPE-output/20190623_PbPb"
 
 # Analysis parameters
 
 # Plotting parameters
+outputDir_pp: "/home/jetscape-user/JETSCAPE-output/20190622_pp"
+outputDir_AA: "/home/jetscape-user/JETSCAPE-output/20190623_PbPb"
+nEvents_pp: 50000
+nEvents_AA: 2000
+fileFormat: ".pdf"

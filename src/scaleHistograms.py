@@ -24,7 +24,7 @@ def scaleHistograms(outputDirBin, bin):
 
   # Option to remove outliers from specified histograms
   # If the average bin content stays below the "outlierLimit" for "outlierNBinsThreshold" bins, it is removed
-  bRemoveOutliers = False
+  bRemoveOutliers = True
   outlierLimit = 2
   outlierNBinsThreshold=4
   
@@ -32,7 +32,8 @@ def scaleHistograms(outputDirBin, bin):
   verbose = False
   
   # Read the cross-section, and scale histograms
-  print("ooo Scaling Pt-hard bin %d" % (bin+1))
+  EndPtHardBin = 20
+  print("ooo Scaling Pt-hard bin {} of {}".format(bin+1, EndPtHardBin))
   f = ROOT.TFile("{}AnalysisResults.root".format(outputDirBin), "UPDATE")
   hCrossSection = f.Get("hCrossSection")
   scaleFactor = hCrossSection.GetBinContent(bin+1)
@@ -46,7 +47,7 @@ def scaleHistograms(outputDirBin, bin):
       continue
     obj = f.Get(name)
     if obj:
-      ScaleAllHistograms(obj, scaleFactor, f, verbose, bRemoveOutliers, outlierLimit, outlierNBinsThreshold, bin, name)
+      ScaleAllHistograms(obj, scaleFactor, f, verbose, outputDirBin, bRemoveOutliers, outlierLimit, outlierNBinsThreshold, bin, EndPtHardBin, name)
     else:
       print('obj not found!')
   
@@ -56,7 +57,7 @@ def scaleHistograms(outputDirBin, bin):
 
 ###################################################################################
 # Function to iterate recursively through an object to scale all TH1/TH2/THnSparse
-def ScaleAllHistograms(obj, scaleFactor, f, verbose, bRemoveOutliers=False, limit=2, nBinsThreshold=4, pTHardBin=0, taskName=""):
+def ScaleAllHistograms(obj, scaleFactor, f, verbose, outputDirBin, bRemoveOutliers=False, limit=2, nBinsThreshold=4, pTHardBin=0, EndPtHardBin=20, taskName=""):
   
   # Set Sumw2 if not already done
   if obj.GetSumw2N() is 0:
@@ -76,7 +77,7 @@ def ScaleAllHistograms(obj, scaleFactor, f, verbose, bRemoveOutliers=False, limi
       name = obj.GetName()
       #only perform outlier removal on these couple histograms
       if "Pt" in name:
-        removeOutliers(pTHardBin, obj, verbose, limit, nBinsThreshold, 1, taskName)
+        removeOutliers(pTHardBin, EndPtHardBin, obj, verbose, outputDirBin, limit, nBinsThreshold, 1, taskName)
     obj.Scale(scaleFactor)
     if verbose:
       print("TH1 %s was scaled..." % obj.GetName())
@@ -89,13 +90,13 @@ def ScaleAllHistograms(obj, scaleFactor, f, verbose, bRemoveOutliers=False, limi
       print("Not a histogram!")
       print(obj.GetName())
     for subobj in obj:
-      ScaleAllHistograms(subobj, scaleFactor, f, verbose, bRemoveOutliers, limit, nBinsThreshold, pTHardBin, EndPtHardBin, listName, taskName)
+      ScaleAllHistograms(subobj, scaleFactor, f, verbose, outputDirBin, bRemoveOutliers, limit, nBinsThreshold, pTHardBin, taskName)
 
 ###################################################################################
 # Function to remove outliers from a TH3 (i.e. truncate the spectrum), based on projecting to the y-axis
 # It truncates the 3D histogram based on when the 1D projection 4-bin moving average has been above
 # "limit" for "nBinsThreshold" bins.
-def removeOutliers(pTHardBin, hist, verbose, limit=2, nBinsThreshold=4, dimension=3, taskName=""):
+def removeOutliers(pTHardBin, EndPtHardBin, hist, verbose, outputDirBin, limit=2, nBinsThreshold=4, dimension=3, taskName=""):
 
   #Project to the pT Truth axis
   if dimension==3:
@@ -201,9 +202,9 @@ def removeOutliers(pTHardBin, hist, verbose, limit=2, nBinsThreshold=4, dimensio
     (postMean, postMedian) = GetHistMeanAndMedian(histToCheckAfter)
     print("Pre  outliers removal mean: {}, median: {}".format(preMean, preMedian))
     print("Post outliers removal mean: {}, median: {}".format(postMean, postMedian))
-  outlierFilename = "./POST_{}}.pdf".format(hist.GetName())
+  outlierFilename = "{}OutlierRemoval_{}.pdf".format(outputDirBin, hist.GetName())
   if "Pt" in hist.GetName():
-    plotOutlierPDF(histToCheck,histToCheckAfter, pTHardBin, outlierFilename, verbose, "hist E", True)
+    plotOutlierPDF(histToCheck, histToCheckAfter, pTHardBin, EndPtHardBin, outlierFilename, verbose, "hist E", True)
 
 ########################################################################################################
 def GetHistMeanAndMedian(hist):
@@ -267,21 +268,20 @@ def plotOutlierPDF(h, hAfter, pTHardBin, EndPtHardBin, outputFilename, verbose, 
   leg1.AddEntry(hAfter, "after", "l")
   leg1.Draw("same")
 
-  #if file does not yet exist create it
-  if not os.path.exists(outputFilename):
+  c.Print("{}".format(outputFilename))
+  '''
+  if pTHardBin == 0: #if first pt-hard bin, open a .pdf
     if verbose:
       print("Add first pT Hard bin to pdf with name: {0}".format(outputFilename))
-    c.Print("{}(".format(outputFilename))#this opens a .pdf file with all figures
-  #otherwise add pages to the file or close it
-  else:
-    if pTHardBin==EndPtHardBin-1:
-      if verbose:
-        print("Add last pT Hard bin to pdf with name: {0}".format(outputFilename))
-      c.Print("{})".format(outputFilename)) #this closes the .pdf file with all figures
-    else:
-      if verbose:
-        print("Add further pT Hard bin to pdf with name: {0}".format(outputFilename))
-      c.Print("{}".format(outputFilename)) #this adds to the .pdf file with all figures
+  elif pTHardBin==EndPtHardBin-1: #otherwise add pages to the file
+    if verbose:
+      print("Add last pT Hard bin to pdf with name: {0}".format(outputFilename))
+    c.Print("{})".format(outputFilename))
+  else: #otherwise close the file
+    if verbose:
+      print("Add further pT Hard bin to pdf with name: {0}".format(outputFilename))
+    c.Print("{}".format(outputFilename))
+  '''
 
   c.Close()
 

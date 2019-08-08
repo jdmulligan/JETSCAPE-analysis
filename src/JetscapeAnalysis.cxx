@@ -205,7 +205,7 @@ void JetscapeAnalysis::GetEventInfo(const HepMC3::GenEvent &event) {
   double xsec_error = crossSection->xsec_err(0);
   
   // Print event number
-  if (fEventID % 100 == 0) {
+  if (fEventID % 1000 == 0) {
     std::cout << "Event: " << fEventID << std::endl;
   }
   
