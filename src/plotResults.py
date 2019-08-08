@@ -25,7 +25,7 @@ def plotResults(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
   setOptions()
   ROOT.gROOT.ForceStyle()
   
-  plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat)
+  #plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat)
   plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat)
   #plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
 
@@ -140,10 +140,16 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   #etaAcc = 0.7 - radius
 
   # Create canvas
-  cSpectrum = ROOT.TCanvas("cSpectrum","cSpectrum: hist",600,600)
-  cSpectrum.Draw()
-  cSpectrum.cd()
-  cSpectrum.SetLogy()
+  c = ROOT.TCanvas("c","c: pT",800,850)
+  c.cd()
+  pad1 = ROOT.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
+  pad1.SetBottomMargin(0)
+  pad1.SetLeftMargin(0.15)
+  pad1.SetRightMargin(0.05)
+  pad1.SetTopMargin(0.05)
+  pad1.SetLogy()
+  pad1.Draw()
+  pad1.cd()
   
   # Set pad and histo arrangement
   myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
@@ -152,7 +158,9 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   myPad.SetRightMargin(0.04)
   myPad.SetBottomMargin(0.15)
   
-  myBlankHisto = ROOT.TH1F("myBlankHisto","Blank Histogram",20,0,200)
+  myBlankHisto = ROOT.TH1F("myBlankHisto","Blank Histogram", 120, 70, 190)
+  myBlankHisto = myBlankHisto.Rebin(nBins, '{}_NewBinning'.format(myBlankHisto.GetName()), bin_array)
+
   myBlankHisto.SetNdivisions(505)
   myBlankHisto.SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
   myBlankHisto.GetYaxis().SetTitleOffset(2.2)
@@ -173,7 +181,7 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   # Draw spectra
   hJetPt_pp.Draw('PE X0 same')
   hJetPt_pp_amit.Draw('PE X0 same')
-  
+
   # # # # # # # # # # # # # # # # # # # # # # # #
   # Add legends and text
   # # # # # # # # # # # # # # # # # # # # # # # #
@@ -193,16 +201,45 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   
   myLegend2pp = ROOT.TLegend(0.65,0.6,0.8,0.68)
   setupLegend(myLegend2pp,0.04)
-  myLegend2pp.AddEntry(hJetPt_pp,"pp","Pe")
+  myLegend2pp.AddEntry(hJetPt_pp,"Me","Pe")
+  myLegend2pp.AddEntry(hJetPt_pp_amit,"Amit","Pe")
   myLegend2pp.Draw()
-  
-  
-  # # # # # # # # # # # # # # # # # # # # # # # #
-  # Save
-  # # # # # # # # # # # # # # # # # # # # # # # #
-  outputFilename = os.path.join(outputDir_pp, "hJetCrossSectionPP_Amit{}".format(fileFormat))
-  cSpectrum.SaveAs(outputFilename)
 
+  c.cd()
+  pad2 = ROOT.TPad("pad2", "pad2", 0, 0.05, 1, 0.3)
+  pad2.SetTopMargin(0)
+  pad2.SetBottomMargin(0.35)
+  pad2.SetLeftMargin(0.15)
+  pad2.SetRightMargin(0.05)
+  pad2.Draw()
+  pad2.cd()
+
+  # plot ratio
+  hRatio = hJetPt_pp.Clone()
+  hRatio.Divide(hJetPt_pp_amit)
+  hRatio.SetMarkerStyle(21)
+  hRatio.SetMarkerColor(1)
+
+  hRatio.GetXaxis().SetRangeUser(binArray[0], binArray[-1])
+  hRatio.GetXaxis().SetTitleSize(30)
+  hRatio.GetXaxis().SetTitleFont(43)
+  hRatio.GetXaxis().SetTitleOffset(4.)
+  hRatio.GetXaxis().SetLabelFont(43)
+  hRatio.GetXaxis().SetLabelSize(20)
+  hRatio.GetXaxis().SetTitle('pT')
+  
+  hRatio.GetYaxis().SetTitle('Me/Amit')
+  hRatio.GetYaxis().SetTitleSize(20)
+  hRatio.GetYaxis().SetTitleFont(43)
+  hRatio.GetYaxis().SetTitleOffset(2.2)
+  hRatio.GetYaxis().SetLabelFont(43)
+  hRatio.GetYaxis().SetLabelSize(20)
+  hRatio.GetYaxis().SetNdivisions(505)
+
+  hRatio.Draw("P E")
+
+  outputFilename = os.path.join(outputDir_pp, "hJetCrossSectionPP_Ratio{}".format(fileFormat))
+  c.SaveAs(outputFilename)
 
 #-------------------------------------------------------------------------------------------
 def plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
