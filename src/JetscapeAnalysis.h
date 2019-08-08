@@ -1,9 +1,9 @@
 #ifndef JETSCAPEANALYSIS_H
 #define JETSCAPEANALYSIS_H
 
-#include "HepMC/GenEvent.h"
-#include "HepMC/GenParticle.h"
-#include "HepMC/GenVertex.h"
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/GenParticle.h"
+#include "HepMC3/GenVertex.h"
 
 #include "fastjet/PseudoJet.hh"
 
@@ -24,7 +24,7 @@ class JetscapeAnalysis {
   
     // Main analysis functions, called by steering macro
     void Init();
-    void AnalyzeEvent(const HepMC::GenEvent &event);
+    void AnalyzeEvent(const HepMC3::GenEvent &event);
     void WriteOutput();
   
     // Setters
@@ -35,11 +35,11 @@ class JetscapeAnalysis {
   protected:
   
     // Helper functions
-    void                                   GetEventInfo(const HepMC::GenEvent &event);
-    std::vector<HepMC::GenParticlePtr>     GetHadrons(const HepMC::GenEvent &event);
-    void                                   FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons);
+    void                                   GetEventInfo(const HepMC3::GenEvent &event);
+    std::vector<HepMC3::ConstGenParticlePtr>     GetHadrons(const HepMC3::GenEvent &event);
+    void                                   FillHadronHistograms(const std::vector<HepMC3::ConstGenParticlePtr> hadrons);
   
-    std::vector<fastjet::PseudoJet>        FillFastjetConstituents(const std::vector<HepMC::GenParticlePtr> hadrons);
+    std::vector<fastjet::PseudoJet>        FillFastjetConstituents(const std::vector<HepMC3::ConstGenParticlePtr> hadrons);
     std::vector<fastjet::PseudoJet>        GetAcceptedJets(const std::vector<fastjet::PseudoJet> jets);
     void                                   FillJetHistograms(const std::vector<fastjet::PseudoJet> jets, double jetR);
   

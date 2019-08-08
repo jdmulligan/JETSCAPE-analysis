@@ -3,6 +3,8 @@
 #include "TH1.h"
 #include "TH2.h"
 
+#include "HepMC3/GenParticle_fwd.h"
+
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/Selector.hh"
 
@@ -61,13 +63,13 @@ void JetscapeAnalysis::Init()
 }
 
 //-----------------------------------------------------------------
-void JetscapeAnalysis::AnalyzeEvent(const HepMC::GenEvent &event) {
+void JetscapeAnalysis::AnalyzeEvent(const HepMC3::GenEvent &event) {
   
   // Print and store basic event info
   GetEventInfo(event);
   
   // Get list of hadrons from the event, and fill some histograms
-  const std::vector<HepMC::GenParticlePtr> hadrons = GetHadrons(event);
+  const std::vector<HepMC3::ConstGenParticlePtr> hadrons = GetHadrons(event);
   FillHadronHistograms(hadrons);
   
   // Perform jet finding
@@ -110,7 +112,7 @@ void JetscapeAnalysis::AnalyzeEvent(const HepMC::GenEvent &event) {
 
 //-----------------------------------------------------------------
 // Fill hadron histograms
-void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC::GenParticlePtr> hadrons) {
+void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC3::ConstGenParticlePtr> hadrons) {
   
   // Loop through hadrons
   for (auto hadron : hadrons) {
@@ -118,7 +120,7 @@ void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC::GenParticle
     // Fill some basic hadron info
     int pid = hadron->pid();
     
-    HepMC::FourVector momentum = hadron->momentum();
+    HepMC3::FourVector momentum = hadron->momentum();
     double pt = momentum.pt();
     double eta = momentum.eta();
     double phi = momentum.phi(); // [-pi, pi]
@@ -195,12 +197,12 @@ void JetscapeAnalysis::WriteOutput()
 }
 
 //-----------------------------------------------------------------
-void JetscapeAnalysis::GetEventInfo(const HepMC::GenEvent &event) {
+void JetscapeAnalysis::GetEventInfo(const HepMC3::GenEvent &event) {
   
   // Get cross-section
-  std::shared_ptr<HepMC::GenCrossSection> crossSection = event.attribute<HepMC::GenCrossSection>("GenCrossSection");
-  fCrossSection = crossSection->cross_section;
-  double xsec_error = crossSection->cross_section_error;
+  std::shared_ptr<HepMC3::GenCrossSection> crossSection = event.attribute<HepMC3::GenCrossSection>("GenCrossSection");
+  fCrossSection = crossSection->xsec(0);
+  double xsec_error = crossSection->xsec_err(0);
   
   // Print event number
   if (fEventID % 100 == 0) {
@@ -213,7 +215,7 @@ void JetscapeAnalysis::GetEventInfo(const HepMC::GenEvent &event) {
     std::cout << "xsec: " << fCrossSection << " +/- " << xsec_error << "pb" << std::endl;
     
     // Get heavy ion attributes
-    std::shared_ptr<HepMC::GenHeavyIon> heavyIon = event.attribute<HepMC::GenHeavyIon>("GenHeavyIon");
+    std::shared_ptr<HepMC3::GenHeavyIon> heavyIon = event.attribute<HepMC3::GenHeavyIon>("GenHeavyIon");
     int nColl = heavyIon->Ncoll;
     int nPart = heavyIon->Npart_proj;
     double eventPlaneAngle = heavyIon->event_plane_angle;
@@ -230,9 +232,9 @@ void JetscapeAnalysis::GetEventInfo(const HepMC::GenEvent &event) {
 //-----------------------------------------------------------------
 // Get list of hadrons.
 // Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
-std::vector<HepMC::GenParticlePtr> JetscapeAnalysis::GetHadrons(const HepMC::GenEvent &event) {
+std::vector<HepMC3::ConstGenParticlePtr> JetscapeAnalysis::GetHadrons(const HepMC3::GenEvent &event) {
   
-  std::vector<HepMC::GenParticlePtr> hadrons;
+  std::vector<HepMC3::ConstGenParticlePtr> hadrons;
   for (auto vertex : event.vertices()) {
     
     double vertexTime = vertex->position().t();
@@ -248,12 +250,12 @@ std::vector<HepMC::GenParticlePtr> JetscapeAnalysis::GetHadrons(const HepMC::Gen
 
 //-----------------------------------------------------------------
 // Fill hadrons into vector of fastjet pseudojets
-std::vector<fastjet::PseudoJet> JetscapeAnalysis::FillFastjetConstituents(const std::vector<HepMC::GenParticlePtr> hadrons) {
+std::vector<fastjet::PseudoJet> JetscapeAnalysis::FillFastjetConstituents(const std::vector<HepMC3::ConstGenParticlePtr> hadrons) {
   
   std::vector<fastjet::PseudoJet> fjConstituents;
   for (auto hadron : hadrons) {
     
-    HepMC::FourVector momentum = hadron->momentum();
+    HepMC3::FourVector momentum = hadron->momentum();
     double px = momentum.px();
     double py = momentum.py();
     double pz = momentum.pz();

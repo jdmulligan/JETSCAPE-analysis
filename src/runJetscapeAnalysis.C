@@ -3,8 +3,8 @@
  *  Macro for analysis of jetscape events in HepMC3 format.
  */
 
-#include "HepMC/GenEvent.h"
-#include "HepMC/ReaderAscii.h"
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/ReaderAscii.h"
 
 #include "JetscapeAnalysis.h"
 
@@ -26,13 +26,13 @@ int main(int argc, char** argv)
   
   // Read HepMC file
   std::string hepmcFile = outputDirBin.append("test_out.hepmc");
-  HepMC::ReaderAscii reader(hepmcFile.c_str());
+  HepMC3::ReaderAscii reader(hepmcFile.c_str());
   
   // Loop over HepMC events, and call analysis task to process them
   while (!reader.failed()) {
 
     // Read event
-    HepMC::GenEvent event(HepMC::Units::GEV,HepMC::Units::MM);
+    HepMC3::GenEvent event(HepMC3::Units::GEV,HepMC3::Units::MM);
     reader.read_event(event);
     if (reader.failed()) {
       break;

@@ -140,6 +140,6 @@ SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
 ### Run Jetscape
 add_executable(runJetscapeAnalysis ./src/runJetscapeAnalysis.C)
-target_link_libraries(runJetscapeAnalysis JetscapeAnalysis ${ROOT_LIBRARIES} -L${HEPMC_LIB_DIR} -lHepMC libfastjet.so)
+target_link_libraries(runJetscapeAnalysis JetscapeAnalysis ${ROOT_LIBRARIES} -L${HEPMC_LIB_DIR} -lHepMC3 libfastjet.so)
 
 
