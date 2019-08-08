@@ -12,6 +12,7 @@ import sys
 
 # Data analysis and plotting
 import ROOT
+from array import *
 
 # Prevent ROOT from stealing focus when plotting
 ROOT.gROOT.SetBatch(True)
@@ -24,16 +25,17 @@ def plotResults(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
   setOptions()
   ROOT.gROOT.ForceStyle()
   
-  #plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat)
-  plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
+  plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat)
+  plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat)
+  #plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
 
 #-------------------------------------------------------------------------------------------
 def plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat):
 
   filename_pp = '{}/AnalysisResultsFinal.root'.format(outputDir_pp)
   f_pp = ROOT.TFile(filename_pp, 'READ')
-
-  hJetPt_pp = f_pp.Get('hJet020_PtScaled')
+  
+  hJetPt_pp = f_pp.Get('hJet040_PtScaled')
   hJetPt_pp.Rebin(100)
   hJetPt_pp.Scale(1/nEvents_pp, 'width')
   
@@ -73,8 +75,8 @@ def plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat):
   hJetPt_pp.SetLineColor(600-6)
   
   # Draw spectra
-  hJetPt_pp.Draw("PE X0 same")
-  
+  hJetPt_pp.Draw('PE X0 same')
+
   # # # # # # # # # # # # # # # # # # # # # # # #
   # Add legends and text
   # # # # # # # # # # # # # # # # # # # # # # # #
@@ -103,6 +105,104 @@ def plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat):
   # # # # # # # # # # # # # # # # # # # # # # # #
   outputFilename = os.path.join(outputDir_pp, "hJetCrossSectionPP{}".format(fileFormat))
   cSpectrum.SaveAs(outputFilename)
+
+#-------------------------------------------------------------------------------------------
+def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
+  
+  filename_pp = '{}/AnalysisResultsFinal.root'.format(outputDir_pp)
+  f_pp = ROOT.TFile(filename_pp, 'READ')
+  
+  #amitPt = ([75, 85, 95, 105, 120, 140, 160, 180, 200, 225, 255, 285])
+  #binArray = ([70, 80, 90, 100, 110, 130, 150, 170, 190, 210, 240, 270, 300])
+  binArray = ([70, 80, 90, 100, 110, 130, 150, 170, 190])
+  amitCrossSection = [3.73703e-06, 1.82665e-06, 9.5494e-07, 5.3191e-07, 2.44257e-07, 9.25817e-08, 3.86036e-08, 1.75827e-08, 8.47066e-09, 3.70068e-09, 1.44942e-09, 6.09325e-10]
+  amitUncertainty = [2.5731e-08, 8.03882e-09, 4.37744e-09, 2.94087e-09, 8.87617e-10, 3.34769e-10, 1.39597e-10, 6.11302e-11, 2.98531e-11, 1.04712e-11, 4.38574e-12, 1.82346e-12]
+  
+  nBins = len(binArray) - 1
+  bin_array = array('d',binArray)
+  
+  hJetPt_pp_original = f_pp.Get('hJet040_PtScaled')
+  #hJetPt_pp.Rebin(100)
+  hJetPt_pp = hJetPt_pp_original.Rebin(nBins, '{}_NewBinning'.format(hJetPt_pp_original.GetName()), bin_array)
+  hJetPt_pp.Scale(1/nEvents_pp, 'width')
+  
+  hJetPt_pp_amit = hJetPt_pp.Clone()
+  hJetPt_pp_amit.SetName('hJetPt_pp_amit')
+  for bin in range(len(binArray)-1):
+    print('{} : {}: {}'.format(bin+1, hJetPt_pp_amit.GetBinCenter(bin+1), amitCrossSection[bin]))
+    hJetPt_pp_amit.SetBinContent(bin+1, amitCrossSection[bin])
+  hJetPt_pp_amit.SetMarkerSize(1)
+  hJetPt_pp_amit.SetMarkerStyle(21)
+  hJetPt_pp_amit.SetMarkerColor(1)
+
+  #radius = label[1:-5]      ##cut the string into place to find the right radius
+  #radius = 0.1*int(radius)  ##turn the string number into a integer
+  #etaAcc = 0.7 - radius
+
+  # Create canvas
+  cSpectrum = ROOT.TCanvas("cSpectrum","cSpectrum: hist",600,600)
+  cSpectrum.Draw()
+  cSpectrum.cd()
+  cSpectrum.SetLogy()
+  
+  # Set pad and histo arrangement
+  myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
+  myPad.SetLeftMargin(0.22)
+  myPad.SetTopMargin(0.04)
+  myPad.SetRightMargin(0.04)
+  myPad.SetBottomMargin(0.15)
+  
+  myBlankHisto = ROOT.TH1F("myBlankHisto","Blank Histogram",20,0,200)
+  myBlankHisto.SetNdivisions(505)
+  myBlankHisto.SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
+  myBlankHisto.GetYaxis().SetTitleOffset(2.2)
+  myBlankHisto.SetYTitle("#frac{d^{2}#sigma}{d#it{p}_{T,jet}d#it{#eta}_{jet}} #left[mb (GeV/c)^{-1}#right]")
+  myBlankHisto.SetMaximum(9e-3)
+  myBlankHisto.SetMinimum(2e-9)
+  myBlankHisto.Draw()
+  
+  # Set spectra styles
+  print("Plot pp spectrum")
+  hJetPt_pp.SetMarkerSize(2)
+  hJetPt_pp.SetMarkerStyle(33)
+  hJetPt_pp.SetMarkerColor(600-6)
+  hJetPt_pp.SetLineStyle(1)
+  hJetPt_pp.SetLineWidth(2)
+  hJetPt_pp.SetLineColor(600-6)
+  
+  # Draw spectra
+  hJetPt_pp.Draw('PE X0 same')
+  hJetPt_pp_amit.Draw('PE X0 same')
+  
+  # # # # # # # # # # # # # # # # # # # # # # # #
+  # Add legends and text
+  # # # # # # # # # # # # # # # # # # # # # # # #
+  system = ROOT.TLatex(0.49,0.835,"pp  #sqrt{#it{s}} = 2.76 TeV")
+  system.SetNDC()
+  system.SetTextSize(0.044)
+  system.Draw()
+  system2 = ROOT.TLatex(0.49,0.90,"JETSCAPE")
+  system2.SetNDC()
+  system2.SetTextSize(0.044)
+  system2.Draw()
+  
+  myLegend = ROOT.TLegend(0.4,0.7,0.7,0.82)
+  setupLegend(myLegend, 0.035*1.1) #0.04
+  myLegend.AddEntry(myBlankHisto,"Anti-#it{k}_{T} #it{R} = 0.2 | #it{#eta}_{jet}| < 1.0","")
+  myLegend.Draw()
+  
+  myLegend2pp = ROOT.TLegend(0.65,0.6,0.8,0.68)
+  setupLegend(myLegend2pp,0.04)
+  myLegend2pp.AddEntry(hJetPt_pp,"pp","Pe")
+  myLegend2pp.Draw()
+  
+  
+  # # # # # # # # # # # # # # # # # # # # # # # #
+  # Save
+  # # # # # # # # # # # # # # # # # # # # # # # #
+  outputFilename = os.path.join(outputDir_pp, "hJetCrossSectionPP_Amit{}".format(fileFormat))
+  cSpectrum.SaveAs(outputFilename)
+
 
 #-------------------------------------------------------------------------------------------
 def plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):

@@ -212,7 +212,4 @@ if __name__ == '__main__':
       print("File \"{0}\" does not exist! Exiting!".format(args.xmlMasterFile))
       sys.exit(0)
 
-  if args.plot:
-    print("imageFormat: \"{0}\"".format(args.imageFormat))
-      
 doJetscapeAnalysis(configFile = args.configFile, xmlUserFile = args.xmlUserFile, xmlMasterFile = args.xmlMasterFile, run = args.run, analyze = args.analyze, plot = args.plot)
