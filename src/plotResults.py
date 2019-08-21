@@ -27,7 +27,7 @@ def plotResults(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
   
   #plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat)
   plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat)
-  #plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
+  plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
 
 #-------------------------------------------------------------------------------------------
 def plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat):
@@ -126,6 +126,14 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   hJetPt_pp = hJetPt_pp_original.Rebin(nBins, '{}_NewBinning'.format(hJetPt_pp_original.GetName()), bin_array)
   hJetPt_pp.Scale(1/nEvents_pp, 'width')
   
+  #radius = label[1:-5]      ##cut the string into place to find the right radius
+  #radius = 0.1*int(radius)  ##turn the string number into a integer
+  #etaAcc = 0.7 - radius
+  jetR = 0.4
+  #etaAcc = 2*(1-jetR)
+  etaAcc = 2*1.0
+  hJetPt_pp.Scale(1/etaAcc)
+  
   hJetPt_pp_amit = hJetPt_pp.Clone()
   hJetPt_pp_amit.SetName('hJetPt_pp_amit')
   for bin in range(len(binArray)-1):
@@ -135,16 +143,12 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   hJetPt_pp_amit.SetMarkerStyle(21)
   hJetPt_pp_amit.SetMarkerColor(1)
 
-  #radius = label[1:-5]      ##cut the string into place to find the right radius
-  #radius = 0.1*int(radius)  ##turn the string number into a integer
-  #etaAcc = 0.7 - radius
-
   # Create canvas
   c = ROOT.TCanvas("c","c: pT",800,850)
   c.cd()
   pad1 = ROOT.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
   pad1.SetBottomMargin(0)
-  pad1.SetLeftMargin(0.15)
+  pad1.SetLeftMargin(0.2)
   pad1.SetRightMargin(0.05)
   pad1.SetTopMargin(0.05)
   pad1.SetLogy()
@@ -209,7 +213,7 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   pad2 = ROOT.TPad("pad2", "pad2", 0, 0.05, 1, 0.3)
   pad2.SetTopMargin(0)
   pad2.SetBottomMargin(0.35)
-  pad2.SetLeftMargin(0.15)
+  pad2.SetLeftMargin(0.2)
   pad2.SetRightMargin(0.05)
   pad2.Draw()
   pad2.cd()
@@ -226,7 +230,7 @@ def plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat):
   hRatio.GetXaxis().SetTitleOffset(4.)
   hRatio.GetXaxis().SetLabelFont(43)
   hRatio.GetXaxis().SetLabelSize(20)
-  hRatio.GetXaxis().SetTitle('pT')
+  hRatio.GetXaxis().SetTitle('#it{p}_{T}')
   
   hRatio.GetYaxis().SetTitle('Me/Amit')
   hRatio.GetYaxis().SetTitleSize(20)
