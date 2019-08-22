@@ -28,6 +28,7 @@ def plotResults(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
   #plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat)
   plotPPJetCrossSectionAmit(outputDir_pp, nEvents_pp, fileFormat)
   plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
+  plotJetRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
 
 #-------------------------------------------------------------------------------------------
 def plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat):
@@ -42,6 +43,10 @@ def plotPPJetCrossSection(outputDir_pp, nEvents_pp, fileFormat):
   #radius = label[1:-5]      ##cut the string into place to find the right radius
   #radius = 0.1*int(radius)  ##turn the string number into a integer
   #etaAcc = 0.7 - radius
+  jetR = 0.4
+  #etaAcc = 2*(1-jetR)
+  etaAcc = 2*1.0
+  hJetPt_pp.Scale(1/etaAcc)
 
   # Create canvas
   cSpectrum = ROOT.TCanvas("cSpectrum","cSpectrum: hist",600,600)
@@ -281,6 +286,44 @@ def plotHadronRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat
   hHadronRaa.Draw("PE X0 same")
 
   outputFilename = os.path.join(outputDir_pp, "hHadronRAA{}".format(fileFormat))
+  cSpectrum.SaveAs(outputFilename)
+
+#-------------------------------------------------------------------------------------------
+def plotJetRAA(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
+  
+  filename_pp = '{}/AnalysisResultsFinal.root'.format(outputDir_pp)
+  f_pp = ROOT.TFile(filename_pp, 'READ')
+  hJetPt_pp = f_pp.Get('hJet040_PtScaled')
+  hJetPt_pp.SetName('hJetPt_pp')
+  hJetPt_pp.Rebin(100)
+  hJetPt_pp.Scale(1/nEvents_pp, 'width')
+  
+  filename_AA = '{}/AnalysisResultsFinal.root'.format(outputDir_AA)
+  f_AA = ROOT.TFile(filename_AA, 'READ')
+  hJetPt_AA = f_AA.Get('hJet040_PtScaled')
+  hJetPt_AA.SetName('hJetPt_AA')
+  hJetPt_AA.Rebin(100)
+  hJetPt_AA.Scale(1/nEvents_AA, 'width')
+  
+  hJetRaa = hJetPt_AA.Clone()
+  hJetRaa.SetName('hJetRaa')
+  hJetRaa.Divide(hJetPt_pp)
+  
+  # Create canvas
+  cSpectrum = ROOT.TCanvas("cSpectrumJetRAA","cSpectrumJetRAA: hist",600,600)
+  cSpectrum.Draw()
+  cSpectrum.cd()
+  
+  # Set spectra styles
+  print("Plot jet RAA")
+  hJetRaa.SetMarkerSize(2)
+  hJetRaa.SetMarkerStyle(21)
+  hJetRaa.SetMarkerColor(600-6)
+  
+  # Draw spectra
+  hJetRaa.Draw("PE X0 same")
+  
+  outputFilename = os.path.join(outputDir_pp, "hJetRAA_04{}".format(fileFormat))
   cSpectrum.SaveAs(outputFilename)
 
 # Set legend parameters
