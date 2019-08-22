@@ -44,6 +44,7 @@ void JetscapeAnalysis::Init()
   // Hadron histograms
   CreateTH1("hHadronN", "hHadronN", 1000, 0, 1000);
   CreateTH1("hHadronPt", "hHadronPt", 2000, 0, 200);
+  CreateTH1("hHadronPID", "hHadronPID", 10000, -5000, 5000);
   CreateTH2("hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -6.28, 6.28);
   
   // Jet histograms
@@ -125,8 +126,11 @@ void JetscapeAnalysis::FillHadronHistograms(const std::vector<HepMC3::ConstGenPa
     double eta = momentum.eta();
     double phi = momentum.phi(); // [-pi, pi]
     
-    FillTH1("hHadronPt", pt);
-    FillTH2("hHadronEtaPhi", eta, phi);
+    if (TMath::Abs(eta) < fAbsJetEtaMax) {
+      FillTH1("hHadronPt", pt);
+      FillTH1("hHadronPID", pid);
+      FillTH2("hHadronEtaPhi", eta, phi);
+    }
     
   }
   FillTH1("hHadronN", hadrons.size());
@@ -234,12 +238,23 @@ void JetscapeAnalysis::GetEventInfo(const HepMC3::GenEvent &event) {
 // Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
 std::vector<HepMC3::ConstGenParticlePtr> JetscapeAnalysis::GetHadrons(const HepMC3::GenEvent &event) {
   
-  std::vector<HepMC3::ConstGenParticlePtr> hadrons;
+  std::vector<HepMC3::ConstGenParticlePtr> final_state_particles;
   for (auto vertex : event.vertices()) {
     
     double vertexTime = vertex->position().t();
     if ( abs(vertexTime - 100) < 1e-3 ) {
-      hadrons = vertex->particles_out();
+      final_state_particles = vertex->particles_out();
+    }
+    
+  }
+  
+  // Remove neutrinos
+  std::vector<HepMC3::ConstGenParticlePtr> hadrons;
+  for (auto particle : final_state_particles) {
+    
+    int pid = particle->pid();
+    if (pid!=12 && pid!=14 && pid!=16) {
+      hadrons.push_back(particle);
     }
     
   }
