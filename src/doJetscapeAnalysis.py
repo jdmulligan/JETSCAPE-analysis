@@ -1,5 +1,5 @@
 """
-  macro for analysis of jetscape events in hepmc format
+  macro for analysis of jetscape events
   """
 
 # This script allows one to run and analyze Jetscape events for a set of pT-hat bins.
@@ -30,6 +30,7 @@ import shutil
 
 # Data analysis and plotting
 import ROOT
+import common_base
 import scaleHistograms
 import plotResults
 
@@ -39,133 +40,157 @@ ROOT.gROOT.SetBatch(True)
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
-def doJetscapeAnalysis(configFile, xmlUserFile, xmlMasterFile, run, analyze, plot):
+class doJetscapeAnalysis(common_base.common_base):
   
-  # Read config file and create output directory, if needed
-  with open(configFile, 'r') as stream:
-    config = yaml.safe_load(stream)
+  #---------------------------------------------------------------
+  # Constructor
+  #---------------------------------------------------------------
+  def __init__(self, config_file='', xml_user_file='', xml_master_file='', run = False, analyze = False, plot = False, **kwargs):
+    
+    super(doJetscapeAnalysis, self).__init__(**kwargs)
+    self.config_file = config_file
+    self.xml_user_file = xml_user_file
+    self.xml_master_file = xml_master_file
   
-  # Create output dir
-  outputDir = config['outputDir']
-  if not outputDir.endswith('/'):
-    outputDir = outputDir + '/'
-  if not os.path.exists(outputDir):
-    os.makedirs(outputDir)
-  print('Output directory: {}'.format(outputDir))
-
-  # Get pT-hat bin list
-  PtHatBins = config['PtHatBins']
-  print('Pt-hat bins: {}'.format(PtHatBins))
-
-  #############################################
-
-  if run:   # Must be run inside Jetscape environment
-    print("Run Jetscape events for all pT-hat bins!")
-    runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir)
-
-  if analyze:   # Must be run in environment with: HepMC, ROOT
-    print("Analyze Jetscape output for all pT-hat bins!")
-    analyzeOutput(PtHatBins, outputDir)
+    self.run = run
+    self.analyze = analyze
+    self.plot = plot
     
-  if plot:   # Must be run in environment with: ROOT
-    print("Plot histograms!")
+    self.initialize_config()
     
-    outputDir_pp = config['outputDir_pp']
-    outputDir_AA = config['outputDir_AA']
-    nEvents_pp = config['nEvents_pp']
-    nEvents_AA = config['nEvents_AA']
-    fileFormat = config['fileFormat']
-    
-    plotAnalysis(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
+    print(self)
 
-# ---------------------------------------------------------
-def runJetscape(PtHatBins, xmlUserFile, xmlMasterFile, outputDir):
-
-  # Loop through pT-hat bins and create directory structure with XML files for each bin
-  for bin, PtHatMin in enumerate(PtHatBins):
+  #---------------------------------------------------------------
+  # Initialize config file into class members
+  #---------------------------------------------------------------
+  def initialize_config(self):
+  
+    # Read config file and create output directory, if needed
+    with open(self.config_file, 'r') as stream:
+      config = yaml.safe_load(stream)
     
-    # Set min,max of pT-hat bin
-    if bin < ( len(PtHatBins) -1 ):
-      PtHatMax = PtHatBins[bin+1]
-    else:
-      continue
-    
-    # Create outputDir for each bin
-    outputDirBin = '{}{}'.format(outputDir, bin)
-    if not outputDirBin.endswith('/'):
-      outputDirBin = outputDirBin + '/'
-    if not os.path.exists(outputDirBin):
-      os.makedirs(outputDirBin)
+    # Create output dir
+    self.output_dir = config['output_dir']
+    if not self.output_dir.endswith('/'):
+      self.output_dir = self.output_dir + '/'
+    if not os.path.exists(self.output_dir):
+      os.makedirs(self.output_dir)
 
-    # Set pT-hat values in Jetscape User XML configuration
-    for line in fileinput.input(xmlUserFile, inplace=True):
-      if 'pTHatMin' in line:
-        print('      <pTHatMin>{}</pTHatMin>'.format(PtHatMin))
-      elif 'pTHatMax' in line:
-        print('      <pTHatMax>{}</pTHatMax>'.format(PtHatMax))
+    # Get pT-hat bin list
+    self.pt_hat_bins = config['pt_hat_bins']
+
+    if self.plot:
+      self.output_dir_pp = config['output_dir_pp']
+      self.output_dir_AA = config['output_dir_AA']
+      self.nEvents_pp = config['nEvents_pp']
+      self.nEvents_AA = config['nEvents_AA']
+      self.file_format = config['file_format']
+
+  #---------------------------------------------------------------
+  # Initialize config file into class members
+  #---------------------------------------------------------------
+  def do_jetscape_analysis(self):
+
+    if self.run:   # Must be run inside Jetscape environment
+      print("Run Jetscape events for all pT-hat bins!")
+      self.runJetscape()
+
+    if self.analyze:   # Must be run in environment with: HepMC, ROOT
+      print("Analyze Jetscape output for all pT-hat bins!")
+      self.analyzeOutput()
+    
+    if self.plot:   # Must be run in environment with: ROOT
+      print("Plot histograms!")
+      self.plotAnalysis()
+
+  # ---------------------------------------------------------
+  def runJetscape(self):
+
+    # Loop through pT-hat bins and create directory structure with XML files for each bin
+    for bin, pt_hat_min in enumerate(self.pt_hat_bins):
+      
+      # Set min,max of pT-hat bin
+      if bin < ( len(self.pt_hat_bins) -1 ):
+        pt_hat_max = self.pt_hat_bins[bin+1]
       else:
-        print(line, end='')
-    shutil.copyfile(xmlUserFile, '{}{}'.format(outputDirBin, 'jetscape_user.xml'))
-    shutil.copyfile(xmlMasterFile, '{}{}'.format(outputDirBin, 'jetscape_master.xml'))
+        continue
+      
+      # Create outputDir for each bin
+      output_dir_bin = '{}{}'.format(self.output_dir, bin)
+      if not output_dir_bin.endswith('/'):
+        output_dir_bin = output_dir_bin + '/'
+      if not os.path.exists(output_dir_bin):
+        os.makedirs(output_dir_bin)
 
-  # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory    
-  for bin, PtHatMin in enumerate(PtHatBins):
+      # Set pT-hat values in Jetscape User XML configuration
+      for line in fileinput.input(self.xml_user_file, inplace=True):
+        if 'pTHatMin' in line:
+          print('      <pTHatMin>{}</pTHatMin>'.format(pt_hat_min))
+        elif 'pTHatMax' in line:
+          print('      <pTHatMax>{}</pTHatMax>'.format(pt_hat_max))
+        else:
+          print(line, end='')
+      shutil.copyfile(self.xml_user_file, '{}{}'.format(output_dir_bin, 'jetscape_user.xml'))
+      shutil.copyfile(self.xml_master_file, '{}{}'.format(output_dir_bin, 'jetscape_master.xml'))
 
-    # Only iterate over lower bin edges
-    if bin < ( len(PtHatBins) -1 ):
-      PtHatMax = PtHatBins[bin+1]
-      print('PtHat: {} - {}'.format(PtHatMin, PtHatMax))
-    else:
-      continue
+    # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory
+    for bin, pt_hat_min in enumerate(self.pt_hat_bins):
 
-    # cd into bin directory in order to write Jetscape output there
-    outputDirBin = '{}{}'.format(outputDir, bin)
-    os.chdir(outputDirBin)
+      # Only iterate over lower bin edges
+      if bin < ( len(self.pt_hat_bins) -1 ):
+        pt_hat_max = self.pt_hat_bins[bin+1]
+        print('PtHat: {} - {}'.format(pt_hat_min, pt_hat_max))
+      else:
+        continue
 
-    # Run Jetscape executable
-    logfileName = os.path.join(outputDirBin, 'log_{}.txt'.format(bin))
-    with open(logfileName, 'w') as logfile:
-      cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape jetscape_user.xml jetscape_master.xml'
-      subprocess.run(cmd, check=True, shell=True, stdout=logfile)
-    os.chdir(outputDir)
+      # cd into bin directory in order to write Jetscape output there
+      output_dir_bin = '{}{}'.format(self.output_dir, bin)
+      os.chdir(output_dir_bin)
 
-# ---------------------------------------------------------
-def analyzeOutput(PtHatBins, outputDir):
-  
-  # Loop through pT-hat bins
-  for bin, PtHatMin in enumerate(PtHatBins):
+      # Run Jetscape executable
+      logfileName = os.path.join(output_dir_bin, 'log_{}.txt'.format(bin))
+      with open(logfileName, 'w') as logfile:
+        cmd = '/home/jetscape-user/JETSCAPE/build/runJetscape jetscape_user.xml jetscape_master.xml'
+        subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+      os.chdir(self.output_dir)
+
+  # ---------------------------------------------------------
+  def analyzeOutput(self):
     
-    # Set min,max of pT-hat bin
-    if bin < ( len(PtHatBins) -1 ):
-      PtHatMax = PtHatBins[bin+1]
-      print('PtHat: {} - {}'.format(PtHatMin, PtHatMax))
-    else:
-      continue
-        
-    # Get outputDir for each bin
-    outputDirBin = '{}{}'.format(outputDir, bin)
-    if not outputDirBin.endswith('/'):
-      outputDirBin = outputDirBin + '/'
-    if not os.path.exists(outputDirBin):
-      print('outputDirBin {} does not exist!'.format(bin))
-  
-    # Read HepMC output, get hadrons, do jet finding, and write histograms to ROOT file
-    cmd = '/home/jetscape-user/JETSCAPE-analysis/build/runJetscapeAnalysis {} {}'.format(bin, outputDirBin)
+    # Loop through pT-hat bins
+    for bin, pt_hat_min in enumerate(self.pt_hat_bins):
+      
+      # Set min,max of pT-hat bin
+      if bin < ( len(self.pt_hat_bins) -1 ):
+        pt_hat_max = self.pt_hat_bins[bin+1]
+        print('PtHat: {} - {}'.format(pt_hat_min, pt_hat_max))
+      else:
+        continue
+      
+      # Get outputDir for each bin
+      output_dir_bin = '{}{}'.format(self.output_dir, bin)
+      if not output_dir_bin.endswith('/'):
+        output_dir_bin = output_dir_bin + '/'
+      if not os.path.exists(output_dir_bin):
+        print('output_dir_bin {} does not exist!'.format(bin))
+    
+      # Read HepMC output, get hadrons, do jet finding, and write histograms to ROOT file
+      cmd = '/home/jetscape-user/JETSCAPE-analysis/build/runJetscapeAnalysis {} {}'.format(bin, output_dir_bin)
+      subprocess.run(cmd, check=True, shell=True)
+
+      # Scale histograms according to pthard bins cross-section
+      print('Scaling pt-hat bins...')
+      scaleHistograms.scaleHistograms(output_dir_bin, bin)
+    
+    # Merge all pthard bins into a single output file
+    cmd = 'hadd {}AnalysisResultsFinal.root {}*/AnalysisResults.root'.format(self.output_dir, self.output_dir)
     subprocess.run(cmd, check=True, shell=True)
 
-    # Scale histograms according to pthard bins cross-section
-    print('Scaling pt-hat bins...')
-    scaleHistograms.scaleHistograms(outputDirBin, bin)
-            
-  # Merge all pthard bins into a single output file
-  cmd = 'hadd {}AnalysisResultsFinal.root {}*/AnalysisResults.root'.format(outputDir, outputDir)
-  subprocess.run(cmd, check=True, shell=True)
+  # ---------------------------------------------------------
+  def plotAnalysis(self):
 
-# ---------------------------------------------------------
-def plotAnalysis(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat):
-
-  print('Plotting histograms...')
-  plotResults.plotResults(outputDir_pp, outputDir_AA, nEvents_pp, nEvents_AA, fileFormat)
+    print('Plotting histograms...')
+    plotResults.plotResults(self.output_dir_pp, self.output_dir_AA, self.nEvents_pp, self.nEvents_AA, self.file_format)
 
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
@@ -197,7 +222,6 @@ if __name__ == '__main__':
   print("Configuring...")
 
   # If invalid configFile is given, exit
-  print("configFile: \"{0}\"".format(args.configFile))
   if not os.path.exists(args.configFile):
     print("File \"{0}\" does not exist! Exiting!".format(args.configFile))
     sys.exit(0)
@@ -212,4 +236,5 @@ if __name__ == '__main__':
       print("File \"{0}\" does not exist! Exiting!".format(args.xmlMasterFile))
       sys.exit(0)
 
-doJetscapeAnalysis(configFile = args.configFile, xmlUserFile = args.xmlUserFile, xmlMasterFile = args.xmlMasterFile, run = args.run, analyze = args.analyze, plot = args.plot)
+  analysis = doJetscapeAnalysis(config_file = args.configFile, xml_user_file = args.xmlUserFile, xml_master_file = args.xmlMasterFile, run = args.run, analyze = args.analyze, plot = args.plot)
+  analysis.do_jetscape_analysis()

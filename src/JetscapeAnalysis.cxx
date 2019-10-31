@@ -8,6 +8,8 @@
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/Selector.hh"
 
+#include "fastjet/contrib/SoftDrop.hh"
+
 #include "JetscapeAnalysis.h"
 
 //-----------------------------------------------------------------
@@ -19,7 +21,7 @@ JetscapeAnalysis::JetscapeAnalysis(int bin, std::string outputDirBin):
   fPtHatBin(bin),
   fCrossSection(0),
   fJetR(),
-  fMinJetPt(0),
+  fMinJetPt(20.),
   fAbsJetEtaMax(1)
 {
   fHistos = new THashList();
@@ -59,6 +61,9 @@ void JetscapeAnalysis::Init()
     histname = FormJetHistoName("EtaPhi", jetR);
     CreateTH2(histname.c_str(), histname.c_str(), 100, -5, 5, 100, -6.28, 6.28);
     
+    histname = FormJetHistoName("theta", jetR);
+    CreateTH1(histname.c_str(), histname.c_str(), 130, 0, 1.3);
+    
   }
   
 }
@@ -80,6 +85,32 @@ void JetscapeAnalysis::AnalyzeEvent(const HepMC3::GenEvent &event) {
     fastjet::JetDefinition jetDef(fastjet::antikt_algorithm, jetR);
     fastjet::ClusterSequence cs(fjHadrons, jetDef);
     std::vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(fMinJetPt));
+    
+    double z_cut = 0.10;
+    double beta  = 0.;
+    fastjet::contrib::SoftDrop sd(beta, z_cut, jetR);
+    sd.set_grooming_mode();
+    sd.set_verbose_structure(true);
+    
+    // Set custom recluster definition, since by default it uses jetR=max_allowable_R
+    fastjet::Recluster* r = new fastjet::Recluster(fastjet::cambridge_algorithm, jetR);
+    sd.set_reclustering(true, r);
+    
+    for (auto jet : jets) {
+      fastjet::PseudoJet sd_jet = sd(jet);
+      double dR = sd_jet.structure_of<fastjet::contrib::SoftDrop>().delta_R();
+      double zg = sd_jet.structure_of<fastjet::contrib::SoftDrop>().symmetry();
+      double mu = sd_jet.structure_of<fastjet::contrib::SoftDrop>().mu();
+
+      std::string histname = FormJetHistoName("theta", jetR);
+      FillTH1(histname.c_str(), dR/jetR);
+
+      if (dR > jetR) {
+        //std::cout << "  delta_R: " << dR << std::endl;
+        //std::cout << "  z_g: " << zg << std::endl;
+        //std::cout << "  mass drop(mu): " << mu << std::endl;
+      }
+    }
                         
     // Apply selection on jet: Pt, eta
     std::vector<fastjet::PseudoJet> jets_accepted = GetAcceptedJets(jets);
