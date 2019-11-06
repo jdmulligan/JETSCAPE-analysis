@@ -74,6 +74,16 @@ environment.
 
 Install this package using `poetry install` from the repository root.
 
+#### Pre-commit checks
+
+To setup checks that run on every commit, run
+
+```bash
+$ poetry run pre-commit install
+```
+
+Now, each commit will be checked on the users' machine.
+
 #### One-time setup
 
 We recommend to use [pipenv](https://github.com/pypa/pipenv) to manage your python environment:
