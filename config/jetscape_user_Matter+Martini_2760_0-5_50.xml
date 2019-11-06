@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+
+<jetscape>
+  
+  <!--<nEvents> 2500 </nEvents>-->
+  <nEvents> 100 </nEvents>
+  <setReuseHydro> true </setReuseHydro>
+  <nReuseHydro> 2500 </nReuseHydro>
+  
+  <JetScapeWriterHepMC> on </JetScapeWriterHepMC>
+
+  <Random>
+    <seed>0</seed>
+  </Random>
+
+  <!-- Inital State Module  -->
+  <IS>
+    <grid_max_x> 10 </grid_max_x>
+    <grid_max_y> 10 </grid_max_y>
+    <grid_max_z> 0 </grid_max_z>
+    <grid_step_x> 0.2 </grid_step_x>
+    <grid_step_y> 0.2 </grid_step_y>
+    <grid_step_z> 0.2 </grid_step_z>
+    
+    <initial_profile_path>/home/jetscape-user/JETSCAPE/examples/test_hydro_files</initial_profile_path>
+  </IS>
+
+  <!-- Hard Process -->
+  <Hard>
+    <PythiaGun>
+      <pTHatMin>50</pTHatMin>
+      <pTHatMax>1000</pTHatMax>
+      <eCM>2760</eCM>
+    </PythiaGun>
+  </Hard>
+  
+  <!-- Hydro  Module  -->
+  <Hydro>
+    <hydro_from_file>
+      <hydro_files_folder>/home/jetscape-user/JETSCAPE/examples/test_hydro_files</hydro_files_folder>
+      <hydro_type>1</hydro_type>
+      <load_viscous_info>0</load_viscous_info>
+      <T_c>0.154</T_c>
+    </hydro_from_file>
+  </Hydro>
+  
+  <!--Eloss Modules -->
+  <Eloss>
+
+    <deltaT>0.01</deltaT>
+
+    <Matter> 
+      <Q0> 2.0 </Q0>
+      <T0> 0.16 </T0>
+      <vir_factor> 0.25 </vir_factor>
+      <in_vac> 0 </in_vac>
+      <recoil_on> 0 </recoil_on>
+      <broadening_on> 0 </broadening_on>
+      <brick_med> 0 </brick_med>
+      <brick_length> 0.0 </brick_length>
+      <hydro_Tc> 0.15 </hydro_Tc>
+      <qhat0> -3.0 </qhat0>
+      <alphas> 0.23 </alphas>
+    </Matter>
+
+    <Martini> 
+      <name > Martini </name>
+      <Q0> 2.0 </Q0>
+      <alpha_s> 0.23 </alpha_s>
+      <pcut> 1.0 </pcut>
+      <hydro_Tc> 0.16 </hydro_Tc>
+      <path>/home/jetscape-user/JETSCAPE/src/jet/Martini/</path>
+    </Martini>
+
+  </Eloss>
+  
+  <!-- Jet Hadronization Module -->
+  <JetHadronization>
+    <name>colorless</name>
+  </JetHadronization>
+  
+</jetscape>
