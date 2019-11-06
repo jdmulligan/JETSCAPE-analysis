@@ -28,6 +28,7 @@ numpy = "^1.17.3"
 pyhepmc_ng = "^0.4.3"
 pyyaml = "^5.1.2"
 mypy = "^0.740"
+isort = {extras = ["pyproject"], version = "^4.3.21"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2.2"
@@ -42,7 +43,7 @@ analyzeJetscape = "jetscape_analysis.analysis.analyze_events"
 
 [tool.isort]
 known_standard_library = ["setuptools"]
-known_third_party = ["ROOT", "common_base", "event", "fastjet", "fjcontrib", "fjext", "pyhepmc_ng", "reader", "tqdm", "yaml"]
+known_third_party = ["ROOT", "common_base", "event", "fastjet", "fjext", "pyhepmc_ng", "reader", "tqdm", "yaml"]
 known_first_party = ["heppy"]
 line_length = 120
 # Meaning a grouped grid of imports

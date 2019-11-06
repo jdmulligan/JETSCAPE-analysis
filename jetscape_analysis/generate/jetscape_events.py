@@ -3,7 +3,7 @@
 """
   Class to launch the generation of JETSCAPE events over a set of pt-hat bins.
   (You can easily adapt this to loop over any set of JETSCAPE parameter values).
-  
+
   Run from inside the JETSCAPE docker container with:
     python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 
@@ -12,17 +12,20 @@
 
 from __future__ import print_function
 
+import argparse
+import fileinput
+
 # General
 import os
-import sys
-import yaml
-import argparse
-import subprocess
-import fileinput
 import shutil
+import subprocess
+import sys
+
+import yaml
 
 # Base class
 from jetscape_analysis.base import common_base
+
 
 ################################################################
 class generate_jetscape_events(common_base.common_base):

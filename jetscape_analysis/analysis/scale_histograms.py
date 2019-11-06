@@ -9,11 +9,9 @@
 # Author: James Mulligan (james.mulligan@yale.edu)
 #
 
-import ROOT
-import argparse
 import ctypes
-import os
-import yaml
+
+import ROOT
 
 # Prevent ROOT from stealing focus when plotting
 ROOT.gROOT.SetBatch(True)
@@ -85,7 +83,7 @@ def ScaleAllHistograms(
 ):
 
     # Set Sumw2 if not already done
-    if obj.GetSumw2N() is 0:
+    if obj.GetSumw2N() == 0:
         obj.Sumw2()
         if verbose:
             print("Set Sumw2 on {}".format(obj.GetName()))
@@ -424,4 +422,4 @@ if __name__ == "__main__":
     print("Executing scalePtHardHistos.py...")
     print("")
 
-    scalePtHardHistos(outputDirBin, bin)
+    # scalePtHardHistos(outputDirBin, bin)

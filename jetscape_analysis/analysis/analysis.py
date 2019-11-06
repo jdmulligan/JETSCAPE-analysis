@@ -2,7 +2,7 @@
 
 """
   Class to analyze a single JETSCAPE output file
-  
+
   Author: James Mulligan (james.mulligan@berkeley.edu)
   """
 
@@ -10,18 +10,19 @@ from __future__ import print_function
 
 # General
 import os
-import yaml
-import ROOT
-
-# Fastjet via python (from external library heppy)
-import fastjet as fj
-import fjcontrib
-import fjext
-
-from event import event_hepmc
 
 # Base class
 import common_base
+
+# Fastjet via python (from external library heppy)
+import fastjet as fj
+
+# import fjcontrib
+import fjext
+import ROOT
+import yaml
+from event import event_hepmc
+
 
 ################################################################
 class jetscape_analysis(common_base.common_base):
