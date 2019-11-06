@@ -51,7 +51,7 @@ For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy)
 
 #### One-time setup
 
-We recommend to use [pipenv(https://github.com/pypa/pipenv) to manage your python environment:
+We recommend to use [pipenv](https://github.com/pypa/pipenv) to manage your python environment:
 
 ```
 cd JETSCAPE-analysis
