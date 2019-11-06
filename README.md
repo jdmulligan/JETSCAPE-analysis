@@ -1,8 +1,9 @@
 # JETSCAPE-analysis
 
 This repository contains basic tools to generate and analyze Jetscape events in HepMC3 format.
+It is written entirely in python -- leveraging c++ underneath where necessary -- no compilation necessary!
 
-## Generating events
+## (1) Generating events
 
 The script `generate/generate_jetscape_events.py` generates JETSCAPE events, 
 including automated machinery to launch a set of pt-hat bins.
@@ -10,6 +11,7 @@ including automated machinery to launch a set of pt-hat bins.
 ### Pre-requisites
 
 To generate JETSCAPE events, you must first build the JETSCAPE package itself: https://github.com/JETSCAPE/JETSCAPE
+
 We recommend to use Docker to do so: https://github.com/JETSCAPE/JETSCAPE/tree/master/docker
 
 Assuming you have a Jetscape docker installation according to the above instructions 
@@ -35,7 +37,7 @@ be set manually (which modules to include, output format type, etc.).
 
 That's it! The script will write a separate sub-directory with JETSCAPE events for each pt-hat bin. 
 
-## Analyzing events
+## (2) Analyzing events
 
 The script `analysis/analyze_jetscape_events.py` analyzes JETSCAPE events, producing an output ROOT file.
 It also contains machinery to aggregate the results from the set of pt-hat bins, and plot the analysis results.
@@ -43,8 +45,8 @@ It also contains machinery to aggregate the results from the set of pt-hat bins,
 ### Pre-requisites
 
 Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package nor its docker container. 
-Instead, we analyze the events (jet-finding, writing histograms, etc.) using python. 
-For jet-finding, we rely on the package `heppy` which wraps fastjet and fastjet-contribs in python: https://github.com/matplo/heppy
+Instead, we analyze the events (jet-finding, writing histograms, etc.) using a local python environment. 
+For jet-finding, we rely on the package heppy[https://github.com/matplo/heppy] which wraps fastjet and fastjet-contribs in python: 
 
 #### One-time setup
 
@@ -70,7 +72,7 @@ module load heppy/main_python
 
 #### Workflow
 
-Once you have done the one-time setup, to run the analysis script you should do the following:
+Once you have done the one-time setup, your general workflow is the following:
 
 ```
 cd JETSCAPE-analysis
