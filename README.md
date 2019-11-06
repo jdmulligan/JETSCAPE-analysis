@@ -56,7 +56,6 @@ We recommend to use [pipenv](https://github.com/pypa/pipenv) to manage your pyth
 ```
 cd JETSCAPE-analysis
 pipenv --three
-pipenv shell
 pipenv install pyhepmc_ng pyyaml numpy tqdm ROOT
 ```
 
@@ -67,8 +66,6 @@ cd <my-heppy-location>
 git clone git@github.com:matplo/heppy.git
 cd heppy
 ./scripts/setup.sh --buildext --root
-module use <my-heppy-location>/modules
-module load heppy/main_python
 ```
 
 #### Workflow
