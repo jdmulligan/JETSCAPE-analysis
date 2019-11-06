@@ -18,6 +18,8 @@ import fastjet as fj
 import fjcontrib
 import fjext
 
+from event import event_hepmc
+
 # Base class
 import common_base
 
@@ -87,7 +89,7 @@ class jetscape_analysis(common_base.common_base):
     self.get_event_info(event)
   
     # Get list of hadrons from the event, and fill some histograms
-    hadrons = self.get_hadrons(event)
+    hadrons = event.get_hadrons()
     self.fill_hadron_histograms(hadrons)
   
     # Create list of fastjet::PseudoJets
@@ -137,28 +139,6 @@ class jetscape_analysis(common_base.common_base):
       #print('NColl = {}, NPart = {}, EP-angle = {}'.format(nColl, nPart, eventPlaneAngle))
 
     self.event_id += 1
-  
-  #---------------------------------------------------------------
-  # Get list of hadrons.
-  # Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
-  #---------------------------------------------------------------
-  def get_hadrons(self, event):
-  
-    for vertex in event.vertices:
-    
-      vertex_time = vertex.position.t
-      if abs(vertex_time - 100) < 1e-3:
-        final_state_particles = vertex.particles_out
-  
-    # Remove neutrinos
-    hadrons = []
-    for particle in final_state_particles:
-    
-      pid = particle.pid
-      if pid!=12 and pid!=14 and pid!=16:
-        hadrons.append(particle)
-
-    return hadrons
   
   #---------------------------------------------------------------
   # Fill hadron histograms

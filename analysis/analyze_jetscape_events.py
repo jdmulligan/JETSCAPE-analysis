@@ -30,6 +30,7 @@ import common_base
 # Analysis
 import jetscape_analysis
 import pyhepmc_ng
+from reader import reader_hepmc
 import ROOT
 import tqdm
 
@@ -111,36 +112,27 @@ class analyze_jetscape_events(common_base.common_base):
   #---------------------------------------------------------------
   def run_jetscape_analysis(self, input_file, output_dir_bin, bin):
 
+    # Create reader class
+    reader = reader_hepmc.reader_hepmc(input_file)
+    
     # Create analysis task
     analyzer = jetscape_analysis.jetscape_analysis(self.config_file, input_file, output_dir_bin, bin)
 
     # Initialize analysis output objects
     analyzer.initialize_output_objects()
   
-    # Use pyhepmc_ng to parse the HepMC file
-    input_hepmc = pyhepmc_ng.ReaderAscii(input_file)
-    if input_hepmc.failed():
-      print ('[error] unable to read from {}'.format(input_file))
-      sys.exit(1)
-  
     # Iterate through events
-    event_hepmc = pyhepmc_ng.GenEvent()
     pbar = tqdm.tqdm(range(self.n_event_max))
-    while not input_hepmc.failed():
-      ev = input_hepmc.read_event(event_hepmc)
-      if input_hepmc.failed():
+    for event in reader(n_events = self.n_event_max):
+      
+      if not event:
         nstop = pbar.n
         pbar.close()
         print('End of HepMC file at event {} '.format(nstop))
         break
-          
-      analyzer.analyze_event(event_hepmc)
+      
+      analyzer.analyze_event(event)
       pbar.update()
-        
-      if pbar.n >= self.n_event_max:
-        pbar.close()
-        print('{} event limit reached'.format(self.n_event_max))
-        break
 
     # Write analysis task output to ROOT file
     analyzer.write_output_objects()
