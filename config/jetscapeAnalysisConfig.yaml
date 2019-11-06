@@ -12,5 +12,7 @@ min_jet_pt: 20.
 abs_jet_eta_max: 1.
 n_event_max: 100
 
+reader: hepmc                     # [hepmc, ascii]
+
 scale_histograms: False
 merge_histograms: False

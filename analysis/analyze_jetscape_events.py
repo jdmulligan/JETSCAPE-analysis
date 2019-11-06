@@ -29,8 +29,8 @@ import common_base
 
 # Analysis
 import jetscape_analysis
-import pyhepmc_ng
 from reader import reader_hepmc
+from reader import reader_ascii
 import ROOT
 import tqdm
 
@@ -68,6 +68,7 @@ class analyze_jetscape_events(common_base.common_base):
     self.debug_level = config['debug_level']
     self.pt_hat_bins = config['pt_hat_bins']
     self.n_event_max = config['n_event_max']
+    self.reader_type = config['reader']
     self.scale_histograms = config['scale_histograms']
     self.merge_histograms = config['merge_histograms']
 
@@ -113,7 +114,10 @@ class analyze_jetscape_events(common_base.common_base):
   def run_jetscape_analysis(self, input_file, output_dir_bin, bin):
 
     # Create reader class
-    reader = reader_hepmc.reader_hepmc(input_file)
+    if self.reader_type == 'hepmc':
+      reader = reader_hepmc.reader_hepmc(input_file)
+    elif self.reader_type == 'ascii':
+      reader = reader_ascii.reader_ascii(input_file)
     
     # Create analysis task
     analyzer = jetscape_analysis.jetscape_analysis(self.config_file, input_file, output_dir_bin, bin)
