@@ -7,8 +7,8 @@
   Run from inside the JETSCAPE docker container with:
     python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 
-  Author: James Mulligan (james.mulligan@berkeley.edu)
-  """
+.. codeauthor:: James Mulligan <james.mulligan@berkeley.edu>, UC Berkeley
+"""
 
 from __future__ import print_function
 
@@ -22,7 +22,7 @@ import fileinput
 import shutil
 
 # Base class
-import common_base
+from jetscape_analysis.base import common_base
 
 ################################################################
 class generate_jetscape_events(common_base.common_base):
