@@ -10,9 +10,9 @@ including automated machinery to launch a set of pt-hat bins.
 
 ### Pre-requisites
 
-To generate JETSCAPE events, you must first build the JETSCAPE package itself: https://github.com/JETSCAPE/JETSCAPE
+To generate JETSCAPE events, you must first build the [JETSCAPE package](https://github.com/JETSCAPE/JETSCAPE) itself.
 
-We recommend to use Docker to do so: https://github.com/JETSCAPE/JETSCAPE/tree/master/docker
+We recommend to follow the [JETSCAPE Docker Instructions](https://github.com/JETSCAPE/JETSCAPE/tree/master/docker) to do so. 
 
 Assuming you have a Jetscape docker installation according to the above instructions 
 (with a shared folder located at `~/jetscape-docker`, containing the Jetscape repository at `~/jetscape-docker/JETSCAPE`), 
@@ -46,7 +46,7 @@ It also contains machinery to aggregate the results from the set of pt-hat bins,
 
 Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package nor its docker container. 
 Instead, we analyze the events (jet-finding, writing histograms, etc.) using a local python environment. 
-For jet-finding, we rely on the package heppy[https://github.com/matplo/heppy] which wraps fastjet and fastjet-contribs in python: 
+For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet and fastjet-contribs in python: 
 
 #### One-time setup
 
