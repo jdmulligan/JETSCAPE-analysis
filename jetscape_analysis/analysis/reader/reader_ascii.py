@@ -16,19 +16,19 @@ from reader import reader_base
 
 ################################################################
 class reader_ascii(reader_base.reader_base):
-  
-  #---------------------------------------------------------------
-  # Constructor
-  #---------------------------------------------------------------
-  def __init__(self, input_file='', **kwargs):
-    super(reader_ascii, self).__init__(**kwargs)
-    
-    # Create reader
 
-  #---------------------------------------------------------------
-  # Get next event
-  # Return event if successful, False if unsuccessful
-  #---------------------------------------------------------------
-  def next_event(self):
+    # ---------------------------------------------------------------
+    # Constructor
+    # ---------------------------------------------------------------
+    def __init__(self, input_file="", **kwargs):
+        super(reader_ascii, self).__init__(**kwargs)
 
-    return False
+        # Create reader
+
+    # ---------------------------------------------------------------
+    # Get next event
+    # Return event if successful, False if unsuccessful
+    # ---------------------------------------------------------------
+    def next_event(self):
+
+        return False

@@ -6,7 +6,4 @@
 .. codeauthor:: Raymond Ehlers <raymond.ehlers@cern.ch>, ORNL
 """
 
-__all__ = [
-    "common_base"
-]
-
+__all__ = ["common_base"]

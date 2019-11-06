@@ -19,30 +19,30 @@ from reader import reader_base
 
 ################################################################
 class reader_hepmc(reader_base.reader_base):
-  
-  #---------------------------------------------------------------
-  # Constructor
-  #---------------------------------------------------------------
-  def __init__(self, input_file='', **kwargs):
-    super(reader_hepmc, self).__init__(**kwargs)
-  
-    # Create reader
-    self.reader = pyhepmc_ng.ReaderAscii(input_file)
-    if self.reader.failed():
-      print ('[error] unable to read from {}'.format(input_file))
-      sys.exit(1)
 
-  #---------------------------------------------------------------
-  # Get next event
-  # Return event if successful, False if unsuccessful
-  #---------------------------------------------------------------
-  def next_event(self):
-    
-    event = pyhepmc_ng.GenEvent()
-    self.reader.read_event(event)
-    
-    if self.reader.failed():
-      return False
-    else:
-      ev = event_hepmc.event_hepmc(event)
-      return ev
+    # ---------------------------------------------------------------
+    # Constructor
+    # ---------------------------------------------------------------
+    def __init__(self, input_file="", **kwargs):
+        super(reader_hepmc, self).__init__(**kwargs)
+
+        # Create reader
+        self.reader = pyhepmc_ng.ReaderAscii(input_file)
+        if self.reader.failed():
+            print("[error] unable to read from {}".format(input_file))
+            sys.exit(1)
+
+    # ---------------------------------------------------------------
+    # Get next event
+    # Return event if successful, False if unsuccessful
+    # ---------------------------------------------------------------
+    def next_event(self):
+
+        event = pyhepmc_ng.GenEvent()
+        self.reader.read_event(event)
+
+        if self.reader.failed():
+            return False
+        else:
+            ev = event_hepmc.event_hepmc(event)
+            return ev

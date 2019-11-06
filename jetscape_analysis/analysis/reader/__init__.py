@@ -11,4 +11,3 @@ __all__ = [
     "reader_ascii",
     "reader_hepmc",
 ]
-

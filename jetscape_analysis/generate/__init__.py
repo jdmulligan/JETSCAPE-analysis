@@ -6,7 +6,4 @@
 .. codeauthor:: Raymond Ehlers <raymond.ehlers@cern.ch>, ORNL
 """
 
-__all__ = [
-    "jetscape_events"
-]
-
+__all__ = ["jetscape_events"]

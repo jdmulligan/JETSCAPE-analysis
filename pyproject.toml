@@ -33,6 +33,7 @@ mypy = "^0.740"
 pytest = "^5.2.2"
 flake8 = "^3.7.9"
 flake8-colors = "^0.1.6"
+black = "^19.10b0"
 
 [tool.poetry.scripts]
 generateJetscape = "jetscape_analysis.generate.jetscape_events"

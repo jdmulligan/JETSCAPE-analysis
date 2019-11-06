@@ -6,8 +6,4 @@
 .. codeauthor:: Raymond Ehlers <raymond.ehlers@cern.ch>, ORNL
 """
 
-__all__ = [
-    "analysis",
-    "generate"
-]
-
+__all__ = ["analysis", "generate"]
