@@ -1,6 +1,7 @@
 # JETSCAPE-analysis
 
 This repository contains basic tools to generate and analyze Jetscape events in HepMC3 format.
+
 It is written entirely in python -- leveraging c++ underneath where necessary -- no compilation necessary!
 
 ## (1) Generating events
