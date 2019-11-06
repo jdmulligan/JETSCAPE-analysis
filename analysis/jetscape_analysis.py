@@ -69,6 +69,12 @@ class jetscape_analysis(common_base.common_base):
     self.hHadronPID = ROOT.TH1F('hHadronPID', 'hHadronPID', 10000, -5000, 5000)
     self.hHadronEtaPhi = ROOT.TH2F('hHadronEtaPhi', 'hHadronEtaPhi', 100, -5, 5, 100, -3.2, 3.2)
     
+    # Final-state parton histograms
+    self.hPartonN = ROOT.TH1F('hPartonN', 'hPartonN', 1000, 0, 1000)
+    self.hPartonPt = ROOT.TH1F('hPartonPt', 'hPartonPt', 300, 0., 300.)
+    self.hPartonPID = ROOT.TH1F('hPartonPID', 'hPartonPID', 10000, -5000, 5000)
+    self.hPartonEtaPhi = ROOT.TH2F('hPartonEtaPhi', 'hPartonEtaPhi', 100, -5, 5, 100, -3.2, 3.2)
+    
     # Jet histograms
     for jetR in self.jetR_list:
 
@@ -89,8 +95,12 @@ class jetscape_analysis(common_base.common_base):
     self.get_event_info(event)
   
     # Get list of hadrons from the event, and fill some histograms
-    hadrons = event.get_hadrons()
+    hadrons = event.hadrons()
     self.fill_hadron_histograms(hadrons)
+    
+    # Get list of final-state partons from the event, and fill some histograms
+    partons = event.final_partons()
+    self.fill_parton_histograms(partons)
   
     # Create list of fastjet::PseudoJets
     fj_hadrons = []
@@ -162,6 +172,29 @@ class jetscape_analysis(common_base.common_base):
         self.hHadronEtaPhi.Fill(eta, phi)
 
     self.hHadronN.Fill(len(hadrons))
+  
+  #---------------------------------------------------------------
+  # Fill final-state parton histograms
+  #---------------------------------------------------------------
+  def fill_parton_histograms(self, partons):
+    
+    # Loop through partons
+    for parton in partons:
+      
+      # Fill some basic parton info
+      pid = parton.pid
+      
+      momentum = parton.momentum
+      pt = momentum.pt()
+      eta = momentum.eta()
+      phi = momentum.phi() # [-pi, pi]
+      
+      if abs(eta) < self.abs_jet_eta_max:
+        self.hPartonPt.Fill(pt)
+        self.hPartonPID.Fill(pid)
+        self.hPartonEtaPhi.Fill(eta, phi)
+    
+    self.hPartonN.Fill(len(partons))
   
   #---------------------------------------------------------------
   # Fill hadrons into vector of fastjet pseudojets
