@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "jetscape_analysis"
+version = "0.1.0"
+description = "Basic JETSCAPE analysis code"
+license = "BSD-3-Clause"
+authors = [
+    "James Mulligan <james.mulligan@berkeley.edu>",
+    "Raymond Ehlers <raymond.ehlers@cern.ch>",
+]
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    'Development Status :: 4 - Beta',
+    # Indicate who your project is intended for
+    'Intended Audience :: Science/Research',
+    # Specify the Python versions you support here. In particular, ensure
+    # that you indicate whether you support Python 2, Python 3 or both.
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+tqdm = "^4.37.0"
+numpy = "^1.17.3"
+pyhepmc_ng = "^0.4.3"
+pyyaml = "^5.1.2"
+mypy = "^0.740"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2.2"
+flake8 = "^3.7.9"
+flake8-colors = "^0.1.6"
+
+[tool.poetry.scripts]
+generateJetscape = "jetscape_analysis.generate.jetscape_events"
+analyzeJetscape = "jetscape_analysis.analysis.analyze_events"
+
+[tool.isort]
+known_standard_library = ["setuptools"]
+known_third_party = [
+    "iminuit", "matplotlib" , "numpy", "pytest" , "ruamel", "scipy", "uproot",
+]
+known_first_party = ["heppy"]
+line_length = 120
+# Meaning a grouped grid of imports
+multi_line_output = 5
+lines_after_imports = 1
+verbose = true
+skip = ["docs/conf.py"]
+skip_glob = ".*"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+

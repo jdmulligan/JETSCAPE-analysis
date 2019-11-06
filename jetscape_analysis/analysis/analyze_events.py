@@ -25,14 +25,16 @@ import fileinput
 import shutil
 
 # Base class
-import common_base
+from jetscape_analysis.base import common_base
 
 # Analysis
-import jetscape_analysis
-from reader import reader_hepmc
-from reader import reader_ascii
 import ROOT
 import tqdm
+
+from jetscape_analysis.analysis import scale_histograms
+from jetscape_analysis.analysis import analysis
+from jetscape_analysis.analysis.reader import reader_hepmc
+from jetscape_analysis.analysis.reader import reader_ascii
 
 ################################################################
 class analyze_jetscape_events(common_base.common_base):
@@ -101,7 +103,7 @@ class analyze_jetscape_events(common_base.common_base):
       # Scale histograms according to pthard bins cross-section
       if self.scale_histograms:
         print('Scaling pt-hat bins...')
-        scaleHistograms.scaleHistograms(output_dir_bin, bin)
+        scale_histograms.scaleHistograms(output_dir_bin, bin)
     
     # Merge all pthard bins into a single output file
     if self.merge_histograms:
