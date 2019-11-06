@@ -1,4 +1,4 @@
-## Overview
+# JETSCAPE-analysis
 
 This repository contains basic tools to generate and analyze Jetscape events in HepMC3 format.
 
