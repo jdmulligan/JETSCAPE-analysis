@@ -47,11 +47,11 @@ It also contains machinery to aggregate the results from the set of pt-hat bins,
 
 Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package nor its docker container. 
 Instead, we analyze the events (jet-finding, writing histograms, etc.) using a local python environment. 
-For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet and fastjet-contribs in python: 
+For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet and fastjet-contribs in python
 
 #### One-time setup
 
-We recommend to use `pipenv` to manage your python environment:
+We recommend to use [pipenv(https://github.com/pypa/pipenv) to manage your python environment:
 
 ```
 cd JETSCAPE-analysis
