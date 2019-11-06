@@ -1,13 +1,16 @@
-# Run parameters
+# Common parameters
+debug_level: 0
 pt_hat_bins: [5, 7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235, 1000]
 
-output_dir: "/home/jetscape-user/JETSCAPE-output/PP19_2760_FullPtHat_colorless_test"
+# Generation
+xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_PP19.xml'
+xml_master_file: '/home/jetscape-user/JETSCAPE/config/jetscape_master.xml'
 
-# Analysis parameters
+# Analysis
+jetR: [0.2, 0.4]
+min_jet_pt: 20.
+abs_jet_eta_max: 1.
+n_event_max: 100
 
-# Plotting parameters
-output_dir_pp: "/home/jetscape-user/JETSCAPE-output/PP19_2760_FullPtHat_colorless_test"
-output_dir_AA: "/home/jetscape-user/JETSCAPE-output/MATTER+LBT_2760_FullPtHat"
-nEvents_pp: 10000
-nEvents_AA: 2500
-file_format: ".pdf"
+scale_histograms: False
+merge_histograms: False
