@@ -1,0 +1,6 @@
+__pycache__/
+.mypy_cache/
+build/
+jetscape_analysis.egg-info/
+
+.DS_Store

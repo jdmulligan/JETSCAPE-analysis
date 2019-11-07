@@ -1,0 +1,41 @@
+---
+repos:
+    - repo: "https://gitlab.com/pycqa/flake8"
+      rev: 3.7.9  # 3.6.0 doesn't contain this configuration file.
+      hooks:
+          - id: flake8
+            additional_dependencies: ["flake8-colors"]
+    - repo: https://github.com/adrienverge/yamllint.git
+      rev: v1.18.0
+      hooks:
+          - id: yamllint
+    # - repo: https://github.com/pre-commit/mirrors-mypy
+    #   rev: v0.740
+    #   hooks:
+    #       - id: mypy
+    #         args: ["--ignore-missing-imports"]
+    - repo: https://github.com/pre-commit/pygrep-hooks
+      rev: v1.4.2
+      hooks:
+          - id: python-check-mock-methods
+          - id: rst-backticks
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.4.0
+      hooks:
+          - id: trailing-whitespace
+          - id: check-executables-have-shebangs
+    - repo: https://github.com/asottile/seed-isort-config
+      rev: v1.9.3
+      hooks:
+          - id: seed-isort-config
+    - repo: https://github.com/pre-commit/mirrors-isort
+      rev: v4.3.21
+      hooks:
+          - id: isort
+            additional_dependencies:
+                - toml
+    - repo: https://github.com/python/black
+      rev: stable
+      hooks:
+          - id: black
+            language_version: python3.7

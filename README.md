@@ -6,17 +6,18 @@ It is written entirely in python -- leveraging c++ underneath where necessary --
 
 ## (1) Generating events
 
-The script `generate/generate_jetscape_events.py` generates JETSCAPE events, 
-including automated machinery to launch a set of pt-hat bins.
+The script `generate/generate_jetscape_events.py` generates JETSCAPE events, including automated machinery to
+launch a set of pt-hat bins.
 
 ### Pre-requisites
 
 To generate JETSCAPE events, you must first build the [JETSCAPE package](https://github.com/JETSCAPE/JETSCAPE) itself.
 
-We recommend to follow the [JETSCAPE Docker Instructions](https://github.com/JETSCAPE/JETSCAPE/tree/master/docker) to do so. 
+We recommend to follow the [JETSCAPE Docker
+Instructions](https://github.com/JETSCAPE/JETSCAPE/tree/master/docker) to do so.
 
-Assuming you have a Jetscape docker installation according to the above instructions 
-(with a shared folder located at `~/jetscape-docker`, containing the Jetscape repository at `~/jetscape-docker/JETSCAPE`), 
+Assuming you have a Jetscape docker installation according to the above instructions
+(with a shared folder located at `~/jetscape-docker`, containing the Jetscape repository at `~/jetscape-docker/JETSCAPE`),
 you should do (from outside the docker container):
 
 ```
@@ -31,12 +32,12 @@ The generation script should then be run from inside the JETSCAPE docker contain
 python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 ```
 
-where `jetscapeAnalysisConfig.yaml` should be edited to specify the pt-hat bins and JETSCAPE XML configuration paths, 
+where `jetscapeAnalysisConfig.yaml` should be edited to specify the pt-hat bins and JETSCAPE XML configuration paths,
 and `outputdir` specifies where the JETSCAPE output files will be written.
 Note that the machinery here only modifies the pt-hat bins in the JETSCAPE XML configuration -- all other settings should
 be set manually (which modules to include, output format type, etc.).
 
-That's it! The script will write a separate sub-directory with JETSCAPE events for each pt-hat bin. 
+That's it! The script will write a separate sub-directory with JETSCAPE events for each pt-hat bin.
 
 ## (2) Analyzing events
 
@@ -45,9 +46,43 @@ It also contains machinery to aggregate the results from the set of pt-hat bins,
 
 ### Pre-requisites
 
-Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package nor its docker container. 
-Instead, we analyze the events (jet-finding, writing histograms, etc.) using a local python environment. 
+Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package nor its docker container.
+Instead, we analyze the events (jet-finding, writing histograms, etc.) using a local python environment.
 For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet and fastjet-contribs in python
+
+#### Setup `poetry`
+
+We use `poetry` to manage packaging up this code. You need to setup poetry once globally.
+
+You must use version 1.0 or later (currently in 1.0.0b3 as of Nov 2019). Follow the [installation
+instructions](https://poetry.eustace.io/docs/#installation). If the python version that you would like to use
+doesn't automatically show up in your path (for example, if you are a macOS user and don't use pyenv), you can
+set the default python for poetry with (python 3.7 in this example):
+
+```bash
+$ poetry env use 3.7
+# Check that it worked with:
+$ poetry env info
+```
+
+You can run commands within the poetry virtual environment using `poetry run <command>`. If you want to load
+the virtual environment directly, you can try `poetry shell`, which may work (it doesn't for me), or use
+`source "$(dirname $(poetry run which python))/activate"`, as suggested
+[here](https://github.com/sdispater/poetry/issues/571#issuecomment-443595960). You can also alias this command
+for convenience. As long as it is run within the repository, it will always load the right virtual
+environment.
+
+Install this package using `poetry install` from the repository root.
+
+#### Pre-commit checks
+
+To setup checks that run on every commit, run
+
+```bash
+$ poetry run pre-commit install
+```
+
+Now, each commit will be checked on the users' machine.
 
 #### One-time setup
 
@@ -69,6 +104,7 @@ cd heppy
 ```
 
 #### Workflow
+
 
 Once you have done the one-time setup, your general workflow is the following:
 

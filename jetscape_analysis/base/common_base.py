@@ -2,7 +2,7 @@
 
 """
   Analysis base class.
-  
+
   Author: Mateusz Ploskon
 """
 

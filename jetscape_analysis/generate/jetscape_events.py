@@ -3,7 +3,7 @@
 """
   Class to launch the generation of JETSCAPE events over a set of pt-hat bins.
   (You can easily adapt this to loop over any set of JETSCAPE parameter values).
-  
+
   Run from inside the JETSCAPE docker container with:
     python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 
@@ -12,14 +12,14 @@
 
 from __future__ import print_function
 
-# General
-import os
-import sys
-import yaml
 import argparse
-import subprocess
 import fileinput
+import os
 import shutil
+import subprocess
+import sys
+
+import yaml
 
 # Base class
 from jetscape_analysis.base import common_base
@@ -90,12 +90,9 @@ class generate_jetscape_events(common_base.common_base):
                     print("      <pTHatMax>{}</pTHatMax>".format(pt_hat_max))
                 else:
                     print(line, end="")
+            shutil.copyfile(self.xml_user_file, "{}{}".format(output_dir_bin, "jetscape_user.xml"))
             shutil.copyfile(
-                self.xml_user_file, "{}{}".format(output_dir_bin, "jetscape_user.xml")
-            )
-            shutil.copyfile(
-                self.xml_master_file,
-                "{}{}".format(output_dir_bin, "jetscape_master.xml"),
+                self.xml_master_file, "{}{}".format(output_dir_bin, "jetscape_master.xml"),
             )
 
         # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory
@@ -151,7 +148,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.configFile))
         sys.exit(0)
 
-    analysis = generate_jetscape_events(
-        config_file=args.configFile, output_dir=args.outputDir
-    )
+    analysis = generate_jetscape_events(config_file=args.configFile, output_dir=args.outputDir)
     analysis.generate_jetscape_events()
