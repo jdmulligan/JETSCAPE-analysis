@@ -91,7 +91,7 @@ where `/my/outputdir` is the directory containing the generated JETSCAPE events.
 
 
 
-#### Setup `poetry`
+### Setup `poetry`
 
 We use `poetry` to manage packaging up this code. You need to setup poetry once globally.
 
