@@ -11,18 +11,14 @@ from __future__ import print_function
 # General
 import os
 
-# Base class
-import common_base
-
 # Fastjet via python (from external library heppy)
 import fastjet as fj
-
-# import fjcontrib
 import fjext
 import ROOT
 import yaml
-from event import event_hepmc
 
+from jetscape_analysis.analysis.event import event_hepmc
+from jetscape_analysis.base import common_base
 
 ################################################################
 class jetscape_analysis(common_base.common_base):
@@ -68,17 +64,13 @@ class jetscape_analysis(common_base.common_base):
         self.hHadronN = ROOT.TH1F("hHadronN", "hHadronN", 1000, 0, 1000)
         self.hHadronPt = ROOT.TH1F("hHadronPt", "hHadronPt", 300, 0.0, 300.0)
         self.hHadronPID = ROOT.TH1F("hHadronPID", "hHadronPID", 10000, -5000, 5000)
-        self.hHadronEtaPhi = ROOT.TH2F(
-            "hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -3.2, 3.2
-        )
+        self.hHadronEtaPhi = ROOT.TH2F("hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -3.2, 3.2)
 
         # Final-state parton histograms
         self.hPartonN = ROOT.TH1F("hPartonN", "hPartonN", 1000, 0, 1000)
         self.hPartonPt = ROOT.TH1F("hPartonPt", "hPartonPt", 300, 0.0, 300.0)
         self.hPartonPID = ROOT.TH1F("hPartonPID", "hPartonPID", 10000, -5000, 5000)
-        self.hPartonEtaPhi = ROOT.TH2F(
-            "hPartonEtaPhi", "hPartonEtaPhi", 100, -5, 5, 100, -3.2, 3.2
-        )
+        self.hPartonEtaPhi = ROOT.TH2F("hPartonEtaPhi", "hPartonEtaPhi", 100, -5, 5, 100, -3.2, 3.2)
 
         # Jet histograms
         for jetR in self.jetR_list:
@@ -116,9 +108,7 @@ class jetscape_analysis(common_base.common_base):
 
             # Set jet definition and a jet selector
             jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
-            jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(
-                self.abs_jet_eta_max - jetR
-            )
+            jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.abs_jet_eta_max - jetR)
             if self.debug_level > 0:
                 print("jet definition is:", jet_def)
                 print("jet selector is:", jet_selector, "\n")

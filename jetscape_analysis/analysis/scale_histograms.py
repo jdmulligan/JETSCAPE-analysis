@@ -101,15 +101,7 @@ def ScaleAllHistograms(
             # only perform outlier removal on these couple histograms
             if "Pt" in name:
                 removeOutliers(
-                    pTHardBin,
-                    EndPtHardBin,
-                    obj,
-                    verbose,
-                    outputDirBin,
-                    limit,
-                    nBinsThreshold,
-                    1,
-                    taskName,
+                    pTHardBin, EndPtHardBin, obj, verbose, outputDirBin, limit, nBinsThreshold, 1, taskName,
                 )
         obj.Scale(scaleFactor)
         if verbose:
@@ -142,15 +134,7 @@ def ScaleAllHistograms(
 # It truncates the 3D histogram based on when the 1D projection 4-bin moving average has been above
 # "limit" for "nBinsThreshold" bins.
 def removeOutliers(
-    pTHardBin,
-    EndPtHardBin,
-    hist,
-    verbose,
-    outputDirBin,
-    limit=2,
-    nBinsThreshold=4,
-    dimension=3,
-    taskName="",
+    pTHardBin, EndPtHardBin, hist, verbose, outputDirBin, limit=2, nBinsThreshold=4, dimension=3, taskName="",
 ):
 
     # Project to the pT Truth axis
@@ -175,21 +159,11 @@ def removeOutliers(
     for index in range(0, histToCheck.GetNcells()):
         if verbose:
             print("---------")
-        avg = MovingAverage(
-            histToCheck,
-            index=index,
-            numberOfCountsBelowIndex=2,
-            numberOfCountsAboveIndex=2,
-        )
+        avg = MovingAverage(histToCheck, index=index, numberOfCountsBelowIndex=2, numberOfCountsAboveIndex=2,)
         if verbose:
             print(
                 "Index: {0}, Avg: {1}, BinContent: {5}, foundAboveLimit: {2}, cutIndex: {3}, cutLimitReached: {4}".format(
-                    index,
-                    avg,
-                    foundAboveLimit,
-                    cutIndex,
-                    cutLimitReached,
-                    histToCheck.GetBinContent(index),
+                    index, avg, foundAboveLimit, cutIndex, cutLimitReached, histToCheck.GetBinContent(index),
                 )
             )
         if avg > limit:
@@ -213,9 +187,7 @@ def removeOutliers(
     # Do not perform removal here because then we miss values between the avg going below
     # the limit and crossing the nBinsThreshold
     if verbose:
-        print(
-            "Hist checked: {0}, cut index: {1}".format(histToCheck.GetName(), cutIndex)
-        )
+        print("Hist checked: {0}, cut index: {1}".format(histToCheck.GetName(), cutIndex))
 
     # Use on both TH1 and TH2 since we don't start removing immediately, but instead only after the limit
     if cutLimitReached:
@@ -232,11 +204,7 @@ def removeOutliers(
                 if y.value >= cutIndex:
                     if hist.GetBinContent(index) > 1e-3:
                         if verbose:
-                            print(
-                                "Cutting for index {}. y bin {}. Cut index: {}".format(
-                                    index, y, cutIndex
-                                )
-                            )
+                            print("Cutting for index {}. y bin {}. Cut index: {}".format(index, y, cutIndex))
                         hist.SetBinContent(index, 0)
                         hist.SetBinError(index, 0)
             if dimension == 2:
@@ -246,22 +214,14 @@ def removeOutliers(
                 if x.value >= cutIndex:
                     if hist.GetBinContent(index) > 1e-3:
                         if verbose:
-                            print(
-                                "Cutting for index {}. x bin {}. Cut index: {}".format(
-                                    index, x, cutIndex
-                                )
-                            )
+                            print("Cutting for index {}. x bin {}. Cut index: {}".format(index, x, cutIndex))
                         hist.SetBinContent(index, 0)
                         hist.SetBinError(index, 0)
             if dimension == 1:
                 if x.value >= cutIndex:
                     if hist.GetBinContent(index) > 1e-3:
                         if verbose:
-                            print(
-                                "Cutting for index {}. x bin {}. Cut index: {}".format(
-                                    index, x, cutIndex
-                                )
-                            )
+                            print("Cutting for index {}. x bin {}. Cut index: {}".format(index, x, cutIndex))
                         hist.SetBinContent(index, 0)
                         hist.SetBinError(index, 0)
 
@@ -288,14 +248,7 @@ def removeOutliers(
     outlierFilename = "{}OutlierRemoval_{}.pdf".format(outputDirBin, hist.GetName())
     if "Pt" in hist.GetName():
         plotOutlierPDF(
-            histToCheck,
-            histToCheckAfter,
-            pTHardBin,
-            EndPtHardBin,
-            outlierFilename,
-            verbose,
-            "hist E",
-            True,
+            histToCheck, histToCheckAfter, pTHardBin, EndPtHardBin, outlierFilename, verbose, "hist E", True,
         )
 
 
@@ -320,15 +273,11 @@ def MovingAverage(hist, index, numberOfCountsBelowIndex=0, numberOfCountsAboveIn
   """
     # Check inputs
     if numberOfCountsBelowIndex < 0 or numberOfCountsAboveIndex < 0:
-        print(
-            "Moving average number of counts above or below must be >= 0. Please check the values!"
-        )
+        print("Moving average number of counts above or below must be >= 0. Please check the values!")
 
     count = 0.0
     average = 0.0
-    for i in range(
-        index - numberOfCountsBelowIndex, index + numberOfCountsAboveIndex + 1
-    ):
+    for i in range(index - numberOfCountsBelowIndex, index + numberOfCountsAboveIndex + 1):
         # Avoid going over histogram limits
         if i < 0 or i >= hist.GetNcells():
             continue
@@ -347,14 +296,7 @@ def MovingAverage(hist, index, numberOfCountsBelowIndex=0, numberOfCountsAboveIn
 # Plot basic histogram    ##############################################################################
 ########################################################################################################
 def plotOutlierPDF(
-    h,
-    hAfter,
-    pTHardBin,
-    EndPtHardBin,
-    outputFilename,
-    verbose,
-    drawOptions="",
-    setLogy=False,
+    h, hAfter, pTHardBin, EndPtHardBin, outputFilename, verbose, drawOptions="", setLogy=False,
 ):
 
     c = ROOT.TCanvas("c", "c: hist", 600, 450)
@@ -367,9 +309,7 @@ def plotOutlierPDF(
     hAfter.SetLineColor(820)
     hAfter.Draw("same hist")
 
-    leg1 = ROOT.TLegend(
-        0.17, 0.7, 0.83, 0.85, "outlier removal of Bin {}".format(pTHardBin)
-    )
+    leg1 = ROOT.TLegend(0.17, 0.7, 0.83, 0.85, "outlier removal of Bin {}".format(pTHardBin))
     leg1.SetFillColor(10)
     leg1.SetBorderSize(0)
     leg1.SetFillStyle(0)

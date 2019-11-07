@@ -14,8 +14,6 @@ from __future__ import print_function
 
 import argparse
 import fileinput
-
-# General
 import os
 import shutil
 import subprocess
@@ -25,7 +23,6 @@ import yaml
 
 # Base class
 from jetscape_analysis.base import common_base
-
 
 ################################################################
 class generate_jetscape_events(common_base.common_base):
@@ -93,12 +90,9 @@ class generate_jetscape_events(common_base.common_base):
                     print("      <pTHatMax>{}</pTHatMax>".format(pt_hat_max))
                 else:
                     print(line, end="")
+            shutil.copyfile(self.xml_user_file, "{}{}".format(output_dir_bin, "jetscape_user.xml"))
             shutil.copyfile(
-                self.xml_user_file, "{}{}".format(output_dir_bin, "jetscape_user.xml")
-            )
-            shutil.copyfile(
-                self.xml_master_file,
-                "{}{}".format(output_dir_bin, "jetscape_master.xml"),
+                self.xml_master_file, "{}{}".format(output_dir_bin, "jetscape_master.xml"),
             )
 
         # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory
@@ -154,7 +148,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.configFile))
         sys.exit(0)
 
-    analysis = generate_jetscape_events(
-        config_file=args.configFile, output_dir=args.outputDir
-    )
+    analysis = generate_jetscape_events(config_file=args.configFile, output_dir=args.outputDir)
     analysis.generate_jetscape_events()

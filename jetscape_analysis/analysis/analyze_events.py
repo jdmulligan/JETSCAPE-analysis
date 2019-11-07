@@ -14,8 +14,6 @@ See README for pre-requisites.
 from __future__ import print_function
 
 import argparse
-
-# General
 import os
 import subprocess
 import sys
@@ -23,12 +21,10 @@ import sys
 # Analysis
 import tqdm
 import yaml
+
 from jetscape_analysis.analysis import analysis, scale_histograms
 from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
-
-# Base class
 from jetscape_analysis.base import common_base
-
 
 ################################################################
 class analyze_jetscape_events(common_base.common_base):
@@ -101,9 +97,7 @@ class analyze_jetscape_events(common_base.common_base):
 
         # Merge all pthard bins into a single output file
         if self.merge_histograms:
-            cmd = "hadd {}AnalysisResultsFinal.root {}*/AnalysisResults.root".format(
-                self.output_dir, self.output_dir
-            )
+            cmd = "hadd {}AnalysisResultsFinal.root {}*/AnalysisResults.root".format(self.output_dir, self.output_dir)
             subprocess.run(cmd, check=True, shell=True)
 
     # ---------------------------------------------------------------
@@ -118,9 +112,7 @@ class analyze_jetscape_events(common_base.common_base):
             reader = reader_ascii.reader_ascii(input_file)
 
         # Create analysis task
-        analyzer = analysis.jetscape_analysis(
-            self.config_file, input_file, output_dir_bin, bin
-        )
+        analyzer = analysis.jetscape_analysis(self.config_file, input_file, output_dir_bin, bin)
 
         # Initialize analysis output objects
         analyzer.initialize_output_objects()
@@ -178,7 +170,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.outputDir))
         sys.exit(0)
 
-    analysis_manager = analyze_jetscape_events(
-        config_file=args.configFile, output_dir=args.outputDir
-    )
+    analysis_manager = analyze_jetscape_events(config_file=args.configFile, output_dir=args.outputDir)
     analysis_manager.analyze_jetscape_events()
