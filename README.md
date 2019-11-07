@@ -6,7 +6,7 @@ It is written entirely in python -- leveraging c++ underneath where necessary --
 
 ## (1) Generating events
 
-The script `generate/generate_jetscape_events.py` generates JETSCAPE events, including automated machinery to
+The script `generate/jetscape_events.py` generates JETSCAPE events, including automated machinery to
 launch a set of pt-hat bins.
 
 ### Pre-requisites
@@ -29,7 +29,7 @@ You should then enter the docker container as specified in the above instruction
 The generation script should then be run from inside the JETSCAPE docker container:
 
 ```
-python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
+python jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 ```
 
 where `jetscapeAnalysisConfig.yaml` should be edited to specify the pt-hat bins and JETSCAPE XML configuration paths,
@@ -41,7 +41,7 @@ That's it! The script will write a separate sub-directory with JETSCAPE events f
 
 ## (2) Analyzing events
 
-The script `analysis/analyze_jetscape_events.py` analyzes JETSCAPE events, producing an output ROOT file.
+The script `analysis/analyze_events.py` analyzes JETSCAPE events, producing an output ROOT file.
 It also contains machinery to aggregate the results from the set of pt-hat bins, and plot the analysis results.
 
 ### Pre-requisites
@@ -49,40 +49,6 @@ It also contains machinery to aggregate the results from the set of pt-hat bins,
 Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package nor its docker container.
 Instead, we analyze the events (jet-finding, writing histograms, etc.) using a local python environment.
 For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet and fastjet-contribs in python
-
-#### Setup `poetry`
-
-We use `poetry` to manage packaging up this code. You need to setup poetry once globally.
-
-You must use version 1.0 or later (currently in 1.0.0b3 as of Nov 2019). Follow the [installation
-instructions](https://poetry.eustace.io/docs/#installation). If the python version that you would like to use
-doesn't automatically show up in your path (for example, if you are a macOS user and don't use pyenv), you can
-set the default python for poetry with (python 3.7 in this example):
-
-```bash
-$ poetry env use 3.7
-# Check that it worked with:
-$ poetry env info
-```
-
-You can run commands within the poetry virtual environment using `poetry run <command>`. If you want to load
-the virtual environment directly, you can try `poetry shell`, which may work (it doesn't for me), or use
-`source "$(dirname $(poetry run which python))/activate"`, as suggested
-[here](https://github.com/sdispater/poetry/issues/571#issuecomment-443595960). You can also alias this command
-for convenience. As long as it is run within the repository, it will always load the right virtual
-environment.
-
-Install this package using `poetry install` from the repository root.
-
-#### Pre-commit checks
-
-To setup checks that run on every commit, run
-
-```bash
-$ poetry run pre-commit install
-```
-
-Now, each commit will be checked on the users' machine.
 
 #### One-time setup
 
@@ -118,8 +84,43 @@ module load heppy/main_python
 And then run the script:
 
 ```
-python generate_jetscape_events.py -c ../config/jetscapeAnalysisConfig.yaml -o /my/outputdir
+python analyze_events.py -c ../config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 ```
 
 where `/my/outputdir` is the directory containing the generated JETSCAPE events.
 
+
+
+#### Setup `poetry`
+
+We use `poetry` to manage packaging up this code. You need to setup poetry once globally.
+
+You must use version 1.0 or later (currently in 1.0.0b3 as of Nov 2019). Follow the [installation
+instructions](https://poetry.eustace.io/docs/#installation). If the python version that you would like to use
+doesn't automatically show up in your path (for example, if you are a macOS user and don't use pyenv), you can
+set the default python for poetry with (python 3.7 in this example):
+
+```bash
+$ poetry env use 3.7
+# Check that it worked with:
+$ poetry env info
+```
+
+You can run commands within the poetry virtual environment using `poetry run <command>`. If you want to load
+the virtual environment directly, you can try `poetry shell`, which may work (it doesn't for me), or use
+`source "$(dirname $(poetry run which python))/activate"`, as suggested
+[here](https://github.com/sdispater/poetry/issues/571#issuecomment-443595960). You can also alias this command
+for convenience. As long as it is run within the repository, it will always load the right virtual
+environment.
+
+Install this package using `poetry install` from the repository root.
+
+#### Pre-commit checks
+
+To setup checks that run on every commit, run
+
+```bash
+$ poetry run pre-commit install
+```
+
+Now, each commit will be checked on the users' machine.
