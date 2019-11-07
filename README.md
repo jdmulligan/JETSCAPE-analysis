@@ -84,7 +84,7 @@ module load heppy/main_python
 And then run the script:
 
 ```
-python analyze_events.py -c ../config/jetscapeAnalysisConfig.yaml -o /my/outputdir
+python analyze_events.py -c ../../config/jetscapeAnalysisConfig.yaml -o /my/outputdir
 ```
 
 where `/my/outputdir` is the directory containing the generated JETSCAPE events.
