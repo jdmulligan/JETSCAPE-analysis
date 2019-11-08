@@ -198,18 +198,16 @@ class example_analysis(common_base.common_base):
     # ---------------------------------------------------------------
     def fill_fastjet_constituents(self, hadrons):
 
-        fjConstituents = []
-        for hadron in hadrons:
-
-            momentum = hadron.momentum
-            px = momentum.px
-            py = momentum.py
-            pz = momentum.pz
-            e = momentum.e
-            fjConstituents.append(fj.PseudoJet(px, py, pz, e))
-
-        return fjConstituents
-
+        px = [hadron.momentum.px for hadron in hadrons]
+        py = [hadron.momentum.py for hadron in hadrons]
+        pz = [hadron.momentum.pz for hadron in hadrons]
+        e = [hadron.momentum.e for hadron in hadrons]
+        
+        # Use swig'd function to create a vector of fastjet::PseudoJets from numpy arrays of px,py,pz,e
+        fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
+        
+        return fj_particles
+    
     # ---------------------------------------------------------------
     # Fill jet histograms
     # ---------------------------------------------------------------
@@ -226,16 +224,6 @@ class example_analysis(common_base.common_base):
 
             h = getattr(self, "hJetEtaPhi_R{}".format(jetR))
             h.Fill(jet_eta, jet_phi)
-
-    # ---------------------------------------------------------------
-    # Return vector of fastjet:PseudoJets from numpy arrays of pt,eta,phi
-    # ---------------------------------------------------------------
-    def get_fjparticles(self, pt, eta, phi):
-
-        # Use swig'd function to create a vector of fastjet::PseudoJets from numpy arrays of pt,eta,phi
-        fj_particles = fjext.vectorize_pt_eta_phi(pt, eta, phi)
-
-        return fj_particles
 
     # ---------------------------------------------------------------
     # Save all ROOT histograms and trees to file
