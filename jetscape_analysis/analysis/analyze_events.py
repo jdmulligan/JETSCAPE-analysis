@@ -22,7 +22,7 @@ import sys
 import tqdm
 import yaml
 
-from jetscape_analysis.analysis import analysis, scale_histograms
+from jetscape_analysis.analysis import example_analysis, scale_histograms
 from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
 from jetscape_analysis.base import common_base
 
@@ -112,7 +112,7 @@ class analyze_jetscape_events(common_base.common_base):
             reader = reader_ascii.reader_ascii(input_file)
 
         # Create analysis task
-        analyzer = analysis.jetscape_analysis(self.config_file, input_file, output_dir_bin, bin)
+        analyzer = example_analysis.example_analysis(self.config_file, input_file, output_dir_bin, bin)
 
         # Initialize analysis output objects
         analyzer.initialize_output_objects()

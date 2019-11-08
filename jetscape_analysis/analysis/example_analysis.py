@@ -21,13 +21,13 @@ from jetscape_analysis.analysis.event import event_hepmc
 from jetscape_analysis.base import common_base
 
 ################################################################
-class jetscape_analysis(common_base.common_base):
+class example_analysis(common_base.common_base):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file="", input_file="", output_dir="", bin="", **kwargs):
-        super(jetscape_analysis, self).__init__(**kwargs)
+        super(example_analysis, self).__init__(**kwargs)
         self.config_file = config_file
         self.input_file = input_file
         self.output_dir = output_dir

@@ -9,7 +9,7 @@
 from __future__ import print_function
 
 # Base class
-from event import event_base
+from jetscape_analysis.analysis.event import event_base
 
 ################################################################
 class event_hepmc(event_base.event_base):

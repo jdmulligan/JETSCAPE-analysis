@@ -6,4 +6,4 @@
 .. codeauthor:: Raymond Ehlers <raymond.ehlers@cern.ch>, ORNL
 """
 
-__all__ = ["analyze_events" "jetscape_analysis" "scale_histograms"]
+__all__ = ["analyze_events" "example_analysis" "scale_histograms"]

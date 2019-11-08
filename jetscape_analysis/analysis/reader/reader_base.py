@@ -9,7 +9,7 @@
 from __future__ import print_function
 
 # Base class
-import common_base
+from jetscape_analysis.base import common_base
 
 ################################################################
 class reader_base(common_base.common_base):
