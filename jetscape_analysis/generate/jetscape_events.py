@@ -18,7 +18,6 @@ import os
 import shutil
 import subprocess
 import sys
-
 import yaml
 
 # Base class
@@ -82,18 +81,23 @@ class generate_jetscape_events(common_base.common_base):
             if not os.path.exists(output_dir_bin):
                 os.makedirs(output_dir_bin)
 
+            # Copy XML files to pt-hat bin directory 
+            xml_master_file_copy = "{}{}".format(output_dir_bin, "jetscape_master.xml")
+            cmd = "rsync {} {}".format(self.xml_master_file, xml_master_file_copy)
+            os.system(cmd)
+
+            xml_user_file_copy = "{}{}".format(output_dir_bin, "jetscape_user.xml")
+            cmd = "rsync {} {}".format(self.xml_user_file, xml_user_file_copy)
+            os.system(cmd)
+
             # Set pT-hat values in Jetscape User XML configuration
-            for line in fileinput.input(self.xml_user_file, inplace=True):
+            for line in fileinput.input(xml_user_file_copy, inplace=True):
                 if "pTHatMin" in line:
                     print("      <pTHatMin>{}</pTHatMin>".format(pt_hat_min))
                 elif "pTHatMax" in line:
                     print("      <pTHatMax>{}</pTHatMax>".format(pt_hat_max))
                 else:
                     print(line, end="")
-            shutil.copyfile(self.xml_user_file, "{}{}".format(output_dir_bin, "jetscape_user.xml"))
-            shutil.copyfile(
-                self.xml_master_file, "{}{}".format(output_dir_bin, "jetscape_master.xml"),
-            )
 
         # Loop through pt-hat bins and call Jetscape executable, and write output to pT-hat bin directory
         for bin, pt_hat_min in enumerate(self.pt_hat_bins):
