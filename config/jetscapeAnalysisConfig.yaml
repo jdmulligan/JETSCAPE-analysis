@@ -1,6 +1,6 @@
 # Common parameters
 debug_level: 0
-pt_hat_bins: [5, 7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235, 1000]
+pt_hat_bins: [5, 7, 10, 15, 20, 25, 35, 45, 55, 65, 75, 85, 100, 125, 150, 180, 210, 250, 300, 500, 1000]
 
 # Generation
 xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_PP19.xml'
