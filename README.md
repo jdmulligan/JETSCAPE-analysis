@@ -7,7 +7,7 @@ It is written entirely in python -- leveraging c++ underneath where necessary --
 ## (1) Generating events
 
 The script `generate/jetscape_events.py` generates JETSCAPE events, including automated machinery to
-launch a set of pt-hat bins.
+launch a set of pt-hat bins and optionally scan over any additional parameter(s).
 
 ### Pre-requisites
 
