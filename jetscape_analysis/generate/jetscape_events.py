@@ -98,16 +98,16 @@ class generate_jetscape_events(common_base.common_base):
             dir_label = ''
             for index, value in enumerate(parameter_combination):
                 if index == 0:
+                    dir_label += str(pt_hat_bin)
                     continue
-                if index != 1:
-                    dir_label += '_'
+                dir_label += '_'
                 dir_label += parameter_labels[index]
                 dir_label += str(value)
             if len(parameter_combination) > 1:
                 print('    Generating {}'.format(dir_label))
                 
             # Create outputDir for each bin
-            output_dir_bin = '{}{}/{}'.format(self.output_dir, pt_hat_bin, dir_label)
+            output_dir_bin = '{}{}'.format(self.output_dir, dir_label)
             if not output_dir_bin.endswith("/"):
                 output_dir_bin = output_dir_bin + "/"
             if not os.path.exists(output_dir_bin):

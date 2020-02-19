@@ -12,9 +12,19 @@ parameter_scan:
 
   # additional parameters are optional
   parameter1:
+    label: 'eCM'
+    spacing: '      '
+    values: [200, 5020]
+    
+  parameter2:
     label: 'vir_factor'
     spacing: '      '
     values: [0.25, 0.5]
+
+  parameter3:
+    label: 'name'
+    spacing: '    '
+    values: [colorless, colored]
 
 # Generation
 xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_PP19.xml'
