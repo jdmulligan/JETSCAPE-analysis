@@ -8,24 +8,34 @@ parameter_scan:
   pt_hat_bins:
     label: 'pt_hat_bins'
     spacing: '      '
-    values: [5, 7, 10]
+    values: [5, 7, 9]
 
   # additional parameters are optional
   parameter1:
+    label: 'seed'
+    spacing: '    '
+    values: [10, 11]
+    
+  parameter2:
     label: 'eCM'
     spacing: '      '
     values: [200, 5020]
     
-  parameter2:
+  parameter3:
+    label: 'deltaT'
+    spacing: '    '
+    values: [0.01, 0.1]
+    
+  parameter4:
     label: 'vir_factor'
     spacing: '      '
     values: [0.25, 0.5]
 
-  parameter3:
+  parameter5:
     label: 'name'
     spacing: '    '
     values: [colorless, colored]
 
 # Generation
-xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_PP19.xml'
+xml_user_file: '/home/jetscape-user/JETSCAPE-analysis/test/pp/config/jetscape_user_PP19.xml'
 xml_master_file: '/home/jetscape-user/JETSCAPE/config/jetscape_master.xml'

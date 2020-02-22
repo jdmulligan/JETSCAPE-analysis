@@ -1,19 +1,55 @@
 #! /bin/bash
 
-PREFIX="/home/jetscape-user/JETSCAPE-analysis"
-OUTPUT_DIR="test/20200219"
-REFERENCE_DIR="test/20200218"
+JETSCAPE_ANALYSIS="/home/jetscape-user/JETSCAPE-analysis"
+ANALYSIS_CONFIG="${JETSCAPE_ANALYSIS}/test/pp/config/jetscapeTestConfig.yaml"
+OUTPUT_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200221"
+REFERENCE_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200220"
+
+#  Parse command line options
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -j)
+    JETSCAPE_ANALYSIS="$2"
+    shift # remove argument
+    shift # remove value
+    ;;
+    -c)
+    ANALYSIS_CONFIG="$2"
+    shift
+    shift
+    ;;
+    -o)
+    OUTPUT_DIR="$2"
+    shift
+    shift
+    ;;
+    -r)
+    REFERENCE_DIR="$2"
+    shift
+    shift
+    ;;
+esac
+done
 
 echo ""
 echo "Running Tests..."
 echo ""
 
-cd $PREFIX/jetscape_analysis/generate
-python jetscape_events.py -c $PREFIX/config/jetscapeTestConfig.yaml -o $PREFIX/$OUTPUT_DIR
+cd ${JETSCAPE_ANALYSIS}/jetscape_analysis/generate
+python jetscape_events.py -c ${ANALYSIS_CONFIG} -o ${OUTPUT_DIR}
 
 echo ""
 echo "Comparing tests in $OUTPUT_DIR to Reference in $REFERENCE_DIR ..."
 echo ""
+
+if [ ! -d $OUTPUT_DIR ]
+then
+  mkdir -p $OUTPUT_DIR
+fi
 
 N=0
 N_PASSED_HEPMC=0
@@ -22,14 +58,14 @@ cd $PREFIX/$OUTPUT_DIR
 for dir in */ ; do
   N=$((N+1))
   
-  DIFF_HEPMC=$(diff $PREFIX/$OUTPUT_DIR/$dir/test_out.hepmc $PREFIX/$REFERENCE_DIR/${dir}test_out.hepmc)
+  DIFF_HEPMC=$(diff $OUTPUT_DIR/$dir/test_out.hepmc $REFERENCE_DIR/${dir}test_out.hepmc)
   if [ $? -ne 0 ]
   then
     echo "Error: Check whether you have used the same YAML config for the Test and the Reference"
     exit 1
   fi
   
-  DIFF_ASCII=$(diff $PREFIX/$OUTPUT_DIR/$dir/test_out.dat $PREFIX/$REFERENCE_DIR/${dir}test_out.dat)
+  DIFF_ASCII=$(diff $OUTPUT_DIR/$dir/test_out.dat $REFERENCE_DIR/${dir}test_out.dat)
   if [ $? -ne 0 ]
   then
     echo "Error: Check whether you have used the same YAML config for the Test and the Reference"
@@ -65,5 +101,3 @@ else
   exit 1
 fi
 echo ""
-
-
