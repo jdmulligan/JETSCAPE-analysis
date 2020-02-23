@@ -12,6 +12,7 @@ jobs:
     
     container:
       image: jetscape/base:v1.3
+      options: --user $(id -u):$(id -g)
       
     steps:
       
