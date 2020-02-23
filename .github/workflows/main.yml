@@ -15,9 +15,11 @@ jobs:
     steps:
     - name: printout
       run: |
-        pwd
-        ls
         echo $USER 
+        pwd
+        
+    - name: set permissions
+      run: sudo chown -R $USER:$GROUP .
       
     - name: Checkout JETSCAPE-analysis
       uses: actions/checkout@v2
