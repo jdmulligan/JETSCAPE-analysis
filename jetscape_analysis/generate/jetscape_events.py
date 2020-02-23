@@ -7,7 +7,7 @@
   specified parameter values will be generated.
 
   Run from inside the JETSCAPE docker container with:
-    python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir
+    python generate_jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /my/outputdir -j /path/to/JETSCAPE
 
 .. codeauthor:: James Mulligan <james.mulligan@berkeley.edu>, UC Berkeley
 """
@@ -33,10 +33,11 @@ class generate_jetscape_events(common_base.common_base):
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
-    def __init__(self, config_file="", output_dir="", **kwargs):
+    def __init__(self, config_file="", output_dir="", jetscape_dir="", **kwargs):
         super(generate_jetscape_events, self).__init__(**kwargs)
         self.config_file = config_file
         self.output_dir = output_dir
+        self.jetscape_dir = jetscape_dir
 
         # Create output dir
         if not self.output_dir.endswith("/"):
@@ -156,7 +157,7 @@ class generate_jetscape_events(common_base.common_base):
             # Run Jetscape executable
             logfile_name = os.path.join(output_dir_bin, "log_{}_{}.txt".format(pt_hat_bin, dir_label))
             with open(logfile_name, "w") as logfile:
-                cmd = "/home/jetscape-user/JETSCAPE/build/runJetscape jetscape_user.xml jetscape_master.xml"
+                cmd = '{}/build/runJetscape jetscape_user.xml jetscape_master.xml'.format(self.jetscape_dir)
                 subprocess.run(cmd, check=True, shell=True, stdout=logfile)
             os.chdir(self.output_dir)
 
@@ -182,6 +183,15 @@ if __name__ == "__main__":
         default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
         help="Output directory for output to be written to",
     )
+    parser.add_argument(
+        "-j",
+        "--jetscapeDir",
+        action="store",
+        type=str,
+        metavar="jetscapeDir",
+        default="/home/jetscape-user/JETSCAPE",
+        help="Location of JETSCAPE repository",
+    )
 
     # Parse the arguments
     args = parser.parse_args()
@@ -191,5 +201,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.configFile))
         sys.exit(0)
 
-    analysis = generate_jetscape_events(config_file=args.configFile, output_dir=args.outputDir)
+    analysis = generate_jetscape_events(config_file=args.configFile, output_dir=args.outputDir, jetscape_dir=args.jetscapeDir)
     analysis.generate_jetscape_events()
