@@ -34,8 +34,7 @@ python jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetsca
 
 where `jetscapeAnalysisConfig.yaml` should be edited to specify the pt-hat bins and JETSCAPE XML configuration paths,
 and `outputdir` specifies where the JETSCAPE output files will be written.
-Note that the machinery here only modifies the pt-hat bins in the JETSCAPE XML configuration -- all other settings should
-be set manually (which modules to include, output format type, etc.).
+Note that the machinery here only modifies the pt-hat bins and (optionally) other parameter values in the JETSCAPE XML configuration -- but does not allow to change which modules are present.
 
 That's it! The script will write a separate sub-directory with JETSCAPE events for each pt-hat bin.
 
