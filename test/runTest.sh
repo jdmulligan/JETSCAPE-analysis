@@ -3,8 +3,8 @@
 JETSCAPE="/home/jetscape-user/JETSCAPE"
 JETSCAPE_ANALYSIS="/home/jetscape-user/JETSCAPE-analysis"
 ANALYSIS_CONFIG="${JETSCAPE_ANALYSIS}/test/pp/config/jetscapeTestConfig.yaml"
-OUTPUT_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200221"
-REFERENCE_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200220"
+OUTPUT_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/new"
+REFERENCE_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200221"
 
 #  Parse command line options
 POSITIONAL=()

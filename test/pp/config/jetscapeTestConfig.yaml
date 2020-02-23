@@ -37,5 +37,5 @@ parameter_scan:
     values: [colorless, colored]
 
 # Generation
-xml_user_file: '/home/jetscape-user/JETSCAPE-analysis/test/pp/config/jetscape_user_PP19.xml'
-xml_master_file: '/home/jetscape-user/JETSCAPE/config/jetscape_master.xml'
+xml_user_file: '${GITHUB_WORKSPACE}/JETSCAPE-analysis/test/pp/config/jetscape_user_PP19.xml'
+xml_master_file: '${GITHUB_WORKSPACE}/JETSCAPE/config/jetscape_master.xml'
