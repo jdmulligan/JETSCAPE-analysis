@@ -10,16 +10,15 @@ jobs:
     name: test pr
     runs-on: ubuntu-latest
     
-    container: jetscape/base:v1.3
+    container: 
+      image: jetscape/base:v1.3
+      options: --user root
       
     steps:
     - name: printout
       run: |
         echo $USER 
         pwd
-        
-    - name: set permissions
-      run: sudo chown -R $USER:$GROUP .
       
     - name: Checkout JETSCAPE-analysis
       uses: actions/checkout@v2
