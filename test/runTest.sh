@@ -1,5 +1,6 @@
 #! /bin/bash
 
+JETSCAPE="/home/jetscape-user/JETSCAPE"
 JETSCAPE_ANALYSIS="/home/jetscape-user/JETSCAPE-analysis"
 ANALYSIS_CONFIG="${JETSCAPE_ANALYSIS}/test/pp/config/jetscapeTestConfig.yaml"
 OUTPUT_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200221"
@@ -13,6 +14,11 @@ key="$1"
 
 case $key in
     -j)
+    JETSCAPE="$2"
+    shift # remove argument
+    shift # remove value
+    ;;
+    -a)
     JETSCAPE_ANALYSIS="$2"
     shift # remove argument
     shift # remove value
@@ -40,7 +46,7 @@ echo "Running Tests..."
 echo ""
 
 cd ${JETSCAPE_ANALYSIS}/jetscape_analysis/generate
-python jetscape_events.py -c ${ANALYSIS_CONFIG} -o ${OUTPUT_DIR}
+python jetscape_events.py -c ${ANALYSIS_CONFIG} -o ${OUTPUT_DIR} -j ${JETSCAPE}
 
 echo ""
 echo "Comparing tests in $OUTPUT_DIR to Reference in $REFERENCE_DIR ..."
