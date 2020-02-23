@@ -15,10 +15,6 @@ jobs:
       options: --user root
       
     steps:
-    - name: printout
-      run: |
-        echo $USER 
-        pwd
       
     - name: Checkout JETSCAPE-analysis
       uses: actions/checkout@v2
@@ -28,4 +24,12 @@ jobs:
       with:
         repository: JETSCAPE/JETSCAPE
         path: JETSCAPE
+        
+    - name: Build JETSCAPE
+      run: |
+        cd $GITHUB_WORKSPACE/JETSCAPE
+        mkdir build
+        cd build
+        cmake ..
+        make
       
