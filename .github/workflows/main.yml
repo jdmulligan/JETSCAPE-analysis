@@ -10,17 +10,15 @@ jobs:
     name: test pr
     runs-on: ubuntu-latest
     
-    container:
-      image: jetscape/base:v1.3
-      options: --user $(id -u):$(id -g)
+    container: jetscape/base:v1.3
       
     steps:
       
-    - name: Checkout JETSCAPE-analysis
-      uses: actions/checkout@v2
-        
     - name: Checkout JETSCAPE
       uses: actions/checkout@v2
       with:
         repository: JETSCAPE/JETSCAPE
         path: JETSCAPE
+      
+    - name: Checkout JETSCAPE-analysis
+      uses: actions/checkout@v2
