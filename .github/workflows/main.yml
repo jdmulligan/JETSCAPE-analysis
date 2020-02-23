@@ -14,11 +14,11 @@ jobs:
       
     steps:
       
+    - uses: actions/checkout@v2
+
     - name: Checkout JETSCAPE
       uses: actions/checkout@v2
       with:
         repository: JETSCAPE/JETSCAPE
         path: JETSCAPE
       
-    - name: Checkout JETSCAPE-analysis
-      uses: actions/checkout@v2
