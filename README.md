@@ -1,6 +1,6 @@
 # JETSCAPE-analysis
 
-This repository contains basic tools to generate and analyze Jetscape events in HepMC3 format.
+This repository contains basic tools to generate and analyze Jetscape events in HepMC3 and/or Ascii format.
 
 It is written entirely in python -- leveraging c++ underneath where necessary -- no compilation necessary!
 
