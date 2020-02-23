@@ -3,7 +3,7 @@ name: pp test
 on:
   pull_request:
     branches:
-      - test-james
+      - master
 
 jobs:
   build:
