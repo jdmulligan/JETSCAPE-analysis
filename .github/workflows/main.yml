@@ -10,17 +10,17 @@ jobs:
     name: test pr
     runs-on: ubuntu-latest
     
-    container: 
-      image: jetscape/base:v1.3
-      options: -it
+    container: jetscape/base:v1.3
       
     steps:
-    - run: |
+    - name: printout
+      run: |
         pwd
         ls
         echo $USER 
       
-    - uses: actions/checkout@v2
+    - name: Checkout JETSCAPE-analysis
+      uses: actions/checkout@v2
 
     - name: Checkout JETSCAPE
       uses: actions/checkout@v2
