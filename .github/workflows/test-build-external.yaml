@@ -39,5 +39,5 @@ jobs:
         cd $GITHUB_WORKSPACE/JETSCAPE
         mkdir build
         cd build
-        cmake .. -DUSE_MUSIC=ON -DUSE_ISS=ON -DUSE_FREESTREAM=ON -DUSE_SMASH=ON
+        cmake .. -Dmusic=ON -DiSS=ON -Dfreestream=ON -Dsmash=ON
         make -j2
