@@ -22,6 +22,7 @@ import subprocess
 import sys
 import yaml
 import itertools
+import re
 
 # Base class
 sys.path.append('../..')
@@ -71,9 +72,8 @@ class generate_jetscape_events(common_base.common_base):
     # ---------------------------------------------------------------
     def generate_jetscape_events(self):
 
-        # Store list of parameter labels and formatting
+        # Store list of parameter labels
         parameter_labels = [self.parameter_scan_dict[key]['label'] for key in self.parameter_scan_dict]
-        parameter_spacings = [self.parameter_scan_dict[key]['spacing'] for key in self.parameter_scan_dict]
 
         # Create list of all combinations of parameters
         parameter_values = [self.parameter_scan_dict[key]['values'] for key in self.parameter_scan_dict]
@@ -127,7 +127,6 @@ class generate_jetscape_events(common_base.common_base):
             for index, value in enumerate(parameter_combination):
             
                 parameter_label = parameter_labels[index]
-                parameter_spacing = parameter_spacings[index]
             
                 # Set pt-hat
                 if parameter_label == 'pt_hat_bins':
@@ -135,9 +134,9 @@ class generate_jetscape_events(common_base.common_base):
                     for line in fileinput.input(xml_user_file_copy, inplace=True):
                 
                         if 'pTHatMin' in line:
-                            print('{}<pTHatMin>{}</pTHatMin>'.format(parameter_spacing, pt_hat_min))
+                            print(re.sub(r'{0}*{0}'.format('pTHatMin', 'pTHatMin'), '{0}>{1}<{0}'.format('pTHatMin', pt_hat_min), line), end='')
                         elif 'pTHatMax' in line:
-                            print('{}<pTHatMax>{}</pTHatMax>'.format(parameter_spacing, pt_hat_max))
+                            print(re.sub(r'{0}*{0}'.format('pTHatMax', 'pTHatMax'), '{0}>{1}<{0}'.format('pTHatMax', pt_hat_max), line), end='')
                         else:
                             print(line, end='')
                       
@@ -147,7 +146,7 @@ class generate_jetscape_events(common_base.common_base):
                     for line in fileinput.input(xml_user_file_copy, inplace=True):
                     
                         if parameter_label in line:
-                            print('{}<{}>{}</{}>'.format(parameter_spacing, parameter_label, value, parameter_label))
+                            print(re.sub(r'{0}*{0}'.format(parameter_label), '{0}>{1}<{0}'.format(parameter_label, value), line), end='')
                         else:
                             print(line, end='')
 
