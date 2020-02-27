@@ -41,6 +41,14 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/JETSCAPE/external_packages
         ./get_smash.sh
+      
+    - name: Print env
+      run: |
+        echo "1: $JETSCAPE_DIR"
+        echo "2: $SMASH_DIR"
+        echo "3: $EIGEN3_ROOT"
+        echo "4: $PYTHIA8DIR"
+        echo "5: $PYTHIA8_ROOT_DIR"
     
     - name: Build JETSCAPE
       run: |
