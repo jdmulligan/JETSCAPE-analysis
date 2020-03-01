@@ -21,7 +21,9 @@ import sys
 # Analysis
 import tqdm
 import yaml
+import itertools
 
+sys.path.append('../..')
 from jetscape_analysis.analysis import example_analysis, scale_histograms
 from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
 from jetscape_analysis.base import common_base
@@ -32,11 +34,14 @@ class analyze_jetscape_events(common_base.common_base):
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
-    def __init__(self, config_file="", input_file="", output_dir="", **kwargs):
+    def __init__(self, config_file="", input_dir="", output_dir="", **kwargs):
         super(analyze_jetscape_events, self).__init__(**kwargs)
         self.config_file = config_file
-        self.input_file = input_file
+        self.input_dir = input_dir
         self.output_dir = output_dir
+
+        if not self.input_dir.endswith("/"):
+            self.input_dir = self.input_dir + "/"
 
         # Create output dir
         if not self.output_dir.endswith("/"):
@@ -56,9 +61,11 @@ class analyze_jetscape_events(common_base.common_base):
         # Read config file
         with open(self.config_file, "r") as stream:
             config = yaml.safe_load(stream)
+            
+        self.parameter_scan_dict = config['parameter_scan']
+        self.pt_hat_bins = self.parameter_scan_dict['pt_hat_bins']['values']
 
         self.debug_level = config["debug_level"]
-        self.pt_hat_bins = config["pt_hat_bins"]
         self.n_event_max = config["n_event_max"]
         self.reader_type = config["reader"]
         self.scale_histograms = config["scale_histograms"]
@@ -68,32 +75,58 @@ class analyze_jetscape_events(common_base.common_base):
     # Main processing function
     # ---------------------------------------------------------------
     def analyze_jetscape_events(self):
+    
+        # Store list of parameter labels
+        parameter_labels = [self.parameter_scan_dict[key]['label'] for key in self.parameter_scan_dict]
 
-        # Loop through pT-hat bins
-        for bin, pt_hat_min in enumerate(self.pt_hat_bins):
+        # Create list of all combinations of parameters
+        parameter_values = [self.parameter_scan_dict[key]['values'] for key in self.parameter_scan_dict]
+        parameter_combinations = list(itertools.product(*parameter_values))
+    
+        # Remove that last pt-hat bin edge
+        n_combinations_per_pthat = int(len(parameter_combinations)/len(self.pt_hat_bins))
+        parameter_combinations = parameter_combinations[:-n_combinations_per_pthat]
 
-            # Set min,max of pT-hat bin
-            if bin < (len(self.pt_hat_bins) - 1):
-                pt_hat_max = self.pt_hat_bins[bin + 1]
-                print("PtHat: {} - {}".format(pt_hat_min, pt_hat_max))
+        # Loop through all parameter combinations
+        for index, parameter_combination in enumerate(parameter_combinations):
+        
+            pt_hat_bin = int(index / n_combinations_per_pthat)
+            if pt_hat_bin < len(self.pt_hat_bins) - 1:
+                pt_hat_min = self.pt_hat_bins[pt_hat_bin]
+                pt_hat_max = self.pt_hat_bins[pt_hat_bin + 1]
             else:
                 continue
+            if index % n_combinations_per_pthat == 0:
+                print('Analyzing pt-hat: {} - {} ...'.format(pt_hat_min, pt_hat_max))
 
-            # Get outputDir for each bin
-            output_dir_bin = "{}{}".format(self.output_dir, bin)
+            # Create label for output directory
+            dir_label = ''
+            for index, value in enumerate(parameter_combination):
+                if index == 0:
+                    dir_label += str(pt_hat_bin)
+                    continue
+                dir_label += '_'
+                dir_label += parameter_labels[index]
+                dir_label += str(value)
+            if len(parameter_combination) > 1:
+                print('    Analyzing {}'.format(dir_label))
+                
+            # Create outputDir for each bin
+            output_dir_bin = '{}{}'.format(self.output_dir, dir_label)
             if not output_dir_bin.endswith("/"):
                 output_dir_bin = output_dir_bin + "/"
             if not os.path.exists(output_dir_bin):
-                print("output_dir_bin {} does not exist!".format(bin))
-
+                os.makedirs(output_dir_bin)
+    
             # Read HepMC output, get hadrons, do jet finding, and write histograms to ROOT file
-            input_file = os.path.join(output_dir_bin, "test_out.hepmc")
-            self.run_jetscape_analysis(input_file, output_dir_bin, bin)
+            input_dir_bin = '{}{}'.format(self.input_dir, dir_label)
+            input_file = os.path.join(input_dir_bin, "test_out.hepmc")
+            self.run_jetscape_analysis(input_file, output_dir_bin, pt_hat_bin)
 
             # Scale histograms according to pthard bins cross-section
             if self.scale_histograms:
                 print("Scaling pt-hat bins...")
-                scale_histograms.scaleHistograms(output_dir_bin, bin)
+                scale_histograms.scaleHistograms(output_dir_bin, pt_hat_bin)
 
         # Merge all pthard bins into a single output file
         if self.merge_histograms:
@@ -103,7 +136,7 @@ class analyze_jetscape_events(common_base.common_base):
     # ---------------------------------------------------------------
     # Main processing function for a single pt-hat bin
     # ---------------------------------------------------------------
-    def run_jetscape_analysis(self, input_file, output_dir_bin, bin):
+    def run_jetscape_analysis(self, input_file, output_dir_bin, pt_hat_bin):
 
         # Create reader class
         if self.reader_type == "hepmc":
@@ -112,7 +145,7 @@ class analyze_jetscape_events(common_base.common_base):
             reader = reader_ascii.reader_ascii(input_file)
 
         # Create analysis task
-        analyzer = example_analysis.example_analysis(self.config_file, input_file, output_dir_bin, bin)
+        analyzer = example_analysis.example_analysis(self.config_file, input_file, output_dir_bin, pt_hat_bin)
 
         # Initialize analysis output objects
         analyzer.initialize_output_objects()
@@ -148,6 +181,15 @@ if __name__ == "__main__":
         help="Path of config file for analysis",
     )
     parser.add_argument(
+        "-i",
+        "--inputDir",
+        action="store",
+        type=str,
+        metavar="inputDir",
+        default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
+        help="Input directory containing JETSCAPE output files",
+    )
+    parser.add_argument(
         "-o",
         "--outputDir",
         action="store",
@@ -165,10 +207,10 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.configFile))
         sys.exit(0)
 
-    # If invalid outputDir is given, exit
-    if not os.path.exists(args.outputDir):
-        print('File "{0}" does not exist! Exiting!'.format(args.outputDir))
+    # If invalid inputDir is given, exit
+    if not os.path.exists(args.inputDir):
+        print('File "{0}" does not exist! Exiting!'.format(args.inputDir))
         sys.exit(0)
 
-    analysis_manager = analyze_jetscape_events(config_file=args.configFile, output_dir=args.outputDir)
+    analysis_manager = analyze_jetscape_events(config_file=args.configFile, input_dir=args.inputDir, output_dir=args.outputDir)
     analysis_manager.analyze_jetscape_events()
