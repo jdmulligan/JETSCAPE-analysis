@@ -45,10 +45,14 @@ class example_analysis(common_base.common_base):
         with open(self.config_file, "r") as stream:
             config = yaml.safe_load(stream)
 
+        self.parameter_scan_dict = config['parameter_scan']
+        self.n_pt_hat_bins = len(self.parameter_scan_dict['pt_hat_bins']['values'])
+
         self.debug_level = config["debug_level"]
         self.jetR_list = config["jetR"]
         self.min_jet_pt = config["min_jet_pt"]
         self.abs_jet_eta_max = config["abs_jet_eta_max"]
+        self.reader = config['reader']
         self.event_id = 0
 
     # ---------------------------------------------------------------
@@ -57,8 +61,8 @@ class example_analysis(common_base.common_base):
     def initialize_output_objects(self):
 
         # Event histograms
-        self.hNevents = ROOT.TH1F("hNevents", "hNevents", 20, 0, 20)
-        self.hCrossSection = ROOT.TH1F("hCrossSection", "hCrossSection", 20, 0, 20)
+        self.hNevents = ROOT.TH1F("hNevents", "hNevents", self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
+        self.hCrossSection = ROOT.TH1F("hCrossSection", "hCrossSection", self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
 
         # Hadron histograms
         self.hHadronN = ROOT.TH1F("hHadronN", "hHadronN", 1000, 0, 1000)
@@ -128,22 +132,17 @@ class example_analysis(common_base.common_base):
     # ---------------------------------------------------------------
     def get_event_info(self, event):
 
-        # Get cross-section
-        # cross_section = event.GenCrossSection
-        # fCrossSection = cross_section.xsec(0)
-        # xsec_error = cross_section.xsec_err(0)
-
         # Print some basic info for first event
-        # if self.event_id == 0:
+        if self.event_id == 0:
 
-        # print('xsec: {} +/- {} pb'.format(fCrossSection, xsec_error))
-
-        # Get heavy ion attributes
-        # heavy_ion = event.GenHeavyIon
-        # nColl = heavy_ion.Ncoll
-        # nPart = heavy_ion.Npart_proj
-        # eventPlaneAngle = heavy_ion.event_plane_angle
-        # print('NColl = {}, NPart = {}, EP-angle = {}'.format(nColl, nPart, eventPlaneAngle))
+            # Get heavy ion attributes
+            heavy_ion = event.heavy_ion()
+            # However it seems that pyhepmc_ng doesn't implement most of these...
+            #print(dir(heavy_ion))
+            #nColl = heavy_ion.Ncoll
+            #nPart = heavy_ion.Npart_proj
+            #eventPlaneAngle = heavy_ion.event_plane_angle
+            #print('NColl = {}, NPart = {}, EP-angle = {}'.format(nColl, nPart, eventPlaneAngle))
 
         self.event_id += 1
 
@@ -231,7 +230,10 @@ class example_analysis(common_base.common_base):
     def write_output_objects(self):
 
         # Fill cross-section with last event's value, which is most accurate
-        # self.hCrossSection(fCrossSection/(1e9))
+        xsec = self.cross_section()
+        self.hCrossSection.SetBinContent(self.bin+1, xsec)
+        
+        # Set N events
         self.hNevents.SetBinContent(self.bin + 1, self.event_id)
 
         # Save output objects
@@ -248,6 +250,34 @@ class example_analysis(common_base.common_base):
                 obj.Write()
 
         fout.Close()
+
+    # ---------------------------------------------------------------
+    # Get cross-section from last event JETSCAPE output file
+    #
+    # It seems that pyhepmc_ng doesn't contain GenCrossSection, so we need to find it manually
+    # Similarly, we find the cross-section manually for ascii format.
+    # ---------------------------------------------------------------
+    def cross_section(self):
+        
+        # Fill array of cross-sections
+        cross_sections = []
+        with open(self.input_file, 'r') as infile:
+            for line in infile:
+            
+                if self.reader == 'hepmc':
+                    if 'GenCrossSection' in line:
+                        split = line.split()
+                        xsec = float(split[3]) / 1e9
+                        cross_sections.append(xsec)
+            
+                elif self.reader == 'ascii':
+                    if 'sigmaGen' in line:
+                        split = line.split()
+                        xsec = float(split[2])
+                        cross_sections.append(line)
+                        
+        # Return cross-section with last event's value, which is most accurate
+        return cross_sections[-1]
 
     # ---------------------------------------------------------------
     # Remove periods from a label
