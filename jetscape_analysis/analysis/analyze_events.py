@@ -24,6 +24,7 @@ import yaml
 import itertools
 
 sys.path.append('../..')
+sys.path.append('.')
 from jetscape_analysis.analysis import example_analysis, scale_histograms
 from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
 from jetscape_analysis.base import common_base
@@ -59,17 +60,18 @@ class AnalyzeJetscapeEvents(common_base.CommonBase):
     def initialize_config(self):
 
         # Read config file
-        with open(self.config_file, "r") as stream:
+        with open(self.config_file, 'r') as stream:
             config = yaml.safe_load(stream)
             
         self.parameter_scan_dict = config['parameter_scan']
         self.pt_hat_bins = self.parameter_scan_dict['pt_hat_bins']['values']
 
-        self.debug_level = config["debug_level"]
-        self.n_event_max = config["n_event_max"]
-        self.reader_type = config["reader"]
-        self.scale_histograms = config["scale_histograms"]
-        self.merge_histograms = config["merge_histograms"]
+        self.debug_level = config['debug_level']
+        self.n_event_max = config['n_event_max']
+        self.reader_type = config['reader']
+        self.progress_bar = config['progress_bar']
+        self.scale_histograms = config['scale_histograms']
+        self.merge_histograms = config['merge_histograms']
 
     # ---------------------------------------------------------------
     # Main processing function
@@ -151,17 +153,22 @@ class AnalyzeJetscapeEvents(common_base.CommonBase):
         analyzer.initialize_output_objects()
 
         # Iterate through events
-        pbar = tqdm.tqdm(range(self.n_event_max))
+        if self.progress_bar:
+            pbar = tqdm.tqdm(range(self.n_event_max))
         for event in reader(n_events=self.n_event_max):
 
             if not event:
-                nstop = pbar.n
-                pbar.close()
-                print("End of HepMC file at event {} ".format(nstop))
+                if self.progress_bar:
+                    nstop = pbar.n
+                    pbar.close()
+                    print("End of HepMC file at event {} ".format(nstop))
+                else:
+                    print("End of HepMC file.")
                 break
 
             analyzer.analyze_event(event)
-            pbar.update()
+            if self.progress_bar:
+                pbar.update()
 
         # Write analysis task output to ROOT file
         analyzer.write_output_objects()

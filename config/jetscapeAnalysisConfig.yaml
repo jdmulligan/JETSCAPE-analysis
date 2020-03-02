@@ -30,6 +30,6 @@ abs_jet_eta_max: [0.3, 2.0, 2.8]
 
 n_event_max: 10000
 reader: hepmc
-
+progress_bar: True
 scale_histograms: True
 merge_histograms: True
