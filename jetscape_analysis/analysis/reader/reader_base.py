@@ -12,13 +12,13 @@ from __future__ import print_function
 from jetscape_analysis.base import common_base
 
 ################################################################
-class reader_base(common_base.common_base):
+class ReaderBase(common_base.CommonBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, input_file="", **kwargs):
-        super(reader_base, self).__init__(**kwargs)
+        super(ReaderBase, self).__init__(**kwargs)
 
     # ---------------------------------------------------------------
     # Generator (in pythonic sense) to loop over all events

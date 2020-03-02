@@ -29,13 +29,13 @@ from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
 from jetscape_analysis.base import common_base
 
 ################################################################
-class analyze_jetscape_events(common_base.common_base):
+class AnalyzeJetscapeEvents(common_base.CommonBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file="", input_dir="", output_dir="", **kwargs):
-        super(analyze_jetscape_events, self).__init__(**kwargs)
+        super(AnalyzeJetscapeEvents, self).__init__(**kwargs)
         self.config_file = config_file
         self.input_dir = input_dir
         self.output_dir = output_dir
@@ -126,7 +126,7 @@ class analyze_jetscape_events(common_base.common_base):
             # Scale histograms according to pthard bins cross-section
             if self.scale_histograms:
                 print("Scaling pt-hat bins...")
-                scale_histograms.scaleHistograms(output_dir_bin, pt_hat_bin)
+                scale_histograms.scale_histograms(output_dir_bin, pt_hat_bin, bRemoveOutliers=False)
 
         # Merge all pthard bins into a single output file
         if self.merge_histograms:
@@ -140,12 +140,12 @@ class analyze_jetscape_events(common_base.common_base):
 
         # Create reader class
         if self.reader_type == "hepmc":
-            reader = reader_hepmc.reader_hepmc(input_file)
+            reader = reader_hepmc.ReaderHepMC(input_file)
         elif self.reader_type == "ascii":
-            reader = reader_ascii.reader_ascii(input_file)
+            reader = reader_ascii.ReaderAscii(input_file)
 
         # Create analysis task
-        analyzer = example_analysis.example_analysis(self.config_file, input_file, output_dir_bin, pt_hat_bin)
+        analyzer = example_analysis.ExampleAnalysis(self.config_file, input_file, output_dir_bin, pt_hat_bin)
 
         # Initialize analysis output objects
         analyzer.initialize_output_objects()
@@ -165,7 +165,6 @@ class analyze_jetscape_events(common_base.common_base):
 
         # Write analysis task output to ROOT file
         analyzer.write_output_objects()
-
 
 ##################################################################
 if __name__ == "__main__":
@@ -212,5 +211,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.inputDir))
         sys.exit(0)
 
-    analysis_manager = analyze_jetscape_events(config_file=args.configFile, input_dir=args.inputDir, output_dir=args.outputDir)
+    analysis_manager = AnalyzeJetscapeEvents(config_file=args.configFile, input_dir=args.inputDir, output_dir=args.outputDir)
     analysis_manager.analyze_jetscape_events()

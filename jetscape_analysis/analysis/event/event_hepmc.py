@@ -12,13 +12,13 @@ from __future__ import print_function
 from jetscape_analysis.analysis.event import event_base
 
 ################################################################
-class event_hepmc(event_base.event_base):
+class EventHepMC(event_base.EventBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, event="", **kwargs):
-        super(event_hepmc, self).__init__(**kwargs)
+        super(EventHepMC, self).__init__(**kwargs)
 
         self.event = event
 

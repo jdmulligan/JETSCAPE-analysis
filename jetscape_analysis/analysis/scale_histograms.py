@@ -18,11 +18,10 @@ ROOT.gROOT.SetBatch(True)
 
 ###################################################################################
 # Main function
-def scaleHistograms(outputDirBin, bin):
+def scale_histograms(outputDirBin, bin, bRemoveOutliers=False):
 
     # Option to remove outliers from specified histograms
     # If the average bin content stays below the "outlierLimit" for "outlierNBinsThreshold" bins, it is removed
-    bRemoveOutliers = True
     outlierLimit = 2
     outlierNBinsThreshold = 4
 
@@ -45,7 +44,7 @@ def scaleHistograms(outputDirBin, bin):
             continue
         obj = f.Get(name)
         if obj:
-            ScaleAllHistograms(
+            scale_all_histograms(
                 obj,
                 scaleFactor,
                 f,
@@ -68,7 +67,7 @@ def scaleHistograms(outputDirBin, bin):
 
 ###################################################################################
 # Function to iterate recursively through an object to scale all TH1/TH2/THnSparse
-def ScaleAllHistograms(
+def scale_all_histograms(
     obj,
     scaleFactor,
     f,
@@ -100,7 +99,7 @@ def ScaleAllHistograms(
             name = obj.GetName()
             # only perform outlier removal on these couple histograms
             if "Pt" in name:
-                removeOutliers(
+                remove_outliers(
                     pTHardBin, EndPtHardBin, obj, verbose, outputDirBin, limit, nBinsThreshold, 1, taskName,
                 )
         obj.Scale(scaleFactor)
@@ -133,7 +132,7 @@ def ScaleAllHistograms(
 # Function to remove outliers from a TH3 (i.e. truncate the spectrum), based on projecting to the y-axis
 # It truncates the 3D histogram based on when the 1D projection 4-bin moving average has been above
 # "limit" for "nBinsThreshold" bins.
-def removeOutliers(
+def remove_outliers(
     pTHardBin, EndPtHardBin, hist, verbose, outputDirBin, limit=2, nBinsThreshold=4, dimension=3, taskName="",
 ):
 
@@ -154,12 +153,12 @@ def removeOutliers(
     # nBinsThreshold= n bins that are below threshold before all bins are cut
 
     if verbose:
-        (preMean, preMedian) = GetHistMeanAndMedian(histToCheck)
+        (preMean, preMedian) = mean_and_median(histToCheck)
 
     for index in range(0, histToCheck.GetNcells()):
         if verbose:
             print("---------")
-        avg = MovingAverage(histToCheck, index=index, numberOfCountsBelowIndex=2, numberOfCountsAboveIndex=2,)
+        avg = moving_average(histToCheck, index=index, numberOfCountsBelowIndex=2, numberOfCountsAboveIndex=2,)
         if verbose:
             print(
                 "Index: {0}, Avg: {1}, BinContent: {5}, foundAboveLimit: {2}, cutIndex: {3}, cutLimitReached: {4}".format(
@@ -242,18 +241,18 @@ def removeOutliers(
         histToCheckAfter = hist
 
     if verbose:
-        (postMean, postMedian) = GetHistMeanAndMedian(histToCheckAfter)
+        (postMean, postMedian) = get_hist_mean_and_median(histToCheckAfter)
         print("Pre  outliers removal mean: {}, median: {}".format(preMean, preMedian))
         print("Post outliers removal mean: {}, median: {}".format(postMean, postMedian))
     outlierFilename = "{}OutlierRemoval_{}.pdf".format(outputDirBin, hist.GetName())
     if "Pt" in hist.GetName():
-        plotOutlierPDF(
+        plot_outlier_PDF(
             histToCheck, histToCheckAfter, pTHardBin, EndPtHardBin, outlierFilename, verbose, "hist E", True,
         )
 
 
 ########################################################################################################
-def GetHistMeanAndMedian(hist):
+def get_hist_mean_and_median(hist):
     # Median
     # See: https://root-forum.cern.ch/t/median-of-histogram/7626/5
     x = ctypes.c_double(0)
@@ -267,7 +266,7 @@ def GetHistMeanAndMedian(hist):
 
 
 ########################################################################################################
-def MovingAverage(hist, index, numberOfCountsBelowIndex=0, numberOfCountsAboveIndex=2):
+def moving_average(hist, index, numberOfCountsBelowIndex=0, numberOfCountsAboveIndex=2):
     """
   # [-2, 2] includes -2, -1, 0, 1, 2
   """
@@ -295,7 +294,7 @@ def MovingAverage(hist, index, numberOfCountsBelowIndex=0, numberOfCountsAboveIn
 ########################################################################################################
 # Plot basic histogram    ##############################################################################
 ########################################################################################################
-def plotOutlierPDF(
+def plot_outlier_PDF(
     h, hAfter, pTHardBin, EndPtHardBin, outputFilename, verbose, drawOptions="", setLogy=False,
 ):
 
@@ -335,31 +334,7 @@ def plotOutlierPDF(
 
     c.Close()
 
-
-########################################################################################################
-# Get Jet radius from list analysis label                       #############################################
-########################################################################################################
-def getRadiusFromlistName(listName):
-
-    radius = 0.0
-    if "01" in listName:
-        radius = 0.1
-    if "02" in listName:
-        radius = 0.2
-    elif "03" in listName:
-        radius = 0.3
-    elif "04" in listName:
-        radius = 0.4
-    elif "05" in listName:
-        radius = 0.5
-    elif "06" in listName:
-        radius = 0.6
-    return radius
-
-
 # ---------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-    print("Executing scalePtHardHistos.py...")
+    print("Executing scale_histograms.py...")
     print("")
-
-    # scalePtHardHistos(outputDirBin, bin)

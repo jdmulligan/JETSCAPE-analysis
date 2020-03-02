@@ -29,13 +29,13 @@ sys.path.append('../..')
 from jetscape_analysis.base import common_base
 
 ################################################################
-class generate_jetscape_events(common_base.common_base):
+class GenerateJetscapeEvents(common_base.CommonBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file="", output_dir="", jetscape_dir="", **kwargs):
-        super(generate_jetscape_events, self).__init__(**kwargs)
+        super(GenerateJetscapeEvents, self).__init__(**kwargs)
         self.config_file = config_file
         self.output_dir = output_dir
         self.jetscape_dir = jetscape_dir
@@ -200,5 +200,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.configFile))
         sys.exit(0)
 
-    analysis = generate_jetscape_events(config_file=args.configFile, output_dir=args.outputDir, jetscape_dir=args.jetscapeDir)
+    analysis = GenerateJetscapeEvents(config_file=args.configFile, output_dir=args.outputDir, jetscape_dir=args.jetscapeDir)
     analysis.generate_jetscape_events()

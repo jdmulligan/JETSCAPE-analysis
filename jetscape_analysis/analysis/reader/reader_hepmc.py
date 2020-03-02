@@ -18,13 +18,13 @@ from event import event_hepmc
 from reader import reader_base
 
 ################################################################
-class reader_hepmc(reader_base.reader_base):
+class ReaderHepMC(reader_base.ReaderBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, input_file="", **kwargs):
-        super(reader_hepmc, self).__init__(**kwargs)
+        super(ReaderHepMC, self).__init__(**kwargs)
 
         # Create reader
         self.reader = pyhepmc_ng.ReaderAscii(input_file)
@@ -44,5 +44,5 @@ class reader_hepmc(reader_base.reader_base):
         if self.reader.failed():
             return False
         else:
-            ev = event_hepmc.event_hepmc(event)
+            ev = event_hepmc.EventHepMC(event)
             return ev

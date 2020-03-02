@@ -21,13 +21,13 @@ from jetscape_analysis.analysis.event import event_hepmc
 from jetscape_analysis.base import common_base
 
 ################################################################
-class example_analysis(common_base.common_base):
+class ExampleAnalysis(common_base.CommonBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file="", input_file="", output_dir="", bin="", **kwargs):
-        super(example_analysis, self).__init__(**kwargs)
+        super(ExampleAnalysis, self).__init__(**kwargs)
         self.config_file = config_file
         self.input_file = input_file
         self.output_dir = output_dir
@@ -133,10 +133,10 @@ class example_analysis(common_base.common_base):
     def get_event_info(self, event):
 
         # Print some basic info for first event
-        if self.event_id == 0:
+        #if self.event_id == 0:
 
             # Get heavy ion attributes
-            heavy_ion = event.heavy_ion()
+            #heavy_ion = event.heavy_ion()
             # However it seems that pyhepmc_ng doesn't implement most of these...
             #print(dir(heavy_ion))
             #nColl = heavy_ion.Ncoll

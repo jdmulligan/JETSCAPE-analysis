@@ -15,13 +15,13 @@ from event import event_ascii
 from reader import reader_base
 
 ################################################################
-class reader_ascii(reader_base.reader_base):
+class ReaderAscii(reader_base.ReaderBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, input_file="", **kwargs):
-        super(reader_ascii, self).__init__(**kwargs)
+        super(ReaderAscii, self).__init__(**kwargs)
 
         # Create reader
 

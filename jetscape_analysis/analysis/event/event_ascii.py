@@ -12,12 +12,12 @@ from __future__ import print_function
 from event import event_base
 
 ################################################################
-class event_ascii(event_base.event_base):
+class EventAscii(event_base.EventBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, event="", **kwargs):
-        super(event_ascii, self).__init__(**kwargs)
+        super(EventAscii, self).__init__(**kwargs)
 
         self.event = event
