@@ -47,7 +47,7 @@ class ExampleAnalysis(common_base.CommonBase):
             config = yaml.safe_load(stream)
 
         self.parameter_scan_dict = config['parameter_scan']
-        self.n_pt_hat_bins = len(self.parameter_scan_dict['pt_hat_bins']['values'])
+        self.n_pt_hat_bins = len(self.parameter_scan_dict['pt_hat_bins']['values']) - 1
 
         self.debug_level = config['debug_level']
         self.reader = config['reader']
