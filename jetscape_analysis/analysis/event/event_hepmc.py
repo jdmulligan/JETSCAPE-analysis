@@ -26,7 +26,7 @@ class EventHepMC(event_base.EventBase):
     # Get list of hadrons.
     # Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
     # ---------------------------------------------------------------
-    def hadrons(self):
+    def hadrons(self, min_track_pt=0.):
 
         for vertex in self.event.vertices:
 
@@ -39,8 +39,10 @@ class EventHepMC(event_base.EventBase):
         for particle in final_state_particles:
 
             pid = particle.pid
+            pt = particle.momentum.pt()
             if pid != 12 and pid != 14 and pid != 16:
-                hadrons.append(particle)
+                if pt > min_track_pt:
+                    hadrons.append(particle)
 
         return hadrons
 

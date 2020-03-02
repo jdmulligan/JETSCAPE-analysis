@@ -16,6 +16,7 @@ import fastjet as fj
 import fjext
 import ROOT
 import yaml
+from array import *
 
 from jetscape_analysis.analysis.event import event_hepmc
 from jetscape_analysis.base import common_base
@@ -26,7 +27,7 @@ class ExampleAnalysis(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
-    def __init__(self, config_file="", input_file="", output_dir="", bin="", **kwargs):
+    def __init__(self, config_file='', input_file='', output_dir='', bin='', **kwargs):
         super(ExampleAnalysis, self).__init__(**kwargs)
         self.config_file = config_file
         self.input_file = input_file
@@ -42,18 +43,22 @@ class ExampleAnalysis(common_base.CommonBase):
     def initialize_config(self):
 
         # Read config file
-        with open(self.config_file, "r") as stream:
+        with open(self.config_file, 'r') as stream:
             config = yaml.safe_load(stream)
 
         self.parameter_scan_dict = config['parameter_scan']
         self.n_pt_hat_bins = len(self.parameter_scan_dict['pt_hat_bins']['values'])
 
-        self.debug_level = config["debug_level"]
-        self.jetR_list = config["jetR"]
-        self.min_jet_pt = config["min_jet_pt"]
-        self.abs_jet_eta_max = config["abs_jet_eta_max"]
+        self.debug_level = config['debug_level']
         self.reader = config['reader']
         self.event_id = 0
+        
+        self.min_track_pt = config['min_track_pt']
+        self.abs_track_eta_max = config['abs_track_eta_max']
+        
+        self.jetR_list = config['jetR']
+        self.min_jet_pt = config['min_jet_pt']
+        self.abs_jet_eta_max = config['abs_jet_eta_max']
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -61,31 +66,49 @@ class ExampleAnalysis(common_base.CommonBase):
     def initialize_output_objects(self):
 
         # Event histograms
-        self.hNevents = ROOT.TH1F("hNevents", "hNevents", self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
-        self.hCrossSection = ROOT.TH1F("hCrossSection", "hCrossSection", self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
+        self.hNevents = ROOT.TH1F('hNevents', 'hNevents', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
+        self.hCrossSection = ROOT.TH1F('hCrossSection', 'hCrossSection', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
 
         # Hadron histograms
-        self.hHadronN = ROOT.TH1F("hHadronN", "hHadronN", 1000, 0, 1000)
-        self.hHadronPt = ROOT.TH1F("hHadronPt", "hHadronPt", 300, 0.0, 300.0)
-        self.hHadronPID = ROOT.TH1F("hHadronPID", "hHadronPID", 10000, -5000, 5000)
-        self.hHadronEtaPhi = ROOT.TH2F("hHadronEtaPhi", "hHadronEtaPhi", 100, -5, 5, 100, -3.2, 3.2)
-
-        # Final-state parton histograms
-        self.hPartonN = ROOT.TH1F("hPartonN", "hPartonN", 1000, 0, 1000)
-        self.hPartonPt = ROOT.TH1F("hPartonPt", "hPartonPt", 300, 0.0, 300.0)
-        self.hPartonPID = ROOT.TH1F("hPartonPID", "hPartonPID", 10000, -5000, 5000)
-        self.hPartonEtaPhi = ROOT.TH2F("hPartonEtaPhi", "hPartonEtaPhi", 100, -5, 5, 100, -3.2, 3.2)
+        hname = 'hHadronPt_eta{}'.format(self.abs_track_eta_max)
+        pt_bins = [9.6, 12.0, 14.4, 19.2, 24.0, 28.8, 35.2, 41.6, 48.0, 60.8, 73.6, 86.4, 103.6, 120.8, 140.0, 165.0, 250.0, 400.0]
+        n_pt_bins = len(pt_bins) - 1
+        pt_bin_array = array('d', pt_bins)
+        setattr(self, hname, ROOT.TH1F(hname, hname, n_pt_bins, pt_bin_array))
+        
+        hname = 'hHadronPID_eta{}'.format(self.abs_track_eta_max)
+        setattr(self, hname, ROOT.TH1F(hname, hname, 10000, -5000, 5000))
+        
+        hname = 'hHadronEtaPhi_eta{}'.format(self.abs_track_eta_max)
+        setattr(self, hname, ROOT.TH2F(hname, hname, 100, -5, 5, 100, -3.2, 3.2))
+        
+        # Parton histograms
+        hname = 'hPartonPt_eta{}'.format(self.abs_track_eta_max)
+        setattr(self, hname, ROOT.TH1F(hname, hname, 300, 0.0, 300.0))
+        
+        hname = 'hPartonPID_eta{}'.format(self.abs_track_eta_max)
+        setattr(self, hname, ROOT.TH1F(hname, hname, 10000, -5000, 5000))
+        
+        hname = 'hPartonEtaPhi_eta{}'.format(self.abs_track_eta_max)
+        setattr(self, hname, ROOT.TH2F(hname, hname, 100, -5, 5, 100, -3.2, 3.2))
 
         # Jet histograms
         for jetR in self.jetR_list:
+            for abs_jet_eta_max in self.abs_jet_eta_max:
 
-            name = "hJetPt_R{}".format(jetR)
-            h = ROOT.TH1F(name, name, 300, 0, 300)
-            setattr(self, name, h)
+                if abs_jet_eta_max == 2.0:
+                    pt_bins = [70, 80, 90, 100, 110, 130, 150, 170, 190, 210, 240, 270, 300]
+                else:
+                    pt_bins = [40, 50, 63, 79, 100, 126, 158, 200, 251, 316, 398, 501, 631, 800, 1000]
+                n_pt_bins = len(pt_bins) - 1
+                pt_bin_array = array('d', pt_bins)
+                hname = 'hJetPt_R{}_eta{}'.format(jetR, abs_jet_eta_max)
+                h = ROOT.TH1F(hname, hname, n_pt_bins, pt_bin_array)
+                setattr(self, hname, h)
 
-            name = "hJetEtaPhi_R{}".format(jetR)
-            h = ROOT.TH2F(name, name, 100, -5, 5, 100, -6.28, 6.28)
-            setattr(self, name, h)
+                hname = 'hJetEtaPhi_R{}_eta{}'.format(jetR, abs_jet_eta_max)
+                h = ROOT.TH2F(hname, hname, 100, -5, 5, 100, 0, 6.28)
+                setattr(self, hname, h)
 
     # ---------------------------------------------------------------
     # Analyze a single event
@@ -96,7 +119,7 @@ class ExampleAnalysis(common_base.CommonBase):
         self.get_event_info(event)
 
         # Get list of hadrons from the event, and fill some histograms
-        hadrons = event.hadrons()
+        hadrons = event.hadrons(min_track_pt=self.min_track_pt)
         self.fill_hadron_histograms(hadrons)
 
         # Get list of final-state partons from the event, and fill some histograms
@@ -109,23 +132,24 @@ class ExampleAnalysis(common_base.CommonBase):
 
         # Loop through specified jet R
         for jetR in self.jetR_list:
+            for abs_jet_eta_max in self.abs_jet_eta_max:
 
-            # Set jet definition and a jet selector
-            jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
-            jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.abs_jet_eta_max - jetR)
-            if self.debug_level > 0:
-                print("jet definition is:", jet_def)
-                print("jet selector is:", jet_selector, "\n")
+                # Set jet definition and a jet selector
+                jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
+                jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(abs_jet_eta_max)
+                if self.debug_level > 0:
+                    print('jet definition is:', jet_def)
+                    print('jet selector is:', jet_selector, '\n')
 
-            # Do jet finding
-            jets = []
-            jets_selected = []
-            cs = fj.ClusterSequence(fj_hadrons, jet_def)
-            jets = fj.sorted_by_pt(cs.inclusive_jets())
-            jets_selected = jet_selector(jets)
+                # Do jet finding
+                jets = []
+                jets_selected = []
+                cs = fj.ClusterSequence(fj_hadrons, jet_def)
+                jets = fj.sorted_by_pt(cs.inclusive_jets())
+                jets_selected = jet_selector(jets)
 
-            # Fill some jet histograms
-            self.fill_jet_histograms(jets_selected, jetR)
+                # Fill some jet histograms
+                self.fill_jet_histograms(jets_selected, jetR, abs_jet_eta_max)
 
     # ---------------------------------------------------------------
     # Get event info
@@ -137,7 +161,7 @@ class ExampleAnalysis(common_base.CommonBase):
 
             # Get heavy ion attributes
             #heavy_ion = event.heavy_ion()
-            # However it seems that pyhepmc_ng doesn't implement most of these...
+            # However it seems that pyhepmc_ng doesn't implement any of these...
             #print(dir(heavy_ion))
             #nColl = heavy_ion.Ncoll
             #nPart = heavy_ion.Npart_proj
@@ -150,7 +174,7 @@ class ExampleAnalysis(common_base.CommonBase):
     # Fill hadron histograms
     # ---------------------------------------------------------------
     def fill_hadron_histograms(self, hadrons):
-
+    
         # Loop through hadrons
         for hadron in hadrons:
 
@@ -162,12 +186,16 @@ class ExampleAnalysis(common_base.CommonBase):
             eta = momentum.eta()
             phi = momentum.phi()  # [-pi, pi]
 
-            if abs(eta) < self.abs_jet_eta_max:
-                self.hHadronPt.Fill(pt)
-                self.hHadronPID.Fill(pid)
-                self.hHadronEtaPhi.Fill(eta, phi)
-
-        self.hHadronN.Fill(len(hadrons))
+            if abs(eta) < self.abs_track_eta_max:
+            
+                hname = 'hHadronPt_eta{}'.format(self.abs_track_eta_max)
+                getattr(self, hname).Fill(pt)
+                
+                hname = 'hHadronPID_eta{}'.format(self.abs_track_eta_max)
+                getattr(self, hname).Fill(pid)
+                
+                hname = 'hHadronEtaPhi_eta{}'.format(self.abs_track_eta_max)
+                getattr(self, hname).Fill(eta, phi)
 
     # ---------------------------------------------------------------
     # Fill final-state parton histograms
@@ -185,12 +213,16 @@ class ExampleAnalysis(common_base.CommonBase):
             eta = momentum.eta()
             phi = momentum.phi()  # [-pi, pi]
 
-            if abs(eta) < self.abs_jet_eta_max:
-                self.hPartonPt.Fill(pt)
-                self.hPartonPID.Fill(pid)
-                self.hPartonEtaPhi.Fill(eta, phi)
-
-        self.hPartonN.Fill(len(partons))
+            if abs(eta) < self.abs_track_eta_max:
+            
+                hname = 'hPartonPt_eta{}'.format(self.abs_track_eta_max)
+                getattr(self, hname).Fill(pt)
+                
+                hname = 'hPartonPID_eta{}'.format(self.abs_track_eta_max)
+                getattr(self, hname).Fill(pid)
+                
+                hname = 'hPartonEtaPhi_eta{}'.format(self.abs_track_eta_max)
+                getattr(self, hname).Fill(eta, phi)
 
     # ---------------------------------------------------------------
     # Fill hadrons into vector of fastjet pseudojets
@@ -210,7 +242,7 @@ class ExampleAnalysis(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Fill jet histograms
     # ---------------------------------------------------------------
-    def fill_jet_histograms(self, jets, jetR):
+    def fill_jet_histograms(self, jets, jetR, abs_jet_eta_max):
 
         for jet in jets:
 
@@ -218,11 +250,8 @@ class ExampleAnalysis(common_base.CommonBase):
             jet_eta = jet.eta()
             jet_phi = jet.phi()  # [0, 2pi]
 
-            h = getattr(self, "hJetPt_R{}".format(jetR))
-            h.Fill(jet_pt)
-
-            h = getattr(self, "hJetEtaPhi_R{}".format(jetR))
-            h.Fill(jet_eta, jet_phi)
+            getattr(self, 'hJetPt_R{}_eta{}'.format(jetR, abs_jet_eta_max)).Fill(jet_pt)
+            getattr(self, 'hJetEtaPhi_R{}_eta{}'.format(jetR, abs_jet_eta_max)).Fill(jet_eta, jet_phi)
 
     # ---------------------------------------------------------------
     # Save all ROOT histograms and trees to file
@@ -237,8 +266,8 @@ class ExampleAnalysis(common_base.CommonBase):
         self.hNevents.SetBinContent(self.bin + 1, self.event_id)
 
         # Save output objects
-        outputfilename = os.path.join(self.output_dir, "AnalysisResults.root")
-        fout = ROOT.TFile(outputfilename, "recreate")
+        outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
+        fout = ROOT.TFile(outputfilename, 'recreate')
         fout.cd()
         for attr in dir(self):
 
@@ -285,4 +314,4 @@ class ExampleAnalysis(common_base.CommonBase):
     def remove_periods(self, text):
 
         string = str(text)
-        return string.replace(".", "")
+        return string.replace('.', '')
