@@ -134,9 +134,9 @@ class GenerateJetscapeEvents(common_base.CommonBase):
                     for line in fileinput.input(xml_user_file_copy, inplace=True):
                 
                         if 'pTHatMin' in line:
-                            print(re.sub(r'{0}*{0}'.format('pTHatMin', 'pTHatMin'), '{0}>{1}<{0}'.format('pTHatMin', pt_hat_min), line), end='')
+                            print(re.sub(r'{0}>\w*</{0}'.format('pTHatMin'), '{0}>{1}</{0}'.format('pTHatMin', pt_hat_min), line), end='')
                         elif 'pTHatMax' in line:
-                            print(re.sub(r'{0}*{0}'.format('pTHatMax', 'pTHatMax'), '{0}>{1}<{0}'.format('pTHatMax', pt_hat_max), line), end='')
+                            print(re.sub(r'{0}>\w*</{0}'.format('pTHatMax'), '{0}>{1}</{0}'.format('pTHatMax', pt_hat_max), line), end='')
                         else:
                             print(line, end='')
                       
@@ -146,7 +146,7 @@ class GenerateJetscapeEvents(common_base.CommonBase):
                     for line in fileinput.input(xml_user_file_copy, inplace=True):
                     
                         if parameter_label in line:
-                            print(re.sub(r'{0}*{0}'.format(parameter_label), '{0}>{1}<{0}'.format(parameter_label, value), line), end='')
+                            print(re.sub(r'{0}>\w*</{0}'.format(parameter_label), '{0}>{1}</{0}'.format(parameter_label, value), line), end='')
                         else:
                             print(line, end='')
 
