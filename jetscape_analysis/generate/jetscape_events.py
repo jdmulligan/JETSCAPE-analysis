@@ -154,7 +154,7 @@ class GenerateJetscapeEvents(common_base.CommonBase):
             os.chdir(output_dir_bin)
 
             # Run Jetscape executable
-            logfile_name = os.path.join(output_dir_bin, "log_{}_{}.txt".format(pt_hat_bin, dir_label))
+            logfile_name = os.path.join(output_dir_bin, "log_{}.txt".format(dir_label))
             with open(logfile_name, "w") as logfile:
                 cmd = '{}/build/runJetscape jetscape_user.xml jetscape_master.xml'.format(self.jetscape_dir)
                 subprocess.run(cmd, check=True, shell=True, stdout=logfile)
