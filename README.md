@@ -56,7 +56,7 @@ We recommend to use [pipenv](https://github.com/pypa/pipenv) to manage your pyth
 ```
 cd JETSCAPE-analysis
 pipenv --three
-pipenv install pyhepmc_ng pyyaml numpy tqdm ROOT
+pipenv install pyhepmc_ng pyyaml numpy tqdm
 ```
 
 Install `heppy` wherever you desire, and load its modules:
