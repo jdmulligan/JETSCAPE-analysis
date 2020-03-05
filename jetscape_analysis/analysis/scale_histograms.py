@@ -29,8 +29,7 @@ def scale_histograms(outputDirBin, bin, bRemoveOutliers=False):
     verbose = False
 
     # Read the cross-section, and scale histograms
-    EndPtHardBin = 20
-    print("ooo Scaling Pt-hard bin {} of {}".format(bin + 1, EndPtHardBin))
+    print("ooo Scaling Pt-hard bin {}".format(bin + 1))
     f = ROOT.TFile("{}AnalysisResults.root".format(outputDirBin), "UPDATE")
     hCrossSection = f.Get("hCrossSection")
     scaleFactor = hCrossSection.GetBinContent(bin + 1)
@@ -54,8 +53,7 @@ def scale_histograms(outputDirBin, bin, bRemoveOutliers=False):
                 outlierLimit,
                 outlierNBinsThreshold,
                 bin,
-                EndPtHardBin,
-                name,
+                name
             )
         else:
             print("obj not found!")
@@ -77,8 +75,7 @@ def scale_all_histograms(
     limit=2,
     nBinsThreshold=4,
     pTHardBin=0,
-    EndPtHardBin=20,
-    taskName="",
+    taskName=""
 ):
 
     # Set Sumw2 if not already done
@@ -100,7 +97,7 @@ def scale_all_histograms(
             # only perform outlier removal on these couple histograms
             if "Pt" in name:
                 remove_outliers(
-                    pTHardBin, EndPtHardBin, obj, verbose, outputDirBin, limit, nBinsThreshold, 1, taskName,
+                    pTHardBin, obj, verbose, outputDirBin, limit, nBinsThreshold, 1, taskName,
                 )
         obj.Scale(scaleFactor)
         if verbose:
@@ -133,7 +130,7 @@ def scale_all_histograms(
 # It truncates the 3D histogram based on when the 1D projection 4-bin moving average has been above
 # "limit" for "nBinsThreshold" bins.
 def remove_outliers(
-    pTHardBin, EndPtHardBin, hist, verbose, outputDirBin, limit=2, nBinsThreshold=4, dimension=3, taskName="",
+    pTHardBin, hist, verbose, outputDirBin, limit=2, nBinsThreshold=4, dimension=3, taskName="",
 ):
 
     # Project to the pT Truth axis
@@ -247,7 +244,7 @@ def remove_outliers(
     outlierFilename = "{}OutlierRemoval_{}.pdf".format(outputDirBin, hist.GetName())
     if "Pt" in hist.GetName():
         plot_outlier_PDF(
-            histToCheck, histToCheckAfter, pTHardBin, EndPtHardBin, outlierFilename, verbose, "hist E", True,
+            histToCheck, histToCheckAfter, pTHardBin, outlierFilename, verbose, "hist E", True,
         )
 
 
@@ -295,7 +292,7 @@ def moving_average(hist, index, numberOfCountsBelowIndex=0, numberOfCountsAboveI
 # Plot basic histogram    ##############################################################################
 ########################################################################################################
 def plot_outlier_PDF(
-    h, hAfter, pTHardBin, EndPtHardBin, outputFilename, verbose, drawOptions="", setLogy=False,
+    h, hAfter, pTHardBin, outputFilename, verbose, drawOptions="", setLogy=False,
 ):
 
     c = ROOT.TCanvas("c", "c: hist", 600, 450)
@@ -318,20 +315,6 @@ def plot_outlier_PDF(
     leg1.Draw("same")
 
     c.Print("{}".format(outputFilename))
-    """
-  if pTHardBin == 0: #if first pt-hard bin, open a .pdf
-    if verbose:
-      print("Add first pT Hard bin to pdf with name: {0}".format(outputFilename))
-  elif pTHardBin==EndPtHardBin-1: #otherwise add pages to the file
-    if verbose:
-      print("Add last pT Hard bin to pdf with name: {0}".format(outputFilename))
-    c.Print("{})".format(outputFilename))
-  else: #otherwise close the file
-    if verbose:
-      print("Add further pT Hard bin to pdf with name: {0}".format(outputFilename))
-    c.Print("{}".format(outputFilename))
-  """
-
     c.Close()
 
 # ---------------------------------------------------------------------------------------------------
