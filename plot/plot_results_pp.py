@@ -14,6 +14,7 @@ import argparse
 # Data analysis and plotting
 import ROOT
 from array import *
+import numpy as np
 
 # Prevent ROOT from stealing focus when plotting
 ROOT.gROOT.SetBatch(True)
@@ -55,11 +56,8 @@ class PlotResults():
         self.plot_jet_cross_section('5020',  eta_cut = 0.3)
         self.plot_jet_cross_section('5020',  eta_cut = 2.8)
 
-        # dSigma/(2*pi*pT*dpT*dy*70mb)
-        #self.plot_chhadron_cross_section('2760',  eta_cut = 1.0)
-        #self.plot_chhadron_cross_section('5020',  eta_cut = 1.0)
-        #hHadronRAA_CMS_2760
-        #hHadronRAA_CMS_5020
+        self.plot_ch_hadron_cross_section('2760',  eta_cut = 1.0)
+        self.plot_ch_hadron_cross_section('5020',  eta_cut = 1.0)
 
         # dN/(2pi pT dpT) of (D0+anti-D0)/2
         #self.plot_D0_cross_section('5020', eta_cut = 1.0)
@@ -105,11 +103,62 @@ class PlotResults():
 
         # Plot the ratio
         output_filename = os.path.join(self.output_dir, 'hJetCrossSectionPP_Ratio_{}_eta{}{}'.format(sqrts, self.remove_periods(eta_cut), self.file_format))
-        self.plot_ratio(hJetPt, hJetPt_amit, output_filename, sqrts, eta_cut)
+        xtitle = '#it{p}_{T,jet} (GeV/#it{c})'
+        ytitle = '#frac{d^{2}#sigma}{d#it{p}_{T,jet}d#it{#eta}_{jet}} #left[mb (GeV/c)^{-1}#right]'
+        self.plot_ratio(hJetPt, hJetPt_amit, output_filename, xtitle, ytitle, sqrts, eta_cut)
+
+    #-------------------------------------------------------------------------------------------
+    def plot_ch_hadron_cross_section(self, sqrts, eta_cut):
+
+        # Get my histogram
+        filename = os.path.join(self.output_dir, self.filename.format(sqrts, 'ON'))
+        f = ROOT.TFile(filename, 'READ')
+
+        hHadronPt_eta = f.Get('hHadronPt_etaScaled')
+        
+        hHadronPt_eta.GetYaxis().SetRangeUser(-1.*eta_cut, eta_cut)
+        hHadronPt_finebinned = hHadronPt_eta.ProjectionX()
+        hHadronPt_finebinned.SetName('{}_{}_{}'.format(hHadronPt_finebinned, sqrts, eta_cut))
+        
+        if sqrts == '2760':
+            pt_bins = [9.6, 12.0, 14.4, 19.2, 24.0, 28.8, 35.2, 41.6, 48.0, 60.8, 73.6, 86.4, 103.6]
+        else:
+            pt_bins = [9.6, 12.0, 14.4, 19.2, 24.0, 28.8, 35.2, 41.6, 48.0, 60.8, 73.6, 86.4, 103.6, 120.8, 140.0, 165.0, 250.0, 400.0]
+        n_pt_bins = len(pt_bins) - 1
+        pt_bin_array = array('d', pt_bins)
+        hHadronPt = hHadronPt_finebinned.Rebin(n_pt_bins, '{}{}'.format(hHadronPt_finebinned.GetName(), 'rebinned'), pt_bin_array)
+        
+        # dSigma/(2*pi*pT*dpT*dy*70mb)
+        eta_acc = 2*eta_cut
+        hHadronPt.Scale(1/(2 * np.pi * self.nEvents * eta_acc * 70.), 'width')
+        
+        for bin in range(0, hHadronPt.GetNbinsX() + 1):
+            pt = hHadronPt.GetBinCenter(bin)
+            old_content = hHadronPt.GetBinContent(bin)
+            old_error = hHadronPt.GetBinError(bin)
+            hHadronPt.SetBinContent(bin, old_content/pt)
+            hHadronPt.SetBinError(bin, old_error/pt)
+        
+        # Get reference histogram
+        f_amit = ROOT.TFile(self.filename_amit, 'READ')
+        
+        hname = ''
+        if sqrts == '2760':
+            hname = 'hHadronRAA_CMS_2760'
+        elif sqrts == '5020':
+            hname = 'hHadronRAA_CMS_5020'
+                
+        hHadronPt_amit = f_amit.Get(hname)
+
+        # Plot the ratio
+        output_filename = os.path.join(self.output_dir, 'hChHadronCrossSectionPP_Ratio_{}_eta{}{}'.format(sqrts, self.remove_periods(eta_cut), self.file_format))
+        xtitle = '#it{p}_{T} (GeV/#it{c})'
+        ytitle = '#frac{1}{2 #pi #it{p}_{T} #times 70} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-2}#right]'
+        self.plot_ratio(hHadronPt, hHadronPt_amit, output_filename, xtitle, ytitle, sqrts, eta_cut)
         
     #-------------------------------------------------------------------------------------------
     # Plot ratio h1/h2
-    def plot_ratio(self, h1, h2, outputFilename, sqrts, eta_cut):
+    def plot_ratio(self, h1, h2, outputFilename, xtitle, ytitle, sqrts, eta_cut):
     
         # Create canvas
         cname = 'c_{}_{}'.format(h1.GetName(), h2.GetName())
@@ -147,11 +196,15 @@ class PlotResults():
         h2.SetLineColor(1)
 
         # Draw spectra
-        h2.SetXTitle('#it{p}_{T,jet} (GeV/#it{c})')
+        h2.SetXTitle(xtitle)
         h2.GetYaxis().SetTitleOffset(2.2)
-        h2.SetYTitle('#frac{d^{2}#sigma}{d#it{p}_{T,jet}d#it{#eta}_{jet}} #left[mb (GeV/c)^{-1}#right]')
-        h2.SetMaximum(9e-4)
-        h2.SetMinimum(2e-13)
+        h2.SetYTitle(ytitle)
+        if 'jet' in xtitle:
+            h2.SetMaximum(9e-4)
+            h2.SetMinimum(2e-13)
+        else:
+            h2.SetMaximum(9e-5)
+            h2.SetMinimum(2e-17)
         
         h2.Draw('PE X0 same')
         h1.Draw('PE X0 same')
@@ -169,10 +222,17 @@ class PlotResults():
         system2.SetTextSize(0.044)
         system2.Draw()
 
-        system3 = ROOT.TLatex(0.49 ,0.765, 'Anti-#it{k}_{T} #it{R} = 0.4 | #it{#eta}_{jet}| < ' + str(eta_cut))
-        system3.SetNDC()
-        system3.SetTextSize(0.044)
-        system3.Draw()
+        if 'jet' in xtitle:
+            system3 = ROOT.TLatex(0.49 ,0.765, 'Anti-#it{k}_{T} #it{R} = 0.4 | #it{#eta}_{jet}| < ' + str(eta_cut))
+            system3.SetNDC()
+            system3.SetTextSize(0.044)
+            system3.Draw()
+            
+        elif '70' in ytitle:
+            system3 = ROOT.TLatex(0.49 ,0.765, 'Charged particles | #it{#eta}| < ' + str(eta_cut))
+            system3.SetNDC()
+            system3.SetTextSize(0.044)
+            system3.Draw()
 
         myLegend2pp = ROOT.TLegend(0.65,0.6,0.8,0.68)
         self.setupLegend(myLegend2pp,0.04)
