@@ -69,7 +69,7 @@ class ExampleAnalysis(common_base.CommonBase):
         self.hCrossSection = ROOT.TH1F('hCrossSection', 'hCrossSection', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
 
         # Hadron histograms
-        hname = 'hHadronPt_eta'
+        hname = 'hChHadronPt_eta'
         pt_bins = [9.6, 12.0, 14.4, 19.2, 24.0, 28.8, 35.2, 41.6, 48.0, 60.8, 73.6, 86.4, 103.6, 120.8, 140.0, 165.0, 250.0, 400.0]
         n_pt_bins = len(pt_bins) - 1
         pt_bin_array = array('d', pt_bins)
@@ -90,7 +90,7 @@ class ExampleAnalysis(common_base.CommonBase):
         hname = 'hHadronPID_eta{}'.format(self.abs_track_eta_max)
         setattr(self, hname, ROOT.TH1F(hname, hname, 10000, -5000, 5000))
         
-        hname = 'hHadronEtaPhi'
+        hname = 'hChHadronEtaPhi'
         setattr(self, hname, ROOT.TH2F(hname, hname, 100, -5, 5, 100, -3.2, 3.2))
         
         # Parton histograms
@@ -189,8 +189,11 @@ class ExampleAnalysis(common_base.CommonBase):
             eta = momentum.eta()
             phi = momentum.phi()  # [-pi, pi]
 
-            getattr(self, 'hHadronPt_eta').Fill(pt, eta)
-            getattr(self, 'hHadronEtaPhi').Fill(eta, phi)
+            #  Fill charged particle histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-, e+, mu+)
+            #  (assuming weak strange decays are off, but charm decays are on)
+            if abs(pid)==211 or abs(pid)==321 or abs(pid)==2212 or abs(pid)==3222 or abs(pid)==3112 or abs(pid)==3312 or abs(pid)==3334 or abs(pid)==11 or abs(pid)==13:
+                getattr(self, 'hChHadronPt_eta').Fill(pt, eta)
+                getattr(self, 'hChHadronEtaPhi').Fill(eta, phi)
 
             if abs(eta) < self.abs_track_eta_max:
             
