@@ -13,6 +13,10 @@ parameter_scan:
   parameter1:
     label: 'eCM'
     values: [2760, 5020]
+    
+  parameter2:
+    label: 'weak_decays'
+    values: ['on', 'off']
 
 # Generation
 xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_PP19.xml'
