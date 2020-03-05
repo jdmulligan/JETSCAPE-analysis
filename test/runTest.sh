@@ -68,6 +68,8 @@ for dir in */ ; do
   if [ $? -ne 0 ]
   then
     echo "Error: Check whether you have used the same YAML config for the Test and the Reference"
+    echo "New file: $OUTPUT_DIR/$dir/test_out.hepmc"
+    echo "Reference file: $REFERENCE_DIR/${dir}test_out.hepmc"
     exit 1
   fi
   
@@ -75,6 +77,8 @@ for dir in */ ; do
   if [ $? -ne 0 ]
   then
     echo "Error: Check whether you have used the same YAML config for the Test and the Reference"
+    echo "New file: $OUTPUT_DIR/$dir/test_out.hepmc"
+    echo "Reference file: $REFERENCE_DIR/${dir}test_out.hepmc"
     exit 1
   fi
 

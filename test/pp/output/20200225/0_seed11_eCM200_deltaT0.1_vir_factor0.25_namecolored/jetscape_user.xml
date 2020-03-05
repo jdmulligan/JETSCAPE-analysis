@@ -8,15 +8,15 @@
   <JetScapeWriterAscii> on </JetScapeWriterAscii>
 
   <Random>
-    <seed>10</seed>
+    <seed>11</seed>
   </Random>
 
   <!-- Hard Process -->
   <Hard>
     <PythiaGun>
-      <pTHatMin>235</pTHatMin>
-      <pTHatMax>1000</pTHatMax>
-      <eCM>2760</eCM>
+      <pTHatMin>5</pTHatMin>
+      <pTHatMax>7</pTHatMax>
+      <eCM>200</eCM>
     </PythiaGun>
   </Hard>
   
@@ -35,7 +35,7 @@
   
   <!-- Jet Hadronization Module -->
   <JetHadronization>
-    <name>colorless</name>
+    <name>colored</name>
   </JetHadronization>
   
 </jetscape>
