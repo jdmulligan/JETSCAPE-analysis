@@ -76,7 +76,9 @@ class ExampleAnalysis(common_base.CommonBase):
         eta_bins = [-5., -3., -1., 1., 3., 5.]
         n_eta_bins = len(eta_bins) - 1
         eta_bin_array = array('d', eta_bins)
-        setattr(self, hname, ROOT.TH2F(hname, hname, n_pt_bins, pt_bin_array, n_eta_bins, eta_bin_array))
+        h = ROOT.TH2F(hname, hname, n_pt_bins, pt_bin_array, n_eta_bins, eta_bin_array)
+        h.Sumw2()
+        setattr(self, hname, h)
         
         hname = 'hD0Pt_eta'
         pt_bins = [2., 3., 4., 5., 6., 8., 10., 12.5, 15., 20., 25., 30., 40., 60., 100.]
@@ -85,7 +87,9 @@ class ExampleAnalysis(common_base.CommonBase):
         eta_bins = [-5., -3., -1., 1., 3., 5.]
         n_eta_bins = len(eta_bins) - 1
         eta_bin_array = array('d', eta_bins)
-        setattr(self, hname, ROOT.TH2F(hname, hname, n_pt_bins, pt_bin_array, n_eta_bins, eta_bin_array))
+        h = ROOT.TH2F(hname, hname, n_pt_bins, pt_bin_array, n_eta_bins, eta_bin_array)
+        h.Sumw2()
+        setattr(self, hname, h)
         
         hname = 'hHadronPID_eta{}'.format(self.abs_track_eta_max)
         setattr(self, hname, ROOT.TH1F(hname, hname, 10000, -5000, 5000))
@@ -192,7 +196,7 @@ class ExampleAnalysis(common_base.CommonBase):
             #  Fill charged particle histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-, e+, mu+)
             #  (assuming weak strange decays are off, but charm decays are on)
             if abs(pid)==211 or abs(pid)==321 or abs(pid)==2212 or abs(pid)==3222 or abs(pid)==3112 or abs(pid)==3312 or abs(pid)==3334 or abs(pid)==11 or abs(pid)==13:
-                getattr(self, 'hChHadronPt_eta').Fill(pt, eta)
+                getattr(self, 'hChHadronPt_eta').Fill(pt, eta, 1/pt) # Fill with weight 1/pt, to form 1/pt dN/dpt
                 getattr(self, 'hChHadronEtaPhi').Fill(eta, phi)
 
             if abs(eta) < self.abs_track_eta_max:
@@ -202,7 +206,7 @@ class ExampleAnalysis(common_base.CommonBase):
                 
             if abs(pid) == 421:
             
-                getattr(self, 'hD0Pt_eta').Fill(pt, eta)
+                getattr(self, 'hD0Pt_eta').Fill(pt, eta, 1/pt) # Fill with weight 1/pt, to form 1/pt dN/dpt
 
     # ---------------------------------------------------------------
     # Fill final-state parton histograms
