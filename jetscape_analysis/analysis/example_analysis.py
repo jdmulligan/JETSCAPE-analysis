@@ -193,9 +193,10 @@ class ExampleAnalysis(common_base.CommonBase):
             eta = momentum.eta()
             phi = momentum.phi()  # [-pi, pi]
 
-            #  Fill charged particle histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-, e+, mu+)
-            #  (assuming weak strange decays are off, but charm decays are on)
-            if abs(pid)==211 or abs(pid)==321 or abs(pid)==2212 or abs(pid)==3222 or abs(pid)==3112 or abs(pid)==3312 or abs(pid)==3334 or abs(pid)==11 or abs(pid)==13:
+            # Fill charged particle histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+            # (assuming weak strange decays are off, but charm decays are on)
+            # Neglect e+, mu+ (11, 13)
+            if abs(pid)==211 or abs(pid)==321 or abs(pid)==2212 or abs(pid)==3222 or abs(pid)==3112 or abs(pid)==3312 or abs(pid)==3334:
                 getattr(self, 'hChHadronPt_eta').Fill(pt, eta, 1/pt) # Fill with weight 1/pt, to form 1/pt dN/dpt
                 getattr(self, 'hChHadronEtaPhi').Fill(eta, phi)
 
