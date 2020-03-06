@@ -114,7 +114,7 @@ class PlotResults():
         filename = os.path.join(self.output_dir, self.filename.format(sqrts, 'ON'))
         f = ROOT.TFile(filename, 'READ')
 
-        hHadronPt_eta = f.Get('hHadronPt_etaScaled')
+        hHadronPt_eta = f.Get('hChHadronPt_etaScaled')
         
         hHadronPt_eta.GetYaxis().SetRangeUser(-1.*eta_cut, eta_cut)
         hHadronPt_finebinned = hHadronPt_eta.ProjectionX()
@@ -132,13 +132,6 @@ class PlotResults():
         eta_acc = 2*eta_cut
         hHadronPt.Scale(1/(2 * np.pi * self.nEvents * eta_acc * 70.), 'width')
         
-        for bin in range(0, hHadronPt.GetNbinsX() + 1):
-            pt = hHadronPt.GetBinCenter(bin)
-            old_content = hHadronPt.GetBinContent(bin)
-            old_error = hHadronPt.GetBinError(bin)
-            hHadronPt.SetBinContent(bin, old_content/pt)
-            hHadronPt.SetBinError(bin, old_error/pt)
-        
         # Get reference histogram
         f_amit = ROOT.TFile(self.filename_amit, 'READ')
         
@@ -153,7 +146,7 @@ class PlotResults():
         # Plot the ratio
         output_filename = os.path.join(self.output_dir, 'hChHadronCrossSectionPP_Ratio_{}_eta{}{}'.format(sqrts, self.remove_periods(eta_cut), self.file_format))
         xtitle = '#it{p}_{T} (GeV/#it{c})'
-        ytitle = '#frac{1}{2 #pi #it{p}_{T} #times 70} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-2}#right]'
+        ytitle = '#frac{1}{2 #pi #it{p}_{T} #times 70mb} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-2}#right]'
         self.plot_ratio(hHadronPt, hHadronPt_amit, output_filename, xtitle, ytitle, sqrts, eta_cut, label = 'Hadron')
         
     #-------------------------------------------------------------------------------------------
@@ -175,15 +168,9 @@ class PlotResults():
         hD0Pt = hD0Pt_finebinned.Rebin(n_pt_bins, '{}{}'.format(hD0Pt_finebinned.GetName(), 'rebinned'), pt_bin_array)
         
         # dN/(2pi pT dpT) of (D0+anti-D0)/2
+        # dSigma/(2*pi*pT*dpT*dy*70mb)
         eta_acc = 2*eta_cut
         hD0Pt.Scale(1/(2 * np.pi * self.nEvents * eta_acc * 70. * 2), 'width')
-        
-        for bin in range(0, hD0Pt.GetNbinsX() + 1):
-            pt = hD0Pt.GetBinCenter(bin)
-            old_content = hD0Pt.GetBinContent(bin)
-            old_error = hD0Pt.GetBinError(bin)
-            hD0Pt.SetBinContent(bin, old_content/pt)
-            hD0Pt.SetBinError(bin, old_error/pt)
         
         # Get reference histogram
         f_gojko = ROOT.TFile(self.filename_gojko, 'READ')
@@ -193,7 +180,7 @@ class PlotResults():
         # Plot the ratio
         output_filename = os.path.join(self.output_dir, 'hD0CrossSectionPP_Ratio_{}_eta{}{}'.format(sqrts, self.remove_periods(eta_cut), self.file_format))
         xtitle = '#it{p}_{T} (GeV/#it{c})'
-        ytitle = '#frac{1}{2 #pi #it{p}_{T} #times 70} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-2}#right]'
+        ytitle = '#frac{1}{2 #pi #it{p}_{T} #times 70mb} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-2}#right]'
         self.plot_ratio(hD0Pt, hD0Pt_gojko, output_filename, xtitle, ytitle, sqrts, eta_cut, label = 'D0')
         
     #-------------------------------------------------------------------------------------------
@@ -269,21 +256,13 @@ class PlotResults():
 
         if 'Jet' in label:
             system3 = ROOT.TLatex(0.49 ,0.765, 'Anti-#it{k}_{T} #it{R} = 0.4 | #it{#eta}_{jet}| < ' + str(eta_cut))
-            system3.SetNDC()
-            system3.SetTextSize(0.044)
-            system3.Draw()
-            
         elif 'Hadron' in label:
             system3 = ROOT.TLatex(0.49 ,0.765, 'Charged particles | #it{#eta}| < ' + str(eta_cut))
-            system3.SetNDC()
-            system3.SetTextSize(0.044)
-            system3.Draw()
-            
         elif 'D0' in label:
-            system3 = ROOT.TLatex(0.49 ,0.765, '(D0 + #bar{D0})/2 | #it{#eta}| < ' + str(eta_cut))
-            system3.SetNDC()
-            system3.SetTextSize(0.044)
-            system3.Draw()
+            system3 = ROOT.TLatex(0.49 ,0.765, '(D^{0} + #bar{D^{0}})/2 | #it{#eta}| < ' + str(eta_cut))
+        system3.SetNDC()
+        system3.SetTextSize(0.044)
+        system3.Draw()
 
         myLegend2pp = ROOT.TLegend(0.65,0.6,0.8,0.68)
         self.setupLegend(myLegend2pp,0.04)
@@ -312,7 +291,7 @@ class PlotResults():
         hRatio.GetXaxis().SetTitleOffset(4.)
         hRatio.GetXaxis().SetLabelFont(43)
         hRatio.GetXaxis().SetLabelSize(20)
-        hRatio.GetXaxis().SetTitle('#it{p}_{T}')
+        hRatio.GetXaxis().SetTitle(xtitle)
 
         hRatio.GetYaxis().SetTitle('3.0 / AApaper')
         hRatio.GetYaxis().SetTitleSize(20)
@@ -324,6 +303,8 @@ class PlotResults():
         
         hRatio.SetMinimum(0.5)
         hRatio.SetMaximum(1.7)
+        if 'D0' in label:
+            hRatio.SetMinimum(0.1)
         hRatio.Draw('P E')
 
         c.SaveAs(outputFilename)
