@@ -92,6 +92,8 @@ where `/my/outputdir` is the directory containing the generated JETSCAPE events.
 
 ### Setup `poetry`
 
+This section is only relevant if you want to package up the code yourself.
+
 We use `poetry` to manage packaging up this code. You need to setup poetry once globally.
 
 You must use version 1.0 or later (currently in 1.0.0b3 as of Nov 2019). Follow the [installation
