@@ -65,7 +65,7 @@ Install `heppy` wherever you desire, and load its modules:
 cd <my-heppy-location>
 git clone git@github.com:matplo/heppy.git
 cd heppy
-./scripts/setup.sh --buildext --root
+./external/build.sh
 ```
 
 #### Workflow
@@ -77,7 +77,7 @@ Once you have done the one-time setup, your general workflow is the following:
 cd JETSCAPE-analysis
 pipenv shell
 module use <my-heppy-location>/modules
-module load heppy/main_python
+module load heppy/1.0
 ```
 
 And then run the script:
