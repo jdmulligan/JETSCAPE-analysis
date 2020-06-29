@@ -31,7 +31,7 @@ You should then enter the docker container as specified in the above instruction
 The generation script should then be run from inside the JETSCAPE docker container:
 
 ```
-python jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml -o /home/jetscape-user/JETSCAPE-analysis-output
+python jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/example.yaml -o /home/jetscape-user/JETSCAPE-analysis-output
 ```
 
 where 
@@ -102,7 +102,7 @@ Simply run the script:
 
 ```
 cd /home/jetscape-user/JETSCAPE-analysis/jetscape_analysis/analysis
-python analyze_events.py -c ../../config/jetscapeAnalysisConfig.yaml -i /home/jetscape-user/JETSCAPE-analysis-output -o /my/outputdir
+python analyze_events.py -c ../../config/example.yaml -i /home/jetscape-user/JETSCAPE-analysis-output -o /my/outputdir
 ```
 
 where 
