@@ -9,7 +9,9 @@
 from __future__ import print_function
 
 # General
+import sys
 import os
+import argparse
 
 # Fastjet via python (from external library heppy)
 import fastjet as fj
@@ -18,40 +20,34 @@ import ROOT
 import yaml
 from array import *
 
+sys.path.append('../..')
+sys.path.append('.')
+from jetscape_analysis.analysis import analyze_events_base
 from jetscape_analysis.analysis.event import event_hepmc
 from jetscape_analysis.base import common_base
 
 ################################################################
-class ExampleAnalysis(common_base.CommonBase):
+class AnalyzeJetscapeEvents_Example(analyze_events_base.AnalyzeJetscapeEvents_Base):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
-    def __init__(self, config_file='', input_file='', output_dir='', bin='', **kwargs):
-        super(ExampleAnalysis, self).__init__(**kwargs)
-        self.config_file = config_file
-        self.input_file = input_file
-        self.output_dir = output_dir
-        self.bin = bin
-
-        self.initialize_config()
+    def __init__(self, config_file='', input_file='', output_dir='', **kwargs):
+        super(AnalyzeJetscapeEvents_Example, self).__init__(config_file=config_file,
+                                                            input_file=input_file,
+                                                            output_dir=output_dir,
+                                                            **kwargs)
+        self.initialize_user_config()
         print(self)
 
     # ---------------------------------------------------------------
     # Initialize config file into class members
     # ---------------------------------------------------------------
-    def initialize_config(self):
+    def initialize_user_config(self):
 
         # Read config file
         with open(self.config_file, 'r') as stream:
             config = yaml.safe_load(stream)
-
-        self.parameter_scan_dict = config['parameter_scan']
-        self.n_pt_hat_bins = len(self.parameter_scan_dict['pt_hat_bins']['values']) - 1
-
-        self.debug_level = config['debug_level']
-        self.reader = config['reader']
-        self.event_id = 0
         
         self.min_track_pt = config['min_track_pt']
         self.abs_track_eta_max = config['abs_track_eta_max']
@@ -62,11 +58,7 @@ class ExampleAnalysis(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Initialize output objects
     # ---------------------------------------------------------------
-    def initialize_output_objects(self):
-
-        # Event histograms
-        self.hNevents = ROOT.TH1F('hNevents', 'hNevents', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
-        self.hCrossSection = ROOT.TH1F('hCrossSection', 'hCrossSection', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
+    def initialize_user_output_objects(self):
 
         # Hadron histograms
         hname = 'hChHadronPt_eta'
@@ -119,12 +111,9 @@ class ExampleAnalysis(common_base.CommonBase):
             setattr(self, hname, h)
 
     # ---------------------------------------------------------------
-    # Analyze a single event
+    # Analyze a single event -- fill user-defined output objects
     # ---------------------------------------------------------------
     def analyze_event(self, event):
-
-        # Print and store basic event info
-        self.get_event_info(event)
 
         # Get list of hadrons from the event, and fill some histograms
         hadrons = event.hadrons(min_track_pt=self.min_track_pt)
@@ -157,25 +146,6 @@ class ExampleAnalysis(common_base.CommonBase):
 
             # Fill some jet histograms
             self.fill_jet_histograms(jets_selected, jetR)
-
-    # ---------------------------------------------------------------
-    # Get event info
-    # ---------------------------------------------------------------
-    def get_event_info(self, event):
-
-        # Print some basic info for first event
-        #if self.event_id == 0:
-
-            # Get heavy ion attributes
-            #heavy_ion = event.heavy_ion()
-            # However it seems that pyhepmc_ng doesn't implement any of these...
-            #print(dir(heavy_ion))
-            #nColl = heavy_ion.Ncoll
-            #nPart = heavy_ion.Npart_proj
-            #eventPlaneAngle = heavy_ion.event_plane_angle
-            #print('NColl = {}, NPart = {}, EP-angle = {}'.format(nColl, nPart, eventPlaneAngle))
-
-        self.event_id += 1
 
     # ---------------------------------------------------------------
     # Fill hadron histograms
@@ -264,65 +234,50 @@ class ExampleAnalysis(common_base.CommonBase):
             getattr(self, 'hJetPt_eta_R{}'.format(jetR)).Fill(jet_pt, jet_eta)
             getattr(self, 'hJetEtaPhi_R{}'.format(jetR)).Fill(jet_eta, jet_phi)
 
-    # ---------------------------------------------------------------
-    # Save all ROOT histograms and trees to file
-    # ---------------------------------------------------------------
-    def write_output_objects(self):
+##################################################################
+if __name__ == "__main__":
+    # Define arguments
+    parser = argparse.ArgumentParser(description="Generate JETSCAPE events")
+    parser.add_argument(
+        "-c",
+        "--configFile",
+        action="store",
+        type=str,
+        metavar="configFile",
+        default="/home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml",
+        help="Path of config file for analysis",
+    )
+    parser.add_argument(
+        "-i",
+        "--inputDir",
+        action="store",
+        type=str,
+        metavar="inputDir",
+        default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
+        help="Input directory containing JETSCAPE output files",
+    )
+    parser.add_argument(
+        "-o",
+        "--outputDir",
+        action="store",
+        type=str,
+        metavar="outputDir",
+        default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
+        help="Output directory for output to be written to",
+    )
 
-        # Fill cross-section with last event's value, which is most accurate
-        xsec = self.cross_section()
-        self.hCrossSection.SetBinContent(self.bin+1, xsec)
-        
-        # Set N events
-        self.hNevents.SetBinContent(self.bin + 1, self.event_id)
+    # Parse the arguments
+    args = parser.parse_args()
 
-        # Save output objects
-        outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
-        fout = ROOT.TFile(outputfilename, 'recreate')
-        fout.cd()
-        for attr in dir(self):
+    # If invalid configFile is given, exit
+    if not os.path.exists(args.configFile):
+        print('File "{0}" does not exist! Exiting!'.format(args.configFile))
+        sys.exit(0)
 
-            obj = getattr(self, attr)
+    # If invalid inputDir is given, exit
+    if not os.path.exists(args.inputDir):
+        print('File "{0}" does not exist! Exiting!'.format(args.inputDir))
+        sys.exit(0)
 
-            # Write all ROOT histograms and trees to file
-            types = (ROOT.TH1, ROOT.THnBase, ROOT.TTree)
-            if isinstance(obj, types):
-                obj.Write()
-
-        fout.Close()
-
-    # ---------------------------------------------------------------
-    # Get cross-section from last event JETSCAPE output file
-    #
-    # It seems that pyhepmc_ng doesn't contain GenCrossSection, so we need to find it manually
-    # Similarly, we find the cross-section manually for ascii format.
-    # ---------------------------------------------------------------
-    def cross_section(self):
-        
-        # Fill array of cross-sections
-        cross_sections = []
-        with open(self.input_file, 'r') as infile:
-            for line in infile:
-            
-                if self.reader == 'hepmc':
-                    if 'GenCrossSection' in line:
-                        split = line.split()
-                        xsec = float(split[3]) / 1e9
-                        cross_sections.append(xsec)
-            
-                elif self.reader == 'ascii':
-                    if 'sigmaGen' in line:
-                        split = line.split()
-                        xsec = float(split[2])
-                        cross_sections.append(line)
-                        
-        # Return cross-section with last event's value, which is most accurate
-        return cross_sections[-1]
-
-    # ---------------------------------------------------------------
-    # Remove periods from a label
-    # ---------------------------------------------------------------
-    def remove_periods(self, text):
-
-        string = str(text)
-        return string.replace('.', '')
+    analysis = AnalyzeJetscapeEvents_Example(config_file=args.configFile, input_dir=args.inputDir, output_dir=args.outputDir)
+    analysis.analyze_jetscape_events()

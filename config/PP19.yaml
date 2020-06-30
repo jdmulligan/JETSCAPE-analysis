@@ -22,16 +22,16 @@ parameter_scan:
 xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_PP19.xml'
 xml_master_file: '/home/jetscape-user/JETSCAPE/config/jetscape_master.xml'
 
-# Analysis
-min_track_pt: 0.01       # Used for both hadron/parton and jet histograms
-abs_track_eta_max: 1.0   # Used only for hadron/parton histograms -- jet finding uses all hadrons as constituents
-
-jetR: [0.2, 0.4]
-min_jet_pt: 20.
-abs_jet_eta_max: [0.3, 2.0, 2.8]
-
+# Analysis parameters -- required
 n_event_max: 10000
 reader: hepmc
 progress_bar: True
 scale_histograms: True
 merge_histograms: False
+
+# Analysis parameters -- user-defined
+min_track_pt: 0.01       # Used for both hadron/parton and jet histograms
+abs_track_eta_max: 1.0   # Used only for hadron/parton histograms -- jet finding uses all hadrons as constituents
+jetR: [0.2, 0.4]
+min_jet_pt: 20.
+abs_jet_eta_max: [0.3, 2.0, 2.8]
