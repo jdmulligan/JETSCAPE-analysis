@@ -21,10 +21,7 @@ import yaml
 from array import *
 
 sys.path.append('../..')
-sys.path.append('.')
 from jetscape_analysis.analysis import analyze_events_base
-from jetscape_analysis.analysis.event import event_hepmc
-from jetscape_analysis.base import common_base
 
 ################################################################
 class AnalyzeJetscapeEvents_Example(analyze_events_base.AnalyzeJetscapeEvents_Base):

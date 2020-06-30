@@ -6,4 +6,4 @@
 .. codeauthor:: Raymond Ehlers <raymond.ehlers@cern.ch>, ORNL
 """
 
-__all__ = ["analyze_events" "scale_histograms"]
+__all__ = ["analyze_events_base" "scale_histograms"]

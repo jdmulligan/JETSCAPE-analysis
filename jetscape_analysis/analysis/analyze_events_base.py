@@ -23,8 +23,6 @@ import yaml
 import itertools
 import ROOT
 
-sys.path.append('../..')
-sys.path.append('.')
 from jetscape_analysis.analysis import scale_histograms
 from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
 from jetscape_analysis.base import common_base
@@ -221,7 +219,7 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
         self.hNevents.SetBinContent(self.pt_hat_bin+1, self.event_id)
 
         # Save output objects
-        outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
+        outputfilename = os.path.join(self.output_dir_bin, 'AnalysisResults.root')
         fout = ROOT.TFile(outputfilename, 'recreate')
         fout.cd()
         for attr in dir(self):
@@ -232,6 +230,8 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
             types = (ROOT.TH1, ROOT.THnBase, ROOT.TTree)
             if isinstance(obj, types):
                 obj.Write()
+                obj.SetDirectory(0)
+                del obj
 
         fout.Close()
         

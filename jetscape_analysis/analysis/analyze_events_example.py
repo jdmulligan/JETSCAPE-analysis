@@ -20,10 +20,7 @@ import ROOT
 import yaml
 
 sys.path.append('../..')
-sys.path.append('.')
 from jetscape_analysis.analysis import analyze_events_base
-from jetscape_analysis.analysis.event import event_hepmc, event_ascii
-from jetscape_analysis.base import common_base
 
 ################################################################
 class AnalyzeJetscapeEvents_Example(analyze_events_base.AnalyzeJetscapeEvents_Base):
@@ -126,7 +123,7 @@ class AnalyzeJetscapeEvents_Example(analyze_events_base.AnalyzeJetscapeEvents_Ba
         pz = [hadron.momentum.pz for hadron in hadrons]
         e = [hadron.momentum.e for hadron in hadrons]
         
-        # Use swig'd function to create a vector of fastjet::PseudoJets from numpy arrays of px,py,pz,e
+        # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
         
         return fj_particles

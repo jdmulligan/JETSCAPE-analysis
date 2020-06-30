@@ -13,18 +13,11 @@ import sys
 import os
 import argparse
 
-# Fastjet via python (from external library heppy)
-import fastjet as fj
-import fjext
 import ROOT
 import yaml
-from array import *
 
 sys.path.append('../..')
-sys.path.append('.')
 from jetscape_analysis.analysis import analyze_events
-from jetscape_analysis.analysis.event import event_hepmc
-from jetscape_analysis.base import common_base
 
 ################################################################
 class AnalyzeJetscapeEvents_PGun(common_base.CommonBase):
@@ -50,8 +43,6 @@ class AnalyzeJetscapeEvents_PGun(common_base.CommonBase):
             config = yaml.safe_load(stream)
         
         self.min_track_pt = config['min_track_pt']
-        self.abs_track_eta_max = config['abs_track_eta_max']
-        
         self.jetR_list = config['jetR']
         self.min_jet_pt = config['min_jet_pt']
 
@@ -100,3 +91,51 @@ class AnalyzeJetscapeEvents_PGun(common_base.CommonBase):
             self.hPartonPID.Fill(pid)
 
         self.hPartonN.Fill(len(partons))
+
+##################################################################
+if __name__ == "__main__":
+    # Define arguments
+    parser = argparse.ArgumentParser(description="Generate JETSCAPE events")
+    parser.add_argument(
+        "-c",
+        "--configFile",
+        action="store",
+        type=str,
+        metavar="configFile",
+        default="/home/jetscape-user/JETSCAPE-analysis/config/jetscapeAnalysisConfig.yaml",
+        help="Path of config file for analysis",
+    )
+    parser.add_argument(
+        "-i",
+        "--inputDir",
+        action="store",
+        type=str,
+        metavar="inputDir",
+        default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
+        help="Input directory containing JETSCAPE output files",
+    )
+    parser.add_argument(
+        "-o",
+        "--outputDir",
+        action="store",
+        type=str,
+        metavar="outputDir",
+        default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
+        help="Output directory for output to be written to",
+    )
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # If invalid configFile is given, exit
+    if not os.path.exists(args.configFile):
+        print('File "{0}" does not exist! Exiting!'.format(args.configFile))
+        sys.exit(0)
+
+    # If invalid inputDir is given, exit
+    if not os.path.exists(args.inputDir):
+        print('File "{0}" does not exist! Exiting!'.format(args.inputDir))
+        sys.exit(0)
+
+    analysis = AnalyzeJetscapeEvents_PGun(config_file=args.configFile, input_dir=args.inputDir, output_dir=args.outputDir)
+    analysis.analyze_jetscape_events()
