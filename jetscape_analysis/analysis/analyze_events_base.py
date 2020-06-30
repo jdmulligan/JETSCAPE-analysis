@@ -13,15 +13,19 @@ See README for pre-requisites.
 
 from __future__ import print_function
 
+# General
 import os
 import subprocess
 import sys
-
-# Analysis
 import tqdm
 import yaml
+
+# Analysis
 import itertools
 import ROOT
+
+# Fastjet via python (from external library heppy)
+import fjext
 
 from jetscape_analysis.analysis import scale_histograms
 from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
@@ -265,6 +269,21 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
 
         # Return cross-section with last event's value, which is most accurate
         return cross_sections[-1]
+   
+    # ---------------------------------------------------------------
+    # Fill hadrons into vector of fastjet pseudojets
+    # ---------------------------------------------------------------
+    def fill_fastjet_constituents(self, hadrons):
+
+        px = [hadron.momentum.px for hadron in hadrons]
+        py = [hadron.momentum.py for hadron in hadrons]
+        pz = [hadron.momentum.pz for hadron in hadrons]
+        e = [hadron.momentum.e for hadron in hadrons]
+        
+        # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
+        fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
+        
+        return fj_particles
 
     # ---------------------------------------------------------------
     # This function is called once per setting

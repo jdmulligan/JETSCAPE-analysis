@@ -12,9 +12,10 @@ from __future__ import print_function
 import sys
 import os
 import argparse
-
-import ROOT
 import yaml
+
+# Analysis
+import ROOT
 
 sys.path.append('../..')
 from jetscape_analysis.analysis import analyze_events

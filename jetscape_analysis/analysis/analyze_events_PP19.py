@@ -12,13 +12,14 @@ from __future__ import print_function
 import sys
 import os
 import argparse
+import yaml
+
+# Analysis
+import ROOT
+from array import *
 
 # Fastjet via python (from external library heppy)
 import fastjet as fj
-import fjext
-import ROOT
-import yaml
-from array import *
 
 sys.path.append('../..')
 from jetscape_analysis.analysis import analyze_events_base
@@ -163,7 +164,7 @@ class AnalyzeJetscapeEvents_Example(analyze_events_base.AnalyzeJetscapeEvents_Ba
             # Fill charged particle histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             # (assuming weak strange decays are off, but charm decays are on)
             # Neglect e+, mu+ (11, 13)
-            if abs(pid)==211 or abs(pid)==321 or abs(pid)==2212 or abs(pid)==3222 or abs(pid)==3112 or abs(pid)==3312 or abs(pid)==3334:
+            if abs(pid) in [211, 321, 2212, 3222, 3112, 3312, 3334]:
                 getattr(self, 'hChHadronPt_eta').Fill(pt, eta, 1/pt) # Fill with weight 1/pt, to form 1/pt dN/dpt
                 getattr(self, 'hChHadronEtaPhi').Fill(eta, phi)
 
@@ -201,21 +202,6 @@ class AnalyzeJetscapeEvents_Example(analyze_events_base.AnalyzeJetscapeEvents_Ba
                 
                 hname = 'hPartonPID_eta{}'.format(self.abs_track_eta_max)
                 getattr(self, hname).Fill(pid)
-
-    # ---------------------------------------------------------------
-    # Fill hadrons into vector of fastjet pseudojets
-    # ---------------------------------------------------------------
-    def fill_fastjet_constituents(self, hadrons):
-
-        px = [hadron.momentum.px for hadron in hadrons]
-        py = [hadron.momentum.py for hadron in hadrons]
-        pz = [hadron.momentum.pz for hadron in hadrons]
-        e = [hadron.momentum.e for hadron in hadrons]
-        
-        # Use swig'd function to create a vector of fastjet::PseudoJets from numpy arrays of px,py,pz,e
-        fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
-        
-        return fj_particles
     
     # ---------------------------------------------------------------
     # Fill jet histograms
