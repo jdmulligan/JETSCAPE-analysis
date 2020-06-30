@@ -34,13 +34,13 @@ class EventHepMC(event_base.EventBase):
             if abs(vertex_time - 100) < 1e-3:
                 final_state_particles = vertex.particles_out
 
-        # Remove neutrinos
         hadrons = []
         for particle in final_state_particles:
 
             pid = particle.pid
             pt = particle.momentum.pt()
-            if pid != 12 and pid != 14 and pid != 16:
+            
+            if pid != 12 and pid != 14 and pid != 16: # Remove neutrinos
                 if pt > min_track_pt:
                     hadrons.append(particle)
 

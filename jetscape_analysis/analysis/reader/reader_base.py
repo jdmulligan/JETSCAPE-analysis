@@ -25,5 +25,5 @@ class ReaderBase(common_base.CommonBase):
     # ---------------------------------------------------------------
     def __call__(self, n_events):
 
-        for _ in range(0, n_events):
+        for i in range(0, n_events):
             yield self.next_event()

@@ -158,6 +158,15 @@ class GenerateJetscapeEvents(common_base.CommonBase):
             with open(logfile_name, "w") as logfile:
                 cmd = '{}/build/runJetscape jetscape_user.xml jetscape_master.xml'.format(self.jetscape_dir)
                 subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+                
+                # If ascii format, generate FinalStateHadrons and FinalStatePartons
+                if os.path.exists('test_out.dat'):
+                    cmd = '{}/build/FinalStateHadrons test_out.dat FinalStateHadrons.txt'.format(self.jetscape_dir)
+                    subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+                    
+                    cmd = '{}/build/FinalStatePartons test_out.dat FinalStatePartons.txt'.format(self.jetscape_dir)
+                    subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+                
             os.chdir(self.output_dir)
 
 ##################################################################

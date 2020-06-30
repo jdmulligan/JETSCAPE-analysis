@@ -66,8 +66,6 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
         self.debug_level = config['debug_level']
         self.n_event_max = config['n_event_max']
         self.reader_type = config['reader']
-        if self.reader_type == 'ascii':
-            self.reader_type = 'dat'
         self.progress_bar = config['progress_bar']
         self.scale_histograms = config['scale_histograms']
         self.merge_histograms = config['merge_histograms']
@@ -123,7 +121,12 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
     
             # Read JETSCAPE output, get hadrons, do jet finding, and write histograms to ROOT file
             input_dir_bin = '{}{}'.format(self.input_dir, dir_label)
-            self.input_file = os.path.join(input_dir_bin, 'test_out.{}'.format(self.reader_type))
+            if self.reader_type == 'hepmc':
+                self.input_file = os.path.join(input_dir_bin, 'test_out.{}'.format(self.reader_type))
+            elif self.reader_type == 'ascii':
+                self.input_file = os.path.join(input_dir_bin, 'test_out.dat')
+                self.input_file_hadrons = os.path.join(input_dir_bin, 'FinalStateHadrons.txt')
+                self.input_file_partons = os.path.join(input_dir_bin, 'FinalStatePartons.txt')
             self.run_jetscape_analysis()
 
             # Scale histograms according to pthard bins cross-section
@@ -144,8 +147,8 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
         # Create reader class
         if self.reader_type == 'hepmc':
             self.reader = reader_hepmc.ReaderHepMC(self.input_file)
-        elif self.reader_type == 'dat':
-            self.reader = reader_ascii.ReaderAscii(self.input_file)
+        elif self.reader_type == 'ascii':
+            self.reader = reader_ascii.ReaderAscii(self.input_file_hadrons, self.input_file_partons)
 
         # Initialize output objects
         self.initialize_output_objects()
@@ -154,7 +157,7 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
         if self.progress_bar:
             pbar = tqdm.tqdm(range(self.n_event_max))
         for event in self.reader(n_events=self.n_event_max):
-
+        
             if not event:
                 if self.progress_bar:
                     nstop = pbar.n
@@ -254,12 +257,12 @@ class AnalyzeJetscapeEvents_Base(common_base.CommonBase):
                         xsec = float(split[3]) / 1e9
                         cross_sections.append(xsec)
             
-                elif self.reader_type == 'dat':
+                elif self.reader_type == 'ascii':
                     if 'sigmaGen' in line:
                         split = line.split()
                         xsec = float(split[2])
-                        cross_sections.append(line)
-                        
+                        cross_sections.append(xsec)
+
         # Return cross-section with last event's value, which is most accurate
         return cross_sections[-1]
 
