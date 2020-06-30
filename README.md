@@ -38,13 +38,14 @@ where
 - `-c` specifies a configuration file that should be edited to specify the pt-hat bins and JETSCAPE XML configuration paths,
 - `-o` specifies a location where the JETSCAPE output files will be written.
 
-Note that the machinery here only modifies the pt-hat bins and (optionally) other parameter values in the JETSCAPE XML configuration -- but does not allow to change which modules are present.
+Note that the machinery here only modifies the pt-hat bins and (optionally) other parameter values in the JETSCAPE XML configuration -- but does not allow to change which modules are present -- for that you need to manually edit the user XML file.
 
 That's it! The script will write a separate sub-directory with JETSCAPE events for each pt-hat bin.
 
 ## (2) Analyzing events
 
-The script `jetscape_analysis/analysis/analyze_events.py` analyzes JETSCAPE events, producing an output ROOT file.
+We provide a simple framework to loop over the generated JETSCAPE output files, 
+perform physics analysis, and produce a ROOT file.
 It also contains machinery to aggregate the results from the set of pt-hat bins, and plot the analysis results.
 
 ### Pre-requisites
@@ -98,17 +99,25 @@ module load heppy/1.0
 
 ### Analyze events
 
+The class `jetscape_analysis/analysis/analyze_events_base.py` is a base class to analyze JETSCAPE events and produce an output ROOT file.
+To use this, you should write your own class which inherits from `analyze_events_base.py` and implements the following two functions:
+- `initialize_user_output_objects()` -- This defines the ROOT histograms or trees that you want to write (called once per JETSCAPE output file)
+- `analyze_event(event)` -- This is where you fill your output objects (called once per event). The `event` object and available functions for HepMC or Ascii format can be seen in `jetscape_analysis/analysis/event`.
+
+As an example -- and starting point to copy-paste and build your own class -- see `analyze_events_example.py`.
 Simply run the script:
 
 ```
 cd /home/jetscape-user/JETSCAPE-analysis/jetscape_analysis/analysis
-python analyze_events.py -c ../../config/example.yaml -i /home/jetscape-user/JETSCAPE-analysis-output -o /my/outputdir
+python analyze_events_example.py -c ../../config/example.yaml -i /home/jetscape-user/JETSCAPE-analysis-output -o /my/outputdir
 ```
 
 where 
 - `-c` specifies a configuration file that should be edited to specify the pt-hat bins and analysis parameters,
 - `-i` specifies  is the directory containing the generated JETSCAPE events,
 - `-o` specifies a location where the analysis output will be written.
+
+See `config/example.yaml` for required analysis settings and further details, such as whether to scale and merge the pt-hat bins.
 
 ---------------------------------------------------------------------
 
