@@ -121,6 +121,11 @@ See `config/example.yaml` for required analysis settings and further details, su
 
 ---------------------------------------------------------------------
 
+Please post an [Issue](https://github.com/jdmulligan/JETSCAPE-analysis/issues) if you encounter any problems, 
+or have suggestions for improvement!
+
+---------------------------------------------------------------------
+
 ### Setup `poetry`
 
 This section is only relevant if you want to package up the code yourself.
