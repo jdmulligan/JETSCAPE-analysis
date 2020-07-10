@@ -31,6 +31,7 @@ You should then enter the docker container as specified in the above instruction
 The generation script should then be run from inside the JETSCAPE docker container:
 
 ```
+cd jetscape_analysis/generate
 python jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/example.yaml -o /home/jetscape-user/JETSCAPE-analysis-output
 ```
 
