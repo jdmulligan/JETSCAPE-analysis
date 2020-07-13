@@ -29,8 +29,7 @@ class ReaderHepMC(reader_base.ReaderBase):
         # Create reader
         self.reader = pyhepmc_ng.ReaderAscii(input_file)
         if self.reader.failed():
-            print("[error] unable to read from {}".format(input_file))
-            sys.exit(1)
+            raise ValueError("[error] unable to read from {}".format(input_file))
 
     # ---------------------------------------------------------------
     # Get next event
