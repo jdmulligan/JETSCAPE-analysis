@@ -1,0 +1,72 @@
+#------------------------------------------------------------------
+# Common parameters used in both generation and analysis
+debug_level: 0
+
+pt_hat_bins:  [1, 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 350, 400, 450, 500, 550, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2200, 2400, 2510]
+
+#------------------------------------------------------------------
+# Analysis parameters -- nothing below affects the generation stage
+
+# Required parameters
+n_event_max: 1000
+reader: ascii            # [hepmc, ascii]
+progress_bar: True
+scale_histograms: False
+merge_histograms: False
+
+# Charged particle data
+# In all cases: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+#
+# (1) CMS, JHEP 04, 039 (2017)
+#     hepdata: https://www.hepdata.net/record/ins1496050
+#     Centrality: 0-5, 5-10, 30-50
+#     Cuts:
+#       - rapidity cut: |eta(pseudorapidity)|<1
+#
+# (2) ATLAS, ATLAS-CONF-2017-012
+#     hepdata: None
+#     Centrality: 0-5, 30-40
+#     Cuts:
+#       - rapidity cut: |eta(pseudorapidity)|<2.5
+#       - leptons removed
+#
+# (3) ALICE, JHEP 11, 013 (2018)
+#     hepdata: https://www.hepdata.net/record/ins1657384
+#     Centrality: 0-5, 5-10, 30-40, 40-50
+#     Cuts:
+#       - rapidity cut: |eta(pseudorapidity)|<0.8
+
+# User-defined parameters
+charged_particle_eta_cut: [1.0, 2.5, 0.8] # CMS, ATLAS, ALICE
+
+# Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
+CMS_hadron_0_5: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
+CMS_hadron_5_10: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
+CMS_hadron_30_50: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
+ATLAS_hadron: ''
+ALICE_hadron: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+
+# Inclusive jet data, R=0.4 AKT
+#
+# (1) CMS, CMS-PAS-HIN-18-014
+#     hepdata: None
+#     Cuts:
+#       - rapidity cut: |eta(pseudorapidity)|<2.0
+#
+# (2) ATLAS, Phys. Lett. B 790, 108-128 (2019)
+#     hepdata: https://www.hepdata.net/record/ins1673184
+#     Cuts:
+#       - |y(rapidity)|<2.8
+#
+# (3) ALICE, Phys. Rev. C 101, no.3, 034911 (2020)
+#     hepdata: https://www.hepdata.net/record/ins1755387
+#     Cuts:
+#       - leading (largest pT in jet) charged particle requirement: pT^{ch lead} > 7 GeV
+#       - rapidity cut: |eta(pseudorapidity)|<0.3
+
+jetR: [0.4]
+min_track_pt: 0.01                    # Used for both hadron/parton and jet histograms
+min_jet_pt: 20.
+jet_rapidity_cut: []     # CMS, ATLAS, ALICE
+
+# Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
