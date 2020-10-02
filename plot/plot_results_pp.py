@@ -33,7 +33,7 @@ class PlotResults():
             output_dir = output_dir + "/"
         self.output_dir = output_dir
         
-        self.nEvents = 80000
+        self.nEvents = 90000
         self.file_format = '.pdf'
         
         # Filename from my output
@@ -53,11 +53,11 @@ class PlotResults():
         self.setOptions()
         ROOT.gROOT.ForceStyle()
 
-        self.plot_jet_cross_section('2760', eta_cut = 2.0)
+        #self.plot_jet_cross_section('2760', eta_cut = 2.0)
         self.plot_jet_cross_section('5020', eta_cut = 0.3)
         self.plot_jet_cross_section('5020', eta_cut = 2.8)
 
-        self.plot_ch_hadron_cross_section('2760', eta_cut = 1.0)
+        #self.plot_ch_hadron_cross_section('2760', eta_cut = 1.0)
         self.plot_ch_hadron_cross_section('5020', eta_cut = 1.0)
 
         self.plot_D0_cross_section('5020', eta_cut = 1.0)
@@ -169,8 +169,8 @@ class PlotResults():
         
         # dN/(2pi pT dpT) of (D0+anti-D0)/2
         # dSigma/(2*pi*pT*dpT*dy*70mb)
-        eta_acc = 2*eta_cut
-        hD0Pt.Scale(1/(2 * np.pi * self.nEvents * eta_acc * 70. * 2), 'width')
+        #eta_acc = 2*eta_cut
+        hD0Pt.Scale(1/(2 * np.pi * self.nEvents * 70. * 2), 'width')
         
         # Get reference histogram
         f_gojko = ROOT.TFile(self.filename_gojko, 'READ')
@@ -306,6 +306,12 @@ class PlotResults():
         if 'D0' in label:
             hRatio.SetMinimum(0.1)
         hRatio.Draw('P E')
+        
+        line = ROOT.TLine(2., 1, 100., 1)
+        line.SetLineColor(920+2)
+        line.SetLineStyle(2)
+        line.SetLineWidth(4)
+        line.Draw()
 
         c.SaveAs(outputFilename)
         
