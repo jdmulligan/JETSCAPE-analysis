@@ -44,10 +44,6 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         
         self.input_file_hadrons = input_file
         self.input_file_partons = ''
-
-        # Create output dir
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
             
         # Get pt-hat from filename
         filename = self.input_file_hadrons.split('/')[-1]
@@ -87,6 +83,11 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         for i,bin in enumerate(self.pt_hat_bins):
             if bin == self.pt_hat_min:
                 self.pt_hat_bin = i
+                
+        # Create output dir
+        self.output_dir = os.path.join(self.output_dir, str(self.pt_hat_bin))
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
         
         self.event_id = 0
 
@@ -201,9 +202,17 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         py = [hadron.momentum.py for hadron in hadrons]
         pz = [hadron.momentum.pz for hadron in hadrons]
         e = [hadron.momentum.e for hadron in hadrons]
-        
+        status = [hadron.status for hadron in hadrons]
+        #print(status)
+    
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
+        
+        if len(status) == len(fj_particles):
+            [part.set_user_index(status[i]) for i,part in enumerate(fj_particles)]
+            #print([part.user_index() for part in fj_particles])
+        else:
+            sys.exit()
         
         return fj_particles
 
