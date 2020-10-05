@@ -151,6 +151,11 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
             h.Sumw2()
             setattr(self, hname, h)
             
+            hname = 'hJetPt_ALICE_no_ptlead_cut_R{}'.format(jetR)
+            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_jet)-1, self.bins_ALICE_jet)
+            h.Sumw2()
+            setattr(self, hname, h)
+            
             hname = 'hJetPt_recoils_R{}'.format(jetR)
             h = ROOT.TH2F(hname, hname, 100, 0, 1000, 300, 0, 300)
             h.GetXaxis().SetTitle('jet pt')
@@ -280,7 +285,23 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
 
             # ALICE
             if abs(jet.eta()) < jet_eta_cut[2]:
-                getattr(self, 'hJetPt_ALICE_R{}'.format(jetR)).Fill(jet_pt)
+            
+                # Check leading track requirement
+                if jetR == 0.2:
+                    min_leading_track_pt = 5.
+                elif jetR == 0.4:
+                    min_leading_track_pt = 7.
+                
+                accept_jet = False
+                for constituent in jet.constituents():
+                    if constituent.pt() > min_leading_track_pt:
+                        # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+                        if constituent.user_index() in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                            accept_jet = True
+                
+                if accept_jet:
+                    getattr(self, 'hJetPt_ALICE_R{}'.format(jetR)).Fill(jet_pt)
+                getattr(self, 'hJetPt_ALICE_no_ptlead_cut_R{}'.format(jetR)).Fill(jet_pt)
                 
             # Recoil histogram
             getattr(self, 'hJetPt_recoils_R{}'.format(jetR)).Fill(jet_pt, negative_pt)

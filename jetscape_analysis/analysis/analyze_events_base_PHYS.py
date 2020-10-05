@@ -221,6 +221,11 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
         
+        # Set pid as user_index
+        pid = [hadron.pid for hadron in hadrons]
+        for i,p in enumerate(fj_particles):
+            fj_particles[i].set_user_index(pid[i])
+        
         return fj_particles
 
     # ---------------------------------------------------------------
