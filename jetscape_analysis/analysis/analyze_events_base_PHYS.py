@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" Base class to analyze a JETSCAPE output files: do jet-finding and produce a ROOT file for each pt-hat bin.
+""" Base class to analyze a JETSCAPE output file: do jet-finding and produce a ROOT file for each pt-hat bin.
 
 You should create a user class that inherits from this one. See analyze_events_PHYS.py for an example.
 
@@ -195,24 +195,31 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
    
     # ---------------------------------------------------------------
     # Fill hadrons into vector of fastjet pseudojets
+    #
+    # By default, select all particles
+    # If select_status='+', select only positive status particles
+    # If select_status='-', select only positive status particles
     # ---------------------------------------------------------------
-    def fill_fastjet_constituents(self, hadrons):
+    def fill_fastjet_constituents(self, hadrons, select_status=None):
 
-        px = [hadron.momentum.px for hadron in hadrons]
-        py = [hadron.momentum.py for hadron in hadrons]
-        pz = [hadron.momentum.pz for hadron in hadrons]
-        e = [hadron.momentum.e for hadron in hadrons]
-        status = [hadron.status for hadron in hadrons]
-        #print(status)
+        if select_status == '-':
+            px = [hadron.momentum.px for hadron in hadrons if hadron.status<0]
+            py = [hadron.momentum.py for hadron in hadrons if hadron.status<0]
+            pz = [hadron.momentum.pz for hadron in hadrons if hadron.status<0]
+            e = [hadron.momentum.e for hadron in hadrons if hadron.status<0]
+        elif select_status == '+':
+            px = [hadron.momentum.px for hadron in hadrons if not hadron.status<0]
+            py = [hadron.momentum.py for hadron in hadrons if not hadron.status<0]
+            pz = [hadron.momentum.pz for hadron in hadrons if not hadron.status<0]
+            e = [hadron.momentum.e for hadron in hadrons if not hadron.status<0]
+        else:
+            px = [hadron.momentum.px for hadron in hadrons]
+            py = [hadron.momentum.py for hadron in hadrons]
+            pz = [hadron.momentum.pz for hadron in hadrons]
+            e = [hadron.momentum.e for hadron in hadrons]
     
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
-        
-        if len(status) == len(fj_particles):
-            [part.set_user_index(status[i]) for i,part in enumerate(fj_particles)]
-            #print([part.user_index() for part in fj_particles])
-        else:
-            sys.exit()
         
         return fj_particles
 

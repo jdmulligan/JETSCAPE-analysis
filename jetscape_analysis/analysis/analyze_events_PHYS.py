@@ -75,6 +75,8 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
         self.min_track_pt = config['min_track_pt']
         self.jetR_list = config['jetR']
         self.min_jet_pt = config['min_jet_pt']
+        self.jet_eta_cut_04 = config['jet_eta_cut_04']
+        self.jet_eta_cut_02 = config['jet_eta_cut_02']
         
         self.file_CMS_jet = config['CMS_jet']
         self.file_ATLAS_jet_0_10 = config['ATLAS_jet_0_10']
@@ -84,7 +86,7 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
         self.file_ALICE_jet_0_10_R04 = config['ALICE_jet_0_10_R04']
                 
         # Get binnings from data
-        self.bins_CMS_jet = np.array([250, 300, 400, 500, 1000])
+        self.bins_CMS_jet = np.array([250., 300., 400., 500., 1000.])
         
         f = ROOT.TFile(self.file_ATLAS_jet_0_10, 'READ')
         dir = f.Get('Table 19')
@@ -141,34 +143,34 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
 
             hname = 'hJetPt_CMS_R{}'.format(jetR)
             h = ROOT.TH1F(hname, hname, len(self.bins_CMS_jet)-1, self.bins_CMS_jet)
-            setattr(self, hname, h)
-            
-            hname = 'hJetPt_CMS_R{}_uncorrected'.format(jetR)
-            h = ROOT.TH1F(hname, hname, len(self.bins_CMS_jet)-1, self.bins_CMS_jet)
+            h.Sumw2()
             setattr(self, hname, h)
             
             hname = 'hJetPt_ALICE_R{}'.format(jetR)
             h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_jet)-1, self.bins_ALICE_jet)
+            h.Sumw2()
             setattr(self, hname, h)
             
-            hname = 'hJetPt_ALICE_R{}_uncorrected'.format(jetR)
-            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_jet)-1, self.bins_ALICE_jet)
+            hname = 'hJetPt_recoils_R{}'.format(jetR)
+            h = ROOT.TH2F(hname, hname, 100, 0, 1000, 300, 0, 300)
+            h.GetXaxis().SetTitle('jet pt')
+            h.GetYaxis().SetTitle('recoil pt')
+            h.Sumw2()
             setattr(self, hname, h)
             
         hname = 'hJetPt_ATLAS_binning0_R{}'.format(0.4)
         h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_0_10)-1, self.bins_ATLAS_jet_0_10)
+        h.Sumw2()
         setattr(self, hname, h)
         
         hname = 'hJetPt_ATLAS_binning1_R{}'.format(0.4)
         h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_30_40)-1, self.bins_ATLAS_jet_30_40)
+        h.Sumw2()
         setattr(self, hname, h)
         
         hname = 'hJetPt_ATLAS_binning2_R{}'.format(0.4)
         h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_40_50)-1, self.bins_ATLAS_jet_40_50)
-        setattr(self, hname, h)
-        
-        hname = 'hJetPt_ATLAS_binning2_R{}_uncorrected'.format(0.4)
-        h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_40_50)-1, self.bins_ATLAS_jet_40_50)
+        h.Sumw2()
         setattr(self, hname, h)
 
     # ---------------------------------------------------------------
@@ -180,8 +182,9 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
         hadrons = event.hadrons(min_track_pt=self.min_track_pt)
         self.fill_hadron_histograms(hadrons)
 
-        # Create list of fastjet::PseudoJets
-        fj_hadrons = self.fill_fastjet_constituents(hadrons)
+        # Create list of fastjet::PseudoJets (jet shower hadrons only)
+        fj_hadrons_positive = self.fill_fastjet_constituents(hadrons, select_status='+')
+        fj_hadrons_negative = self.fill_fastjet_constituents(hadrons, select_status='-')
 
         # Loop through specified jet R
         for jetR in self.jetR_list:
@@ -194,12 +197,12 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
                 print('jet selector is:', jet_selector, '\n')
 
             # Do jet finding
-            cs = fj.ClusterSequence(fj_hadrons, jet_def)
+            cs = fj.ClusterSequence(fj_hadrons_positive, jet_def)
             jets = fj.sorted_by_pt(cs.inclusive_jets())
             jets_selected = jet_selector(jets)
 
             # Fill some jet histograms
-            self.fill_jet_histograms(jets_selected, jetR)
+            self.fill_jet_histograms(jets_selected, fj_hadrons_negative, jetR)
 
     # ---------------------------------------------------------------
     # Fill hadron histograms
@@ -242,33 +245,45 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill jet histograms
     # ---------------------------------------------------------------
-    def fill_jet_histograms(self, jets, jetR):
+    def fill_jet_histograms(self, jets, fj_hadrons_negative, jetR):
 
         for jet in jets:
             
-            # Get jet pt, as well as contribution from negative recoils
+            # Get jet pt (from shower hadrons only)
             jet_pt_uncorrected = jet.pt()
             
+            # Sum the negative recoils within R
             negative_pt = 0.
-            for constituent in jet.constituents():
-                if constituent.user_index() < 0:
-                    negative_pt += constituent.pt()
+            for hadron in fj_hadrons_negative:
+                if jet.delta_R(hadron) < jetR:
+                    negative_pt += hadron.pt()
                     
-            jet_pt = jet_pt_uncorrected - 2*negative_pt
+            # Compute corrected jet pt, and fill histograms
+            jet_pt = jet_pt_uncorrected - negative_pt
             
-            # Fill corrected pt
-            getattr(self, 'hJetPt_CMS_R{}'.format(jetR)).Fill(jet_pt)
-            getattr(self, 'hJetPt_ALICE_R{}'.format(jetR)).Fill(jet_pt)
+            # Select eta cut
+            if jetR == 0.2:
+                jet_eta_cut = self.jet_eta_cut_02
+            elif jetR == 0.4:
+                jet_eta_cut = self.jet_eta_cut_04
+            
+            # CMS
+            if abs(jet.eta()) < jet_eta_cut[0]:
+                getattr(self, 'hJetPt_CMS_R{}'.format(jetR)).Fill(jet_pt)
+
+            # ATLAS
             if jetR == 0.4:
-                getattr(self, 'hJetPt_ATLAS_binning0_R{}'.format(jetR)).Fill(jet_pt)
-                getattr(self, 'hJetPt_ATLAS_binning1_R{}'.format(jetR)).Fill(jet_pt)
-                getattr(self, 'hJetPt_ATLAS_binning2_R{}'.format(jetR)).Fill(jet_pt)
+                if abs(jet.rap()) < jet_eta_cut[1]:
+                    getattr(self, 'hJetPt_ATLAS_binning0_R{}'.format(jetR)).Fill(jet_pt)
+                    getattr(self, 'hJetPt_ATLAS_binning1_R{}'.format(jetR)).Fill(jet_pt)
+                    getattr(self, 'hJetPt_ATLAS_binning2_R{}'.format(jetR)).Fill(jet_pt)
+
+            # ALICE
+            if abs(jet.eta()) < jet_eta_cut[2]:
+                getattr(self, 'hJetPt_ALICE_R{}'.format(jetR)).Fill(jet_pt)
                 
-            # Fill uncorrected pt
-            getattr(self, 'hJetPt_CMS_R{}_uncorrected'.format(jetR)).Fill(jet_pt_uncorrected)
-            getattr(self, 'hJetPt_ALICE_R{}_uncorrected'.format(jetR)).Fill(jet_pt_uncorrected)
-            if jetR == 0.4:
-                getattr(self, 'hJetPt_ATLAS_binning2_R{}_uncorrected'.format(jetR)).Fill(jet_pt_uncorrected)
+            # Recoil histogram
+            getattr(self, 'hJetPt_recoils_R{}'.format(jetR)).Fill(jet_pt, negative_pt)
 
 ##################################################################
 if __name__ == "__main__":
