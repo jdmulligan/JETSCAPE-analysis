@@ -67,8 +67,10 @@ def _handle_line(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool,
         #
         # For now, we don't construct any objects to contain the information because
         # it's not worth the computing time - we're not really using this information...
-        header_values = re.findall(_header_regex, line)
-        header_info = [float(header_values[0]), int(header_values[1]), int(header_values[2])]
+        header_values = line.split()
+        if len(header_values) != 9:
+            sys.exit('Check parsing of header: {}'.format(header_substrings))
+        header_info = [float(header_values[1]), int(header_values[2][5:-2]), int(header_values[3])]
 
     return time_to_stop, header_info
 
