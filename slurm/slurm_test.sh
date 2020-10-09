@@ -4,10 +4,10 @@
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=1
 #SBATCH --partition=std
 #SBATCH --time=24:00:00
-#SBATCH --array=1-66
-#SBATCH --output=/rstorage/rstorage/jetscape/PHYS_RAA/slurm-%A_%a.out
+#SBATCH --array=1-792
+#SBATCH --output=/rstorage/jetscape/PHYS_RAA/slurm-%A_%a.out
 
-FILE_PATHS='/rstorage/james/JETSCAPE-AA-events/5020_PbPb_0-10_0R25_2R0_1/files.txt'
+FILE_PATHS='/rstorage/james/JETSCAPE-AA-events/files.txt'
 NFILES=$(wc -l < $FILE_PATHS)
 echo "N files to process: ${NFILES}"
 
