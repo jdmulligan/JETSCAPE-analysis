@@ -184,7 +184,7 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
     def analyze_event(self, event):
     
         # Get list of hadrons from the event, and fill some histograms
-        hadrons = event.hadrons(min_track_pt=self.min_track_pt)
+        hadrons = event.hadrons_parsed(min_track_pt=self.min_track_pt)
         self.fill_hadron_histograms(hadrons)
 
         # Create list of fastjet::PseudoJets (jet shower hadrons only)

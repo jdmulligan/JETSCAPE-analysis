@@ -8,9 +8,10 @@ pt_hat_bins:  [1, 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 20, 25, 30, 35, 40, 45, 50, 
 # Analysis parameters -- nothing below affects the generation stage
 
 # Required parameters
-n_event_max: 1000
+n_event_max: 120000
+events_per_chunk: 1
 reader: ascii            # [hepmc, ascii]
-progress_bar: True
+progress_bar: False
 scale_histograms: False
 merge_histograms: False
 

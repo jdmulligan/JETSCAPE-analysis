@@ -28,7 +28,7 @@ import ROOT
 import fjext
 
 from jetscape_analysis.analysis import scale_histograms
-from jetscape_analysis.analysis.reader import reader_ascii, reader_hepmc
+from jetscape_analysis.analysis.reader import reader_ascii_parsed, parse_ascii
 from jetscape_analysis.base import common_base
 
 ################################################################
@@ -72,6 +72,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
             
         self.debug_level = config['debug_level']
         self.n_event_max = config['n_event_max']
+        self.events_per_chunk = config['events_per_chunk']
         self.reader_type = config['reader']
         self.progress_bar = config['progress_bar']
         self.scale_histograms = config['scale_histograms']
@@ -111,36 +112,39 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # ---------------------------------------------------------------
     def run_jetscape_analysis(self):
 
-        # Create reader class
-        if self.reader_type == 'hepmc':
-            self.reader = reader_hepmc.ReaderHepMC(self.input_file)
-        elif self.reader_type == 'ascii':
-            self.reader = reader_ascii.ReaderAscii(self.input_file_hadrons, self.input_file_partons)
-
         # Initialize output objects
         self.initialize_output_objects()
-
-        # Iterate through events
+        
         if self.progress_bar:
             pbar = tqdm.tqdm(range(self.n_event_max))
-        for event in self.reader(n_events=self.n_event_max):
-        
-            if not event:
-                if self.progress_bar:
-                    nstop = pbar.n
-                    pbar.close()
-                    print('End of {} file at event {} '.format(self.reader_type, nstop))
-                else:
-                    print('End of {} file.'.format(self.reader_type))
-                break
 
-            # Print and store basic event info
-            self.get_event_info(event)
+        # Create reader class for each chunk of events, and iterate through each chunk
+        # The parser returns an awkward array of events
+        for event_chunk in parse_ascii.read(filename=self.input_file_hadrons,
+                                            events_per_chunk=self.events_per_chunk):
+
+            # Iterate through events
+            # Construct reader objects
+            self.reader = reader_ascii_parsed.ReaderAsciiParsed(event_chunk)
+            # Use generator function to loop through events
+            for event in self.reader(n_events=len(event_chunk)):
             
-            # Call user-defined function to analyze event
-            self.analyze_event(event)
-            if self.progress_bar:
-                pbar.update()
+                if not event:
+                    if self.progress_bar:
+                        nstop = pbar.n
+                        pbar.close()
+                        print('End of {} file at event {} '.format(self.reader_type, nstop))
+                    else:
+                        print('End of {} file.'.format(self.reader_type))
+                    break
+
+                # Print and store basic event info
+                self.get_event_info(event)
+                
+                # Call user-defined function to analyze event
+                self.analyze_event(event)
+                if self.progress_bar:
+                    pbar.update()
 
         # Write analysis task output to ROOT file
         self.write_output_objects()
