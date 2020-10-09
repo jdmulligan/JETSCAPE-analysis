@@ -76,7 +76,6 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.reader_type = config['reader']
         self.progress_bar = config['progress_bar']
         self.scale_histograms = config['scale_histograms']
-        self.merge_histograms = config['merge_histograms']
         
         # Find pt-hat bin index
         self.pt_hat_bins = config['pt_hat_bins']
@@ -104,8 +103,8 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
 
         # Scale histograms according to pthard bins cross-section
         if self.scale_histograms:
-            print("Scaling pt-hat bins...")
-            scale_histograms.scale_histograms(self.output_dir_bin, self.pt_hat_bin, bRemoveOutliers=False)
+            print("Scaling pt-hat bin...")
+            scale_histograms.scale_histograms(self.output_dir, self.pt_hat_bin, bRemoveOutliers=False)
 
     # ---------------------------------------------------------------
     # Main processing function for a single pt-hat bin

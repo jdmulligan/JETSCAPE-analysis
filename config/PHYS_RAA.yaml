@@ -12,8 +12,7 @@ n_event_max: 120000
 events_per_chunk: 1
 reader: ascii            # [hepmc, ascii]
 progress_bar: False
-scale_histograms: False
-merge_histograms: False
+scale_histograms: True
 
 # Charged particle data
 # In all cases: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )

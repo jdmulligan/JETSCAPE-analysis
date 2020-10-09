@@ -10,6 +10,7 @@
 #
 
 import ctypes
+import os
 
 import ROOT
 
@@ -30,7 +31,8 @@ def scale_histograms(outputDirBin, bin, bRemoveOutliers=False):
 
     # Read the cross-section, and scale histograms
     print("ooo Scaling Pt-hard bin {}".format(bin + 1))
-    f = ROOT.TFile("{}AnalysisResults.root".format(outputDirBin), "UPDATE")
+    filename = os.path.join(outputDirBin, 'AnalysisResults.root')
+    f = ROOT.TFile(filename, "UPDATE")
     hCrossSection = f.Get("hCrossSection")
     scaleFactor = hCrossSection.GetBinContent(bin + 1)
     print("ooo scaleFactor: {0}".format(scaleFactor))
