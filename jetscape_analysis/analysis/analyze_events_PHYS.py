@@ -19,7 +19,7 @@ import numpy as np
 import fastjet as fj
 import ROOT
 
-sys.path.append('../..')
+sys.path.append('.')
 from jetscape_analysis.analysis import analyze_events_base_PHYS
 
 ################################################################
