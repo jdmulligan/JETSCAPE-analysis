@@ -145,6 +145,9 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
                 self.analyze_event(event)
                 if self.progress_bar:
                     pbar.update()
+                else:
+                    if self.event_id % 1000 == 0:
+                        print('event: {}'.format(self.event_id))
 
         # Write analysis task output to ROOT file
         self.write_output_objects()
