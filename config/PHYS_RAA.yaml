@@ -41,11 +41,11 @@ merge_histograms: False
 charged_particle_eta_cut: [1.0, 2.5, 0.8] # CMS, ATLAS, ALICE
 
 # Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
-CMS_hadron_0_5: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
-CMS_hadron_5_10: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
-CMS_hadron_30_50: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
+CMS_hadron_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
+CMS_hadron_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
+CMS_hadron_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
 ATLAS_hadron: ''
-ALICE_hadron: '~/JETSCAPE-analysis/data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+ALICE_hadron: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
 
 # Inclusive jet data, R=0.4 AKT
 #
@@ -80,8 +80,8 @@ jet_eta_cut_02: [2.0, None, 0.5]    # CMS, ATLAS, ALICE
 
 # Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
 CMS_jet: ''
-ATLAS_jet_0_10: '~/JETSCAPE-analysis/data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
-ATLAS_jet_30_40: '~/JETSCAPE-analysis/data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
-ATLAS_jet_40_50: '~/JETSCAPE-analysis/data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
-ALICE_jet_0_10_R02: '~/JETSCAPE-analysis/data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
-ALICE_jet_0_10_R04: '~/JETSCAPE-analysis/data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
+ATLAS_jet_0_10: 'data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
+ATLAS_jet_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
+ATLAS_jet_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
+ALICE_jet_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
+ALICE_jet_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
