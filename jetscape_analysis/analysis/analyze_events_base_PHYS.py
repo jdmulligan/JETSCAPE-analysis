@@ -75,6 +75,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.events_per_chunk = config['events_per_chunk']
         self.reader_type = config['reader']
         self.progress_bar = config['progress_bar']
+        self.dry_run = config['dry_run']
         self.scale_histograms = config['scale_histograms']
         
         # Find pt-hat bin index
@@ -123,33 +124,41 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
                                             events_per_chunk=self.events_per_chunk):
 
             # Iterate through events
-            # Construct reader objects
-            self.reader = reader_ascii_parsed.ReaderAsciiParsed(event_chunk)
-            # Use generator function to loop through events
-            for event in self.reader(n_events=len(event_chunk)):
+            self.analyze_event_chunk(event_chunk)
             
-                if not event:
-                    if self.progress_bar:
-                        nstop = pbar.n
-                        pbar.close()
-                        print('End of {} file at event {} '.format(self.reader_type, nstop))
-                    else:
-                        print('End of {} file.'.format(self.reader_type))
-                    break
-
-                # Print and store basic event info
-                self.get_event_info(event)
-                
-                # Call user-defined function to analyze event
-                self.analyze_event(event)
-                if self.progress_bar:
-                    pbar.update()
-                else:
-                    if self.event_id % 1000 == 0:
-                        print('event: {}'.format(self.event_id))
-
         # Write analysis task output to ROOT file
         self.write_output_objects()
+            
+    # ---------------------------------------------------------------
+    # Analyze event chunk
+    # ---------------------------------------------------------------
+    def analyze_event_chunk(self, event_chunk):
+            
+        # Construct reader objects
+        reader = reader_ascii_parsed.ReaderAsciiParsed(event_chunk)
+        # Use generator function to loop through events
+        for event in reader(n_events=len(event_chunk)):
+        
+            self.event_id += 1
+            if not self.progress_bar and self.event_id % 1000 == 0:
+                print('event: {}'.format(self.event_id))
+        
+            if self.dry_run:
+                continue
+        
+            if not event:
+                if self.progress_bar:
+                    nstop = pbar.n
+                    pbar.close()
+                    print('End of {} file at event {} '.format(self.reader_type, nstop))
+                else:
+                    print('End of {} file.'.format(self.reader_type))
+                break
+            
+            # Call user-defined function to analyze event
+            self.analyze_event(event)
+            if self.progress_bar:
+                pbar.update()
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -163,13 +172,6 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Initialize user-defined output objects
         self.initialize_user_output_objects()
         
-    # ---------------------------------------------------------------
-    # Get event info
-    # ---------------------------------------------------------------
-    def get_event_info(self, event):
-
-        self.event_id += 1
-
     # ---------------------------------------------------------------
     # Save all ROOT histograms and trees to file
     # ---------------------------------------------------------------
