@@ -1,7 +1,7 @@
 #! /bin/bash
 
 #SBATCH --job-name=PHYS-skim
-#SBATCH --nodes=1 --ntasks=1 --cpus-per-task=5
+#SBATCH --nodes=1 --ntasks=1 --cpus-per-task=4
 #SBATCH --partition=std
 #SBATCH --time=24:00:00
 #SBATCH --array=1-792

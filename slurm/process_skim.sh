@@ -44,7 +44,7 @@ module list
 
 # Run python script via pipenv
 cd /software/users/james/jetscape-docker/JETSCAPE-analysis
-pipenv run python jetscape_analysis/analysis/reader/skim_ascii.py -c -i $INPUT_FILE -o $OUTPUT_DIR
+pipenv run python jetscape_analysis/analysis/reader/skim_ascii.py -i $INPUT_FILE -o $OUTPUT_DIR
 
 # Move stdout to appropriate folder
 mv /rstorage/jetscape/JETSCAPE-AA-events/skim/slurm-${JOB_ID}_${TASK_ID}.out /rstorage/jetscape/JETSCAPE-AA-events/skim/${JOB_ID}/

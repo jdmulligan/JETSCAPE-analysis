@@ -26,7 +26,7 @@ class SkimAscii(common_base.CommonBase):
         self.output_dir = output_dir
         
         self.event_id = 0
-        self.events_per_chunk = 1000
+        self.events_per_chunk = 5000
     
     # ---------------------------------------------------------------
     # Main processing function for a single pt-hat bin
