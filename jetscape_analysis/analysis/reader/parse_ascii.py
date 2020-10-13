@@ -404,7 +404,7 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
     #import IPython; IPython.embed()
 
 
-def full_events_to_only_necessary_columns(arrays: ak.Array) -> ak.Array:
+def full_events_to_only_necessary_columns_pt_eta_phi(arrays: ak.Array) -> ak.Array:
     return ak.zip(
         {
             "particle_ID": arrays["particle_ID"],
@@ -415,6 +415,17 @@ def full_events_to_only_necessary_columns(arrays: ak.Array) -> ak.Array:
         },
     )
 
+def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Array:
+    return ak.zip(
+        {
+            "particle_ID": arrays["particle_ID"],
+            "status": arrays["status"],
+            "E": arrays["E"],
+            "px": arrays["px"],
+            "py": arrays["py"],
+            "pz": arrays["pz"],
+        },
+    )
 
 def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
                      input_filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas",
@@ -438,13 +449,13 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
     base_output_filename = Path(base_output_filename)
     # Setup the base output filename
     if events_per_chunk > 0:
-        base_output_filename = base_output_filename.parent / f"events_per_chunk_{events_per_chunk}" / base_output_filename.name
+        base_output_filename = base_output_filename / base_output_filename.name
     base_output_filename.parent.mkdir(parents=True, exist_ok=True)
 
     for i, arrays in enumerate(read(filename=input_filename, events_per_chunk=events_per_chunk, parser=parser)):
         # Reduce to the minimum required data.
         if store_only_necessary_columns:
-            arrays = full_events_to_only_necessary_columns(arrays)
+            arrays = full_events_to_only_necessary_columns_E_px_py_pz(arrays)
 
         # We limit the depth of the zip to ensure that we can write the parquet successfully.
         # (parquet can't handle lists of structs at the moment). Later, we'll recreate this
