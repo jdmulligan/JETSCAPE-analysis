@@ -41,7 +41,6 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     def __init__(self, config_file="", input_file="", output_dir="", **kwargs):
         super(AnalyzeJetscapeEvents_BasePHYS, self).__init__(**kwargs)
         self.config_file = config_file
-        self.output_dir = output_dir
         
         self.input_file_hadrons = input_file
         self.input_file_partons = ''
@@ -52,6 +51,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.pt_hat_min = int(suffix.split('_')[0])
         self.pt_hat_max = int(suffix.split('_')[1])
         self.index = suffix.split('_')[2]
+        self.output_dir = os.path.join(output_dir, self.index)
         
         # Get pt-hat scale factor from file in same directory
         self.input_dir = os.path.dirname(input_file)
@@ -170,7 +170,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.hNevents.SetBinContent(self.pt_hat_bin+1, self.n_event_max)
 
         # Save output objects
-        outputfilename = os.path.join(self.output_dir, 'AnalysisResults_{}.root'.format(self.index))
+        outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
         fout = ROOT.TFile(outputfilename, 'recreate')
         fout.cd()
         for attr in dir(self):
