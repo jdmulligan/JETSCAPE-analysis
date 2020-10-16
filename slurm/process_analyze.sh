@@ -28,7 +28,7 @@ fi
 
 # Define output path from relevant sub-path of input file
 # Note: suffix depends on file structure of input file -- need to edit appropriately
-OUTPUT_SUFFIX=$(echo $INPUT_FILE | cut -d/ -f5-5)
+OUTPUT_SUFFIX=$(echo $INPUT_FILE | cut -d/ -f7-7)
 OUTPUT_DIR="/rstorage/jetscape/PHYS_RAA/$JOB_ID/$OUTPUT_SUFFIX"
 echo "Output dir: $OUTPUT_DIR"
 mkdir -p $OUTPUT_DIR
