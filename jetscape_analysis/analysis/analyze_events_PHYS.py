@@ -182,14 +182,14 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
     # Analyze a single event -- fill user-defined output objects
     # ---------------------------------------------------------------
     def analyze_event(self, event):
-    
-        # Get list of hadrons from the event, and fill some histograms
-        hadrons = event.hadrons_parsed(min_track_pt=self.min_track_pt)
-        self.fill_hadron_histograms(hadrons)
 
-        # Create list of fastjet::PseudoJets (jet shower hadrons only)
-        fj_hadrons_positive = self.fill_fastjet_constituents(hadrons, select_status='+')
-        fj_hadrons_negative = self.fill_fastjet_constituents(hadrons, select_status='-')
+        # Create list of fastjet::PseudoJets (separately for jet shower particles and holes)
+        fj_hadrons_positive = self.fill_fastjet_constituents(event, select_status='+')
+        fj_hadrons_negative = self.fill_fastjet_constituents(event, select_status='-')
+        
+        # Fill hadron histograms for jet shower particles
+        self.fill_hadron_histograms(fj_hadrons_positive, status='+')
+        self.fill_hadron_histograms(fj_hadrons_negative, status='-')
 
         # Loop through specified jet R
         for jetR in self.jetR_list:
@@ -213,20 +213,20 @@ class AnalyzeJetscapeEvents_PHYS(analyze_events_base_PHYS.AnalyzeJetscapeEvents_
     # Fill hadron histograms
     # (assuming weak strange decays are off, but charm decays are on)
     # ---------------------------------------------------------------
-    def fill_hadron_histograms(self, hadrons):
+    def fill_hadron_histograms(self, fj_particles, status='+'):
     
         # Loop through hadrons
-        for hadron in hadrons:
+        for i,particle in enumerate(fj_particles):
+        
+            # Fill some basic hadron info
+            pid = particle.user_index()
+            pt = particle.pt()
+            eta = particle.eta()
         
             # Skip negative recoils (holes)
-            if hadron.status < 0:
+            if status == '-':
                 getattr(self, 'hChargedPt_Recoils').Fill(pt)
                 continue
-
-            # Fill some basic hadron info
-            pid = hadron.pid
-            pt = hadron.momentum.pt()
-            eta = hadron.momentum.eta()
 
             # CMS
             # Fill charged hadron histograms (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)

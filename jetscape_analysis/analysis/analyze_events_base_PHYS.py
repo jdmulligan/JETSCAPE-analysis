@@ -23,6 +23,7 @@ import yaml
 # Analysis
 import itertools
 import ROOT
+import pandas as pd
 
 # Fastjet via python (from external library heppy)
 import fjext
@@ -47,13 +48,14 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
             
         # Get pt-hat from filename
         filename = self.input_file_hadrons.split('/')[-1]
-        self.suffix = filename.split('Bin')[1].split('.')[0]
-        self.pt_hat_min = int(self.suffix.split('_')[0])
-        self.pt_hat_max = int(self.suffix.split('_')[1])
+        suffix = filename.split('Bin')[1]
+        self.pt_hat_min = int(suffix.split('_')[0])
+        self.pt_hat_max = int(suffix.split('_')[1])
+        self.index = suffix.split('_')[2]
         
         # Get pt-hat scale factor from file in same directory
         self.input_dir = os.path.dirname(input_file)
-        pt_hat_filename = os.path.join(self.input_dir, 'SigmaHardBin{}_{}.out'.format(self.pt_hat_min, self.pt_hat_max))
+        pt_hat_filename = os.path.join(self.input_dir, '../SigmaHardBin{}_{}.out'.format(self.pt_hat_min, self.pt_hat_max))
         with open(pt_hat_filename) as f:
             first_line = f.readline()
             self.pt_hat_xsec = float(first_line.split(' ')[0])
@@ -84,13 +86,11 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         for i,bin in enumerate(self.pt_hat_bins):
             if bin == self.pt_hat_min:
                 self.pt_hat_bin = i
-                
+
         # Create output dir
         self.output_dir = os.path.join(self.output_dir, str(self.pt_hat_bin))
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-        
-        self.event_id = 0
 
     # ---------------------------------------------------------------
     # Main processing function
@@ -115,16 +115,16 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Initialize output objects
         self.initialize_output_objects()
         
+        # Read chunk of events into a dataframe
+        # Fields: particle_ID, status, E, px, py, pz
+        df_event_chunk = pd.read_parquet(self.input_file_hadrons)
+        
+        self.n_event_max = df_event_chunk.shape[0]
         if self.progress_bar:
             pbar = tqdm.tqdm(range(self.n_event_max))
 
-        # Create reader class for each chunk of events, and iterate through each chunk
-        # The parser returns an awkward array of events
-        for event_chunk in parse_ascii.read(filename=self.input_file_hadrons,
-                                            events_per_chunk=self.events_per_chunk):
-
-            # Iterate through events
-            self.analyze_event_chunk(event_chunk)
+        # Iterate through events
+        self.analyze_event_chunk(df_event_chunk)
             
         # Write analysis task output to ROOT file
         self.write_output_objects()
@@ -132,28 +132,13 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Analyze event chunk
     # ---------------------------------------------------------------
-    def analyze_event_chunk(self, event_chunk):
+    def analyze_event_chunk(self, df_event_chunk):
             
-        # Construct reader objects
-        reader = reader_ascii_parsed.ReaderAsciiParsed(event_chunk)
-        # Use generator function to loop through events
-        for event in reader(n_events=len(event_chunk)):
-        
-            self.event_id += 1
-            if not self.progress_bar and self.event_id % 1000 == 0:
-                print('event: {}'.format(self.event_id))
-        
-            if self.dry_run:
-                continue
-        
-            if not event:
-                if self.progress_bar:
-                    nstop = pbar.n
-                    pbar.close()
-                    print('End of {} file at event {} '.format(self.reader_type, nstop))
-                else:
-                    print('End of {} file.'.format(self.reader_type))
-                break
+        # Loop through events
+        for i,event in df_event_chunk.iterrows():
+
+            if not self.progress_bar and i % 1000 == 0:
+                print('event: {}'.format(i))
             
             # Call user-defined function to analyze event
             self.analyze_event(event)
@@ -182,7 +167,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.hCrossSection.SetBinError(self.pt_hat_bin+1, self.pt_hat_xsec_err)
         
         # Set N events
-        self.hNevents.SetBinContent(self.pt_hat_bin+1, self.event_id)
+        self.hNevents.SetBinContent(self.pt_hat_bin+1, self.n_event_max)
 
         # Save output objects
         outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
@@ -208,31 +193,33 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # If select_status='+', select only positive status particles
     # If select_status='-', select only positive status particles
     # ---------------------------------------------------------------
-    def fill_fastjet_constituents(self, hadrons, select_status=None):
-
+    def fill_fastjet_constituents(self, event, select_status=None):
+    
         if select_status == '-':
-            px = [hadron.momentum.px for hadron in hadrons if hadron.status<0]
-            py = [hadron.momentum.py for hadron in hadrons if hadron.status<0]
-            pz = [hadron.momentum.pz for hadron in hadrons if hadron.status<0]
-            e = [hadron.momentum.e for hadron in hadrons if hadron.status<0]
+            px = event['px'][(event['status'] < 0)]
+            py = event['py'][(event['status'] < 0)]
+            pz = event['pz'][(event['status'] < 0)]
+            e = event['E'][(event['status'] < 0)]
+            pid = event['particle_ID'][(event['status'] < 0)]
         elif select_status == '+':
-            px = [hadron.momentum.px for hadron in hadrons if not hadron.status<0]
-            py = [hadron.momentum.py for hadron in hadrons if not hadron.status<0]
-            pz = [hadron.momentum.pz for hadron in hadrons if not hadron.status<0]
-            e = [hadron.momentum.e for hadron in hadrons if not hadron.status<0]
+            px = event['px'][(event['status'] > -1)]
+            py = event['py'][(event['status'] > -1)]
+            pz = event['pz'][(event['status'] > -1)]
+            e = event['E'][(event['status'] > -1)]
+            pid = event['particle_ID'][(event['status'] > -1)]
         else:
-            px = [hadron.momentum.px for hadron in hadrons]
-            py = [hadron.momentum.py for hadron in hadrons]
-            pz = [hadron.momentum.pz for hadron in hadrons]
-            e = [hadron.momentum.e for hadron in hadrons]
+            px = event['px']
+            py = event['py']
+            pz = event['pz']
+            e = event['E']
+            pid = event['particle_ID']
     
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
         
         # Set pid as user_index
-        pid = [hadron.pid for hadron in hadrons]
         for i,p in enumerate(fj_particles):
-            fj_particles[i].set_user_index(pid[i])
+            fj_particles[i].set_user_index(int(pid[i]))
         
         return fj_particles
 
