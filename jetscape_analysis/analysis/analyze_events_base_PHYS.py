@@ -170,7 +170,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.hNevents.SetBinContent(self.pt_hat_bin+1, self.n_event_max)
 
         # Save output objects
-        outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
+        outputfilename = os.path.join(self.output_dir, 'AnalysisResults_{}.root'.format(self.index))
         fout = ROOT.TFile(outputfilename, 'recreate')
         fout.cd()
         for attr in dir(self):
