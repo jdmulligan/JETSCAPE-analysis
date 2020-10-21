@@ -106,55 +106,76 @@ class PlotResults(common_base.CommonBase):
         ROOT.gROOT.ForceStyle()
         
         # Charged particle histograms
-        self.plot_ch_hadron_cross_section('ALICE', cent_type='central',
-                                          eta_cut=self.charged_particle_eta_cut[2],
-                                          data_centralities=['0-5', '5-10'],
-                                          mc_centralities=['0-10'])
-        self.plot_ch_hadron_cross_section('ALICE', cent_type='semicentral',
-                                          eta_cut=self.charged_particle_eta_cut[2],
-                                          data_centralities=['30-40'],
-                                          mc_centralities=['30-40'])
-        self.plot_ch_hadron_cross_section('ATLAS', cent_type='central',
-                                          eta_cut=self.charged_particle_eta_cut[1],
-                                          data_centralities=['0-5'],
-                                          mc_centralities=['0-10'])
-        self.plot_ch_hadron_cross_section('ATLAS', cent_type='semicentral',
-                                          eta_cut=self.charged_particle_eta_cut[1],
-                                          data_centralities=['30-40'],
-                                          mc_centralities=['30-40'])
-        self.plot_ch_hadron_cross_section('CMS', cent_type='central',
-                                          eta_cut=self.charged_particle_eta_cut[0],
-                                          data_centralities=['0-5', '5-10'],
-                                          mc_centralities=['0-10'])
-        self.plot_ch_hadron_cross_section('CMS', cent_type='semicentral',
-                                          eta_cut=self.charged_particle_eta_cut[0],
-                                          data_centralities=['30-50'],
-                                          mc_centralities=['30-40', '40-50'])
+        plot_hadron_histograms = True
+        if plot_hadron_histograms:
+            self.plot_raa('ALICE', raa_type='hadron', cent_type='central',
+                          eta_cut=self.charged_particle_eta_cut[2],
+                          data_centralities=['0-5', '5-10'],
+                          mc_centralities=['0-10'])
+            self.plot_raa('ALICE', raa_type='hadron', cent_type='semicentral',
+                          eta_cut=self.charged_particle_eta_cut[2],
+                          data_centralities=['30-40'],
+                          mc_centralities=['30-40'])
+            self.plot_raa('ATLAS', raa_type='hadron', cent_type='central',
+                          eta_cut=self.charged_particle_eta_cut[1],
+                          data_centralities=['0-5'],
+                          mc_centralities=['0-10'])
+            self.plot_raa('ATLAS', raa_type='hadron',  cent_type='semicentral',
+                          eta_cut=self.charged_particle_eta_cut[1],
+                          data_centralities=['30-40'],
+                          mc_centralities=['30-40'])
+            self.plot_raa('CMS', raa_type='hadron', cent_type='central',
+                          eta_cut=self.charged_particle_eta_cut[0],
+                          data_centralities=['0-5', '5-10'],
+                          mc_centralities=['0-10'])
+            self.plot_raa('CMS', raa_type='hadron', cent_type='semicentral',
+                          eta_cut=self.charged_particle_eta_cut[0],
+                          data_centralities=['30-50'],
+                          mc_centralities=['30-40', '40-50'])
         
         # Jet histograms
-        self.plot_jet_cross_section('ALICE', cent_type='central', eta_cut=self.jet_eta_cut_02[2],
-                                    R=0.2, data_centralities=['0-10'], mc_centralities=['0-10'])
-        self.plot_jet_cross_section('ALICE', cent_type='central', eta_cut=self.jet_eta_cut_04[2],
-                                    R=0.4, data_centralities=['0-10'], mc_centralities=['0-10'])
-        self.plot_jet_cross_section('ATLAS',cent_type='central', eta_cut=self.jet_eta_cut_04[1],
-                                    R=0.4, data_centralities=['0-10'], mc_centralities=['0-10'])
-        self.plot_jet_cross_section('ATLAS', cent_type='semicentral', eta_cut=self.jet_eta_cut_04[1],
-                                    R=0.4, data_centralities=['30-40'], mc_centralities=['30-40'])
-        self.plot_jet_cross_section('CMS', cent_type='central', eta_cut=self.jet_eta_cut_02[0],
-                                    R=0.2, data_centralities=['0-10'], mc_centralities=['0-10'])
-        self.plot_jet_cross_section('CMS', cent_type='semicentral', eta_cut=self.jet_eta_cut_02[0],
-                                    R=0.2, data_centralities=['30-50'], mc_centralities=['30-40, 30-50'])
-        self.plot_jet_cross_section('CMS', cent_type='central', eta_cut=self.jet_eta_cut_04[0],
-                                    R=0.4, data_centralities=['0-10'], mc_centralities=['0-10'])
-        self.plot_jet_cross_section('CMS', cent_type='semicentral', eta_cut=self.jet_eta_cut_04[0],
-                                    R=0.4, data_centralities=['30-50'], mc_centralities=['30-40, 30-50'])
-   
+        plot_jet_histograms = True
+        if plot_jet_histograms:
+            self.plot_raa('ALICE', raa_type='jet', cent_type='central',
+                          eta_cut=self.jet_eta_cut_02[2],
+                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
+            self.plot_raa('ALICE', raa_type='jet', cent_type='central',
+                          eta_cut=self.jet_eta_cut_04[2],
+                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+            self.plot_raa('ATLAS', raa_type='jet', cent_type='central',
+                          eta_cut=self.jet_eta_cut_04[1],
+                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+            self.plot_raa('ATLAS', raa_type='jet', cent_type='semicentral',
+                          eta_cut=self.jet_eta_cut_04[1],
+                          data_centralities=['30-40'], mc_centralities=['30-40'], R=0.4)
+            self.plot_raa('CMS', raa_type='jet', cent_type='central',
+                          eta_cut=self.jet_eta_cut_02[0],
+                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
+            self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
+                          eta_cut=self.jet_eta_cut_02[0],
+                          data_centralities=['30-50'], mc_centralities=['30-40, 30-50'], R=0.2)
+            self.plot_raa('CMS', raa_type='jet', cent_type='central',
+                          eta_cut=self.jet_eta_cut_04[0],
+                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+            self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
+                          eta_cut=self.jet_eta_cut_04[0],
+                          data_centralities=['30-50'], mc_centralities=['30-40, 30-50'], R=0.4)
+       
     #-------------------------------------------------------------------------------------------
-    def plot_ch_hadron_cross_section(self, experiment, cent_type, eta_cut,
-                                     data_centralities, mc_centralities):
+    def plot_raa(self, experiment, raa_type, cent_type,
+                 eta_cut, data_centralities, mc_centralities, R=None):
 
         # Get JETSCAPE prediction
-        hname = 'hChargedPt_{}Scaled'.format(experiment)
+        if raa_type == 'hadron':
+            hname = 'hChargedPt_{}Scaled'.format(experiment)
+        elif raa_type == 'jet':
+            if experiment in ['ALICE', 'CMS']:
+                hname = 'hJetPt_{}_R{}Scaled'.format(experiment, R)
+            elif experiment == 'ATLAS':
+                if cent_type == 'central':
+                    hname = 'hJetPt_{}_binning0_R{}Scaled'.format(experiment, R)
+                elif cent_type == 'semicentral':
+                    hname = 'hJetPt_{}_binning1_R{}Scaled'.format(experiment, R)
 
         # pp
         filename_pp = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(self.predictions['pp'][0]))
@@ -180,67 +201,39 @@ class PlotResults(common_base.CommonBase):
             
             filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(prediction[0]))
             f_AA = ROOT.TFile(filename, 'READ')
-            hname = 'hChargedPt_{}Scaled'.format(experiment)
             h_AA = f_AA.Get(hname)
             h_AA.SetDirectory(0)
             f_AA.Close()
 
             # Plot the ratio
             if h_AA:
-                output_filename = os.path.join(self.output_dir, 'hChHadron_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
-                xtitle = '#it{p}_{T} (GeV/#it{c})'
-                ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
-                h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
-                                        cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Hadron')
+                if raa_type == 'hadron':
+                    output_filename = os.path.join(self.output_dir, 'hChHadron_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
+                    xtitle = '#it{p}_{T} (GeV/#it{c})'
+                    ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+                    h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
+                                            cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Hadron')
+                elif raa_type == 'jet':
+                    output_filename = os.path.join(self.output_dir, 'hJetPt_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
+                    xtitle = '#it{p}_{T} (GeV/#it{c})'
+                    ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+                    h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
+                                            cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Jet', R=R)
                 self.h_RAA_list.append(h_RAA)
                 
-        # Get experimental data
-        h_data_list = []
-        if experiment == 'ALICE':
-            f = ROOT.TFile(self.file_ALICE_hadron, 'READ')
-            dir = f.Get('Table 8')
-            if mc_cent == '0-10':
-                h_data_0_5 = dir.Get('Graph1D_y1')
-                h_data_5_10 = dir.Get('Graph1D_y2')
-                h_data_list.append([h_data_0_5, '0-5'])
-                h_data_list.append([h_data_5_10, '5-10'])
-            elif mc_cent == '30-40':
-                h_data = dir.Get('Graph1D_y5')
-                h_data_list.append([h_data, mc_cent])
-            f.Close()
-        elif experiment == 'ATLAS':
-            if mc_cent == '0-10':
-                h_data= self.get_data_from_txt(self.file_ATLAS_hadron_0_5,
-                                               os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
-            elif mc_cent == '30-40':
-                h_data= self.get_data_from_txt(self.file_ATLAS_hadron_30_40,
-                                               os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
-            h_data_list.append([h_data, mc_cent])
-        elif experiment == 'CMS':
-            if mc_cent == '0-10':
-                f_0_5 = ROOT.TFile(self.file_CMS_hadron_0_5, 'READ')
-                dir_0_5 = f_0_5.Get('Table 8')
-                h_data_0_5 = dir_0_5.Get('Graph1D_y1')
-                f_5_10 = ROOT.TFile(self.file_CMS_hadron_5_10, 'READ')
-                dir_5_10 = f_5_10.Get('Table 9')
-                h_data_5_10 = dir_5_10.Get('Graph1D_y1')
-                h_data_list.append([h_data_0_5, '0-5'])
-                h_data_list.append([h_data_5_10, '5-10'])
-            elif mc_cent == '30-40' or mc_cent == '40-50':
-                f = ROOT.TFile(self.file_CMS_hadron_30_50, 'READ')
-                dir = f.Get('Table 11')
-                h_data = dir.Get('Graph1D_y1')
-                h_data_list.append([h_data, '30-50'])
-                f.Close()
-
+        if raa_type == 'hadron':
+            h_data_list = self.get_hadron_data(experiment, mc_cent)
+            output_filename = os.path.join(self.output_dir, 'hHadronRAA_{}_{}{}'.format(cent_type, experiment, self.file_format))
+        elif raa_type == 'jet':
+            h_data_list = self.get_jet_data(experiment, mc_cent, R)
+            output_filename = os.path.join(self.output_dir, 'hJetRAA_{}_{}_R{}{}'.format(cent_type, experiment, R, self.file_format))
         # Plot RAA overlay
         if len(self.h_RAA_list) > 0:
-            output_filename = os.path.join(self.output_dir, 'hRAA_{}_{}{}'.format(cent_type, experiment, self.file_format))
-            self.plot_RAA(predictions_to_plot, h_data_list, experiment, output_filename)
-        
+            self.plot_RAA_overlay(predictions_to_plot, h_data_list, experiment, output_filename)
+
     #-------------------------------------------------------------------------------------------
-    def plot_RAA(self, predictions, h_data_list, experiment, output_filename):
-    
+    def plot_RAA_overlay(self, predictions, h_data_list, experiment, output_filename):
+
         # Create canvas
         cname = 'c_RAA_{}'.format(output_filename)
         c = ROOT.TCanvas(cname,cname,600,450)
@@ -305,55 +298,52 @@ class PlotResults(common_base.CommonBase):
         c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
-    def plot_jet_cross_section(self, experiment, cent_type, eta_cut, R,
-                               data_centralities, mc_centralities):
-    
-        # Get JETSCAPE prediction
-        if experiment in ['ALICE', 'CMS']:
-            hname = 'hJetPt_{}_R{}Scaled'.format(experiment, R)
+    def get_hadron_data(self, experiment, mc_cent):
+
+        # Get experimental data
+        h_data_list = []
+        if experiment == 'ALICE':
+            f = ROOT.TFile(self.file_ALICE_hadron, 'READ')
+            dir = f.Get('Table 8')
+            if mc_cent == '0-10':
+                h_data_0_5 = dir.Get('Graph1D_y1')
+                h_data_5_10 = dir.Get('Graph1D_y2')
+                h_data_list.append([h_data_0_5, '0-5'])
+                h_data_list.append([h_data_5_10, '5-10'])
+            elif mc_cent == '30-40':
+                h_data = dir.Get('Graph1D_y5')
+                h_data_list.append([h_data, mc_cent])
+            f.Close()
         elif experiment == 'ATLAS':
-            if cent_type == 'central':
-                hname = 'hJetPt_{}_binning0_R{}Scaled'.format(experiment, R)
-            elif cent_type == 'semicentral':
-                hname = 'hJetPt_{}_binning1_R{}Scaled'.format(experiment, R)
+            if mc_cent == '0-10':
+                h_data= self.get_data_from_txt(self.file_ATLAS_hadron_0_5,
+                                               os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+            elif mc_cent == '30-40':
+                h_data= self.get_data_from_txt(self.file_ATLAS_hadron_30_40,
+                                               os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+            h_data_list.append([h_data, mc_cent])
+        elif experiment == 'CMS':
+            if mc_cent == '0-10':
+                f_0_5 = ROOT.TFile(self.file_CMS_hadron_0_5, 'READ')
+                dir_0_5 = f_0_5.Get('Table 8')
+                h_data_0_5 = dir_0_5.Get('Graph1D_y1')
+                f_5_10 = ROOT.TFile(self.file_CMS_hadron_5_10, 'READ')
+                dir_5_10 = f_5_10.Get('Table 9')
+                h_data_5_10 = dir_5_10.Get('Graph1D_y1')
+                h_data_list.append([h_data_0_5, '0-5'])
+                h_data_list.append([h_data_5_10, '5-10'])
+            elif mc_cent == '30-40' or mc_cent == '40-50':
+                f = ROOT.TFile(self.file_CMS_hadron_30_50, 'READ')
+                dir = f.Get('Table 11')
+                h_data = dir.Get('Graph1D_y1')
+                h_data_list.append([h_data, '30-50'])
+                f.Close()
 
-        # pp
-        filename_pp = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(self.predictions['pp'][0]))
-        f_pp = ROOT.TFile(filename_pp, 'READ')
-        h_pp = f_pp.Get(hname)
-        h_pp.SetDirectory(0)
-        f_pp.Close()
+        return h_data_list
+
+    #-------------------------------------------------------------------------------------------
+    def get_jet_data(self, experiment, mc_cent, R):
     
-        # AA
-        predictions = self.predictions[cent_type]
-        predictions_to_plot = []
-        h_AA = None
-        self.h_RAA_list = []
-        for i,prediction in enumerate(predictions):
-            mc_cent = prediction[1]
-            alpha_s = prediction[2]
-            Q_switch = prediction[3]
-            
-            if mc_cent in mc_centralities:
-                predictions_to_plot.append(prediction)
-            else:
-                continue
-            
-            filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(prediction[0]))
-            f_AA = ROOT.TFile(filename, 'READ')
-            h_AA = f_AA.Get(hname)
-            h_AA.SetDirectory(0)
-            f_AA.Close()
-
-            # Plot the ratio
-            if h_AA:
-                output_filename = os.path.join(self.output_dir, 'hJetPt_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
-                xtitle = '#it{p}_{T} (GeV/#it{c})'
-                ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
-                h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
-                                        cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Jet', R=R)
-                self.h_RAA_list.append(h_RAA)
-            
         # Get experimental data
         h_data_list = []
         if experiment == 'ALICE':
@@ -371,35 +361,33 @@ class PlotResults(common_base.CommonBase):
             if mc_cent == '0-10':
                 f = ROOT.TFile(self.file_ATLAS_jet_0_10, 'READ')
                 dir = f.Get('Table 19')
-                h_data = dir.Get('Hist1D_y1')
+                h_data = dir.Get('Graph1D_y1')
                 h_data_list.append([h_data, '0-10'])
             elif mc_cent == '30-40':
                 f = ROOT.TFile(self.file_ATLAS_jet_30_40, 'READ')
                 dir = f.Get('Table 22')
-                h_data = dir.Get('Hist1D_y1')
+                h_data = dir.Get('Graph1D_y1')
                 h_data_list.append([h_data, '30-40'])
+            f.Close()
         elif experiment == 'CMS':
             if mc_cent == '0-10':
                 if R==0.2:
-                    h_data= self.get_data_from_txt(self.file_CMS_jet_0_10_R02,
+                    h_data = self.get_data_from_txt(self.file_CMS_jet_0_10_R02,
                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
                 elif R==0.4:
-                    h_data= self.get_data_from_txt(self.file_CMS_jet_0_10_R04,
+                    h_data = self.get_data_from_txt(self.file_CMS_jet_0_10_R04,
                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
             elif mc_cent == '30-40' or mc_cent == '40-50':
                 if R==0.2:
-                    h_data= self.get_data_from_txt(self.file_CMS_jet_30_50_R02,
+                    h_data = self.get_data_from_txt(self.file_CMS_jet_30_50_R02,
                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
                 elif R==0.4:
-                    h_data= self.get_data_from_txt(self.file_CMS_jet_30_50_R04,
+                    h_data = self.get_data_from_txt(self.file_CMS_jet_30_50_R04,
                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
             h_data_list.append([h_data, mc_cent])
 
-        # Plot RAA overlay
-        if len(self.h_RAA_list) > 0:
-            output_filename = os.path.join(self.output_dir, 'hJetRAA_{}_{}_R{}{}'.format(cent_type, experiment, R, self.file_format))
-            self.plot_RAA(predictions_to_plot, h_data_list, experiment, output_filename)
-        
+        return h_data_list
+
     #-------------------------------------------------------------------------------------------
     # Plot ratio h1/h2
     def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, eta_cut, cent, alpha_s, Q_switch,
