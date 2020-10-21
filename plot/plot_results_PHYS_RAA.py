@@ -106,73 +106,97 @@ class PlotResults(common_base.CommonBase):
         ROOT.gROOT.ForceStyle()
         
         # Charged particle histograms
-        plot_hadron_histograms = True
+        plot_hadron_histograms = False
         if plot_hadron_histograms:
             self.plot_hadron_histograms()
         
         # Jet histograms
-        plot_jet_histograms = False
+        plot_jet_histograms = True
         if plot_jet_histograms:
             self.plot_jet_histograms()
 
     #-------------------------------------------------------------------------------------------
     def plot_hadron_histograms(self):
     
-        self.plot_raa('ALICE', raa_type='hadron', cent_type='central',
+        # Create multi-panel canvas
+        cname = 'c_hadron'
+        c = ROOT.TCanvas(cname,cname,1700,900)
+        c.cd()
+        c.Divide(3, 2)
+        
+        # Keep histograms in memory
+        self.plot_list = []
+    
+        self.plot_raa('ALICE', c, pad=1, raa_type='hadron', cent_type='central',
                       eta_cut=self.charged_particle_eta_cut[2],
                       data_centralities=['0-5', '5-10'],
                       mc_centralities=['0-10'])
-        self.plot_raa('ALICE', raa_type='hadron', cent_type='semicentral',
+        self.plot_raa('ALICE', c, pad=4, raa_type='hadron', cent_type='semicentral',
                       eta_cut=self.charged_particle_eta_cut[2],
                       data_centralities=['30-40'],
                       mc_centralities=['30-40'])
-        self.plot_raa('ATLAS', raa_type='hadron', cent_type='central',
+        self.plot_raa('ATLAS', c, pad=2, raa_type='hadron', cent_type='central',
                       eta_cut=self.charged_particle_eta_cut[1],
                       data_centralities=['0-5'],
                       mc_centralities=['0-10'])
-        self.plot_raa('ATLAS', raa_type='hadron',  cent_type='semicentral',
+        self.plot_raa('ATLAS', c, pad=5, raa_type='hadron',  cent_type='semicentral',
                       eta_cut=self.charged_particle_eta_cut[1],
                       data_centralities=['30-40'],
                       mc_centralities=['30-40'])
-        self.plot_raa('CMS', raa_type='hadron', cent_type='central',
+        self.plot_raa('CMS', c, pad=3, raa_type='hadron', cent_type='central',
                       eta_cut=self.charged_particle_eta_cut[0],
                       data_centralities=['0-5', '5-10'],
                       mc_centralities=['0-10'])
-        self.plot_raa('CMS', raa_type='hadron', cent_type='semicentral',
+        self.plot_raa('CMS', c, pad=6, raa_type='hadron', cent_type='semicentral',
                       eta_cut=self.charged_particle_eta_cut[0],
                       data_centralities=['30-50'],
                       mc_centralities=['30-40', '40-50'])
+                    
+        output_filename = os.path.join(self.output_dir, 'hHadronRAA{}'.format(self.file_format))
+        c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
     def plot_jet_histograms(self):
+    
+        # Create multi-panel canvas
+        cname = 'c_jet'
+        c = ROOT.TCanvas(cname,cname,1700,900)
+        c.cd()
+        c.Divide(4, 2)
+        
+        # Keep histograms in memory
+        self.plot_list = []
 
-        self.plot_raa('ALICE', raa_type='jet', cent_type='central',
+        self.plot_raa('ALICE', c, pad=1, raa_type='jet', cent_type='central',
                       eta_cut=self.jet_eta_cut_02[2],
                       data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
-        self.plot_raa('ALICE', raa_type='jet', cent_type='central',
+        self.plot_raa('ALICE', c, pad=5, raa_type='jet', cent_type='central',
                       eta_cut=self.jet_eta_cut_04[2],
                       data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-        self.plot_raa('ATLAS', raa_type='jet', cent_type='central',
+        self.plot_raa('ATLAS', c, pad=2, raa_type='jet', cent_type='central',
                       eta_cut=self.jet_eta_cut_04[1],
                       data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-        self.plot_raa('ATLAS', raa_type='jet', cent_type='semicentral',
+        self.plot_raa('ATLAS', c, pad=6, raa_type='jet', cent_type='semicentral',
                       eta_cut=self.jet_eta_cut_04[1],
                       data_centralities=['30-40'], mc_centralities=['30-40'], R=0.4)
-        self.plot_raa('CMS', raa_type='jet', cent_type='central',
+        self.plot_raa('CMS', c, pad=3, raa_type='jet', cent_type='central',
                       eta_cut=self.jet_eta_cut_02[0],
                       data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
-        self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
+        self.plot_raa('CMS', c, pad=7, raa_type='jet', cent_type='semicentral',
                       eta_cut=self.jet_eta_cut_02[0],
                       data_centralities=['30-50'], mc_centralities=['30-40'], R=0.2)
-        self.plot_raa('CMS', raa_type='jet', cent_type='central',
+        self.plot_raa('CMS', c, pad=4, raa_type='jet', cent_type='central',
                       eta_cut=self.jet_eta_cut_04[0],
                       data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-        self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
+        self.plot_raa('CMS', c, pad=8, raa_type='jet', cent_type='semicentral',
                       eta_cut=self.jet_eta_cut_04[0],
                       data_centralities=['30-50'], mc_centralities=['30-40'], R=0.4)
+                      
+        output_filename = os.path.join(self.output_dir, 'hJetRAA{}'.format(self.file_format))
+        c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
-    def plot_raa(self, experiment, raa_type, cent_type,
+    def plot_raa(self, experiment, c, pad, raa_type, cent_type,
                  eta_cut, data_centralities, mc_centralities, R=None):
 
         # Get JETSCAPE prediction
@@ -229,38 +253,54 @@ class PlotResults(common_base.CommonBase):
                     ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
                     h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
                                             cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Jet', R=R)
+                h_RAA.SetName('{}_{}_{}'.format(h_RAA.GetName(), experiment, pad))
+                self.plot_list.append(h_RAA)
                 self.h_RAA_list.append(h_RAA)
                 
         if raa_type == 'hadron':
             h_data_list = self.get_hadron_data(experiment, mc_cent)
-            output_filename = os.path.join(self.output_dir, 'hHadronRAA_{}_{}{}'.format(cent_type, experiment, self.file_format))
         elif raa_type == 'jet':
             h_data_list = self.get_jet_data(experiment, mc_cent, R)
-            output_filename = os.path.join(self.output_dir, 'hJetRAA_{}_{}_R{}{}'.format(cent_type, experiment, R, self.file_format))
         # Plot RAA overlay
         if len(self.h_RAA_list) > 0:
-            self.plot_RAA_overlay(predictions_to_plot, h_data_list, experiment, output_filename)
+            self.plot_RAA_overlay(raa_type, c, pad, predictions_to_plot, h_data_list, experiment)
+            
+        self.plot_list.append(predictions_to_plot)
+        self.plot_list.append(h_data_list)
 
     #-------------------------------------------------------------------------------------------
-    def plot_RAA_overlay(self, predictions, h_data_list, experiment, output_filename):
+    def plot_RAA_overlay(self, raa_type, c, pad, predictions, h_data_list, experiment):
 
         # Create canvas
-        cname = 'c_RAA_{}'.format(output_filename)
-        c = ROOT.TCanvas(cname,cname,600,450)
-        c.cd()
+        c.cd(pad)
         
         # Set pad and histo arrangement
         myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
-        myPad.SetLeftMargin(0.15)
-        myPad.SetTopMargin(0.04)
-        myPad.SetRightMargin(0.04)
-        myPad.SetBottomMargin(0.17)
+
+        if raa_type == 'hadron':
+            myPad.SetLeftMargin(0.12)
+            myPad.SetRightMargin(0.)
+            myPad.SetTopMargin(0.01)
+            myPad.SetBottomMargin(0.15)
+        elif raa_type == 'jet':
+            myPad.SetLeftMargin(0.12)
+            myPad.SetRightMargin(0.)
+            myPad.SetTopMargin(0.01)
+            myPad.SetBottomMargin(0.15)
+
         myPad.SetTicks(0,1)
         myPad.Draw()
         myPad.cd()
         
-        leg = ROOT.TLegend(0.45,0.74,0.6,0.93)
-        self.setupLegend(leg,0.04)
+        if raa_type == 'hadron':
+            leg = ROOT.TLegend(0.35,0.74,0.6,0.93)
+            self.setupLegend(leg,0.04)
+            self.plot_list.append(leg)
+        elif raa_type == 'jet':
+            leg = ROOT.TLegend(0.15,0.74,0.5,0.93)
+            self.setupLegend(leg,0.04)
+            self.plot_list.append(leg)
+
         
         # Draw experimental data
         for i,h_data_entry in enumerate(h_data_list):
@@ -280,10 +320,10 @@ class PlotResults(common_base.CommonBase):
             
                 self.h_RAA_list[i].SetNdivisions(505)
                 self.h_RAA_list[i].GetXaxis().SetTitleSize(24)
-                self.h_RAA_list[i].GetXaxis().SetTitleOffset(1.2)
+                self.h_RAA_list[i].GetXaxis().SetTitleOffset(2.6)
                 self.h_RAA_list[i].SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
                 self.h_RAA_list[i].GetYaxis().SetTitleSize(24)
-                self.h_RAA_list[i].GetYaxis().SetTitleOffset(1.1)
+                self.h_RAA_list[i].GetYaxis().SetTitleOffset(1.8)
                 self.h_RAA_list[i].SetYTitle("#it{R}_{AA}")
                 self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.47)
                 self.h_RAA_list[i].Draw('PE same')
@@ -304,9 +344,8 @@ class PlotResults(common_base.CommonBase):
         line.SetLineColor(1)
         line.SetLineStyle(2)
         line.Draw('same')
+        self.plot_list.append(line)
             
-        c.SaveAs(output_filename)
-
     #-------------------------------------------------------------------------------------------
     def get_hadron_data(self, experiment, mc_cent):
 
