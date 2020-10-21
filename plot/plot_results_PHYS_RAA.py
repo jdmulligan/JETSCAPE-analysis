@@ -153,13 +153,13 @@ class PlotResults(common_base.CommonBase):
                           data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
             self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
                           eta_cut=self.jet_eta_cut_02[0],
-                          data_centralities=['30-50'], mc_centralities=['30-40, 30-50'], R=0.2)
+                          data_centralities=['30-50'], mc_centralities=['30-40'], R=0.2)
             self.plot_raa('CMS', raa_type='jet', cent_type='central',
                           eta_cut=self.jet_eta_cut_04[0],
                           data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
             self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
                           eta_cut=self.jet_eta_cut_04[0],
-                          data_centralities=['30-50'], mc_centralities=['30-40, 30-50'], R=0.4)
+                          data_centralities=['30-50'], mc_centralities=['30-40'], R=0.4)
        
     #-------------------------------------------------------------------------------------------
     def plot_raa(self, experiment, raa_type, cent_type,
@@ -332,7 +332,7 @@ class PlotResults(common_base.CommonBase):
                 h_data_5_10 = dir_5_10.Get('Graph1D_y1')
                 h_data_list.append([h_data_0_5, '0-5'])
                 h_data_list.append([h_data_5_10, '5-10'])
-            elif mc_cent == '30-40' or mc_cent == '40-50':
+            elif mc_cent in ['30-40', '40-50']:
                 f = ROOT.TFile(self.file_CMS_hadron_30_50, 'READ')
                 dir = f.Get('Table 11')
                 h_data = dir.Get('Graph1D_y1')
@@ -373,17 +373,17 @@ class PlotResults(common_base.CommonBase):
             if mc_cent == '0-10':
                 if R==0.2:
                     h_data = self.get_data_from_txt(self.file_CMS_jet_0_10_R02,
-                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
                 elif R==0.4:
                     h_data = self.get_data_from_txt(self.file_CMS_jet_0_10_R04,
-                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
-            elif mc_cent == '30-40' or mc_cent == '40-50':
+                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+            elif mc_cent in ['30-40', '40-50']:
                 if R==0.2:
                     h_data = self.get_data_from_txt(self.file_CMS_jet_30_50_R02,
-                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
                 elif R==0.4:
                     h_data = self.get_data_from_txt(self.file_CMS_jet_30_50_R04,
-                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+                                                    os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
             h_data_list.append([h_data, mc_cent])
 
         return h_data_list
