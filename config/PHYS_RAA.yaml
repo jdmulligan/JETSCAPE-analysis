@@ -44,7 +44,8 @@ charged_particle_eta_cut: [1.0, 2.5, 0.8] # CMS, ATLAS, ALICE
 CMS_hadron_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
 CMS_hadron_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
 CMS_hadron_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
-ATLAS_hadron: ''
+ATLAS_hadron_0_5: 'data/PHYS_RAA/data_hadron/ATLAS/0_5/hadronRaa0-5.txt'
+ATLAS_hadron_30_40: 'data/PHYS_RAA/data_hadron/ATLAS/30_40/hadronRaa30-40.txt'
 ALICE_hadron: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
 
 # Inclusive jet data, R=0.4 AKT
@@ -79,7 +80,10 @@ jet_eta_cut_04: [2.0, 2.8, 0.3]     # CMS, ATLAS, ALICE
 jet_eta_cut_02: [2.0, None, 0.5]    # CMS, ATLAS, ALICE
 
 # Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
-CMS_jet: ''
+CMS_jet_0_10_R02: 'data/PHYS_RAA/data_jet/CMS/0_10_R02/CMS_JetRAA_R02_0-10.txt'
+CMS_jet_0_10_R04: 'data/PHYS_RAA/data_jet/CMS/0_10_R04/CMS_JetRAA_R04_0-10.txt'
+CMS_jet_30_50_R02: 'data/PHYS_RAA/data_jet/CMS/30_50_R02/CMS_JetRAA_R02_30-50.txt'
+CMS_jet_30_50_R04: 'data/PHYS_RAA/data_jet/CMS/30_50_R04/CMS_JetRAA_R04_30-50.txt'
 ATLAS_jet_0_10: 'data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
 ATLAS_jet_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
 ATLAS_jet_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
