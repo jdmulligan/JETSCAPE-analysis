@@ -114,6 +114,73 @@ class PlotResults(common_base.CommonBase):
         plot_jet_histograms = True
         if plot_jet_histograms:
             self.plot_jet_histograms()
+            
+        # Plot some additional histograms
+        plot_qa_histograms = True
+        if plot_qa_histograms:
+            self.plot_qa_histograms()
+            
+    #-------------------------------------------------------------------------------------------
+    def plot_qa_histograms(self):
+    
+        self.plot_n_events()
+
+        
+    #-------------------------------------------------------------------------------------------
+    def plot_n_events(self):
+    
+        cname = 'c_hadron'
+        c = ROOT.TCanvas(cname,cname,600, 450)
+        c.cd()
+        
+        leg = ROOT.TLegend(0.2,0.53,0.6,0.88)
+        self.setupLegend(leg,0.04)
+
+        i=0
+        h_list = []
+        for key,cent_group in self.predictions.items():
+
+            for prediction in cent_group:
+                            
+                if key == 'pp':
+                    dir = prediction
+                else:
+                    dir = prediction[0]
+                
+                filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(dir))
+                f = ROOT.TFile(filename, 'READ')
+                
+                hname = 'hNevents'
+                h = f.Get(hname)
+                h.SetDirectory(0)
+                h.SetName('{}_{}'.format(h.GetName(), dir))
+                h_list.append(h)
+                f.Close()
+                
+                h.GetYaxis().SetRangeUser(-1, 250000)
+                h.GetYaxis().SetTitle('N events (unscaled)')
+                h.GetXaxis().SetTitle('pt hat index')
+                h.GetXaxis().SetTitleOffset(1.)
+                
+                n_event_avg = int(h.Integral()/66.)
+                print('Avg n_events: {} ({})'.format(n_event_avg, dir))
+                
+                if n_event_avg == 120000:
+                    h.SetMarkerStyle(21)
+                else:
+                    h.SetMarkerStyle(20)
+                h.SetMarkerColor(ROOT.kBlue+2-i)
+                h.Draw('P same')
+                
+                leg.AddEntry(h, '{} (avg: {})'.format(dir, n_event_avg))
+
+                
+                i += 1
+                
+        leg.Draw('same')
+        
+        output_filename = os.path.join(self.output_dir, 'hNevents{}'.format(self.file_format))
+        c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
     def plot_hadron_histograms(self):
