@@ -14,6 +14,7 @@ reader: ascii            # [hepmc, ascii]
 progress_bar: False
 dry_run: False
 scale_histograms: True
+debug_level: 0
 
 # Charged particle data
 # In all cases: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )

@@ -38,7 +38,8 @@ class PlotResults(common_base.CommonBase):
         self.data_markers = [21, 20]
         self.markers = [20, 33, 34, 24, 27, 28]
         self.theory_colors = [ROOT.kViolet-8, ROOT.kRed-7, ROOT.kTeal-8,
-                              ROOT.kViolet-8, ROOT.kRed-7, ROOT.kTeal-8]
+                              ROOT.kViolet-8, ROOT.kRed-7, ROOT.kTeal-8,
+                              ROOT.kBlue-7, ROOT.kBlue-7, ROOT.kBlue-7]
         
         # Read config file
         with open(config_file, 'r') as stream:
@@ -50,6 +51,7 @@ class PlotResults(common_base.CommonBase):
         self.jetR_list = config['jetR']
         self.jet_eta_cut_04 = config['jet_eta_cut_04']
         self.jet_eta_cut_02 = config['jet_eta_cut_02']
+        self.debug_level = config['debug_level']
         self.file_format = '.pdf'
         
         self.predictions = {'pp': [], 'central': [], 'semicentral': [],}
@@ -92,33 +94,6 @@ class PlotResults(common_base.CommonBase):
         self.file_ATLAS_jet_40_50 = config['ATLAS_jet_40_50']
         self.file_ALICE_jet_0_10_R02 = config['ALICE_jet_0_10_R02']
         self.file_ALICE_jet_0_10_R04 = config['ALICE_jet_0_10_R04']
-                        
-        # Get binnings from data
-        self.bins_CMS_jet = np.array([250., 300., 400., 500., 1000.])
-        
-        f = ROOT.TFile(self.file_ATLAS_jet_0_10, 'READ')
-        dir = f.Get('Table 19')
-        h = dir.Get('Hist1D_y1')
-        self.bins_ATLAS_jet_0_10 = np.array(h.GetXaxis().GetXbins())
-        f.Close()
-        
-        f = ROOT.TFile(self.file_ATLAS_jet_30_40, 'READ')
-        dir = f.Get('Table 22')
-        h = dir.Get('Hist1D_y1')
-        self.bins_ATLAS_jet_30_40 = np.array(h.GetXaxis().GetXbins())
-        f.Close()
-        
-        f = ROOT.TFile(self.file_ATLAS_jet_40_50, 'READ')
-        dir = f.Get('Table 23')
-        h = dir.Get('Hist1D_y1')
-        self.bins_ATLAS_jet_40_50 = np.array(h.GetXaxis().GetXbins())
-        f.Close()
-
-        f = ROOT.TFile(self.file_ALICE_jet_0_10_R02, 'READ')
-        dir = f.Get('Table 30')
-        h = dir.Get('Hist1D_y1')
-        self.bins_ALICE_jet = np.array(h.GetXaxis().GetXbins())
-        f.Close()
         
         print(self)
 
@@ -157,13 +132,22 @@ class PlotResults(common_base.CommonBase):
                                           mc_centralities=['30-40', '40-50'])
         
         # Jet histograms
-       #for jetR in self.jetR_list:
-       #    self.plot_jet_cross_section('ALICE', type='central')
-       #    self.plot_jet_cross_section('ALICE', type='semicentral')
-       #    self.plot_jet_cross_section('ATLAS', type='central')
-       #    self.plot_jet_cross_section('ATLAS', type='semicentral')
-       #    self.plot_jet_cross_section('CMS', type='central')
-       #    self.plot_jet_cross_section('CMS', type='semicentral')
+        self.plot_jet_cross_section('ALICE', cent_type='central', eta_cut=self.jet_eta_cut_02[2],
+                                    R=0.2, data_centralities=['0-10'], mc_centralities=['0-10'])
+        self.plot_jet_cross_section('ALICE', cent_type='central', eta_cut=self.jet_eta_cut_04[2],
+                                    R=0.4, data_centralities=['0-10'], mc_centralities=['0-10'])
+        self.plot_jet_cross_section('ATLAS',cent_type='central', eta_cut=self.jet_eta_cut_04[1],
+                                    R=0.4, data_centralities=['0-10'], mc_centralities=['0-10'])
+        self.plot_jet_cross_section('ATLAS', cent_type='semicentral', eta_cut=self.jet_eta_cut_04[1],
+                                    R=0.4, data_centralities=['30-40'], mc_centralities=['30-40'])
+        self.plot_jet_cross_section('CMS', cent_type='central', eta_cut=self.jet_eta_cut_02[0],
+                                    R=0.2, data_centralities=['0-10'], mc_centralities=['0-10'])
+        self.plot_jet_cross_section('CMS', cent_type='semicentral', eta_cut=self.jet_eta_cut_02[0],
+                                    R=0.2, data_centralities=['30-50'], mc_centralities=['30-40, 30-50'])
+        self.plot_jet_cross_section('CMS', cent_type='central', eta_cut=self.jet_eta_cut_04[0],
+                                    R=0.4, data_centralities=['0-10'], mc_centralities=['0-10'])
+        self.plot_jet_cross_section('CMS', cent_type='semicentral', eta_cut=self.jet_eta_cut_04[0],
+                                    R=0.4, data_centralities=['30-50'], mc_centralities=['30-40, 30-50'])
    
     #-------------------------------------------------------------------------------------------
     def plot_ch_hadron_cross_section(self, experiment, cent_type, eta_cut,
@@ -226,10 +210,10 @@ class PlotResults(common_base.CommonBase):
             f.Close()
         elif experiment == 'ATLAS':
             if mc_cent == '0-10':
-                h_data= self.get_data_from_csv(self.file_ATLAS_hadron_0_5,
+                h_data= self.get_data_from_txt(self.file_ATLAS_hadron_0_5,
                                                os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
             elif mc_cent == '30-40':
-                h_data= self.get_data_from_csv(self.file_ATLAS_hadron_30_40,
+                h_data= self.get_data_from_txt(self.file_ATLAS_hadron_30_40,
                                                os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
             h_data_list.append([h_data, mc_cent])
         elif experiment == 'CMS':
@@ -300,7 +284,7 @@ class PlotResults(common_base.CommonBase):
                 self.h_RAA_list[i].SetYTitle("#it{R}_{AA}")
                 self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.47)
                 self.h_RAA_list[i].Draw('PE same')
-                
+
             self.h_RAA_list[i].SetMarkerColor(self.theory_colors[i])
             self.h_RAA_list[i].SetLineColor(self.theory_colors[i])
             self.h_RAA_list[i].SetMarkerStyle(self.markers[i])
@@ -321,87 +305,108 @@ class PlotResults(common_base.CommonBase):
         c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
-    def plot_jet_cross_section(self, sqrts, eta_cut):
+    def plot_jet_cross_section(self, experiment, cent_type, eta_cut, R,
+                               data_centralities, mc_centralities):
     
+        # Get JETSCAPE prediction
+        if experiment in ['ALICE', 'CMS']:
+            hname = 'hJetPt_{}_R{}Scaled'.format(experiment, R)
+        elif experiment == 'ATLAS':
+            if cent_type == 'central':
+                hname = 'hJetPt_{}_binning0_R{}Scaled'.format(experiment, R)
+            elif cent_type == 'semicentral':
+                hname = 'hJetPt_{}_binning1_R{}Scaled'.format(experiment, R)
 
-        hname = 'hJetPt_CMS_R{}'.format(jetR)
-        h = ROOT.TH1F(hname, hname, len(self.bins_CMS_jet)-1, self.bins_CMS_jet)
-        h.Sumw2()
-        setattr(self, hname, h)
-        
-        hname = 'hJetPt_ALICE_R{}'.format(jetR)
-        h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_jet)-1, self.bins_ALICE_jet)
-        h.Sumw2()
-        setattr(self, hname, h)
-        
-        hname = 'hJetPt_ALICE_no_ptlead_cut_R{}'.format(jetR)
-        h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_jet)-1, self.bins_ALICE_jet)
-        h.Sumw2()
-        setattr(self, hname, h)
-        
-        hname = 'hJetPt_ATLAS_binning0_R{}'.format(0.4)
-        h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_0_10)-1, self.bins_ATLAS_jet_0_10)
-        h.Sumw2()
-        setattr(self, hname, h)
-        
-        hname = 'hJetPt_ATLAS_binning1_R{}'.format(0.4)
-        h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_30_40)-1, self.bins_ATLAS_jet_30_40)
-        h.Sumw2()
-        setattr(self, hname, h)
-        
-        hname = 'hJetPt_ATLAS_binning2_R{}'.format(0.4)
-        h = ROOT.TH1F(hname, hname, len(self.bins_ATLAS_jet_40_50)-1, self.bins_ATLAS_jet_40_50)
-        h.Sumw2()
-        setattr(self, hname, h)
+        # pp
+        filename_pp = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(self.predictions['pp'][0]))
+        f_pp = ROOT.TFile(filename_pp, 'READ')
+        h_pp = f_pp.Get(hname)
+        h_pp.SetDirectory(0)
+        f_pp.Close()
     
-        # Get my histogram
-        filename = os.path.join(self.output_dir, self.filename.format(sqrts, 'ON'))
-        f = ROOT.TFile(filename, 'READ')
+        # AA
+        predictions = self.predictions[cent_type]
+        predictions_to_plot = []
+        h_AA = None
+        self.h_RAA_list = []
+        for i,prediction in enumerate(predictions):
+            mc_cent = prediction[1]
+            alpha_s = prediction[2]
+            Q_switch = prediction[3]
+            
+            if mc_cent in mc_centralities:
+                predictions_to_plot.append(prediction)
+            else:
+                continue
+            
+            filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(prediction[0]))
+            f_AA = ROOT.TFile(filename, 'READ')
+            h_AA = f_AA.Get(hname)
+            h_AA.SetDirectory(0)
+            f_AA.Close()
 
-        hJetPt_eta = f.Get('hJetPt_eta_R0.4Scaled')
-        
-        hJetPt_eta.GetYaxis().SetRangeUser(-1.*eta_cut, eta_cut)
-        hJetPt_finebinned = hJetPt_eta.ProjectionX()
-        hJetPt_finebinned.SetName('{}_{}_{}'.format(hJetPt_finebinned, sqrts, eta_cut))
-        
-        pt_bins = []
-        if sqrts == '2760':
-            pt_bins = [70, 80, 90, 100, 110, 130, 150, 170, 190, 210, 240, 270, 300]
-        elif sqrts == '5020':
-            pt_bins = [40, 50, 63, 79, 100, 126, 158, 200, 251, 316, 398, 501, 631, 800, 1000]
-        n_pt_bins = len(pt_bins) - 1
-        pt_bin_array = array('d', pt_bins)
-        hJetPt = hJetPt_finebinned.Rebin(n_pt_bins, '{}{}'.format(hJetPt_finebinned.GetName(), 'rebinned'), pt_bin_array)
-        
-        eta_acc = 2*eta_cut
-        hJetPt.Scale(1/(self.nEvents * eta_acc), 'width')
-        
-        # Get reference histogram
-        f_amit = ROOT.TFile(self.filename_amit, 'READ')
-        
-        hname = ''
-        if sqrts == '2760':
-            hname = 'hJetRAA_CMS_2760'
-        elif sqrts == '5020':
-            if eta_cut == 0.3:
-                hname = 'hJetRAA_ATLAS_5020_eta03'
-            elif eta_cut == 2.8:
-                hname = 'hJetRAA_ATLAS_5020_eta28'
-                
-        hJetPt_amit = f_amit.Get(hname)
+            # Plot the ratio
+            if h_AA:
+                output_filename = os.path.join(self.output_dir, 'hJetPt_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
+                xtitle = '#it{p}_{T} (GeV/#it{c})'
+                ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+                h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
+                                        cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Jet', R=R)
+                self.h_RAA_list.append(h_RAA)
+            
+        # Get experimental data
+        h_data_list = []
+        if experiment == 'ALICE':
+            if mc_cent == '0-10':
+                if R==0.2:
+                    f = ROOT.TFile(self.file_ALICE_jet_0_10_R02, 'READ')
+                    dir = f.Get('Table 30')
+                elif R==0.4:
+                    f = ROOT.TFile(self.file_ALICE_jet_0_10_R04, 'READ')
+                    dir = f.Get('Table 31')
+                h_data = dir.Get('Graph1D_y1')
+                h_data_list.append([h_data, '0-10'])
+            f.Close()
+        elif experiment == 'ATLAS':
+            if mc_cent == '0-10':
+                f = ROOT.TFile(self.file_ATLAS_jet_0_10, 'READ')
+                dir = f.Get('Table 19')
+                h_data = dir.Get('Hist1D_y1')
+                h_data_list.append([h_data, '0-10'])
+            elif mc_cent == '30-40':
+                f = ROOT.TFile(self.file_ATLAS_jet_30_40, 'READ')
+                dir = f.Get('Table 22')
+                h_data = dir.Get('Hist1D_y1')
+                h_data_list.append([h_data, '30-40'])
+        elif experiment == 'CMS':
+            if mc_cent == '0-10':
+                if R==0.2:
+                    h_data= self.get_data_from_txt(self.file_CMS_jet_0_10_R02,
+                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+                elif R==0.4:
+                    h_data= self.get_data_from_txt(self.file_CMS_jet_0_10_R04,
+                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+            elif mc_cent == '30-40' or mc_cent == '40-50':
+                if R==0.2:
+                    h_data= self.get_data_from_txt(self.file_CMS_jet_30_50_R02,
+                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+                elif R==0.4:
+                    h_data= self.get_data_from_txt(self.file_CMS_jet_30_50_R04,
+                                                   os.path.join(self.output_dir, '{}_{}{}'.format(experiment, mc_cent, self.file_format)))
+            h_data_list.append([h_data, mc_cent])
 
-        # Plot the ratio
-        output_filename = os.path.join(self.output_dir, 'hJetCrossSectionPP_Ratio_{}_eta{}{}'.format(sqrts, self.remove_periods(eta_cut), self.file_format))
-        xtitle = '#it{p}_{T,jet} (GeV/#it{c})'
-        ytitle = '#frac{d^{2}#sigma}{d#it{p}_{T,jet}d#it{#eta}_{jet}} #left[mb (GeV/c)^{-1}#right]'
-        self.plot_ratio(hJetPt, hJetPt_amit, output_filename, xtitle, ytitle, sqrts, eta_cut, label = 'Jet')
+        # Plot RAA overlay
+        if len(self.h_RAA_list) > 0:
+            output_filename = os.path.join(self.output_dir, 'hJetRAA_{}_{}_R{}{}'.format(cent_type, experiment, R, self.file_format))
+            self.plot_RAA(predictions_to_plot, h_data_list, experiment, output_filename)
         
     #-------------------------------------------------------------------------------------------
     # Plot ratio h1/h2
-    def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, eta_cut, cent, alpha_s, Q_switch, label='Jet'):
+    def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, eta_cut, cent, alpha_s, Q_switch,
+                   label='Jet', R=None):
 
         # Create canvas
-        cname = 'c_{}_{}_{}_{}'.format(cent, alpha_s, Q_switch, eta_cut)
+        cname = 'c_{}_{}_{}_{}_{}'.format(cent, alpha_s, Q_switch, eta_cut, R)
         c = ROOT.TCanvas(cname,cname,800,850)
         #ROOT.SetOwnership(c, False) # For some reason this is necessary to avoid a segfault...some bug in ROOT or pyroot
                                     # Supposedly fixed in https://github.com/root-project/root/pull/3787
@@ -515,20 +520,23 @@ class PlotResults(common_base.CommonBase):
         line.SetLineWidth(4)
         line.Draw()
 
-        c.SaveAs(outputFilename)
+        if self.debug_level > 0:
+            c.SaveAs(outputFilename)
         
         return hRatio.Clone('{}_{}'.format(hRatio.GetName(), 'new'))
         
   
     # Set legend parameters
     #-------------------------------------------------------------------------------------------
-    def get_data_from_csv(self, filename, output_filename):
+    def get_data_from_txt(self, filename, output_filename):
         
         g = ROOT.TGraphAsymmErrors(filename, "%lg %lg %lg %lg %lg %lg")
-        #cname = 'c_{}'.format(filename)
-        #c = ROOT.TCanvas(cname,cname,800,850)
-        #g.Draw()
-        #c.SaveAs(output_filename)
+        
+        if self.debug_level > 0:
+            cname = 'c_{}'.format(filename)
+            c = ROOT.TCanvas(cname,cname,800,850)
+            g.Draw()
+            c.SaveAs(output_filename)
         return g
         
     # Set legend parameters
