@@ -108,59 +108,69 @@ class PlotResults(common_base.CommonBase):
         # Charged particle histograms
         plot_hadron_histograms = True
         if plot_hadron_histograms:
-            self.plot_raa('ALICE', raa_type='hadron', cent_type='central',
-                          eta_cut=self.charged_particle_eta_cut[2],
-                          data_centralities=['0-5', '5-10'],
-                          mc_centralities=['0-10'])
-            self.plot_raa('ALICE', raa_type='hadron', cent_type='semicentral',
-                          eta_cut=self.charged_particle_eta_cut[2],
-                          data_centralities=['30-40'],
-                          mc_centralities=['30-40'])
-            self.plot_raa('ATLAS', raa_type='hadron', cent_type='central',
-                          eta_cut=self.charged_particle_eta_cut[1],
-                          data_centralities=['0-5'],
-                          mc_centralities=['0-10'])
-            self.plot_raa('ATLAS', raa_type='hadron',  cent_type='semicentral',
-                          eta_cut=self.charged_particle_eta_cut[1],
-                          data_centralities=['30-40'],
-                          mc_centralities=['30-40'])
-            self.plot_raa('CMS', raa_type='hadron', cent_type='central',
-                          eta_cut=self.charged_particle_eta_cut[0],
-                          data_centralities=['0-5', '5-10'],
-                          mc_centralities=['0-10'])
-            self.plot_raa('CMS', raa_type='hadron', cent_type='semicentral',
-                          eta_cut=self.charged_particle_eta_cut[0],
-                          data_centralities=['30-50'],
-                          mc_centralities=['30-40', '40-50'])
+            self.plot_hadron_histograms()
         
         # Jet histograms
-        plot_jet_histograms = True
+        plot_jet_histograms = False
         if plot_jet_histograms:
-            self.plot_raa('ALICE', raa_type='jet', cent_type='central',
-                          eta_cut=self.jet_eta_cut_02[2],
-                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
-            self.plot_raa('ALICE', raa_type='jet', cent_type='central',
-                          eta_cut=self.jet_eta_cut_04[2],
-                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-            self.plot_raa('ATLAS', raa_type='jet', cent_type='central',
-                          eta_cut=self.jet_eta_cut_04[1],
-                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-            self.plot_raa('ATLAS', raa_type='jet', cent_type='semicentral',
-                          eta_cut=self.jet_eta_cut_04[1],
-                          data_centralities=['30-40'], mc_centralities=['30-40'], R=0.4)
-            self.plot_raa('CMS', raa_type='jet', cent_type='central',
-                          eta_cut=self.jet_eta_cut_02[0],
-                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
-            self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
-                          eta_cut=self.jet_eta_cut_02[0],
-                          data_centralities=['30-50'], mc_centralities=['30-40'], R=0.2)
-            self.plot_raa('CMS', raa_type='jet', cent_type='central',
-                          eta_cut=self.jet_eta_cut_04[0],
-                          data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-            self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
-                          eta_cut=self.jet_eta_cut_04[0],
-                          data_centralities=['30-50'], mc_centralities=['30-40'], R=0.4)
-       
+            self.plot_jet_histograms()
+
+    #-------------------------------------------------------------------------------------------
+    def plot_hadron_histograms(self):
+    
+        self.plot_raa('ALICE', raa_type='hadron', cent_type='central',
+                      eta_cut=self.charged_particle_eta_cut[2],
+                      data_centralities=['0-5', '5-10'],
+                      mc_centralities=['0-10'])
+        self.plot_raa('ALICE', raa_type='hadron', cent_type='semicentral',
+                      eta_cut=self.charged_particle_eta_cut[2],
+                      data_centralities=['30-40'],
+                      mc_centralities=['30-40'])
+        self.plot_raa('ATLAS', raa_type='hadron', cent_type='central',
+                      eta_cut=self.charged_particle_eta_cut[1],
+                      data_centralities=['0-5'],
+                      mc_centralities=['0-10'])
+        self.plot_raa('ATLAS', raa_type='hadron',  cent_type='semicentral',
+                      eta_cut=self.charged_particle_eta_cut[1],
+                      data_centralities=['30-40'],
+                      mc_centralities=['30-40'])
+        self.plot_raa('CMS', raa_type='hadron', cent_type='central',
+                      eta_cut=self.charged_particle_eta_cut[0],
+                      data_centralities=['0-5', '5-10'],
+                      mc_centralities=['0-10'])
+        self.plot_raa('CMS', raa_type='hadron', cent_type='semicentral',
+                      eta_cut=self.charged_particle_eta_cut[0],
+                      data_centralities=['30-50'],
+                      mc_centralities=['30-40', '40-50'])
+
+    #-------------------------------------------------------------------------------------------
+    def plot_jet_histograms(self):
+
+        self.plot_raa('ALICE', raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_02[2],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
+        self.plot_raa('ALICE', raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_04[2],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+        self.plot_raa('ATLAS', raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_04[1],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+        self.plot_raa('ATLAS', raa_type='jet', cent_type='semicentral',
+                      eta_cut=self.jet_eta_cut_04[1],
+                      data_centralities=['30-40'], mc_centralities=['30-40'], R=0.4)
+        self.plot_raa('CMS', raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_02[0],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
+        self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
+                      eta_cut=self.jet_eta_cut_02[0],
+                      data_centralities=['30-50'], mc_centralities=['30-40'], R=0.2)
+        self.plot_raa('CMS', raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_04[0],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+        self.plot_raa('CMS', raa_type='jet', cent_type='semicentral',
+                      eta_cut=self.jet_eta_cut_04[0],
+                      data_centralities=['30-50'], mc_centralities=['30-40'], R=0.4)
+
     #-------------------------------------------------------------------------------------------
     def plot_raa(self, experiment, raa_type, cent_type,
                  eta_cut, data_centralities, mc_centralities, R=None):
