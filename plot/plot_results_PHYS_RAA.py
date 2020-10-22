@@ -11,6 +11,7 @@ import os
 import sys
 import yaml
 import argparse
+import operator
 
 # Data analysis and plotting
 import ROOT
@@ -36,7 +37,8 @@ class PlotResults(common_base.CommonBase):
         
         self.data_color = ROOT.kGray+3
         self.data_markers = [21, 20]
-        self.markers = [20, 33, 34, 24, 27, 28]
+        self.markers = [21, 20, 34, 33, 22, 23]
+        self.alpha = 0.7
         self.theory_colors = [ROOT.kViolet-8, ROOT.kRed-7, ROOT.kTeal-8,
                               ROOT.kViolet-8, ROOT.kRed-7, ROOT.kTeal-8,
                               ROOT.kBlue-7, ROOT.kBlue-7, ROOT.kBlue-7]
@@ -236,10 +238,20 @@ class PlotResults(common_base.CommonBase):
         h_pp_rebinned = h_pp.Rebin(h_pp_xbins.size-1, '{}_pp_rebinned'.format(hname), h_pp_xbins)
         
         # AA
-        predictions = self.predictions[cent_type]
+        predictions = sorted(self.predictions[cent_type], key=operator.itemgetter(2))
+        if predictions[0][2] == 0.2:
+            predictions.append(predictions.pop(0))
+            predictions.append(predictions.pop(-2))
+        if predictions[1][3] == 3.0:
+            predictions_temp1 = predictions[1]
+            predictions_temp2 = predictions[2]
+            predictions[1] = predictions_temp2
+            predictions[2] = predictions_temp1
+        
         predictions_to_plot = []
         h_AA = None
         self.h_RAA_list = []
+        
         for i,prediction in enumerate(predictions):
             mc_cent = prediction[1]
             alpha_s = prediction[2]
@@ -363,10 +375,13 @@ class PlotResults(common_base.CommonBase):
                 self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.8)
                 self.h_RAA_list[i].Draw('PE same')
 
-            self.h_RAA_list[i].SetMarkerColor(self.theory_colors[i])
-            self.h_RAA_list[i].SetLineColor(self.theory_colors[i])
+            #self.h_RAA_list[i].SetMarkerColor(self.theory_colors[i])
+            self.h_RAA_list[i].SetMarkerColorAlpha(self.theory_colors[i], self.alpha)
+            #self.h_RAA_list[i].SetLineColor(self.theory_colors[i])
+            self.h_RAA_list[i].SetLineColorAlpha(self.theory_colors[i], self.alpha)
+            self.h_RAA_list[i].SetLineWidth(1)
             self.h_RAA_list[i].SetMarkerStyle(self.markers[i])
-            leg.AddEntry(self.h_RAA_list[i],'#alpha_{{s}} = {}, #it{{Q}}_{{0}} = {}, {}%'.format(alpha_s, Q_switch, cent),'Pe')
+            leg.AddEntry(self.h_RAA_list[i],'#alpha_{{s}} = {}, #it{{Q}}_{{0}} = {}, {}%'.format(alpha_s, Q_switch, cent),'P')
 
         for h_data_entry in h_data_list:
             h_data_entry[0].Draw('PE same')
@@ -764,7 +779,7 @@ class PlotResults(common_base.CommonBase):
 
         myLegend2pp = ROOT.TLegend(0.45,0.6,0.6,0.68)
         self.setupLegend(myLegend2pp,0.04)
-        myLegend2pp.AddEntry(h_AA,'Pb-Pb {}%  (#alpha_{{s}}={}, Q_{{switch}}={})'.format(cent, alpha_s, Q_switch),'Pe')
+        myLegend2pp.AddEntry(h_AA,'Pb-Pb {}%  (#alpha_{{s}}={}, Q_{{switch}}={})'.format(cent, alpha_s, Q_switch),'P')
         myLegend2pp.AddEntry(h_pp,'pp','Pe')
         myLegend2pp.Draw()
 
