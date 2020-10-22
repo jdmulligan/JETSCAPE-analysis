@@ -125,31 +125,40 @@ class PlotResults(common_base.CommonBase):
     def plot_qa_histograms(self):
     
         # Plot unscaled number of events per pt-hat bin
-        self.plot_n_events()
+        self.plot_hist_loop(hname = 'hNevents')
+        
+        # Plot hadron recoil pt distribution
+        self.plot_hist_loop(hname = 'hChargedPt_RecoilsScaled')
         
         # Plot ALICE bias ratio in pp
-        self.plot_pt_lead_ratio(R=0.2)
+        #self.plot_pt_lead_ratio(R=0.2)
         #self.plot_pt_lead_ratio(R=0.4)
-
+        
     #-------------------------------------------------------------------------------------------
-    def plot_pt_lead_ratio(self, R):
-
-        cname = 'c_ptlead_{}'.format(R)
+    def plot_hist_loop(self, hname):
+    
+        cname = 'c_{}'.format(hname)
         c = ROOT.TCanvas(cname,cname,600, 450)
         c.cd()
-        
+            
         # Set pad and histo arrangement
         myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
         myPad.SetTicks(0,1)
-        myPad.SetLeftMargin(0.2)
+        myPad.SetLeftMargin(0.15)
         myPad.SetRightMargin(0.05)
         myPad.SetBottomMargin(0.12)
         myPad.SetTopMargin(0.05)
         myPad.Draw()
+        if 'hChargedPt_RecoilsScaled' in hname:
+            myPad.SetLogy()
         myPad.cd()
         
-        leg = ROOT.TLegend(0.3,0.56,0.7,0.92)
-        self.setupLegend(leg,0.04)
+        if 'hChargedPt_RecoilsScaled' in hname:
+            leg = ROOT.TLegend(0.4,0.56,0.8,0.92)
+            self.setupLegend(leg,0.04)
+        else:
+            leg = ROOT.TLegend(0.25,0.56,0.65,0.92)
+            self.setupLegend(leg,0.04)
 
         i=0
         h_list = []
@@ -164,111 +173,47 @@ class PlotResults(common_base.CommonBase):
                 
                 filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(dir))
                 f = ROOT.TFile(filename, 'READ')
-                
-                h1name = 'hJetPt_ALICE_R{}Scaled'.format(R)
-                h1 = f.Get(h1name)
-                h1.SetDirectory(0)
-                h1.SetName('{}_{}'.format(h1.GetName(), dir))
-  
-                h2name = 'hJetPt_ALICE_no_ptlead_cut_R{}Scaled'.format(R)
-                h2 = f.Get(h2name)
-                h2.SetDirectory(0)
-                h2.SetName('{}_{}'.format(h2.GetName(), dir))
-  
-                f.Close()
- 
-                h1.Divide(h2)
-                h_list.append(h1)
-                h1.GetYaxis().SetRangeUser(0., 2.)
-                h1.GetYaxis().SetTitle('bias ratio:   #frac{#it{p}_{T,ch lead} > 5 GeV/#it{c}}{#it{p}_{T,ch lead} > 0 GeV/#it{c}}')
-                h1.GetYaxis().SetTitleOffset(2.)
-                h1.GetXaxis().SetTitle('#it{p}_{T} (GeV/#it{c})')
-                h1.GetXaxis().SetTitleOffset(1.2)
-                if key == 'pp':
-                    h1.SetMarkerStyle(20)
-                else:
-                    h1.SetMarkerStyle(33)
-                h1.SetMarkerColor(ROOT.kBlue+2-i)
-                h1.Draw('P same')
-   
-                leg.AddEntry(h1, dir)
-
-                i += 1
-        
-        # Draw exp data, for R=0.2 case
-        if R == 0.2:
-            f = ROOT.TFile(self.file_ALICE_jet_0_10_R02_biasratio, 'READ')
-            dir = f.Get('Table 26')
-            h_data = dir.Get('Graph1D_y1')
-            h_data.SetMarkerStyle(21)
-            h_data.SetMarkerColor(self.data_color)
-            h_data.SetLineColor(self.data_color)
-            h_data.Draw('EP same')
-            leg.AddEntry(h_data, 'ALICE pp R=0.2')
-
-        leg.Draw('same')
-        
-        line = ROOT.TLine(h1.GetXaxis().GetXmin(),1,h1.GetXaxis().GetXmax(),1)
-        line.SetLineColor(1)
-        line.SetLineStyle(2)
-        line.Draw('same')
-        
-        output_filename = os.path.join(self.output_dir, 'hBiasRatio_R{}{}'.format(R, self.file_format))
-        c.SaveAs(output_filename)
-        
-    #-------------------------------------------------------------------------------------------
-    def plot_n_events(self):
-    
-        cname = 'c_nevent'
-        c = ROOT.TCanvas(cname,cname,600, 450)
-        c.cd()
-        
-        leg = ROOT.TLegend(0.2,0.53,0.6,0.88)
-        self.setupLegend(leg,0.04)
-
-        i=0
-        h_list = []
-        for key,cent_group in self.predictions.items():
-
-            for prediction in cent_group:
-                            
-                if key == 'pp':
-                    dir = prediction
-                else:
-                    dir = prediction[0]
-                
-                filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(dir))
-                f = ROOT.TFile(filename, 'READ')
-                
-                hname = 'hNevents'
                 h = f.Get(hname)
                 h.SetDirectory(0)
                 h.SetName('{}_{}'.format(h.GetName(), dir))
                 h_list.append(h)
                 f.Close()
                 
-                h.GetYaxis().SetRangeUser(-1, 250000)
-                h.GetYaxis().SetTitle('N events (unscaled)')
-                h.GetXaxis().SetTitle('pt hat index')
-                h.GetXaxis().SetTitleOffset(1.)
-                
-                n_event_avg = int(h.Integral()/66.)
-                print('Avg n_events: {} ({})'.format(n_event_avg, dir))
-                
-                if n_event_avg == 120000:
+                if 'Nevents' in hname:
+                    h.GetYaxis().SetTitle('N events (unscaled)')
+                    h.GetXaxis().SetTitle('pt hat index')
+                    h.GetXaxis().SetTitleOffset(1.)
+                    h.GetYaxis().SetRangeUser(-1, 250000)
+                    n_event_avg = int(h.Integral()/66.)
+                    print('Avg n_events: {} ({})'.format(n_event_avg, dir))
+                    if n_event_avg == 120000:
+                        h.SetMarkerStyle(21)
+                    else:
+                        h.SetMarkerStyle(20)
+                    leg.AddEntry(h, '{} (avg: {})'.format(dir, n_event_avg))
+            
+                elif 'hChargedPt_RecoilsScaled' in hname:
+                    h.GetYaxis().SetTitle('#frac{dN}{d#it{p}_{T}} (GeV/#it{c})^{-1}')
+                    h.GetYaxis().SetTitleOffset(2.8)
+                    h.GetXaxis().SetTitle('#it{p}_{T} (GeV/#it{c})')
+                    h.GetYaxis().SetTitleOffset(1.2)
+                    h.GetXaxis().SetRangeUser(0,50)
+                    h.GetYaxis().SetRangeUser(1e-5,1e12)
                     h.SetMarkerStyle(21)
-                else:
-                    h.SetMarkerStyle(20)
+                    leg.AddEntry(h, dir)
+
+                    #rebin_value = 5
+                    #h.Rebin(rebin_value)
+                    #h.Scale(1./rebin_value)
+
                 h.SetMarkerColor(ROOT.kBlue+2-i)
                 h.Draw('P same')
-                
-                leg.AddEntry(h, '{} (avg: {})'.format(dir, n_event_avg))
 
                 i += 1
                 
         leg.Draw('same')
         
-        output_filename = os.path.join(self.output_dir, 'hNevents{}'.format(self.file_format))
+        output_filename = os.path.join(self.output_dir, '{}{}'.format(hname, self.file_format))
         c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
@@ -501,7 +446,96 @@ class PlotResults(common_base.CommonBase):
         line.SetLineStyle(2)
         line.Draw('same')
         self.plot_list.append(line)
-            
+        
+    #-------------------------------------------------------------------------------------------
+    def plot_pt_lead_ratio(self, R):
+
+        cname = 'c_ptlead_{}'.format(R)
+        c = ROOT.TCanvas(cname,cname,600, 450)
+        c.cd()
+        
+        # Set pad and histo arrangement
+        myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
+        myPad.SetTicks(0,1)
+        myPad.SetLeftMargin(0.2)
+        myPad.SetRightMargin(0.05)
+        myPad.SetBottomMargin(0.12)
+        myPad.SetTopMargin(0.05)
+        myPad.Draw()
+        myPad.cd()
+        
+        leg = ROOT.TLegend(0.3,0.56,0.7,0.92)
+        self.setupLegend(leg,0.04)
+
+        i=0
+        h_list = []
+        for key,cent_group in self.predictions.items():
+
+            for prediction in cent_group:
+                            
+                if key == 'pp':
+                    dir = prediction
+                else:
+                    dir = prediction[0]
+                
+                filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(dir))
+                f = ROOT.TFile(filename, 'READ')
+                
+                h1name = 'hJetPt_ALICE_R{}Scaled'.format(R)
+                h1 = f.Get(h1name)
+                h1.SetDirectory(0)
+                h1.SetName('{}_{}'.format(h1.GetName(), dir))
+  
+                h2name = 'hJetPt_ALICE_no_ptlead_cut_R{}Scaled'.format(R)
+                h2 = f.Get(h2name)
+                h2.SetDirectory(0)
+                h2.SetName('{}_{}'.format(h2.GetName(), dir))
+  
+                f.Close()
+ 
+                hratio = h1.Clone('{}_ratio'.format(h1.GetName()))
+                hratio.Divide(h2)
+                h_list.append(hratio)
+                hratio.GetYaxis().SetRangeUser(0., 2.)
+                if R == 0.2:
+                    hratio.GetYaxis().SetTitle('bias ratio:   #frac{#it{p}_{T,ch lead} > 5 GeV/#it{c}}{#it{p}_{T,ch lead} > 0 GeV/#it{c}}')
+                else:
+                    h1.GetYaxis().SetTitle('bias ratio')
+                hratio.GetYaxis().SetTitleOffset(2.)
+                hratio.GetXaxis().SetTitle('#it{p}_{T} (GeV/#it{c})')
+                hratio.GetXaxis().SetTitleOffset(1.2)
+                if key == 'pp':
+                    hratio.SetMarkerStyle(20)
+                else:
+                    hratio.SetMarkerStyle(33)
+                hratio.SetMarkerColor(ROOT.kBlue+2-i)
+                hratio.Draw('P same')
+   
+                leg.AddEntry(hratio, dir)
+
+                i += 1
+        
+        # Draw exp data, for R=0.2 case
+        if R == 0.2:
+            f = ROOT.TFile(self.file_ALICE_jet_0_10_R02_biasratio, 'READ')
+            dir = f.Get('Table 26')
+            h_data = dir.Get('Graph1D_y1')
+            h_data.SetMarkerStyle(21)
+            h_data.SetMarkerColor(self.data_color)
+            h_data.SetLineColor(self.data_color)
+            h_data.Draw('EP same')
+            leg.AddEntry(h_data, 'ALICE pp R=0.2')
+
+        leg.Draw('same')
+        
+        line = ROOT.TLine(h1.GetXaxis().GetXmin(),1,h1.GetXaxis().GetXmax(),1)
+        line.SetLineColor(1)
+        line.SetLineStyle(2)
+        line.Draw('same')
+        
+        output_filename = os.path.join(self.output_dir, 'hBiasRatio_R{}{}'.format(R, self.file_format))
+        c.SaveAs(output_filename)
+         
     #-------------------------------------------------------------------------------------------
     def get_hadron_data(self, experiment, mc_cent):
 
