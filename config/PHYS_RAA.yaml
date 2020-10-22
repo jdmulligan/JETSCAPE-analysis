@@ -90,3 +90,4 @@ ATLAS_jet_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table
 ATLAS_jet_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
 ALICE_jet_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
 ALICE_jet_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
+ALICE_jet_0_10_R02_biasratio: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_26.root'

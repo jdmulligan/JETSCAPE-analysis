@@ -94,6 +94,7 @@ class PlotResults(common_base.CommonBase):
         self.file_ATLAS_jet_40_50 = config['ATLAS_jet_40_50']
         self.file_ALICE_jet_0_10_R02 = config['ALICE_jet_0_10_R02']
         self.file_ALICE_jet_0_10_R04 = config['ALICE_jet_0_10_R04']
+        self.file_ALICE_jet_0_10_R02_biasratio = config['ALICE_jet_0_10_R02_biasratio']
         
         print(self)
 
@@ -123,13 +124,102 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def plot_qa_histograms(self):
     
+        # Plot unscaled number of events per pt-hat bin
         self.plot_n_events()
+        
+        # Plot ALICE bias ratio in pp
+        self.plot_pt_lead_ratio(R=0.2)
+        #self.plot_pt_lead_ratio(R=0.4)
 
+    #-------------------------------------------------------------------------------------------
+    def plot_pt_lead_ratio(self, R):
+
+        cname = 'c_ptlead_{}'.format(R)
+        c = ROOT.TCanvas(cname,cname,600, 450)
+        c.cd()
+        
+        # Set pad and histo arrangement
+        myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
+        myPad.SetTicks(0,1)
+        myPad.SetLeftMargin(0.2)
+        myPad.SetRightMargin(0.05)
+        myPad.SetBottomMargin(0.12)
+        myPad.SetTopMargin(0.05)
+        myPad.Draw()
+        myPad.cd()
+        
+        leg = ROOT.TLegend(0.3,0.56,0.7,0.92)
+        self.setupLegend(leg,0.04)
+
+        i=0
+        h_list = []
+        for key,cent_group in self.predictions.items():
+
+            for prediction in cent_group:
+                            
+                if key == 'pp':
+                    dir = prediction
+                else:
+                    dir = prediction[0]
+                
+                filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(dir))
+                f = ROOT.TFile(filename, 'READ')
+                
+                h1name = 'hJetPt_ALICE_R{}Scaled'.format(R)
+                h1 = f.Get(h1name)
+                h1.SetDirectory(0)
+                h1.SetName('{}_{}'.format(h1.GetName(), dir))
+  
+                h2name = 'hJetPt_ALICE_no_ptlead_cut_R{}Scaled'.format(R)
+                h2 = f.Get(h2name)
+                h2.SetDirectory(0)
+                h2.SetName('{}_{}'.format(h2.GetName(), dir))
+  
+                f.Close()
+ 
+                h1.Divide(h2)
+                h_list.append(h1)
+                h1.GetYaxis().SetRangeUser(0., 2.)
+                h1.GetYaxis().SetTitle('bias ratio:   #frac{#it{p}_{T,ch lead} > 5 GeV/#it{c}}{#it{p}_{T,ch lead} > 0 GeV/#it{c}}')
+                h1.GetYaxis().SetTitleOffset(2.)
+                h1.GetXaxis().SetTitle('#it{p}_{T} (GeV/#it{c})')
+                h1.GetXaxis().SetTitleOffset(1.2)
+                if key == 'pp':
+                    h1.SetMarkerStyle(20)
+                else:
+                    h1.SetMarkerStyle(33)
+                h1.SetMarkerColor(ROOT.kBlue+2-i)
+                h1.Draw('P same')
+   
+                leg.AddEntry(h1, dir)
+
+                i += 1
+        
+        # Draw exp data, for R=0.2 case
+        if R == 0.2:
+            f = ROOT.TFile(self.file_ALICE_jet_0_10_R02_biasratio, 'READ')
+            dir = f.Get('Table 26')
+            h_data = dir.Get('Graph1D_y1')
+            h_data.SetMarkerStyle(21)
+            h_data.SetMarkerColor(self.data_color)
+            h_data.SetLineColor(self.data_color)
+            h_data.Draw('EP same')
+            leg.AddEntry(h_data, 'ALICE pp R=0.2')
+
+        leg.Draw('same')
+        
+        line = ROOT.TLine(h1.GetXaxis().GetXmin(),1,h1.GetXaxis().GetXmax(),1)
+        line.SetLineColor(1)
+        line.SetLineStyle(2)
+        line.Draw('same')
+        
+        output_filename = os.path.join(self.output_dir, 'hBiasRatio_R{}{}'.format(R, self.file_format))
+        c.SaveAs(output_filename)
         
     #-------------------------------------------------------------------------------------------
     def plot_n_events(self):
     
-        cname = 'c_hadron'
+        cname = 'c_nevent'
         c = ROOT.TCanvas(cname,cname,600, 450)
         c.cd()
         
@@ -174,7 +264,6 @@ class PlotResults(common_base.CommonBase):
                 
                 leg.AddEntry(h, '{} (avg: {})'.format(dir, n_event_avg))
 
-                
                 i += 1
                 
         leg.Draw('same')
