@@ -172,7 +172,7 @@ class PlotResults(common_base.CommonBase):
     
         # Create multi-panel canvas
         cname = 'c_jet'
-        c = ROOT.TCanvas(cname,cname,1700,900)
+        c = ROOT.TCanvas(cname,cname,2300,900)
         c.cd()
         c.Divide(4, 2)
         
@@ -298,13 +298,13 @@ class PlotResults(common_base.CommonBase):
             h_data_list = self.get_jet_data(experiment, mc_cent, R)
         # Plot RAA overlay
         if len(self.h_RAA_list) > 0:
-            self.plot_RAA_overlay(raa_type, c, pad, predictions_to_plot, h_data_list, experiment)
+            self.plot_RAA_overlay(raa_type, c, pad, predictions_to_plot, h_data_list, experiment, eta_cut, R)
             
         self.plot_list.append(predictions_to_plot)
         self.plot_list.append(h_data_list)
 
     #-------------------------------------------------------------------------------------------
-    def plot_RAA_overlay(self, raa_type, c, pad, predictions, h_data_list, experiment):
+    def plot_RAA_overlay(self, raa_type, c, pad, predictions, h_data_list, experiment, eta_cut, R):
 
         # Create canvas
         c.cd(pad)
@@ -315,12 +315,12 @@ class PlotResults(common_base.CommonBase):
 
         if raa_type == 'hadron':
             myPad.SetLeftMargin(0.12)
-            myPad.SetRightMargin(0.)
+            myPad.SetRightMargin(0.03)
             myPad.SetTopMargin(0.01)
             myPad.SetBottomMargin(0.15)
         elif raa_type == 'jet':
             myPad.SetLeftMargin(0.12)
-            myPad.SetRightMargin(0.)
+            myPad.SetRightMargin(0.03)
             myPad.SetTopMargin(0.01)
             myPad.SetBottomMargin(0.15)
 
@@ -328,11 +328,12 @@ class PlotResults(common_base.CommonBase):
         myPad.Draw()
         myPad.cd()
         
+        n_predictions = len(predictions) + len(h_data_list)
         if raa_type == 'hadron':
-            leg = ROOT.TLegend(0.35,0.74,0.6,0.93)
+            leg = ROOT.TLegend(0.55,0.93-0.042*n_predictions,0.75,0.96)
             self.setupLegend(leg,0.04)
         elif raa_type == 'jet':
-            leg = ROOT.TLegend(0.15,0.74,0.5,0.93)
+            leg = ROOT.TLegend(0.53,0.93-0.042*n_predictions,0.73,0.96)
             self.setupLegend(leg,0.04)
         self.plot_list.append(leg)
         
@@ -359,13 +360,13 @@ class PlotResults(common_base.CommonBase):
                 self.h_RAA_list[i].GetYaxis().SetTitleSize(24)
                 self.h_RAA_list[i].GetYaxis().SetTitleOffset(1.8)
                 self.h_RAA_list[i].SetYTitle("#it{R}_{AA}")
-                self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.47)
+                self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.8)
                 self.h_RAA_list[i].Draw('PE same')
 
             self.h_RAA_list[i].SetMarkerColor(self.theory_colors[i])
             self.h_RAA_list[i].SetLineColor(self.theory_colors[i])
             self.h_RAA_list[i].SetMarkerStyle(self.markers[i])
-            leg.AddEntry(self.h_RAA_list[i],'MATTER+LBT {}%  (#alpha_{{s}}={}, Q_{{0}}={})'.format(cent, alpha_s, Q_switch),'Pe')
+            leg.AddEntry(self.h_RAA_list[i],'#alpha_{{s}} = {}, #it{{Q}}_{{0}} = {}, {}%'.format(alpha_s, Q_switch, cent),'Pe')
 
         for h_data_entry in h_data_list:
             h_data_entry[0].Draw('PE same')
@@ -379,6 +380,43 @@ class PlotResults(common_base.CommonBase):
         line.SetLineStyle(2)
         line.Draw('same')
         self.plot_list.append(line)
+        
+        # # # # # # # # # # # # # # # # # # # # # # # #
+        # text
+        # # # # # # # # # # # # # # # # # # # # # # # #
+        ymax = 0.93
+        dy = 0.05
+        x = 0.16
+        system0 = ROOT.TLatex(x,ymax,'#bf{JETSCAPE}')
+        system0.SetNDC()
+        system0.SetTextSize(0.044)
+        system0.Draw()
+        
+        system1 = ROOT.TLatex(x,ymax-dy,'MATTER+LBT')
+        system1.SetNDC()
+        system1.SetTextSize(0.044)
+        system1.Draw()
+        
+        system2 = ROOT.TLatex(x,ymax-2*dy,'Pb-Pb  #sqrt{#it{s}} = 5.02 TeV')
+        system2.SetNDC()
+        system2.SetTextSize(0.044)
+        system2.Draw()
+        
+        if raa_type == 'hadron':
+            system3 = ROOT.TLatex(x,ymax-3*dy, 'Charged particles  |#eta| < {}'.format(eta_cut))
+        elif raa_type == 'jet':
+            if experiment == 'ATLAS':
+                system3 = ROOT.TLatex(x,ymax-3*dy, 'AKT  #it{{R}} = {}  |#it{{y}}_{{jet}}| < {}'.format(R, eta_cut))
+            else:
+                system3 = ROOT.TLatex(x,ymax-3*dy, 'AKT  #it{{R}} = {}  |#eta_{{jet}}| < {}'.format(R, eta_cut))
+        system3.SetNDC()
+        system3.SetTextSize(0.044)
+        system3.Draw()
+        
+        self.plot_list.append(system0)
+        self.plot_list.append(system1)
+        self.plot_list.append(system2)
+        self.plot_list.append(system3)
 
     #-------------------------------------------------------------------------------------------
     def plot_qa_histograms(self):
