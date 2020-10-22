@@ -136,7 +136,11 @@ class PlotResults(common_base.CommonBase):
         cname = 'c_hadron'
         c = ROOT.TCanvas(cname,cname,1700,900)
         c.cd()
-        c.Divide(3, 2)
+        c.SetRightMargin(0.05);
+        c.SetLeftMargin(0.15);
+        c.SetTopMargin(0.05);
+        c.SetBottomMargin(0.15);
+        c.Divide(3, 2, 0, 0)
         
         # Keep histograms in memory, otherwise there can be problems with double deletes (i.e. ROOT then python deletes)
         self.plot_list = []
@@ -174,9 +178,13 @@ class PlotResults(common_base.CommonBase):
     
         # Create multi-panel canvas
         cname = 'c_jet'
-        c = ROOT.TCanvas(cname,cname,2300,900)
+        c = ROOT.TCanvas(cname,cname,2000,900)
+        c.SetRightMargin(0.05);
+        c.SetLeftMargin(0.1);
+        c.SetTopMargin(0.05);
+        c.SetBottomMargin(0.);
         c.cd()
-        c.Divide(4, 2)
+        c.Divide(4, 2, 0.01, 0.)
         
         # Keep histograms in memory, otherwise there can be problems with double deletes (i.e. ROOT then python deletes)
         self.plot_list = []
@@ -322,30 +330,43 @@ class PlotResults(common_base.CommonBase):
         c.cd(pad)
         
         # Set pad and histo arrangement
-        myPad = ROOT.TPad("myPad_{}".format(raa_type), "The pad{}".format(raa_type),0,0,1,1)
-        self.plot_list.append(myPad)
-
-        if raa_type == 'hadron':
-            myPad.SetLeftMargin(0.12)
-            myPad.SetRightMargin(0.03)
+        if raa_type == 'jet':
+            myPad = ROOT.TPad("myPad_{}".format(raa_type), "The pad{}".format(raa_type),0,0,1,1)
+            self.plot_list.append(myPad)
+            if pad in [1,5]:
+                myPad.SetLeftMargin(0.1)
+            else:
+                myPad.SetLeftMargin(0.)
+            myPad.SetRightMargin(0.)
             myPad.SetTopMargin(0.01)
             myPad.SetBottomMargin(0.15)
-        elif raa_type == 'jet':
-            myPad.SetLeftMargin(0.12)
-            myPad.SetRightMargin(0.03)
-            myPad.SetTopMargin(0.01)
-            myPad.SetBottomMargin(0.15)
-
-        myPad.SetTicks(0,1)
-        myPad.Draw()
-        myPad.cd()
+            myPad.SetTicks(0,1)
+            myPad.Draw()
+            myPad.cd()
         
         n_predictions = len(predictions) + len(h_data_list)
         if raa_type == 'hadron':
-            leg = ROOT.TLegend(0.55,0.93-0.042*n_predictions,0.75,0.96)
-            self.setupLegend(leg,0.04)
+            if pad in [1,2,3]:
+                scale_factor = 1.25
+            else:
+                scale_factor = 1.
+            if pad in [1,4]:
+                shift = 0.07
+                shift2 = 0.
+            else:
+                shift = 0.
+                shift2 = -0.07
+            leg = ROOT.TLegend(0.5+shift,0.97-0.042*scale_factor*n_predictions,0.8,0.97)
+            self.setupLegend(leg,0.04*scale_factor)
         elif raa_type == 'jet':
-            leg = ROOT.TLegend(0.53,0.93-0.042*n_predictions,0.73,0.96)
+            scale_factor = 1.
+            if pad in [1,5]:
+                shift = 0.0
+                shift2 = 0.0
+            else:
+                shift = -0.04
+                shift2 = -0.04
+            leg = ROOT.TLegend(0.53+shift,0.93-0.042*scale_factor*n_predictions,0.73,0.96)
             self.setupLegend(leg,0.04)
         self.plot_list.append(leg)
         
@@ -368,7 +389,10 @@ class PlotResults(common_base.CommonBase):
                 self.h_RAA_list[i].SetNdivisions(505)
                 self.h_RAA_list[i].GetXaxis().SetTitleSize(24)
                 self.h_RAA_list[i].GetXaxis().SetTitleOffset(2.6)
-                self.h_RAA_list[i].SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
+                if raa_type == 'hadron':
+                    self.h_RAA_list[i].SetXTitle("#it{p}_{T} (GeV/#it{c})")
+                elif raa_type == 'jet':
+                    self.h_RAA_list[i].SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
                 self.h_RAA_list[i].GetYaxis().SetTitleSize(24)
                 self.h_RAA_list[i].GetYaxis().SetTitleOffset(1.8)
                 self.h_RAA_list[i].SetYTitle("#it{R}_{AA}")
@@ -401,20 +425,20 @@ class PlotResults(common_base.CommonBase):
         # # # # # # # # # # # # # # # # # # # # # # # #
         ymax = 0.93
         dy = 0.05
-        x = 0.16
+        x = 0.15 + shift + shift2
         system0 = ROOT.TLatex(x,ymax,'#bf{JETSCAPE}')
         system0.SetNDC()
-        system0.SetTextSize(0.044)
+        system0.SetTextSize(0.04*scale_factor)
         system0.Draw()
         
         system1 = ROOT.TLatex(x,ymax-dy,'MATTER+LBT')
         system1.SetNDC()
-        system1.SetTextSize(0.044)
+        system1.SetTextSize(0.04*scale_factor)
         system1.Draw()
         
         system2 = ROOT.TLatex(x,ymax-2*dy,'Pb-Pb  #sqrt{#it{s}} = 5.02 TeV')
         system2.SetNDC()
-        system2.SetTextSize(0.044)
+        system2.SetTextSize(0.04*scale_factor)
         system2.Draw()
         
         if raa_type == 'hadron':
@@ -425,7 +449,7 @@ class PlotResults(common_base.CommonBase):
             else:
                 system3 = ROOT.TLatex(x,ymax-3*dy, 'AKT  #it{{R}} = {}  |#eta_{{jet}}| < {}'.format(R, eta_cut))
         system3.SetNDC()
-        system3.SetTextSize(0.044)
+        system3.SetTextSize(0.04*scale_factor)
         system3.Draw()
         
         self.plot_list.append(system0)
