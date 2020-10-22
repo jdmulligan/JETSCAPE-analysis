@@ -48,6 +48,8 @@ class PlotResults(common_base.CommonBase):
         #------------------------------------------------------
         # JETSCAPE predictions
         self.charged_particle_eta_cut = config['charged_particle_eta_cut']
+        self.min_hadron_pt = config['min_hadron_pt']
+        self.subtract_hadron_recoil = config['subtract_hadron_recoil']
         self.jetR_list = config['jetR']
         self.jet_eta_cut_04 = config['jet_eta_cut_04']
         self.jet_eta_cut_02 = config['jet_eta_cut_02']
@@ -107,10 +109,10 @@ class PlotResults(common_base.CommonBase):
         ROOT.gROOT.ForceStyle()
         
         # Charged particle histograms
-        plot_hadron_histograms = False
+        plot_hadron_histograms = True
         if plot_hadron_histograms:
             self.plot_hadron_histograms()
-        
+            
         # Jet histograms
         plot_jet_histograms = True
         if plot_jet_histograms:
@@ -121,22 +123,275 @@ class PlotResults(common_base.CommonBase):
         if plot_qa_histograms:
             self.plot_qa_histograms()
             
+            # Plot ALICE bias ratio in pp
+            self.plot_pt_lead_ratio(R=0.2)
+            self.plot_pt_lead_ratio(R=0.4)
+            
+    #-------------------------------------------------------------------------------------------
+    def plot_hadron_histograms(self):
+    
+        # Create multi-panel canvas
+        cname = 'c_hadron'
+        c = ROOT.TCanvas(cname,cname,1700,900)
+        c.cd()
+        c.Divide(3, 2)
+        
+        # Keep histograms in memory, otherwise there can be problems with double deletes (i.e. ROOT then python deletes)
+        self.plot_list = []
+    
+        self.plot_raa('ALICE', c, pad=1, raa_type='hadron', cent_type='central',
+                      eta_cut=self.charged_particle_eta_cut[2],
+                      data_centralities=['0-5', '5-10'],
+                      mc_centralities=['0-10'])
+        self.plot_raa('ALICE', c, pad=4, raa_type='hadron', cent_type='semicentral',
+                      eta_cut=self.charged_particle_eta_cut[2],
+                      data_centralities=['30-40'],
+                      mc_centralities=['30-40'])
+        self.plot_raa('ATLAS', c, pad=2, raa_type='hadron', cent_type='central',
+                      eta_cut=self.charged_particle_eta_cut[1],
+                      data_centralities=['0-5'],
+                      mc_centralities=['0-10'])
+        self.plot_raa('ATLAS', c, pad=5, raa_type='hadron',  cent_type='semicentral',
+                      eta_cut=self.charged_particle_eta_cut[1],
+                      data_centralities=['30-40'],
+                      mc_centralities=['30-40'])
+        self.plot_raa('CMS', c, pad=3, raa_type='hadron', cent_type='central',
+                      eta_cut=self.charged_particle_eta_cut[0],
+                      data_centralities=['0-5', '5-10'],
+                      mc_centralities=['0-10'])
+        self.plot_raa('CMS', c, pad=6, raa_type='hadron', cent_type='semicentral',
+                      eta_cut=self.charged_particle_eta_cut[0],
+                      data_centralities=['30-50'],
+                      mc_centralities=['30-40', '40-50'])
+                    
+        output_filename = os.path.join(self.output_dir, 'hHadronRAA{}'.format(self.file_format))
+        c.SaveAs(output_filename)
+
+    #-------------------------------------------------------------------------------------------
+    def plot_jet_histograms(self):
+    
+        # Create multi-panel canvas
+        cname = 'c_jet'
+        c = ROOT.TCanvas(cname,cname,1700,900)
+        c.cd()
+        c.Divide(4, 2)
+        
+        # Keep histograms in memory, otherwise there can be problems with double deletes (i.e. ROOT then python deletes)
+        self.plot_list = []
+
+        self.plot_raa('ALICE', c, pad=1, raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_02[2],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
+        self.plot_raa('ALICE', c, pad=5, raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_04[2],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+        self.plot_raa('ATLAS', c, pad=2, raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_04[1],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+        self.plot_raa('ATLAS', c, pad=6, raa_type='jet', cent_type='semicentral',
+                      eta_cut=self.jet_eta_cut_04[1],
+                      data_centralities=['30-40'], mc_centralities=['30-40'], R=0.4)
+        self.plot_raa('CMS', c, pad=3, raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_02[0],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
+        self.plot_raa('CMS', c, pad=7, raa_type='jet', cent_type='semicentral',
+                      eta_cut=self.jet_eta_cut_02[0],
+                      data_centralities=['30-50'], mc_centralities=['30-40'], R=0.2)
+        self.plot_raa('CMS', c, pad=4, raa_type='jet', cent_type='central',
+                      eta_cut=self.jet_eta_cut_04[0],
+                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
+        self.plot_raa('CMS', c, pad=8, raa_type='jet', cent_type='semicentral',
+                      eta_cut=self.jet_eta_cut_04[0],
+                      data_centralities=['30-50'], mc_centralities=['30-40'], R=0.4)
+        
+        output_filename = os.path.join(self.output_dir, 'hJetRAA{}'.format(self.file_format))
+        c.SaveAs(output_filename)
+
+    #-------------------------------------------------------------------------------------------
+    def plot_raa(self, experiment, c, pad, raa_type, cent_type,
+                 eta_cut, data_centralities, mc_centralities, R=None):
+
+        # Get JETSCAPE prediction
+        if raa_type == 'hadron':
+            hname = 'hChargedPt_{}Scaled'.format(experiment)
+        elif raa_type == 'jet':
+            if experiment in ['ALICE', 'CMS']:
+                hname = 'hJetPt_{}_R{}Scaled'.format(experiment, R)
+            elif experiment == 'ATLAS':
+                if cent_type == 'central':
+                    hname = 'hJetPt_{}_binning0_R{}Scaled'.format(experiment, R)
+                elif cent_type == 'semicentral':
+                    hname = 'hJetPt_{}_binning1_R{}Scaled'.format(experiment, R)
+
+        # pp
+        filename_pp = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(self.predictions['pp'][0]))
+        f_pp = ROOT.TFile(filename_pp, 'READ')
+        h_pp = f_pp.Get(hname)
+        h_pp.SetDirectory(0)
+        f_pp.Close()
+
+        # Impose 1 Gev minimum
+        h_pp_xbins = np.array(h_pp.GetXaxis().GetXbins())
+        h_pp_xbins = h_pp_xbins[(h_pp_xbins>=self.min_hadron_pt)]
+        h_pp_rebinned = h_pp.Rebin(h_pp_xbins.size-1, '{}_pp_rebinned'.format(hname), h_pp_xbins)
+        
+        # AA
+        predictions = self.predictions[cent_type]
+        predictions_to_plot = []
+        h_AA = None
+        self.h_RAA_list = []
+        for i,prediction in enumerate(predictions):
+            mc_cent = prediction[1]
+            alpha_s = prediction[2]
+            Q_switch = prediction[3]
+            
+            if mc_cent in mc_centralities:
+                predictions_to_plot.append(prediction)
+            else:
+                continue
+            
+            filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(prediction[0]))
+            f_AA = ROOT.TFile(filename, 'READ')
+            h_AA = f_AA.Get(hname)
+            h_AA.SetDirectory(0)
+            
+            # Impose 1 Gev minimum
+            h_AA_xbins = np.array(h_AA.GetXaxis().GetXbins())
+            h_AA_xbins = h_AA_xbins[(h_AA_xbins>=self.min_hadron_pt)]
+            h_AA_rebinned = h_AA.Rebin(h_AA_xbins.size-1, '{}_{}rebinned'.format(hname, prediction[0]), h_AA_xbins)
+            
+            # For hadrons, subtract the recoil hadrons
+            if raa_type == 'hadron':
+                h_recoil_name = 'hChargedPt_RecoilsScaled'
+                h_recoil = f_AA.Get(h_recoil_name)
+                h_recoil.SetDirectory(0)
+                h_recoil_rebinned = h_recoil.Rebin(h_AA_xbins.size-1, '{}_{}'.format(h_recoil_name, prediction[0]), h_AA_xbins)
+                if self.subtract_hadron_recoil:
+                    h_AA_rebinned.Add(h_AA_rebinned, h_recoil_rebinned, 1, -1)
+            h_AA_rebinned.SetDirectory(0)
+            f_AA.Close()
+
+            # Plot the ratio
+            if h_pp_rebinned and h_AA_rebinned:
+                if raa_type == 'hadron':
+                    output_filename = os.path.join(self.output_dir, 'hChHadron_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
+                    xtitle = '#it{p}_{T} (GeV/#it{c})'
+                    ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+                    h_RAA = self.plot_ratio(h_pp_rebinned, h_AA_rebinned, output_filename, xtitle, ytitle, eta_cut=eta_cut,
+                                            cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Hadron')
+                elif raa_type == 'jet':
+                    output_filename = os.path.join(self.output_dir, 'hJetPt_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
+                    xtitle = '#it{p}_{T} (GeV/#it{c})'
+                    ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+                    h_RAA = self.plot_ratio(h_pp_rebinned, h_AA_rebinned, output_filename, xtitle, ytitle, eta_cut=eta_cut,
+                                            cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Jet', R=R)
+
+                h_RAA.SetName('{}_{}_{}'.format(h_RAA.GetName(), experiment, pad))
+                self.plot_list.append(h_RAA)
+                self.h_RAA_list.append(h_RAA)
+            else:
+                print('h_pp_rebinned or h_AA_rebinned not found!!')
+                
+        if raa_type == 'hadron':
+            h_data_list = self.get_hadron_data(experiment, mc_cent)
+        elif raa_type == 'jet':
+            h_data_list = self.get_jet_data(experiment, mc_cent, R)
+        # Plot RAA overlay
+        if len(self.h_RAA_list) > 0:
+            self.plot_RAA_overlay(raa_type, c, pad, predictions_to_plot, h_data_list, experiment)
+            
+        self.plot_list.append(predictions_to_plot)
+        self.plot_list.append(h_data_list)
+
+    #-------------------------------------------------------------------------------------------
+    def plot_RAA_overlay(self, raa_type, c, pad, predictions, h_data_list, experiment):
+
+        # Create canvas
+        c.cd(pad)
+        
+        # Set pad and histo arrangement
+        myPad = ROOT.TPad("myPad_{}".format(raa_type), "The pad{}".format(raa_type),0,0,1,1)
+        self.plot_list.append(myPad)
+
+        if raa_type == 'hadron':
+            myPad.SetLeftMargin(0.12)
+            myPad.SetRightMargin(0.)
+            myPad.SetTopMargin(0.01)
+            myPad.SetBottomMargin(0.15)
+        elif raa_type == 'jet':
+            myPad.SetLeftMargin(0.12)
+            myPad.SetRightMargin(0.)
+            myPad.SetTopMargin(0.01)
+            myPad.SetBottomMargin(0.15)
+
+        myPad.SetTicks(0,1)
+        myPad.Draw()
+        myPad.cd()
+        
+        if raa_type == 'hadron':
+            leg = ROOT.TLegend(0.35,0.74,0.6,0.93)
+            self.setupLegend(leg,0.04)
+        elif raa_type == 'jet':
+            leg = ROOT.TLegend(0.15,0.74,0.5,0.93)
+            self.setupLegend(leg,0.04)
+        self.plot_list.append(leg)
+        
+        # Draw experimental data
+        for i,h_data_entry in enumerate(h_data_list):
+            h_data_entry[0].SetMarkerColor(self.data_color)
+            h_data_entry[0].SetLineColor(self.data_color)
+            h_data_entry[0].SetMarkerStyle(self.data_markers[i])
+            h_data_entry[0].SetMarkerSize(2)
+            leg.AddEntry(h_data_entry[0],'{} {}%'.format(experiment, h_data_entry[1]),'Pe')
+
+        # Draw JETSCAPE predictions
+        for i,prediction in enumerate(predictions):
+            cent = prediction[1]
+            alpha_s = prediction[2]
+            Q_switch = prediction[3]
+            
+            if i == 0:
+            
+                self.h_RAA_list[i].SetNdivisions(505)
+                self.h_RAA_list[i].GetXaxis().SetTitleSize(24)
+                self.h_RAA_list[i].GetXaxis().SetTitleOffset(2.6)
+                self.h_RAA_list[i].SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
+                self.h_RAA_list[i].GetYaxis().SetTitleSize(24)
+                self.h_RAA_list[i].GetYaxis().SetTitleOffset(1.8)
+                self.h_RAA_list[i].SetYTitle("#it{R}_{AA}")
+                self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.47)
+                self.h_RAA_list[i].Draw('PE same')
+
+            self.h_RAA_list[i].SetMarkerColor(self.theory_colors[i])
+            self.h_RAA_list[i].SetLineColor(self.theory_colors[i])
+            self.h_RAA_list[i].SetMarkerStyle(self.markers[i])
+            leg.AddEntry(self.h_RAA_list[i],'MATTER+LBT {}%  (#alpha_{{s}}={}, Q_{{0}}={})'.format(cent, alpha_s, Q_switch),'Pe')
+
+        for h_data_entry in h_data_list:
+            h_data_entry[0].Draw('PE same')
+        for i,prediction in enumerate(predictions):
+            self.h_RAA_list[i].Draw('PE same')
+        
+        leg.Draw('same')
+        
+        line = ROOT.TLine(self.h_RAA_list[i].GetXaxis().GetXmin(),1,self.h_RAA_list[i].GetXaxis().GetXmax(),1)
+        line.SetLineColor(1)
+        line.SetLineStyle(2)
+        line.Draw('same')
+        self.plot_list.append(line)
+
     #-------------------------------------------------------------------------------------------
     def plot_qa_histograms(self):
-    
+
         # Plot unscaled number of events per pt-hat bin
         self.plot_hist_loop(hname = 'hNevents')
         
         # Plot hadron recoil pt distribution
         self.plot_hist_loop(hname = 'hChargedPt_RecoilsScaled')
         
-        # Plot ALICE bias ratio in pp
-        #self.plot_pt_lead_ratio(R=0.2)
-        #self.plot_pt_lead_ratio(R=0.4)
-        
     #-------------------------------------------------------------------------------------------
     def plot_hist_loop(self, hname):
-    
+
         cname = 'c_{}'.format(hname)
         c = ROOT.TCanvas(cname,cname,600, 450)
         c.cd()
@@ -216,237 +471,6 @@ class PlotResults(common_base.CommonBase):
         output_filename = os.path.join(self.output_dir, '{}{}'.format(hname, self.file_format))
         c.SaveAs(output_filename)
 
-    #-------------------------------------------------------------------------------------------
-    def plot_hadron_histograms(self):
-    
-        # Create multi-panel canvas
-        cname = 'c_hadron'
-        c = ROOT.TCanvas(cname,cname,1700,900)
-        c.cd()
-        c.Divide(3, 2)
-        
-        # Keep histograms in memory
-        self.plot_list = []
-    
-        self.plot_raa('ALICE', c, pad=1, raa_type='hadron', cent_type='central',
-                      eta_cut=self.charged_particle_eta_cut[2],
-                      data_centralities=['0-5', '5-10'],
-                      mc_centralities=['0-10'])
-        self.plot_raa('ALICE', c, pad=4, raa_type='hadron', cent_type='semicentral',
-                      eta_cut=self.charged_particle_eta_cut[2],
-                      data_centralities=['30-40'],
-                      mc_centralities=['30-40'])
-        self.plot_raa('ATLAS', c, pad=2, raa_type='hadron', cent_type='central',
-                      eta_cut=self.charged_particle_eta_cut[1],
-                      data_centralities=['0-5'],
-                      mc_centralities=['0-10'])
-        self.plot_raa('ATLAS', c, pad=5, raa_type='hadron',  cent_type='semicentral',
-                      eta_cut=self.charged_particle_eta_cut[1],
-                      data_centralities=['30-40'],
-                      mc_centralities=['30-40'])
-        self.plot_raa('CMS', c, pad=3, raa_type='hadron', cent_type='central',
-                      eta_cut=self.charged_particle_eta_cut[0],
-                      data_centralities=['0-5', '5-10'],
-                      mc_centralities=['0-10'])
-        self.plot_raa('CMS', c, pad=6, raa_type='hadron', cent_type='semicentral',
-                      eta_cut=self.charged_particle_eta_cut[0],
-                      data_centralities=['30-50'],
-                      mc_centralities=['30-40', '40-50'])
-                    
-        output_filename = os.path.join(self.output_dir, 'hHadronRAA{}'.format(self.file_format))
-        c.SaveAs(output_filename)
-
-    #-------------------------------------------------------------------------------------------
-    def plot_jet_histograms(self):
-    
-        # Create multi-panel canvas
-        cname = 'c_jet'
-        c = ROOT.TCanvas(cname,cname,1700,900)
-        c.cd()
-        c.Divide(4, 2)
-        
-        # Keep histograms in memory
-        self.plot_list = []
-
-        self.plot_raa('ALICE', c, pad=1, raa_type='jet', cent_type='central',
-                      eta_cut=self.jet_eta_cut_02[2],
-                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
-        self.plot_raa('ALICE', c, pad=5, raa_type='jet', cent_type='central',
-                      eta_cut=self.jet_eta_cut_04[2],
-                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-        self.plot_raa('ATLAS', c, pad=2, raa_type='jet', cent_type='central',
-                      eta_cut=self.jet_eta_cut_04[1],
-                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-        self.plot_raa('ATLAS', c, pad=6, raa_type='jet', cent_type='semicentral',
-                      eta_cut=self.jet_eta_cut_04[1],
-                      data_centralities=['30-40'], mc_centralities=['30-40'], R=0.4)
-        self.plot_raa('CMS', c, pad=3, raa_type='jet', cent_type='central',
-                      eta_cut=self.jet_eta_cut_02[0],
-                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.2)
-        self.plot_raa('CMS', c, pad=7, raa_type='jet', cent_type='semicentral',
-                      eta_cut=self.jet_eta_cut_02[0],
-                      data_centralities=['30-50'], mc_centralities=['30-40'], R=0.2)
-        self.plot_raa('CMS', c, pad=4, raa_type='jet', cent_type='central',
-                      eta_cut=self.jet_eta_cut_04[0],
-                      data_centralities=['0-10'], mc_centralities=['0-10'], R=0.4)
-        self.plot_raa('CMS', c, pad=8, raa_type='jet', cent_type='semicentral',
-                      eta_cut=self.jet_eta_cut_04[0],
-                      data_centralities=['30-50'], mc_centralities=['30-40'], R=0.4)
-                      
-        output_filename = os.path.join(self.output_dir, 'hJetRAA{}'.format(self.file_format))
-        c.SaveAs(output_filename)
-
-    #-------------------------------------------------------------------------------------------
-    def plot_raa(self, experiment, c, pad, raa_type, cent_type,
-                 eta_cut, data_centralities, mc_centralities, R=None):
-
-        # Get JETSCAPE prediction
-        if raa_type == 'hadron':
-            hname = 'hChargedPt_{}Scaled'.format(experiment)
-        elif raa_type == 'jet':
-            if experiment in ['ALICE', 'CMS']:
-                hname = 'hJetPt_{}_R{}Scaled'.format(experiment, R)
-            elif experiment == 'ATLAS':
-                if cent_type == 'central':
-                    hname = 'hJetPt_{}_binning0_R{}Scaled'.format(experiment, R)
-                elif cent_type == 'semicentral':
-                    hname = 'hJetPt_{}_binning1_R{}Scaled'.format(experiment, R)
-
-        # pp
-        filename_pp = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(self.predictions['pp'][0]))
-        f_pp = ROOT.TFile(filename_pp, 'READ')
-        h_pp = f_pp.Get(hname)
-        h_pp.SetDirectory(0)
-        f_pp.Close()
-        
-        # AA
-        predictions = self.predictions[cent_type]
-        predictions_to_plot = []
-        h_AA = None
-        self.h_RAA_list = []
-        for i,prediction in enumerate(predictions):
-            mc_cent = prediction[1]
-            alpha_s = prediction[2]
-            Q_switch = prediction[3]
-            
-            if mc_cent in mc_centralities:
-                predictions_to_plot.append(prediction)
-            else:
-                continue
-            
-            filename = os.path.join(self.output_dir, '{}/AnalysisResultsFinal.root'.format(prediction[0]))
-            f_AA = ROOT.TFile(filename, 'READ')
-            h_AA = f_AA.Get(hname)
-            h_AA.SetDirectory(0)
-            f_AA.Close()
-
-            # Plot the ratio
-            if h_AA:
-                if raa_type == 'hadron':
-                    output_filename = os.path.join(self.output_dir, 'hChHadron_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
-                    xtitle = '#it{p}_{T} (GeV/#it{c})'
-                    ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
-                    h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
-                                            cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Hadron')
-                elif raa_type == 'jet':
-                    output_filename = os.path.join(self.output_dir, 'hJetPt_{}_{}_{}{}'.format(cent_type, experiment, i, self.file_format))
-                    xtitle = '#it{p}_{T} (GeV/#it{c})'
-                    ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
-                    h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, eta_cut=eta_cut,
-                                            cent=mc_cent, alpha_s=alpha_s, Q_switch=Q_switch, label='Jet', R=R)
-                h_RAA.SetName('{}_{}_{}'.format(h_RAA.GetName(), experiment, pad))
-                self.plot_list.append(h_RAA)
-                self.h_RAA_list.append(h_RAA)
-                
-        if raa_type == 'hadron':
-            h_data_list = self.get_hadron_data(experiment, mc_cent)
-        elif raa_type == 'jet':
-            h_data_list = self.get_jet_data(experiment, mc_cent, R)
-        # Plot RAA overlay
-        if len(self.h_RAA_list) > 0:
-            self.plot_RAA_overlay(raa_type, c, pad, predictions_to_plot, h_data_list, experiment)
-            
-        self.plot_list.append(predictions_to_plot)
-        self.plot_list.append(h_data_list)
-
-    #-------------------------------------------------------------------------------------------
-    def plot_RAA_overlay(self, raa_type, c, pad, predictions, h_data_list, experiment):
-
-        # Create canvas
-        c.cd(pad)
-        
-        # Set pad and histo arrangement
-        myPad = ROOT.TPad("myPad", "The pad",0,0,1,1)
-
-        if raa_type == 'hadron':
-            myPad.SetLeftMargin(0.12)
-            myPad.SetRightMargin(0.)
-            myPad.SetTopMargin(0.01)
-            myPad.SetBottomMargin(0.15)
-        elif raa_type == 'jet':
-            myPad.SetLeftMargin(0.12)
-            myPad.SetRightMargin(0.)
-            myPad.SetTopMargin(0.01)
-            myPad.SetBottomMargin(0.15)
-
-        myPad.SetTicks(0,1)
-        myPad.Draw()
-        myPad.cd()
-        
-        if raa_type == 'hadron':
-            leg = ROOT.TLegend(0.35,0.74,0.6,0.93)
-            self.setupLegend(leg,0.04)
-            self.plot_list.append(leg)
-        elif raa_type == 'jet':
-            leg = ROOT.TLegend(0.15,0.74,0.5,0.93)
-            self.setupLegend(leg,0.04)
-            self.plot_list.append(leg)
-
-        
-        # Draw experimental data
-        for i,h_data_entry in enumerate(h_data_list):
-            h_data_entry[0].SetMarkerColor(self.data_color)
-            h_data_entry[0].SetLineColor(self.data_color)
-            h_data_entry[0].SetMarkerStyle(self.data_markers[i])
-            h_data_entry[0].SetMarkerSize(2)
-            leg.AddEntry(h_data_entry[0],'{} {}%'.format(experiment, h_data_entry[1]),'Pe')
-
-        # Draw JETSCAPE predictions
-        for i,prediction in enumerate(predictions):
-            cent = prediction[1]
-            alpha_s = prediction[2]
-            Q_switch = prediction[3]
-            
-            if i == 0:
-            
-                self.h_RAA_list[i].SetNdivisions(505)
-                self.h_RAA_list[i].GetXaxis().SetTitleSize(24)
-                self.h_RAA_list[i].GetXaxis().SetTitleOffset(2.6)
-                self.h_RAA_list[i].SetXTitle("#it{p}_{T,jet} (GeV/#it{c})")
-                self.h_RAA_list[i].GetYaxis().SetTitleSize(24)
-                self.h_RAA_list[i].GetYaxis().SetTitleOffset(1.8)
-                self.h_RAA_list[i].SetYTitle("#it{R}_{AA}")
-                self.h_RAA_list[i].GetYaxis().SetRangeUser(0,1.47)
-                self.h_RAA_list[i].Draw('PE same')
-
-            self.h_RAA_list[i].SetMarkerColor(self.theory_colors[i])
-            self.h_RAA_list[i].SetLineColor(self.theory_colors[i])
-            self.h_RAA_list[i].SetMarkerStyle(self.markers[i])
-            leg.AddEntry(self.h_RAA_list[i],'MATTER+LBT {}%  (#alpha_{{s}}={}, Q_{{0}}={})'.format(cent, alpha_s, Q_switch),'Pe')
-        
-        for h_data_entry in h_data_list:
-            h_data_entry[0].Draw('PE same')
-        for i,prediction in enumerate(predictions):
-            self.h_RAA_list[i].Draw('PE same')
-        
-        leg.Draw('same')
-        
-        line = ROOT.TLine(self.h_RAA_list[i].GetXaxis().GetXmin(),1,self.h_RAA_list[i].GetXaxis().GetXmax(),1)
-        line.SetLineColor(1)
-        line.SetLineStyle(2)
-        line.Draw('same')
-        self.plot_list.append(line)
-        
     #-------------------------------------------------------------------------------------------
     def plot_pt_lead_ratio(self, R):
 
@@ -635,7 +659,7 @@ class PlotResults(common_base.CommonBase):
         # Create canvas
         cname = 'c_{}_{}_{}_{}_{}'.format(cent, alpha_s, Q_switch, eta_cut, R)
         c = ROOT.TCanvas(cname,cname,800,850)
-        #ROOT.SetOwnership(c, False) # For some reason this is necessary to avoid a segfault...some bug in ROOT or pyroot
+        ROOT.SetOwnership(c, False) # For some reason this is necessary to avoid a segfault...some bug in ROOT or pyroot
                                     # Supposedly fixed in https://github.com/root-project/root/pull/3787
         c.cd()
         pad1 = ROOT.TPad('pad1', 'pad1', 0, 0.3, 1, 1.0)

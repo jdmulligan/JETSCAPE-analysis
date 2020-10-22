@@ -40,6 +40,8 @@ debug_level: 0
 
 # User-defined parameters
 charged_particle_eta_cut: [1.0, 2.5, 0.8] # CMS, ATLAS, ALICE
+min_hadron_pt: 1.
+subtract_hadron_recoil: True
 
 # Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
 CMS_hadron_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
