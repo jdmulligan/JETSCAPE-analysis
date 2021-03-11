@@ -11,7 +11,7 @@ import typing
 from pathlib import Path
 from typing import Any, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple
 
-import awkward1 as ak
+import awkward as ak
 import numpy as np
 
 
@@ -380,12 +380,14 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         #print(ak.type(array_with_events))
         #print(f"Event header info: {event_header_info}")
         #import IPython; IPython.embed()
-        event_plane_angles = [angle[0] for angle in event_header_info]
+        event_plane_angles = [x[0] for x in event_header_info]
+        hydro_event_id = [x[1] for x in event_header_info]
         # Convert to the desired structure for our awkward array.
         array = ak.zip(
             {
                 # TODO: Does the conversion add any real computation time?
                 "event_plane_angle": ak.values_astype(event_plane_angles, np.float32),
+                "hydro_event_id": ak.values_astype(hydro_event_id, np.uint16),
                 "particle_ID": ak.values_astype(array_with_events[:, :, 1], np.int32),
                 # Status is only a couple of numbers, but it's not always 0. It identifies recoils (1?) and holes (-1?)
                 "status": ak.values_astype(array_with_events[:, :, 2], np.int8),
@@ -397,7 +399,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
                 # big deal to recalculate them, especially compare to the added storage space.
                 "eta": ak.values_astype(array_with_events[:, :, 7], np.float32),
                 "phi": ak.values_astype(array_with_events[:, :, 8], np.float32),
-            },
+                
+            }, depth_limit=1
         )
 
         yield array
@@ -420,13 +423,14 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
     return ak.zip(
         {
             "event_plane_angle": arrays["event_plane_angle"],
+            "hydro_event_id": arrays["hydro_event_id"],
             "particle_ID": arrays["particle_ID"],
             "status": arrays["status"],
             "E": arrays["E"],
             "px": arrays["px"],
             "py": arrays["py"],
             "pz": arrays["pz"],
-        },
+        }, depth_limit=1
     )
 
 def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
@@ -474,12 +478,13 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
             output_filename = (base_output_filename.parent / f"{base_output_filename.stem}_{i:02}").with_suffix(suffix)
         else:
             output_filename = base_output_filename
+
         ak.to_parquet(
             arrays, output_filename,
             compression=compression, compression_level=compression_level,
             # We run into a recursion limit or crash if there's a cut and we don't explode records. Probably a bug...
             # But it works fine if we explored records, so fine for now.
-            explode_records=True,
+            explode_records=False,
         )
 
         # Break now so we don't have to read the next chunk.
