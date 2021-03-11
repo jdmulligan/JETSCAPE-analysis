@@ -368,7 +368,7 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
                 parsing_function(chunk_generator), event_split_index
             )
         )
-
+        
         # Cross check that everything is in order and was parsed correctly.
         if events_per_chunk > 0:
             assert len(event_split_index) == events_per_chunk - 1
@@ -380,11 +380,12 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         #print(ak.type(array_with_events))
         #print(f"Event header info: {event_header_info}")
         #import IPython; IPython.embed()
-
+        event_plane_angles = [angle[0] for angle in event_header_info]
         # Convert to the desired structure for our awkward array.
         array = ak.zip(
             {
                 # TODO: Does the conversion add any real computation time?
+                "event_plane_angle": ak.values_astype(event_plane_angles, np.float32),
                 "particle_ID": ak.values_astype(array_with_events[:, :, 1], np.int32),
                 # Status is only a couple of numbers, but it's not always 0. It identifies recoils (1?) and holes (-1?)
                 "status": ak.values_astype(array_with_events[:, :, 2], np.int8),
@@ -418,6 +419,7 @@ def full_events_to_only_necessary_columns_pt_eta_phi(arrays: ak.Array) -> ak.Arr
 def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Array:
     return ak.zip(
         {
+            "event_plane_angle": arrays["event_plane_angle"],
             "particle_ID": arrays["particle_ID"],
             "status": arrays["status"],
             "E": arrays["E"],
