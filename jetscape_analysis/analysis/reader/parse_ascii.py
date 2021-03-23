@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-""" Tests for parsing JETSCAPE.
+""" Parse JETSCAPE ascii input files in chunks.
 
-    Author: Raymond Ehlers
+.. codeauthor:: Raymond Ehlers
 """
 
 import logging
@@ -10,6 +10,7 @@ import re
 import typing
 from pathlib import Path
 from typing import Any, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple
+from typing_extensions import Literal
 
 import awkward as ak
 import numpy as np
@@ -18,12 +19,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-# Used to extract numbers, specifically trying to cover signed floating point values.
-# Based on https://stackoverflow.com/a/4703409/12907985
-_header_regex = re.compile("[-+]?\d*\.\d+|\d+")
-
-
-def _handle_line(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
+def _parse_line_for_header(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
     """ Parse line as appropriate.
 
     If it's just a standard particle line, we just pass it on. However, if it's a header, we parse
@@ -37,6 +33,7 @@ def _handle_line(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool,
     Args:
         line: Line to be parsed.
         n_events: Number of events processed so far.
+        events_per_chunk: Number of events per chunk.
     Returns:
         Whether we've reached the desired number of events and should stop this block, any information parsed from the header.
         The header info is None if it's not a header line.
@@ -53,7 +50,7 @@ def _handle_line(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool,
         # of events until after we find a header. Basically, it all works out here.
         #if n_events > 0 and n_events % events_per_chunk == 0:
         if n_events == events_per_chunk:
-            logger.debug("Time to stop!")
+            logger.debug("Hit end of chunk - time to stop!")
             time_to_stop = True
 
         # Parse the header string.
@@ -61,21 +58,26 @@ def _handle_line(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool,
         # Due to this formatting issue:
         # - We ignore all of the column names.
         # - We only parse the numbers:
-        #   1. Event plane angle.
-        #   2. Number of particles. int. (This wasn't clear, originally)
-        #   3. Event ID from hydro. int
+        #   1. Event plane angle. float, potentially in scientific notation.
+        #   3. (hydro?) event number. int
+        #   3. Number of particles. int. (This wasn't clear, originally)
+        #
+        # It's unclear where the hydro ID is stored.
         #
         # For now, we don't construct any objects to contain the information because
         # it's not worth the computing time - we're not really using this information...
         header_values = line.split()
+        # Validation
         if len(header_values) != 9:
-            sys.exit('Check parsing of header: {}'.format(header_substrings))
+            raise ValueError(f"Parsing of header failed: {header_values}")
+        # The second value has to be clever because the file is improperly spaced for parsing...
+        # It's of the form: "Event5ID", where all we care about is the event number (in this case, 5)
         header_info = [float(header_values[1]), int(header_values[2][5:-2]), int(header_values[3])]
 
     return time_to_stop, header_info
 
 
-def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = int(1e5)) -> Iterator[Tuple[Iterator[str], List[int], List[Any]]]:
+def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = int(1e5)) -> Iterator[Tuple[Iterator[str], List[int], List[Any], List[bool]]]:
     """ Read events in chunks from stored JETSCAPE ASCII files.
 
     Users are encouraged to use `read(...)`.
@@ -101,6 +103,11 @@ def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = in
         # is over until we already get the header for the next event. We could keep that line and reparse,
         # but there's no need to parse a file twice.
         keep_header_for_next_chunk = None
+        # If we run out of events, we want to notify the user so they can avoid an assertion failure
+        # if they check that the expected number of events were returned.
+        # NOTE: We need a mutable object so we can modify it in the closure, but the changes will be
+        #       passed back through the other return values. So we use a list. This is a dirty, dirty hack...
+        reached_end_of_file = []
 
         # Define an iterator so we can increment it in different locations in the code.
         # Fine to use if it the entire file fits in memory.
@@ -120,6 +127,11 @@ def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = in
                 event_header_info.append(keep_header_for_next_chunk)
                 # Now that we've stored it, reset it to ensure that it doesn't cause problems for future iterations.
                 keep_header_for_next_chunk = None
+
+            # If we're run out of events in the parsing, then we should be done and we should never
+            # make it back here.
+            if reached_end_of_file:
+                raise ValueError("Reached end of file was set, but we're iterating again. This shouldn't occur.")
 
             def _inner(line: str, kept_header: bool) -> Iterator[str]:
                 """ Closure to generate a chunk of events.
@@ -141,6 +153,7 @@ def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = in
                 # Anything that is returned from this function will be consumed by np.loadtxt, so we can't
                 # directly return any value. Instead, we have to make this nonlocal so we can set it here,
                 # and the result will be accessible outside during the next chunk.
+                nonlocal reached_end_of_file
                 nonlocal keep_header_for_next_chunk
                 # If we already have a header, then we already have an event, so we need to increment immediately.
                 # NOTE: Together with storing with handling the header in the first line a few lines below, we're
@@ -153,7 +166,7 @@ def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = in
                     n_particles = 0
 
                 # Handle the first line from the generator.
-                _, header_info = _handle_line(line, n_events, events_per_chunk=events_per_chunk)
+                _, header_info = _parse_line_for_header(line, n_events, events_per_chunk=events_per_chunk)
                 yield line
                 # We always increment after yielding.
                 # Instead of defining the variable here, we account for it in the enumeration below by
@@ -182,7 +195,7 @@ def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = in
                 # Handle additional lines
                 # Start at one to account for the first land already being handled.
                 for line_count, local_line in enumerate(read_lines, start=1):
-                    time_to_stop, header_info = _handle_line(local_line, n_events, events_per_chunk=events_per_chunk)
+                    time_to_stop, header_info = _parse_line_for_header(local_line, n_events, events_per_chunk=events_per_chunk)
                     line_count += 1
 
                     # A new header signals a new event. It needs some careful handling.
@@ -223,10 +236,15 @@ def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = in
                         #print(f"event_split_index len: {len(event_split_index)} - {event_split_index}")
                         break
 
+                # If we've broken out of iteration, but we it's not yet time to stop, that means our
+                # iterator ended. That means we've reached the end of the file and should let the user know.
+                if not time_to_stop:
+                    reached_end_of_file.append(True)
+
             # Yield the generator for the chunk, along with useful information.
             # NOTE: When we pass these lists, they're empty. This only works because lists are mutable, and thus
             #       our changes are passed on.
-            yield _inner(line=line, kept_header=len(event_header_info) > 0), event_split_index, event_header_info
+            yield _inner(line=line, kept_header=len(event_header_info) > 0), event_split_index, event_header_info, reached_end_of_file
 
             # Keep track of what's going on. This is basically a debugging tool.
             return_count += 1
@@ -358,7 +376,7 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
     parsing_function = parsing_function_map[parser]
 
     # Read the file, creating chunks of events.
-    for chunk_generator, event_split_index, event_header_info in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
+    for chunk_generator, event_split_index, event_header_info, reached_end_of_file in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
         # Give a notification just in case the parsing is slow...
         logger.debug("New chunk")
 
@@ -368,11 +386,16 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
                 parsing_function(chunk_generator), event_split_index
             )
         )
-        
+
         # Cross check that everything is in order and was parsed correctly.
         if events_per_chunk > 0:
-            assert len(event_split_index) == events_per_chunk - 1
-            assert len(event_header_info) == events_per_chunk
+            if not reached_end_of_file:
+                assert len(event_split_index) == events_per_chunk - 1
+                assert len(event_header_info) == events_per_chunk
+            else:
+                logger.warning(f"Requested {events_per_chunk} events, but only {len(event_header_info)} are available because we hit the end of the file.")
+                assert len(event_split_index) < events_per_chunk - 1
+                assert len(event_header_info) < events_per_chunk
 
         #print(len(event_split_index))
         #print(f"hadrons: {hadrons}")
@@ -382,8 +405,9 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         #import IPython; IPython.embed()
         event_plane_angles = [x[0] for x in event_header_info]
         hydro_event_id = [x[1] for x in event_header_info]
+
         # Convert to the desired structure for our awkward array.
-        array = ak.zip(
+        yield ak.zip(
             {
                 # TODO: Does the conversion add any real computation time?
                 "event_plane_angle": ak.values_astype(event_plane_angles, np.float32),
@@ -399,11 +423,9 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
                 # big deal to recalculate them, especially compare to the added storage space.
                 "eta": ak.values_astype(array_with_events[:, :, 7], np.float32),
                 "phi": ak.values_astype(array_with_events[:, :, 8], np.float32),
-                
-            }, depth_limit=1
+            },
+            depth_limit=1,
         )
-
-        yield array
 
     #import IPython; IPython.embed()
 
@@ -419,6 +441,7 @@ def full_events_to_only_necessary_columns_pt_eta_phi(arrays: ak.Array) -> ak.Arr
         },
     )
 
+
 def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Array:
     return ak.zip(
         {
@@ -432,6 +455,7 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
             "pz": arrays["pz"],
         }, depth_limit=1
     )
+
 
 def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
                      input_filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas",
@@ -478,12 +502,9 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
             output_filename = (base_output_filename.parent / f"{base_output_filename.stem}_{i:02}").with_suffix(suffix)
         else:
             output_filename = base_output_filename
-
         ak.to_parquet(
             arrays, output_filename,
             compression=compression, compression_level=compression_level,
-            # We run into a recursion limit or crash if there's a cut and we don't explode records. Probably a bug...
-            # But it works fine if we explored records, so fine for now.
             explode_records=False,
         )
 
@@ -496,13 +517,12 @@ if __name__ == "__main__":
     #read(filename="final_state_hadrons.dat", events_per_chunk=-1, base_output_filename="skim/jetscape.parquet")
     for pt_hat_range in ["7_9", "20_25", "50_55", "100_110", "250_260", "500_550", "900_1000"]:
         print(f"Processing pt hat range: {pt_hat_range}")
-        directory_name = "5020_PbPb_0-10_0R25_1R0_1"
+        directory_name = "OutputFile_Type5_qhatA10_B0_5020_PbPb_0-10_0.30_2.0_1"
         filename = f"JetscapeHadronListBin{pt_hat_range}"
         parse_to_parquet(
             base_output_filename=f"skim/{filename}.parquet",
             store_only_necessary_columns=True,
-            input_filename=f"../phys_paper/AAPaperData/{directory_name}/{filename}.out",
-            events_per_chunk=1000,
-            max_chunks=1,
+            input_filename=f"/alf/data/rehlers/jetscape/osiris/AAPaperData/MATTER_LBT_RunningAlphaS_Q2qhat/{directory_name}/{filename}_test.out",
+            events_per_chunk=20,
+            #max_chunks=3,
         )
-
