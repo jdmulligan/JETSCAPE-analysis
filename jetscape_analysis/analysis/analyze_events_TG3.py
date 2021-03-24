@@ -514,5 +514,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.inputFile))
         sys.exit(0)
 
-    analysis = AnalyzeJetscapeEvents_PHYS(config_file=args.configFile, input_file=args.inputFile, output_dir=args.outputDir)
+    analysis = AnalyzeJetscapeEvents_TG3(config_file=args.configFile, input_file=args.inputFile, output_dir=args.outputDir)
     analysis.analyze_jetscape_events()
