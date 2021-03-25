@@ -77,14 +77,13 @@ ALICE_hadron: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.roo
 #     Here, we use the result where the cut is applied on both PbPb and pp
 
 jetR: [0.2, 0.4]
-use_charged_jets: True
 min_track_pt: 0.                    # Used for both hadron/parton and jet histograms
 min_jet_pt: 20.
 jet_eta_cut_04: [2.0, 2.8, 0.3]     # CMS, ATLAS, ALICE
 jet_eta_cut_02: [2.0, None, 0.5]    # CMS, ATLAS, ALICE
 
 # Angularity
-#   hepdata: TODO
+#   hepdata: https://www.hepdata.net/record/ins1682990
 #   sqrts: 2.76  TeV
 #   Centrality: 0-10
 #   Jets:
@@ -95,6 +94,7 @@ jet_eta_cut_02: [2.0, None, 0.5]    # CMS, ATLAS, ALICE
 # Nothing to configure for now (could always pull things out).
 
 # Jet mass
+#   hepdata: https://www.hepdata.net/record/ins1512107 (tgraph...no binning)
 #   sqrts: 2.76  TeV
 #   Centrality: 0-10
 #   Jets:
@@ -119,7 +119,7 @@ soft_drop_zcut: 0.2
 soft_drop_beta: 0.
 
 # semi-inclusive hadron-jet
-#   hepdata: TODO
+#   hepdata: https://www.hepdata.net/record/ins1376027
 #   sqrts: 2.76 TeV
 #   Centrality: 0-10%
 #   Jets:
@@ -131,7 +131,7 @@ soft_drop_beta: 0.
 hjet_low_trigger_range: [8, 9]
 hjet_high_trigger_range: [20, 50]
 
-# Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
+# Location of HEPData ROOT files (relative to JETSCAPE-analysis directory)
 CMS_jet_0_10_R02: 'data/PHYS_RAA/data_jet/CMS/0_10_R02/CMS_JetRAA_R02_0-10_Rescanned.txt'
 CMS_jet_0_10_R04: 'data/PHYS_RAA/data_jet/CMS/0_10_R04/CMS_JetRAA_R04_0-10_Rescanned.txt'
 CMS_jet_30_50_R02: 'data/PHYS_RAA/data_jet/CMS/30_50_R02/CMS_JetRAA_R02_30-50_Rescanned.txt'
@@ -142,3 +142,9 @@ ATLAS_jet_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table
 ALICE_jet_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
 ALICE_jet_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
 ALICE_jet_0_10_R02_biasratio: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_26.root'
+
+# Location of TG3 HEPData files
+ALICE_g_R02: 'data/TG3/g/HEPData-ins1682990-v1-Table_11.root'
+ALICE_m_R04: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
+ALICE_hjet_IAA_R04: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+ALICE_hjet_delta_phi_R04: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'

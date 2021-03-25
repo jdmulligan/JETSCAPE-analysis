@@ -55,7 +55,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.file_CMS_hadron_0_5 = config['CMS_hadron_0_5']
         self.file_CMS_hadron_5_10 = config['CMS_hadron_5_10']
         self.file_CMS_hadron_30_50 = config['CMS_hadron_30_50']
-        self.file_ATLAS_hadron = config['ATLAS_hadron']
+        self.file_ATLAS_hadron_0_5 = config['ATLAS_hadron_0_5']
+        self.file_ATLAS_hadron_30_40 = config['ATLAS_hadron_30_40']
         self.file_ALICE_hadron = config['ALICE_hadron']
 
         # Get binnings from data
@@ -74,15 +75,14 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.bins_ATLAS_hadron = np.array([5.5, 7, 8, 9, 10, 11, 13, 15, 17, 20, 22, 25, 30, 38, 48, 59, 74, 90, 120, 150, 200, 250, 300])
 
         #------------------------------------------------------
-        # Jet parameters
-        self.use_charged_jets = config["use_charged_jets"]
+        # Full jet parameters
         self.min_track_pt = config['min_track_pt']
         self.jetR_list = config['jetR']
         self.min_jet_pt = config['min_jet_pt']
         self.jet_eta_cut_04 = config['jet_eta_cut_04']
         self.jet_eta_cut_02 = config['jet_eta_cut_02']
 
-        self.file_CMS_jet = config['CMS_jet']
+        self.file_CMS_jet_0_10_R02 = config['CMS_jet_0_10_R02']
         self.file_ATLAS_jet_0_10 = config['ATLAS_jet_0_10']
         self.file_ATLAS_jet_30_40 = config['ATLAS_jet_30_40']
         self.file_ATLAS_jet_40_50 = config['ATLAS_jet_40_50']
@@ -115,29 +115,45 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         h = dir.Get('Hist1D_y1')
         self.bins_ALICE_jet = np.array(h.GetXaxis().GetXbins())
         f.Close()
+        
+        #------------------------------------------------------
+        # Charged jet parameters
+        self.file_ALICE_g_R02 = config['ALICE_g_R02']
+        self.file_ALICE_m_R04 = config['ALICE_m_R04']
+        self.file_ALICE_hjet_IAA_R04 = config['ALICE_hjet_IAA_R04']
+        self.file_ALICE_hjet_delta_phi_R04 = config['ALICE_hjet_delta_phi_R04']
 
         # Angularity
-        # TODO: Need the HEPdata.
-        self.bins_ALICE_angularity = ...
+        f = ROOT.TFile(self.file_ALICE_g_R02, 'READ')
+        dir = f.Get('Table 11')
+        h = dir.Get('Hist1D_y1')
+        self.bins_ALICE_g_R02 = np.array(h.GetXaxis().GetXbins())
+        f.Close()
 
-        # Jet mass
-        # TODO: Need the HEPdata.
-        self.bins_ALICE_jet_mass = ...
+        # Jet mass (binning not in hepdata)
+        self.bins_ALICE_m_R04 = np.array([0., 2, 4, 6, 8, 10, 12, 14, 16, 18])
 
         # Substructure
         self.soft_drop_zcut = config["soft_drop_zcut"]
         self.soft_drop_beta = config["soft_drop_beta"]
-        # TODO: Need binning
-        self.bins_ALICE_soft_drop_zg = ...
-        self.bins_ALICE_soft_drop_theta_g = ...
+        self.bins_ALICE_soft_drop_zg_0_10_R02 = np.array([0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5])
+        self.bins_ALICE_soft_drop_theta_g_0_10_R02 = np.array([0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0])
 
         # Hadron-jet
         self.hjet_low_trigger_range = config["hjet_low_trigger_range"]
         self.hjet_high_trigger_range = config["hjet_high_trigger_range"]
-        # TODO: Need the HEPdata.
-        self.bins_ALICE_hjet_yield = ...
-        self.bins_ALICE_hjet_delta_phi = ...
 
+        f = ROOT.TFile(self.file_ALICE_hjet_IAA_R04, 'READ')
+        dir = f.Get('Table 33')
+        h = dir.Get('Hist1D_y1')
+        self.bins_ALICE_hjet_IAA_R04 = np.array(h.GetXaxis().GetXbins())
+        f.Close()
+        
+        f = ROOT.TFile(self.file_ALICE_hjet_delta_phi_R04, 'READ')
+        dir = f.Get('Table 37')
+        h = dir.Get('Hist1D_y1')
+        self.bins_ALICE_hjet_delta_phi_R04 = np.array(h.GetXaxis().GetXbins())
+        f.Close()
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -185,38 +201,38 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
             # Angularity
             hname = f"hAngularity_R{jetR}"
-            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_angularity)-1, self.bins_ALICE_angularity)
+            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_g_R02)-1, self.bins_ALICE_g_R02)
             h.Sumw2()
             setattr(self, hname, h)
 
             # Jet mass
             hname = f"hJetMass_R{jetR}"
-            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_jet_mass)-1, self.bins_ALICE_jet_mass)
+            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_m_R04)-1, self.bins_ALICE_m_R04)
             h.Sumw2()
             setattr(self, hname, h)
 
             # Substructure
             # zg
             hname = f"hSoftDrop_zg_R{jetR}"
-            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_soft_drop_zg)-1, self.bins_ALICE_soft_drop_zg)
+            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_soft_drop_zg_0_10_R02)-1, self.bins_ALICE_soft_drop_zg_0_10_R02)
             h.Sumw2()
             setattr(self, hname, h)
             # theta_g
             hname = f"hSoftDrop_theta_g_R{jetR}"
-            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_soft_drop_theta_g)-1, self.bins_ALICE_soft_drop_theta_g)
+            h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_soft_drop_theta_g_0_10_R02)-1, self.bins_ALICE_soft_drop_theta_g_0_10_R02)
             h.Sumw2()
             setattr(self, hname, h)
 
             # h-jet
             for hist_label in ["low", "high"]:
                 # Yield
-                hname = f"hRecoilJetYield_{hist_label}Trigger"
-                h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_hjet_yield)-1, self.bins_ALICE_hjet_yield)
+                hname = f"hRecoilJetYield_{hist_label}Trigger_R{jetR}"
+                h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_hjet_IAA_R04)-1, self.bins_ALICE_hjet_IAA_R04)
                 h.Sumw2()
                 setattr(self, hname, h)
                 # Delta Phi
-                hname = f"hRecoilJetDeltaPhi_{hist_label}Trigger"
-                h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_hjet_delta_phi)-1, self.bins_ALICE_hjet_delta_phi)
+                hname = f"hRecoilJetDeltaPhi_{hist_label}Trigger_R{jetR}"
+                h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_hjet_delta_phi_R04)-1, self.bins_ALICE_hjet_delta_phi_R04)
                 h.Sumw2()
                 setattr(self, hname, h)
 
@@ -246,35 +262,24 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # Analyze a single event -- fill user-defined output objects
     # ---------------------------------------------------------------
     def analyze_event(self, event):
-        # Only used charged jets.
-        if self.use_charged_jets:
-            # NOTE: This is super inefficient - we can seriously accelerate this with numba.
-            #       But this apparently works for now, so we leave it as is for now.
-            # Create an all false mask. We'll fill it in with the charged constituents
-            mask = np.ones(len(event)) < 0
-            for i, particle in enumerate(event):
-                # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                if abs(particle.particle_ID) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                    mask[i] = True
-            # Can't apply directly to the event because not everything has the same depth
-            # (eg. event plane angle is attached). So we extract out the columns where we
-            # can do so, and pass that to fastjet. In that case, we can apply the mask to
-            # the entire array.
-            fj_event = event[["px", "py", "pz", "E", "particle_ID", "status"]][mask]
-        else:
-            fj_event = event
 
         # Create list of fastjet::PseudoJets (separately for jet shower particles and holes)
-        fj_hadrons_positive = self.fill_fastjet_constituents(fj_event, select_status='+')
-        fj_hadrons_negative = self.fill_fastjet_constituents(fj_event, select_status='-')
-
+        fj_hadrons_positive = self.fill_fastjet_constituents(event, select_status='+')
+        fj_hadrons_negative = self.fill_fastjet_constituents(event, select_status='-')
+        
+        # Create list of charged particles
+        fj_hadrons_positive_charged = self.fill_fastjet_constituents(event, select_status='+',
+                                                                     select_charged=True)
+        fj_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
+                                                                     select_charged=True)
+        
         # Fill hadron histograms for jet shower particles
         self.fill_hadron_histograms(fj_hadrons_positive, status='+')
         self.fill_hadron_histograms(fj_hadrons_negative, status='-')
 
         # Loop through specified jet R
         for jetR in self.jetR_list:
-
+        
             # Set jet definition and a jet selector
             jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
             jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(5.)
@@ -282,13 +287,26 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 print('jet definition is:', jet_def)
                 print('jet selector is:', jet_selector, '\n')
 
+            # Full jets
+            # -----------------
             # Do jet finding
             cs = fj.ClusterSequence(fj_hadrons_positive, jet_def)
             jets = fj.sorted_by_pt(cs.inclusive_jets())
             jets_selected = jet_selector(jets)
 
             # Fill some jet histograms
-            self.fill_jet_histograms(jets_selected, fj_hadrons_positive, fj_hadrons_negative, jetR)
+            self.fill_jet_histograms(jets_selected, fj_hadrons_positive, fj_hadrons_negative, jetR, charged=False)
+            
+            # Charged jets
+            # -----------------
+
+            # Do jet finding
+            cs_charged = fj.ClusterSequence(fj_hadrons_positive_charged, jet_def)
+            jets_charged = fj.sorted_by_pt(cs_charged.inclusive_jets())
+            jets_selected_charged = jet_selector(jets_charged)
+
+            # Fill some jet histograms
+            self.fill_jet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, charged=True)
 
     # ---------------------------------------------------------------
     # Fill hadron histograms
@@ -331,7 +349,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # ---------------------------------------------------------------
     # Fill jet histograms
     # ---------------------------------------------------------------
-    def fill_jet_histograms(self, jets, fj_hadrons_positive, fj_hadrons_negative, jetR):
+    def fill_jet_histograms(self, jets, fj_hadrons_positive, fj_hadrons_negative, jetR, charged=False):
 
         for jet in jets:
 
@@ -348,44 +366,11 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
             # Compute corrected jet pt, and fill histograms
             jet_pt = jet_pt_uncorrected - negative_pt
-
-            # Select eta cut
-            if jetR == 0.2:
-                jet_eta_cut = self.jet_eta_cut_02
-            elif jetR == 0.4:
-                jet_eta_cut = self.jet_eta_cut_04
-
-            # CMS
-            if abs(jet.eta()) < jet_eta_cut[0]:
-                getattr(self, 'hJetPt_CMS_R{}'.format(jetR)).Fill(jet_pt)
-
-            # ATLAS
-            if jetR == 0.4:
-                if abs(jet.rap()) < jet_eta_cut[1]:
-                    getattr(self, 'hJetPt_ATLAS_binning0_R{}'.format(jetR)).Fill(jet_pt)
-                    getattr(self, 'hJetPt_ATLAS_binning1_R{}'.format(jetR)).Fill(jet_pt)
-                    getattr(self, 'hJetPt_ATLAS_binning2_R{}'.format(jetR)).Fill(jet_pt)
-
-            # ALICE
-            if abs(jet.eta()) < jet_eta_cut[2]:
-
-                # Check leading track requirement
-                if jetR == 0.2:
-                    min_leading_track_pt = 5.
-                elif jetR == 0.4:
-                    min_leading_track_pt = 7.
-
-                accept_jet = False
-                for constituent in jet.constituents():
-                    if constituent.pt() > min_leading_track_pt:
-                        # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                        if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                            accept_jet = True
-
-                if accept_jet:
-                    getattr(self, 'hJetPt_ALICE_R{}'.format(jetR)).Fill(jet_pt)
-                getattr(self, 'hJetPt_ALICE_no_ptlead_cut_R{}'.format(jetR)).Fill(jet_pt)
-
+            
+            if charged:
+            
+                jet_eta_cut = 0.9 - jetR
+            
                 # Angularity
                 # No LTB, so take all jets within acceptance.
                 # NOTE: Charged jet pt
@@ -426,14 +411,10 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                     reclustering_algorithm = fj.cambridge_algorithm
                     gshop = fjcontrib.GroomerShop(jet, jetR, reclustering_algorithm)
                     jet_groomed_lund = gshop.soft_drop(self.soft_drop_beta, self.soft_drop_zcut, jetR)
-                    # TODO: Careful with untagged bin...
+                    # Note: untagged jets will return negative value
                     if jet_groomed_lund:
                         theta_g = jet_groomed_lund.Delta() / jetR
                         zg = jet_groomed_lund.z()
-                    else:
-                        # Following my own convention. Revise as necessary.
-                        theta_g = -0.05
-                        zg = -0.05
                     getattr(self, f"hSoftDrop_zg_R{jetR}").Fill(zg)
                     getattr(self, f"hSoftDrop_theta_g_R{jetR}").Fill(theta_g)
 
@@ -459,14 +440,53 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                     if found_recoil_jet:
                         # Jet yield
                         hist_label = "high" if found_high else "low"
-                        getattr(self, f"hRecoilJetYield_{hist_label}Trigger").Fill(jet_pt)
+                        getattr(self, f"hRecoilJetYield_{hist_label}Trigger_R{jetR}").Fill(jet_pt)
                         # Delta Phi
                         # NOTE: Charged jet pt
                         if 40 < jet_pt < 60:
-                            getattr(self, f"hRecoilJetDeltaPhi_{hist_label}Trigger").Fill(hadron.delta_phi_to(jet))
+                            getattr(self, f"hRecoilJetDeltaPhi_{hist_label}Trigger_R{jetR}").Fill(hadron.delta_phi_to(jet))
 
-            # Recoil histogram
-            getattr(self, 'hJetPt_recoils_R{}'.format(jetR)).Fill(jet_pt, negative_pt)
+            else:
+
+                # Select eta cut
+                if jetR == 0.2:
+                    jet_eta_cut = self.jet_eta_cut_02
+                elif jetR == 0.4:
+                    jet_eta_cut = self.jet_eta_cut_04
+
+                # CMS
+                if abs(jet.eta()) < jet_eta_cut[0]:
+                    getattr(self, 'hJetPt_CMS_R{}'.format(jetR)).Fill(jet_pt)
+
+                # ATLAS
+                if jetR == 0.4:
+                    if abs(jet.rap()) < jet_eta_cut[1]:
+                        getattr(self, 'hJetPt_ATLAS_binning0_R{}'.format(jetR)).Fill(jet_pt)
+                        getattr(self, 'hJetPt_ATLAS_binning1_R{}'.format(jetR)).Fill(jet_pt)
+                        getattr(self, 'hJetPt_ATLAS_binning2_R{}'.format(jetR)).Fill(jet_pt)
+
+                # ALICE
+                if abs(jet.eta()) < jet_eta_cut[2]:
+
+                    # Check leading track requirement
+                    if jetR == 0.2:
+                        min_leading_track_pt = 5.
+                    elif jetR == 0.4:
+                        min_leading_track_pt = 7.
+
+                    accept_jet = False
+                    for constituent in jet.constituents():
+                        if constituent.pt() > min_leading_track_pt:
+                            # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+                            if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                accept_jet = True
+
+                    if accept_jet:
+                        getattr(self, 'hJetPt_ALICE_R{}'.format(jetR)).Fill(jet_pt)
+                    getattr(self, 'hJetPt_ALICE_no_ptlead_cut_R{}'.format(jetR)).Fill(jet_pt)
+
+                # Recoil histogram
+                getattr(self, 'hJetPt_recoils_R{}'.format(jetR)).Fill(jet_pt, negative_pt)
 
 
 ##################################################################

@@ -24,6 +24,7 @@ import yaml
 import itertools
 import ROOT
 import pandas as pd
+import numpy as np
 
 # Fastjet via python (from external library heppy)
 import fjext
@@ -193,7 +194,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # If select_status='+', select only positive status particles
     # If select_status='-', select only positive status particles
     # ---------------------------------------------------------------
-    def fill_fastjet_constituents(self, event, select_status=None):
+    def fill_fastjet_constituents(self, event, select_status=None, select_charged=False):
     
         if select_status == '-':
             px = event['px'][(event['status'] < 0)]
@@ -213,6 +214,21 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
             pz = event['pz']
             e = event['E']
             pid = event['particle_ID']
+            
+        if select_charged:
+            # NOTE: This is super inefficient - we can seriously accelerate this with numba.
+            #       But this apparently works for now, so we leave it as is for now.
+            # Create an all false mask. We'll fill it in with the charged constituents
+            mask = np.ones(len(pid)) < 0
+            for i, pid_value in enumerate(pid):
+                # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+                if np.abs(pid_value) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                    mask[i] = True
+            px = px[mask]
+            py = py[mask]
+            pz = pz[mask]
+            e = e[mask]
+            pid = pid[mask]
     
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
