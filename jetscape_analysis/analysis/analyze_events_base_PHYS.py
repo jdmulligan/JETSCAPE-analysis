@@ -42,10 +42,10 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     def __init__(self, config_file="", input_file="", output_dir="", **kwargs):
         super(AnalyzeJetscapeEvents_BasePHYS, self).__init__(**kwargs)
         self.config_file = config_file
-        
+
         self.input_file_hadrons = input_file
         self.input_file_partons = ''
-            
+
         # Get pt-hat from filename
         filename = self.input_file_hadrons.split('/')[-1]
         suffix = filename.split('Bin')[1]
@@ -53,7 +53,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.pt_hat_max = int(suffix.split('_')[1])
         self.index = suffix.split('_')[2]
         self.output_dir = os.path.join(output_dir, self.index)
-        
+
         # Get pt-hat scale factor from file in same directory
         self.input_dir = os.path.dirname(input_file)
         pt_hat_filename = os.path.join(self.input_dir, '../SigmaHardBin{}_{}.out'.format(self.pt_hat_min, self.pt_hat_max))
@@ -72,7 +72,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Read config file
         with open(self.config_file, 'r') as stream:
             config = yaml.safe_load(stream)
-            
+
         self.debug_level = config['debug_level']
         self.n_event_max = config['n_event_max']
         self.events_per_chunk = config['events_per_chunk']
@@ -80,7 +80,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.progress_bar = config['progress_bar']
         self.dry_run = config['dry_run']
         self.scale_histograms = config['scale_histograms']
-        
+
         # Find pt-hat bin index
         self.pt_hat_bins = config['pt_hat_bins']
         self.n_pt_hat_bins = len(self.pt_hat_bins) - 1
@@ -97,9 +97,9 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # Main processing function
     # ---------------------------------------------------------------
     def analyze_jetscape_events(self):
-    
+
         print('Analyzing pt-hat: {} - {} ...'.format(self.pt_hat_min, self.pt_hat_max))
-    
+
         # Read JETSCAPE output, get hadrons, do jet finding, and write histograms to ROOT file
         self.run_jetscape_analysis()
 
@@ -115,32 +115,32 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
 
         # Initialize output objects
         self.initialize_output_objects()
-        
+
         # Read chunk of events into a dataframe
         # Fields: particle_ID, status, E, px, py, pz
         df_event_chunk = pd.read_parquet(self.input_file_hadrons)
-        
+
         self.n_event_max = df_event_chunk.shape[0]
         if self.progress_bar:
             pbar = tqdm.tqdm(range(self.n_event_max))
 
         # Iterate through events
         self.analyze_event_chunk(df_event_chunk)
-            
+
         # Write analysis task output to ROOT file
         self.write_output_objects()
-            
+
     # ---------------------------------------------------------------
     # Analyze event chunk
     # ---------------------------------------------------------------
     def analyze_event_chunk(self, df_event_chunk):
-            
+
         # Loop through events
         for i,event in df_event_chunk.iterrows():
 
             if not self.progress_bar and i % 1000 == 0:
                 print('event: {}'.format(i))
-            
+
             # Call user-defined function to analyze event
             self.analyze_event(event)
             if self.progress_bar:
@@ -154,10 +154,10 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Event histograms
         self.hNevents = ROOT.TH1F('hNevents', 'hNevents', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
         self.hCrossSection = ROOT.TH1F('hCrossSection', 'hCrossSection', self.n_pt_hat_bins, 0, self.n_pt_hat_bins)
-        
+
         # Initialize user-defined output objects
         self.initialize_user_output_objects()
-        
+
     # ---------------------------------------------------------------
     # Save all ROOT histograms and trees to file
     # ---------------------------------------------------------------
@@ -166,7 +166,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Fill cross-section
         self.hCrossSection.SetBinContent(self.pt_hat_bin+1, self.pt_hat_xsec)
         self.hCrossSection.SetBinError(self.pt_hat_bin+1, self.pt_hat_xsec_err)
-        
+
         # Set N events
         self.hNevents.SetBinContent(self.pt_hat_bin+1, self.n_event_max)
 
@@ -186,7 +186,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
                 del obj
 
         fout.Close()
-   
+
     # ---------------------------------------------------------------
     # Fill hadrons into vector of fastjet pseudojets
     #
@@ -195,48 +195,40 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # If select_status='-', select only positive status particles
     # ---------------------------------------------------------------
     def fill_fastjet_constituents(self, event, select_status=None, select_charged=False):
-    
         if select_status == '-':
-            px = event['px'][(event['status'] < 0)]
-            py = event['py'][(event['status'] < 0)]
-            pz = event['pz'][(event['status'] < 0)]
-            e = event['E'][(event['status'] < 0)]
-            pid = event['particle_ID'][(event['status'] < 0)]
+            mask = (event['status'] < 0)
         elif select_status == '+':
-            px = event['px'][(event['status'] > -1)]
-            py = event['py'][(event['status'] > -1)]
-            pz = event['pz'][(event['status'] > -1)]
-            e = event['E'][(event['status'] > -1)]
-            pid = event['particle_ID'][(event['status'] > -1)]
+            mask = (event['status'] > -1)
         else:
-            px = event['px']
-            py = event['py']
-            pz = event['pz']
-            e = event['E']
-            pid = event['particle_ID']
-            
+            # Picked a value to make an all true mask. We don't select anything
+            mask = event["status"] > -1e6
+
+        # Default to an all true mask
+        charged_mask = np.ones(len(mask)) > 0
         if select_charged:
             # NOTE: This is super inefficient - we can seriously accelerate this with numba.
             #       But this apparently works for now, so we leave it as is for now.
             # Create an all false mask. We'll fill it in with the charged constituents
-            mask = np.ones(len(pid)) < 0
+            charged_mask = np.ones(len(pid)) < 0
             for i, pid_value in enumerate(pid):
                 # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                 if np.abs(pid_value) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                    mask[i] = True
-            px = px[mask]
-            py = py[mask]
-            pz = pz[mask]
-            e = e[mask]
-            pid = pid[mask]
-    
+                    charged_mask[i] = True
+
+        full_mask = mask & charged_mask
+        px = event['px'][full_mask]
+        py = event['py'][full_mask]
+        pz = event['pz'][full_mask]
+        e = event['E'][full_mask]
+        pid = event['particle_ID'][full_mask]
+
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
-        
+
         # Set pid as user_index
         for i,p in enumerate(fj_particles):
             fj_particles[i].set_user_index(int(pid[i]))
-        
+
         return fj_particles
 
     # ---------------------------------------------------------------
@@ -245,7 +237,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # ---------------------------------------------------------------
     def initialize_user_output_objects(self):
         raise NotImplementedError('You must implement initialize_user_output_objects()!')
-        
+
     # ---------------------------------------------------------------
     # This function is called once per event (per setting)
     # You must implement this
