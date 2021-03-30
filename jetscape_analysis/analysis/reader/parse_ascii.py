@@ -389,7 +389,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
 
         # Cross check that everything is in order and was parsed correctly.
         if events_per_chunk > 0:
-            if not reached_end_of_file:
+            # NOTE: The second check handles the case where n_events evenly divides by events_per_chunk.
+            if not reached_end_of_file or len(event_split_index) == events_per_chunk - 1:
                 assert len(event_split_index) == events_per_chunk - 1
                 assert len(event_header_info) == events_per_chunk
             else:
