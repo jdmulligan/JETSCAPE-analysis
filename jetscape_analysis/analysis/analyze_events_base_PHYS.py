@@ -195,27 +195,28 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # If select_status='-', select only positive status particles
     # ---------------------------------------------------------------
     def fill_fastjet_constituents(self, event, select_status=None, select_charged=False):
+    
         if select_status == '-':
-            mask = (event['status'] < 0)
+            status_mask = (event['status'] < 0)
         elif select_status == '+':
-            mask = (event['status'] > -1)
+            status_mask = (event['status'] > -1)
         else:
             # Picked a value to make an all true mask. We don't select anything
-            mask = event["status"] > -1e6
+            status_mask = event["status"] > -1e6
 
         # Default to an all true mask
-        charged_mask = np.ones(len(mask)) > 0
+        charged_mask = np.ones(len(status_mask)) > 0
         if select_charged:
             # NOTE: This is super inefficient - we can seriously accelerate this with numba.
             #       But this apparently works for now, so we leave it as is for now.
             # Create an all false mask. We'll fill it in with the charged constituents
-            charged_mask = np.ones(len(pid)) < 0
-            for i, pid_value in enumerate(pid):
+            charged_mask = np.ones(len(event['particle_ID'])) < 0
+            for i, pid_value in enumerate(event['particle_ID']):
                 # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                 if np.abs(pid_value) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                     charged_mask[i] = True
 
-        full_mask = mask & charged_mask
+        full_mask = status_mask & charged_mask
         px = event['px'][full_mask]
         py = event['py'][full_mask]
         pz = event['pz'][full_mask]

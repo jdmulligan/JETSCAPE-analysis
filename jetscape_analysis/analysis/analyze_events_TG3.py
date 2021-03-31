@@ -235,6 +235,20 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 h = ROOT.TH1F(hname, hname, len(self.bins_ALICE_hjet_delta_phi_R04)-1, self.bins_ALICE_hjet_delta_phi_R04)
                 h.Sumw2()
                 setattr(self, hname, h)
+                
+            # Leading subjets
+            if jetR == 0.2:
+                subjetR = 0.1
+                hname = f"hLeadingSubjet_R{jetR}_r{subjetR}"
+                h = ROOT.TH1F(hname, hname, 100, 0., 1.)
+                h.Sumw2()
+                setattr(self, hname, h)
+            if jetR == 0.4:
+                subjetR = 0.2
+                hname = f"hLeadingSubjet_R{jetR}_r{subjetR}"
+                h = ROOT.TH1F(hname, hname, 100, 0., 1.)
+                h.Sumw2()
+                setattr(self, hname, h)
 
             hname = 'hJetPt_recoils_R{}'.format(jetR)
             h = ROOT.TH2F(hname, hname, 100, 0, 1000, 300, 0, 300)
@@ -445,6 +459,31 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                         # NOTE: Charged jet pt
                         if 40 < jet_pt < 60:
                             getattr(self, f"hRecoilJetDeltaPhi_{hist_label}Trigger_R{jetR}").Fill(hadron.delta_phi_to(jet))
+                        
+                # Leading subjets
+                if jetR == 0.4 and 80 < jet_pt < 100:
+                    subjetR = 0.2
+                elif jetR == 0.2 and 60 < jet_pt < 80:
+                    subjetR = 0.1
+                else:
+                    subjetR = None
+                    
+                if subjetR:
+                    cs_subjet = fj.ClusterSequence(jet.constituents(), fj.JetDefinition(fj.antikt_algorithm, subjetR))
+                    subjets = fj.sorted_by_pt(cs_subjet.inclusive_jets())
+                    # Note: May be better to subtract holes before deciding leading subjet
+                    leading_subjet = self.leading_jet(subjets)
+                    
+                    # Sum the negative recoils within subjetR
+                    negative_pt = 0.
+                    for hadron in fj_hadrons_negative:
+                        if subjet.delta_R(hadron) < subjetR:
+                            negative_pt += hadron.pt()
+
+                    # Compute corrected subjet pt, and fill histograms
+                    subjet_pt = leading_subjet.pt() - negative_pt
+                    z_leading = subjet_pt / jet_pt
+                    getattr(self, f"hLeadingSubjet_R{jetR}_r{subjetR}").Fill(z_leading)
 
             else:
 
@@ -488,6 +527,21 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Recoil histogram
                 getattr(self, 'hJetPt_recoils_R{}'.format(jetR)).Fill(jet_pt, negative_pt)
 
+    #---------------------------------------------------------------
+    # Return leading jet (or subjet)
+    #---------------------------------------------------------------
+    def leading_jet(self, jets):
+
+        leading_jet = None
+        for jet in jets:
+
+            if not leading_jet:
+                leading_jet = jet
+            
+            if jet.pt() > leading_jet.pt():
+                leading_jet = jet
+
+        return leading_jet
 
 ##################################################################
 if __name__ == "__main__":
