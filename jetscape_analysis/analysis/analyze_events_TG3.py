@@ -612,7 +612,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Sum the negative recoils within subjetR
                 negative_pt = 0.
                 for hadron in holes_in_jet:
-                    if subjet.delta_R(hadron) < subjetR:
+                    if leading_subjet.delta_R(hadron) < r:
                         negative_pt += hadron.pt()
 
                 # Compute corrected subjet pt, and fill histograms
