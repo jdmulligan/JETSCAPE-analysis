@@ -4,14 +4,14 @@
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=4
 #SBATCH --partition=std
 #SBATCH --time=24:00:00
-#SBATCH --array=1-792
+#SBATCH --array=1-198
 #SBATCH --output=/rstorage/jetscape/JETSCAPE-AA-events/skim/slurm-%A_%a.out
 
-FILE_PATHS='/rstorage/james/JETSCAPE-AA-events/files.txt'
+FILE_PATHS='/rstorage/james/JETSCAPE-AA-events/v2/files.txt'
 NFILES=$(wc -l < $FILE_PATHS)
 echo "N files to process: ${NFILES}"
 
-# Currently we have 7 nodes * 20 cores active
+# Currently we have 8 nodes * 20 cores active
 FILES_PER_JOB=1
 echo "Files per job: $FILES_PER_JOB"
 

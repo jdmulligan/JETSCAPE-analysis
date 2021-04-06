@@ -29,7 +29,7 @@ fi
 # Define output path from relevant sub-path of input file
 # Note: suffix depends on file structure of input file -- need to edit appropriately
 OUTPUT_SUFFIX=$(echo $INPUT_FILE | cut -d/ -f7-7)
-OUTPUT_DIR="/rstorage/jetscape/PHYS_RAA/$JOB_ID/$OUTPUT_SUFFIX"
+OUTPUT_DIR="/rstorage/jetscape/AnalysisResults/$JOB_ID/$OUTPUT_SUFFIX"
 echo "Output dir: $OUTPUT_DIR"
 mkdir -p $OUTPUT_DIR
 
@@ -42,7 +42,7 @@ module list
 
 # Run python script via pipenv
 cd /software/users/james/jetscape-docker/JETSCAPE-analysis
-pipenv run python jetscape_analysis/analysis/analyze_events_PHYS.py -c config/PHYS_RAA.yaml -i $INPUT_FILE -o $OUTPUT_DIR
+pipenv run python jetscape_analysis/analysis/analyze_events_TG3.py -c config/TG3.yaml -i $INPUT_FILE -o $OUTPUT_DIR
 
 # Move stdout to appropriate folder
-mv /rstorage/jetscape/PHYS_RAA/slurm-${JOB_ID}_${TASK_ID}.out /rstorage/jetscape/PHYS_RAA/${JOB_ID}/
+mv /rstorage/jetscape/AnalysisResults/slurm-${JOB_ID}_${TASK_ID}.out /rstorage/jetscape/AnalysisResults/${JOB_ID}/
