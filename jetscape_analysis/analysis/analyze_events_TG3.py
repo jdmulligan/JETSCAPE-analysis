@@ -575,19 +575,18 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
         # Jet mass
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
-            # Could also use modp2(), but it would make it asymmetric compared to the squared E,
-            # which will for sure make me do a double take at some point. Better to avoid it.
-            jet_mass = np.sqrt(jet.E() ** 2 - jet.pt() ** 2 - jet.pz() ** 2)
+        
+            jet_mass = jet.m()
 
             # Add holes together as four vectors, and then calculate their mass, removing it from the jet mass.
             if holes_in_jet:
-                # Copy to avoid modifying the original hole.
-                hole_four_vector = fj.PseudoJet(holes_in_jet[0])
-                for hadron in holes_in_jet[1:]:
+                # Avoid modifying the original hole.
+                hole_four_vector = fj.PseudoJet()
+                for hadron in holes_in_jet:
                     hole_four_vector += hadron
 
                 # Remove mass from holes
-                jet_mass -= np.sqrt(hole_four_vector.E() ** 2 - hole_four_vector.pt() ** 2 - hole_four_vector.pz() ** 2)
+                jet_mass -= hole_four_vector.m()
 
             getattr(self, f'h_chjet_mass_alice_R{jetR}').Fill(jet_mass)
 
@@ -728,14 +727,16 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                     if 40 < jet_pt < 60:
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
-                                        getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_lowTrigger_alice_R{jetR}').Fill(tau2/tau1)
+                                        if tau1 > 1e-3:
+                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_lowTrigger_alice_R{jetR}').Fill(tau2/tau1)
 
                             if nsubjettiness_found_high:
                                 if np.pi - jet.delta_R(hadron) < 0.6:
                                     if 40 < jet_pt < 60:
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
-                                        getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_highTrigger_alice_R{jetR}').Fill(tau2/tau1)
+                                        if tau1 > 1e-3:
+                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_highTrigger_alice_R{jetR}').Fill(tau2/tau1)
 
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
