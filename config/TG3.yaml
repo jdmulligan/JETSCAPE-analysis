@@ -8,7 +8,7 @@ pt_hat_bins:  [1, 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 20, 25, 30, 35, 40, 45, 50, 
 # Analysis parameters -- nothing below affects the generation stage
 
 # Required parameters
-scale_histograms: True
+scale_histograms: False
 
 #------------------------------------------------------------------
 # Label observables as: {type}_{observable}_{experiment}

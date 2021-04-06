@@ -95,9 +95,11 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.run_jetscape_analysis()
 
         # Scale histograms according to pthard bins cross-section
+        # Note: if merging multiple files for given pt-hat bin, likely want to scale only at that point
+        #       in order to scale by xsec/n_event
         if self.scale_histograms:
             print("Scaling pt-hat bin...")
-            scale_histograms.scale_histograms(self.output_dir, self.pt_hat_bin, bRemoveOutliers=False)
+            scale_histograms.scale_histograms(self.output_dir, self.pt_hat_bin, self.n_event_max, bRemoveOutliers=False)
 
     # ---------------------------------------------------------------
     # Main processing function for a single pt-hat bin
