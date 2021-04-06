@@ -8,143 +8,197 @@ pt_hat_bins:  [1, 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 20, 25, 30, 35, 40, 45, 50, 
 # Analysis parameters -- nothing below affects the generation stage
 
 # Required parameters
-n_event_max: 120000
-events_per_chunk: 1000
-reader: ascii            # [hepmc, ascii]
-progress_bar: False
-dry_run: False
 scale_histograms: True
-debug_level: 0
 
+#------------------------------------------------------------------
+# Label observables as: {type}_{observable}_{experiment}
+# For example: hadron_pt_cms_0-5
+#              jet_angularity1_alice_0-10
+#
+# Define each observable as a block below, containing specific cuts
+#
+# We often want to loop through multiple characteristics:
+#  - centrality -- compute every observable for every centrality
+#  - sqrt(s) -- compute every observable for every sqrt(s)
+#  - jet radius -- define a single jetR list and compute all jet observables for those R
+#
+# Include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory)
+#------------------------------------------------------------------
+
+#------------------------------------------------------------------
 # Charged particle data
 # In all cases: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
-#
-# (1) CMS, JHEP 04, 039 (2017)
-#     hepdata: https://www.hepdata.net/record/ins1496050
-#     Centrality: 0-5, 5-10, 30-50
-#     Cuts:
-#       - |eta|<1
-#
-# (2) ATLAS, ATLAS-CONF-2017-012
-#     hepdata: None
-#     Centrality: 0-5, 30-40
-#     Cuts:
-#       - |eta|<2.5
-#       - leptons removed
-#
-# (3) ALICE, JHEP 11, 013 (2018)
-#     hepdata: https://www.hepdata.net/record/ins1657384
-#     Centrality: 0-5, 5-10, 30-40, 40-50
-#     Cuts:
-#       - |eta|<0.8
+hadron:
 
-# User-defined parameters
-charged_particle_eta_cut: [1.0, 2.5, 0.8] # CMS, ATLAS, ALICE
-min_hadron_pt: 1.
-subtract_hadron_recoil: True
+  # CMS, https://www.hepdata.net/record/ins1496050
+  # Centrality: 0-5, 5-10, 30-50
+  # Cuts:
+  #   - |eta|<1
+  pt_cms:
+    eta_cut: 1.0
+    hepdata_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
+    hepdata_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
+    hepdata_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
+  
+  # ATLAS, ATLAS-CONF-2017-012 (no hepdata)
+  # Centrality: 0-5, 30-40
+  # Cuts:
+  #   - |eta|<2.5
+  #   - leptons removed
+  pt_atlas:
+    eta_cut: 2.5
+    bins: [5.5, 7, 8, 9, 10, 11, 13, 15, 17, 20, 22, 25, 30, 38, 48, 59, 74, 90, 120, 150, 200, 250, 300]
+    datapoints_0_5: 'data/PHYS_RAA/data_hadron/ATLAS/0_5/hadronRaa0-5.txt'
+    datapoints_30_40: 'data/PHYS_RAA/data_hadron/ATLAS/30_40/hadronRaa30-40.txt'
+  
+  # ALICE, https://www.hepdata.net/record/ins1657384
+  # Centrality: 0-5, 5-10, 30-40, 40-50
+  # Cuts:
+  #   - |eta|<0.8
+  pt_alice:
+    eta_cut: 0.8
+    hepdata: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+#------------------------------------------------------------------
 
-# Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
-CMS_hadron_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
-CMS_hadron_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
-CMS_hadron_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
-ATLAS_hadron_0_5: 'data/PHYS_RAA/data_hadron/ATLAS/0_5/hadronRaa0-5.txt'
-ATLAS_hadron_30_40: 'data/PHYS_RAA/data_hadron/ATLAS/30_40/hadronRaa30-40.txt'
-ALICE_hadron: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
-
-# Inclusive jet data, R=0.4 AKT
-#
-# (1) CMS, CMS-PAS-HIN-18-014
-#     hepdata: None
-#     Centrality: 0-10, 30-50
-#     Cuts:
-#       - |eta_jet|<2.0
-#
-# (2) ATLAS, Phys. Lett. B 790, 108-128 (2019)
-#     hepdata: https://www.hepdata.net/record/ins1673184
-#     Centrality: 0-10, 30-40, 40-50
-#     Cuts:
-#       - |y_jet|<2.8
-#       - Two charged tracks with pt>4 GeV are required in Pb-Pb
-#         (they argue this is small...unclear if they correct for it...we will ignore it here)
-#
-# (3) ALICE, Phys. Rev. C 101, no.3, 034911 (2020)
-#     hepdata: https://www.hepdata.net/record/ins1755387
-#     Centrality: 0-10
-#     Cuts:
-#       - pT^{ch lead} > 5,7 GeV (for R=0.2,0.4)
-#       - |eta_jet|<0.3,0.5
-#     Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
-#     Here, we use the result where the cut is applied on both PbPb and pp
-
-jetR: [0.2, 0.4]
-min_track_pt: 0.                    # Used for both hadron/parton and jet histograms
+#------------------------------------------------------------------
+# Some general jet parameters
+jet_R: [0.2, 0.4, 0.5]
 min_jet_pt: 20.
-jet_eta_cut_04: [2.0, 2.8, 0.3]     # CMS, ATLAS, ALICE
-jet_eta_cut_02: [2.0, None, 0.5]    # CMS, ATLAS, ALICE
+max_jet_y: 3.
 
-# Angularity
-#   hepdata: https://www.hepdata.net/record/ins1682990
-#   sqrts: 2.76  TeV
-#   Centrality: 0-10
-#   Jets:
-#       - R = 0.2
-#       - 40 < pt_ch < 60
-#   Cuts / Notes:
-#       - |eta_jet| < 0.9 - R
-# Nothing to configure for now (could always pull things out).
+#------------------------------------------------------------------
+# Inclusive jet observables -- full jets
+inclusive_jet:
 
-# Jet mass
-#   hepdata: https://www.hepdata.net/record/ins1512107 (tgraph...no binning)
-#   sqrts: 2.76  TeV
-#   Centrality: 0-10
-#   Jets:
-#       - R = 0.4
-#       - 60 < pt_ch < 80
-#   Cuts / Notes:
-#       - |eta_jet| < 0.9 - R
-# Nothing to configure for now (could always pull things out).
+  # CMS, CMS-PAS-HIN-18-014 (no hepdata)
+  # Centrality: 0-10, 30-50
+  # Cuts:
+  #   - |eta_jet|<2.0
+  pt_cms:
+    eta_cut: 2.0
+    bins: [250., 300., 400., 500., 1000.]
+    hepdata_0_10_R02: 'data/PHYS_RAA/data_jet/CMS/0_10_R02/CMS_JetRAA_R02_0-10_Rescanned.txt'
+    hepdata_0_10_R04: 'data/PHYS_RAA/data_jet/CMS/0_10_R04/CMS_JetRAA_R04_0-10_Rescanned.txt'
+    hepdata_30_50_R02: 'data/PHYS_RAA/data_jet/CMS/30_50_R02/CMS_JetRAA_R02_30-50_Rescanned.txt'
+    hepdata_30_50_R04: 'data/PHYS_RAA/data_jet/CMS/30_50_R04/CMS_JetRAA_R04_30-50_Rescanned.txt'
+  
+  # ATLAS, https://www.hepdata.net/record/ins1673184
+  # Centrality: 0-10, 30-40, 40-50
+  # Cuts:
+  #   - |y_jet|<2.8
+  #   - Two charged tracks with pt>4 GeV are required in Pb-Pb
+  #     (they argue this is small...unclear if they correct for it...we will ignore it here)
+  pt_atlas:
+    y_cut: 2.8
+    hepdata_0_10: 'data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
+    hepdata_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
+    hepdata_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
+  
+  # ALICE, https://www.hepdata.net/record/ins1755387
+  # Centrality: 0-10
+  # Cuts:
+  #   - pT^{ch lead} > 5,7 GeV (for R=0.2,0.4)
+  #   - |eta_jet|<0.3,0.5
+  # Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
+  # Here, we use the result where the cut is applied on both PbPb and pp
+  pt_alice:
+    eta_cut_R: 0.7
+    hepdata_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
+    hepdata_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
+    hepdata_0_10_R02_biasratio: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_26.root'
 
-# Substructure
-# Soft Drop:
-#   hepdata: None
-#   sqrts: 5.02 TeV
-#   Centrality: 0-10, 30-50
-#   Jets:
-#       - R = 0.2, 0.4 in 0-10, 0.4 in 30-50
-#       - 60 < pt_ch < 80
-#   Cuts / Notes:
-#       - |eta_jet| < 0.9 - R
-#       - z_cut = 0.2, beta = 0
-soft_drop_zcut: 0.2
-soft_drop_beta: 0.
+#------------------------------------------------------------------
+# Inclusive jet observables -- charged jets
+inclusive_chjet:
 
-# semi-inclusive hadron-jet
-#   hepdata: https://www.hepdata.net/record/ins1376027
-#   sqrts: 2.76 TeV
-#   Centrality: 0-10%
-#   Jets:
-#       - R = 0.4
-#       - 20 < pt_jet,ch < 100 in 20 GeV bins
-#   Cuts / Notes:
-#       - pi - dPhi < 0.6 for accepting recoil jets
-#       - Hadron trigger ranges: {20, 50} - {8, 9}
-hjet_low_trigger_range: [8, 9]
-hjet_high_trigger_range: [20, 50]
+  eta_cut_alice_R: 0.9
+  soft_drop_zcut: 0.2
+  soft_drop_beta: 0.
 
-# Location of HEPData ROOT files (relative to JETSCAPE-analysis directory)
-CMS_jet_0_10_R02: 'data/PHYS_RAA/data_jet/CMS/0_10_R02/CMS_JetRAA_R02_0-10_Rescanned.txt'
-CMS_jet_0_10_R04: 'data/PHYS_RAA/data_jet/CMS/0_10_R04/CMS_JetRAA_R04_0-10_Rescanned.txt'
-CMS_jet_30_50_R02: 'data/PHYS_RAA/data_jet/CMS/30_50_R02/CMS_JetRAA_R02_30-50_Rescanned.txt'
-CMS_jet_30_50_R04: 'data/PHYS_RAA/data_jet/CMS/30_50_R04/CMS_JetRAA_R04_30-50_Rescanned.txt'
-ATLAS_jet_0_10: 'data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
-ATLAS_jet_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
-ATLAS_jet_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
-ALICE_jet_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
-ALICE_jet_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
-ALICE_jet_0_10_R02_biasratio: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_26.root'
+  # ALICE, https://www.hepdata.net/record/ins1682990
+  #   sqrts: 2.76  TeV
+  #   Centrality: 0-10
+  #   Jets:
+  #       - R = 0.2
+  #       - 40 < pt_ch < 60
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  g_alice:
+    hepdata: 'data/TG3/g/HEPData-ins1682990-v1-Table_11.root'
+    
+  # ALICE, (no hepdata)
+  angularity_alice:
+    alpha: [1, 1.5, 2, 3]
+  
+  # ALICE, https://www.hepdata.net/record/ins1512107 (tgraph...no binning)
+  #   sqrts: 2.76  TeV
+  #   Centrality: 0-10
+  #   Jets:
+  #       - R = 0.4
+  #       - 60 < pt_ch < 80
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  mass_alice:
+    bins: [0., 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    hepdata: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
+  
+  # ALICE, ALICE-PUBLIC-2020-006 (no hepdata)
+  #   sqrts: 5.02 TeV
+  #   Centrality: 0-10, 30-50
+  #   Jets:
+  #       - R = 0.2, 0.4 in 0-10, 0.4 in 30-50
+  #       - 60 < pt_ch < 80
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  #       - z_cut = 0.2, beta = 0
+  softdrop_alice:
+    bins_zg: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+    bins_tg: [0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0]
+  
+  # ALICE, (no hepdata)
+  subjetz_alice:
+    r: [0.1, 0.2]
+  
+  # ALICE, (no hepdata)
+  axis_alice:
+    axes: ['Standard', 'WTA']
+  
+#------------------------------------------------------------------
 
-# Location of TG3 HEPData files
-ALICE_g_R02: 'data/TG3/g/HEPData-ins1682990-v1-Table_11.root'
-ALICE_m_R04: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
-ALICE_hjet_IAA_R04: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
-ALICE_hjet_delta_phi_R04: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
+#------------------------------------------------------------------
+# Jet correlation observables
+semi_inclusive_chjet:
+
+  # ALICE, https://www.hepdata.net/record/ins1376027
+  #   sqrts: 2.76 TeV
+  #   Centrality: 0-10%
+  #   Jets:
+  #       - R = 0.4
+  #       - 20 < pt_jet,ch < 100 in 20 GeV bins
+  #   Cuts / Notes:
+  #       - pi - dPhi < 0.6 for accepting recoil jets
+  #       - |eta_jet| < 0.9 - R
+  #       - Track pt > 0.15 (is this corrected?)
+  #       - Area: A>0.7 for R=0.2, A>0.4 for R=0.4, A>0.6 for R=0.5 (is this corrected?)
+  #       - Make predictions in 2D, and they can project them
+  hjet_alice:
+    hadron_eta_cut: 0.9
+    low_trigger_range_276: [8, 9]
+    low_trigger_range_502: [5, 7]
+    high_trigger_range: [20, 50]
+    hepdata_IAA_276: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+    hepdata_dphi_276: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
+  
+    # ALICE, (no hepdata)
+  #   sqrts: 2.76  TeV
+  #   Centrality: 0-10
+  #   Jets:
+  #       - R = 0.4
+  #       - 40 < pt_ch < 60
+  #   Cuts / Notes:
+  #       - pi - dPhi < 0.6 for accepting recoil jets
+  #       - |eta_jet| < 0.9 - R
+  nsubjettiness_alice:
+    low_trigger_range: [8, 9]
+    high_trigger_range: [15, 45]
+#------------------------------------------------------------------

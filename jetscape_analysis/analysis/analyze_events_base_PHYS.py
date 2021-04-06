@@ -15,9 +15,6 @@ from __future__ import print_function
 
 # General
 import os
-import subprocess
-import sys
-import tqdm
 import yaml
 
 # Analysis
@@ -30,7 +27,6 @@ import numpy as np
 import fjext
 
 from jetscape_analysis.analysis import scale_histograms
-from jetscape_analysis.analysis.reader import reader_ascii_parsed, parse_ascii
 from jetscape_analysis.base import common_base
 
 ################################################################
@@ -74,11 +70,6 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
             config = yaml.safe_load(stream)
 
         self.debug_level = config['debug_level']
-        self.n_event_max = config['n_event_max']
-        self.events_per_chunk = config['events_per_chunk']
-        self.reader_type = config['reader']
-        self.progress_bar = config['progress_bar']
-        self.dry_run = config['dry_run']
         self.scale_histograms = config['scale_histograms']
 
         # Find pt-hat bin index
@@ -119,10 +110,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Read chunk of events into a dataframe
         # Fields: particle_ID, status, E, px, py, pz
         df_event_chunk = pd.read_parquet(self.input_file_hadrons)
-
         self.n_event_max = df_event_chunk.shape[0]
-        if self.progress_bar:
-            pbar = tqdm.tqdm(range(self.n_event_max))
 
         # Iterate through events
         self.analyze_event_chunk(df_event_chunk)
@@ -138,13 +126,11 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Loop through events
         for i,event in df_event_chunk.iterrows():
 
-            if not self.progress_bar and i % 1000 == 0:
+            if i % 1000 == 0:
                 print('event: {}'.format(i))
 
             # Call user-defined function to analyze event
             self.analyze_event(event)
-            if self.progress_bar:
-                pbar.update()
 
     # ---------------------------------------------------------------
     # Initialize output objects
