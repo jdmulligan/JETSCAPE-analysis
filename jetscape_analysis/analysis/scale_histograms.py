@@ -19,7 +19,7 @@ ROOT.gROOT.SetBatch(True)
 
 ###################################################################################
 # Main function
-def scale_histograms(outputDirBin, bin, n_events, bRemoveOutliers=False):
+def scale_histograms(outputDirBin, bin, bRemoveOutliers=False):
 
     # Option to remove outliers from specified histograms
     # If the average bin content stays below the "outlierLimit" for "outlierNBinsThreshold" bins, it is removed
@@ -33,9 +33,10 @@ def scale_histograms(outputDirBin, bin, n_events, bRemoveOutliers=False):
     print(f"ooo Scaling Pt-hard bin {bin+1}")
     filename = os.path.join(outputDirBin, 'AnalysisResults.root')
     f = ROOT.TFile(filename, "UPDATE")
-    hCrossSection = f.Get("hCrossSection")
-    scaleFactor = hCrossSection.GetBinContent(bin + 1) / n_events
-    print(f"ooo scaleFactor: {scaleFactor}  (n_events={n_events})")
+    cross_section = f.Get("hCrossSection").GetBinContent(bin + 1)
+    n_events = f.Get("hNevents").GetBinContent(bin + 1)
+    scaleFactor = cross_section / hNevents
+    print(f"ooo scaleFactor: {scaleFactor}  (cross_section={cross_section}, n_events={n_events})")
 
     # Now, scale all the histograms
     keys = f.GetListOfKeys()

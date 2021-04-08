@@ -99,7 +99,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         #       in order to scale by xsec/n_event
         if self.scale_histograms:
             print("Scaling pt-hat bin...")
-            scale_histograms.scale_histograms(self.output_dir, self.pt_hat_bin, self.n_event_max, bRemoveOutliers=False)
+            scale_histograms.scale_histograms(self.output_dir, self.pt_hat_bin, bRemoveOutliers=False)
 
     # ---------------------------------------------------------------
     # Main processing function for a single pt-hat bin
