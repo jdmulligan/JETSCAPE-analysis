@@ -703,7 +703,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
                             # Jet yield and Delta phi
                             if hjet_found_low_276:
-                                if np.pi - jet.delta_R(hadron) < 0.6:
+                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                     getattr(self, f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{jetR}_276').Fill(jet_pt)
 
                                 if 40 < jet_pt < 60:
@@ -713,17 +713,17 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                 getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_502').Fill(jet_pt, hadron.delta_phi_to(jet))
                                     
                             if hjet_found_high:
-                                if np.pi - jet.delta_R(hadron) < 0.6:
+                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                     getattr(self, f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{jetR}_276').Fill(jet_pt)
-                                     
+
                                 if 40 < jet_pt < 60:
                                     getattr(self, f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{jetR}_276').Fill(hadron.delta_phi_to(jet))
 
                                 getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{jetR}_502').Fill(jet_pt, hadron.delta_phi_to(jet))
-                               
+
                             # Nsubjettiness
                             if nsubjettiness_found_low:
-                                if np.pi - jet.delta_R(hadron) < 0.6:
+                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                     if 40 < jet_pt < 60:
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
@@ -731,7 +731,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                             getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_lowTrigger_alice_R{jetR}').Fill(tau2/tau1)
 
                             if nsubjettiness_found_high:
-                                if np.pi - jet.delta_R(hadron) < 0.6:
+                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                     if 40 < jet_pt < 60:
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
