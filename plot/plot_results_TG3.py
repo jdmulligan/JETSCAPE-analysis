@@ -94,11 +94,11 @@ class PlotResults(common_base.CommonBase):
         
         # h-jet
         self.plot_semi_inclusive_chjet_IAA()
-        #self.plot_semi_inclusive_chjet_dphi()
+        self.plot_semi_inclusive_chjet_dphi()
         
         #----------------------------
         # Some extra fun
-        have_fun = True
+        have_fun = False
         
         if have_fun:
         
@@ -189,6 +189,7 @@ class PlotResults(common_base.CommonBase):
                       ymax=2.8,
                       outputfilename=f'h_chjet_g_alice_R{R}{self.file_format}',
                       R=R,
+                      self_normalize=True,
                       do_chi2=True)
                       
     #-------------------------------------------------------------------------------------------
@@ -196,11 +197,18 @@ class PlotResults(common_base.CommonBase):
         
         # Get experimental data
         h_data_list = []
-        f = ROOT.TFile(self.inclusive_chjet_observables['mass_alice']['hepdata'], 'READ')
-        dir = f.Get('Table 4')
-        h_data = dir.Get('Graph1D_y1')
-        h_data_list.append([h_data, '0-10'])
-        f.Close()
+        
+        f_AA = ROOT.TFile(self.inclusive_chjet_observables['mass_alice']['hepdata_AA'], 'READ')
+        dir = f_AA.Get('Table 4')
+        h_data_PbPb = dir.Get('Graph1D_y1')
+        
+        f_pp = ROOT.TFile(self.inclusive_chjet_observables['mass_alice']['hepdata_pp'], 'READ')
+        dir = f_pp.Get('Table 1')
+        h_data_pp = dir.Get('Graph1D_y1')
+                
+        h_data_list.append([h_data_PbPb, '0-10'])
+        f_AA.Close()
+        f_pp.Close()
         
         # Plot
         R = 0.4
@@ -214,6 +222,7 @@ class PlotResults(common_base.CommonBase):
                       ymax=2.8,
                       outputfilename=f'h_chjet_mass_alice_R{R}{self.file_format}',
                       R=R,
+                      self_normalize=True,
                       do_chi2=True)
                               
     #-------------------------------------------------------------------------------------------
@@ -231,6 +240,7 @@ class PlotResults(common_base.CommonBase):
                       ymax=2.8,
                       outputfilename=f'h_chjet_zg_alice_R{R}{self.file_format}',
                       R=R,
+                      self_normalize=True,
                       do_chi2=False)
                       
     #-------------------------------------------------------------------------------------------
@@ -248,28 +258,157 @@ class PlotResults(common_base.CommonBase):
                       ymax=2.8,
                       outputfilename=f'h_chjet_tg_alice_R{R}{self.file_format}',
                       R=R,
+                      self_normalize=True,
                       do_chi2=False)
                       
     #-------------------------------------------------------------------------------------------
     def plot_semi_inclusive_chjet_IAA(self):
-    
-        hepdata_IAA_276: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
-        hepdata_dphi_276: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
+            
+        # Get experimental data
+        R=0.4
+        c_ref = 0.96 # R02: 0.99, R04: 0.96, R05: 0.93
+        h_data_list = []
+        f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276'], 'READ')
+        dir = f.Get('Table 33')
+        h_data = dir.Get('Graph1D_y1')
+        h_data_list.append([h_data, '0-10'])
+        f.Close()
         
+        hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
+        hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276Scaled'
+        hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276Scaled'
+        
+        # Get JETSCAPE pp prediction
+        filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
+        f_pp = ROOT.TFile(filename_pp, 'READ')
+        h_pp_ntrigger = f_pp.Get(hname_ntrigger)
+        h_pp_ntrigger.SetDirectory(0)
+        h_pp_high = f_pp.Get(hname_high)
+        h_pp_high.SetDirectory(0)
+        h_pp_low = f_pp.Get(hname_low)
+        h_pp_low.SetDirectory(0)
+        f_pp.Close()
+        
+        # Get JETSCAPE AA prediction
+        filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
+        f_AA = ROOT.TFile(filename, 'READ')
+        h_AA_ntrigger = f_AA.Get(hname_ntrigger)
+        h_AA_ntrigger.SetDirectory(0)
+        h_AA_high = f_AA.Get(hname_high)
+        h_AA_high.SetDirectory(0)
+        h_AA_low = f_AA.Get(hname_low)
+        h_AA_low.SetDirectory(0)
+        f_AA.Close()
+        
+        # Delta recoil
+        n_trig_high_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(30.))
+        n_trig_low_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(8.5))
+        n_trig_high_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(30.))
+        n_trig_low_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(8.5))
+        print(f'n_trig_high_pp: {n_trig_high_pp}')
+        print(f'n_trig_low_pp: {n_trig_low_pp}')
+        print(f'n_trig_high_AA: {n_trig_high_AA}')
+        print(f'n_trig_low_AA: {n_trig_low_AA}')
+
+        h_pp_high.Scale(1./n_trig_high_pp)
+        h_pp_low.Scale(1./n_trig_low_pp)
+        h_AA_high.Scale(1./n_trig_high_AA)
+        h_AA_low.Scale(1./n_trig_low_AA)
+        
+        h_delta_recoil_pp = h_pp_high.Clone('h_delta_recoil_pp')
+        h_delta_recoil_pp.Add(h_pp_low, -1)
+        
+        h_delta_recoil_AA = h_AA_high.Clone('h_delta_recoil_AA')
+        h_delta_recoil_AA.Add(h_AA_low, -1*c_ref)
+ 
         # Plot
-        R = 0.2
-        self.plot_raa(raa_type='chjet_tg',
-                      hname = f'h_chjet_tg_alice_R{R}Scaled',
-                      h_data_list=None,
-                      eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                      data_centralities=['0-10'],
-                      mc_centralities=['0-10'],
-                      xtitle="#it{#theta}_{g}",
-                      ymax=2.8,
-                      outputfilename=f'h_chjet_tg_alice_R{R}{self.file_format}',
-                      R=R,
-                      do_chi2=False)
-                      
+        self.plot_raa_ratio(raa_type='hjet_IAA',
+                            h_pp=h_delta_recoil_pp,
+                            h_AA=h_delta_recoil_AA,
+                            h_data_list=h_data_list,
+                            eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
+                            data_centralities=['0-10'],
+                            mc_centralities=['0-10'],
+                            xtitle="#it{p}_{T,ch} (GeV/#it{c})",
+                            ymax=1.8,
+                            outputfilename=f'h_semi_inclusive_chjet_IAA_alice_R{R}{self.file_format}',
+                            R=R,
+                            do_chi2=True)
+
+    #-------------------------------------------------------------------------------------------
+    def plot_semi_inclusive_chjet_dphi(self):
+            
+        # Get experimental data
+        R=0.4
+        c_ref = 0.96 # R02: 0.99, R04: 0.96, R05: 0.93
+        h_data_list = []
+        f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_dphi_276'], 'READ')
+        dir = f.Get('Table 37')
+        h_data = dir.Get('Graph1D_y1')
+        h_data_list.append([h_data, '0-10'])
+        f.Close()
+        
+        hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
+        hname_high = f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{R}_276Scaled'
+        hname_low = f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{R}_276Scaled'
+        
+        # Get JETSCAPE pp prediction
+        filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
+        f_pp = ROOT.TFile(filename_pp, 'READ')
+        h_pp_ntrigger = f_pp.Get(hname_ntrigger)
+        h_pp_ntrigger.SetDirectory(0)
+        h_pp_high = f_pp.Get(hname_high)
+        h_pp_high.SetDirectory(0)
+        h_pp_low = f_pp.Get(hname_low)
+        h_pp_low.SetDirectory(0)
+        f_pp.Close()
+        
+        # Get JETSCAPE AA prediction
+        filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
+        f_AA = ROOT.TFile(filename, 'READ')
+        h_AA_ntrigger = f_AA.Get(hname_ntrigger)
+        h_AA_ntrigger.SetDirectory(0)
+        h_AA_high = f_AA.Get(hname_high)
+        h_AA_high.SetDirectory(0)
+        h_AA_low = f_AA.Get(hname_low)
+        h_AA_low.SetDirectory(0)
+        f_AA.Close()
+        
+        # Delta recoil
+        n_trig_high_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(30.))
+        n_trig_low_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(8.5))
+        n_trig_high_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(30.))
+        n_trig_low_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(8.5))
+        print(f'n_trig_high_pp: {n_trig_high_pp}')
+        print(f'n_trig_low_pp: {n_trig_low_pp}')
+        print(f'n_trig_high_AA: {n_trig_high_AA}')
+        print(f'n_trig_low_AA: {n_trig_low_AA}')
+
+        h_pp_high.Scale(1./n_trig_high_pp)
+        h_pp_low.Scale(1./n_trig_low_pp)
+        h_AA_high.Scale(1./n_trig_high_AA)
+        h_AA_low.Scale(1./n_trig_low_AA)
+        
+        h_delta_Phi_pp = h_pp_high.Clone('h_delta_Phi_pp')
+        h_delta_Phi_pp.Add(h_pp_low, -1)
+        
+        h_delta_Phi_AA = h_AA_high.Clone('h_delta_Phi_AA')
+        h_delta_Phi_AA.Add(h_AA_low, -1*c_ref)
+ 
+        # Plot
+        self.plot_raa_ratio(raa_type='hjet_dphi',
+                            h_pp=h_delta_Phi_pp,
+                            h_AA=h_delta_Phi_AA,
+                            h_data_list=h_data_list,
+                            eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
+                            data_centralities=['0-10'],
+                            mc_centralities=['0-10'],
+                            xtitle="#Delta #it{#phi}",
+                            ymax=0.1,
+                            outputfilename=f'h_semi_inclusive_chjet_dphi_alice_R{R}{self.file_format}',
+                            R=R,
+                            do_chi2=True)
+
     #-------------------------------------------------------------------------------------------
     def plot_chjet_angularity(self):
         
@@ -287,6 +426,7 @@ class PlotResults(common_base.CommonBase):
                                   ymax=2.8,
                                   outputfilename=f'h_chjet_angularity_{label}_alice_R{R}_alpha{alpha}{self.file_format}',
                                   R=R,
+                                  self_normalize=True,
                                   do_chi2=False)
                                   
     #-------------------------------------------------------------------------------------------
@@ -306,6 +446,7 @@ class PlotResults(common_base.CommonBase):
                                   ymax=2.8,
                                   outputfilename=f'h_chjet_subjetz_alice_R{R}_r{r}{self.file_format}',
                                   R=R,
+                                  self_normalize=True,
                                   do_chi2=False)
                                   
     #-------------------------------------------------------------------------------------------
@@ -323,6 +464,7 @@ class PlotResults(common_base.CommonBase):
                           ymax=2.8,
                           outputfilename=f'h_chjet_axis_Standard_WTA_alice_R{R}{self.file_format}',
                           R=R,
+                          self_normalize=True,
                           do_chi2=False)
                           
             self.plot_raa(raa_type='chjet_axis',
@@ -335,6 +477,7 @@ class PlotResults(common_base.CommonBase):
                           ymax=2.8,
                           outputfilename=f'h_chjet_axis_Standard_SD_alice_R{R}{self.file_format}',
                           R=R,
+                          self_normalize=True,
                           do_chi2=False)
                           
             self.plot_raa(raa_type='chjet_axis',
@@ -347,11 +490,12 @@ class PlotResults(common_base.CommonBase):
                           ymax=2.8,
                           outputfilename=f'h_chjet_axis_SD_WTA_alice_R{R}{self.file_format}',
                           R=R,
+                          self_normalize=True,
                           do_chi2=False)
 
     #-------------------------------------------------------------------------------------------
     def plot_raa(self, raa_type, hname, h_data_list, eta_cut, data_centralities, mc_centralities,
-                 xtitle, ymax, outputfilename,R=None, do_chi2=False):
+                 xtitle, ymax, outputfilename, R=None, self_normalize=False, do_chi2=False):
 
         # Get JETSCAPE pp prediction
         filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
@@ -388,6 +532,30 @@ class PlotResults(common_base.CommonBase):
             h_AA.Add(h_AA, h_recoil_rebinned, 1, -1)
             h_AA.SetDirectory(0)
             f_AA.Close()
+            
+        # Rebin
+        if raa_type in ['chjet_angularity']:
+            h_AA.Rebin(5)
+            h_pp.Rebin(5)
+        if raa_type in ['chjet_subjetz']:
+            h_AA.Rebin(10)
+            h_pp.Rebin(10)
+        if raa_type in ['chjet_axis']:
+            h_AA.Rebin(20)
+            h_pp.Rebin(20)
+            
+        # Normalization
+        if self_normalize:
+            h_AA.Scale(1./h_AA.Integral(0, h_AA.GetNbinsX()+1))
+            h_pp.Scale(1./h_pp.Integral(0, h_pp.GetNbinsX()+1))
+            
+        # Plot RAA
+        self.plot_raa_ratio(raa_type, h_pp, h_AA, h_data_list, eta_cut, data_centralities, mc_centralities,
+                 xtitle, ymax, outputfilename, R=R, do_chi2=do_chi2)
+
+    #-------------------------------------------------------------------------------------------
+    def plot_raa_ratio(self, raa_type, h_pp, h_AA, h_data_list, eta_cut, data_centralities, mc_centralities,
+                 xtitle, ymax, outputfilename, R=None, do_chi2=False):
 
         # Plot the ratio
         if h_pp and h_AA:
@@ -401,11 +569,11 @@ class PlotResults(common_base.CommonBase):
                 ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, cent=mc_centralities[0],
                                         eta_cut=eta_cut, label=raa_type, R=R, logy=True)
-            elif raa_type in ['chjet_g', 'chjet_mass', 'chjet_zg', 'chjet_tg', 'chjet_angularity', 'chjet_subjetz', 'chjet_axis']:
+            elif raa_type in ['chjet_g', 'chjet_mass', 'chjet_zg', 'chjet_tg', 'chjet_angularity', 'chjet_subjetz', 'chjet_axis', 'hjet_IAA', 'hjet_dphi']:
                 output_filename = os.path.join(self.output_dir, f'ratio_{outputfilename}')
                 ytitle = f'#frac{{dN}}{{d#it{{{xtitle}}}}}'
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, cent=mc_centralities[0],
-                                        eta_cut=eta_cut, label=raa_type, R=R, save_plot = (raa_type in ['chjet_g', 'chjet_mass']))
+                                        eta_cut=eta_cut, label=raa_type, R=R, save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_IAA', 'hjet_dphi']))
                 if raa_type == 'chjet_mass':
                     return
 
@@ -507,10 +675,10 @@ class PlotResults(common_base.CommonBase):
 
     #-------------------------------------------------------------------------------------------
     # Plot ratio h1/h2
-    def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, cent, eta_cut, label='jet', logy=False, R=None, save_plot=False):
+    def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, cent, eta_cut, label='jet', logy=False, R=None, self_normalize=False, save_plot=False):
 
         # Create canvas
-        cname = f'c_{outputFilename}'
+        cname = f'c_ratio_{outputFilename}'
         c = ROOT.TCanvas(cname,cname,800,850)
         ROOT.SetOwnership(c, False) # For some reason this is necessary to avoid a segfault...some bug in ROOT or pyroot
                                     # Supposedly fixed in https://github.com/root-project/root/pull/3787
@@ -546,7 +714,7 @@ class PlotResults(common_base.CommonBase):
         h_pp.SetLineStyle(1)
         h_pp.SetLineWidth(2)
         h_pp.SetLineColor(1)
-
+        
         # Draw spectra
         h_pp.SetXTitle(xtitle)
         h_pp.GetYaxis().SetTitleOffset(2.2)
@@ -620,7 +788,7 @@ class PlotResults(common_base.CommonBase):
         hRatio.GetYaxis().SetNdivisions(505)
 
         hRatio.SetMinimum(0.)
-        hRatio.SetMaximum(1.49)
+        hRatio.SetMaximum(1.99)
         hRatio.Draw('P E')
 
         line = ROOT.TLine(hRatio.GetXaxis().GetXmin(), 1, hRatio.GetXaxis().GetXmax(), 1)

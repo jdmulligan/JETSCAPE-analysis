@@ -140,7 +140,8 @@ inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   mass_alice:
     bins: [0., 2, 4, 6, 8, 10, 12, 14, 16, 18]
-    hepdata: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
+    hepdata_AA: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
+    hepdata_pp: 'data/TG3/m/HEPData-ins1512107-v1-Table_1.root'
   
   # ALICE, ALICE-PUBLIC-2020-006 (no hepdata)
   #   sqrts: 5.02 TeV
