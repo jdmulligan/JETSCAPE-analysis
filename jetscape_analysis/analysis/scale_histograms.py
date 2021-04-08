@@ -35,7 +35,7 @@ def scale_histograms(outputDirBin, bin, bRemoveOutliers=False):
     f = ROOT.TFile(filename, "UPDATE")
     cross_section = f.Get("hCrossSection").GetBinContent(bin + 1)
     n_events = f.Get("hNevents").GetBinContent(bin + 1)
-    scaleFactor = cross_section / hNevents
+    scaleFactor = cross_section / n_events
     print(f"ooo scaleFactor: {scaleFactor}  (cross_section={cross_section}, n_events={n_events})")
 
     # Now, scale all the histograms
