@@ -431,7 +431,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, charged=True) for jet in jets_selected_charged]
             
             # Fill jet correlations
-            self.fill_semi_inclusive_chjet_histograms(jets_selected, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR)
+            self.fill_semi_inclusive_chjet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR)
 
     # ---------------------------------------------------------------
     # Fill hadron histograms
