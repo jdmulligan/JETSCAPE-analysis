@@ -697,9 +697,9 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                         
                             # Get the corrected jet pt: shower+recoil-holes
                             jet_pt = jet.pt()
-                            for hadron in fj_hadrons_negative_charged:
-                                if jet.delta_R(hadron) < jetR:
-                                    jet_pt -= hadron.pt()
+                            for temp_hadron in fj_hadrons_negative_charged:
+                                if jet.delta_R(temp_hadron) < jetR:
+                                    jet_pt -= temp_hadron.pt()
 
                             # Jet yield and Delta phi
                             if hjet_found_low_276:
