@@ -37,10 +37,6 @@ flake8-colors = "^0.1.6"
 black = "^19.10b0"
 pre-commit = "^1.20.0"
 
-[tool.poetry.scripts]
-generateJetscape = "jetscape_analysis.generate.jetscape_events"
-analyzeJetscape = "jetscape_analysis.analysis.analyze_events"
-
 [tool.isort]
 known_standard_library = ["setuptools"]
 known_third_party = ["ROOT", "common_base", "event", "fastjet", "fjext", "pyhepmc_ng", "reader", "tqdm", "yaml"]
