@@ -29,6 +29,7 @@ pyhepmc_ng = "^0.4.3"
 pyyaml = "^5.1.2"
 mypy = "^0.740"
 isort = {extras = ["pyproject"], version = "^4.3.21"}
+awkward = "^1.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2.2"
