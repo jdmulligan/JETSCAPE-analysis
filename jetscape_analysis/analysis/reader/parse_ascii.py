@@ -478,9 +478,7 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
     """
     # Validation
     base_output_filename = Path(base_output_filename)
-    # Setup the base output filename
-    if events_per_chunk > 0:
-        base_output_filename = base_output_filename / base_output_filename.name
+    # Setup the base output directory
     base_output_filename.parent.mkdir(parents=True, exist_ok=True)
 
     for i, arrays in enumerate(read(filename=input_filename, events_per_chunk=events_per_chunk, parser=parser)):

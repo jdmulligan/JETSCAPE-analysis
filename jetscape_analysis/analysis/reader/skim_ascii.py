@@ -60,7 +60,7 @@ if __name__ == "__main__":
         type=str,
         metavar="outputDir",
         default="/home/jetscape-user/JETSCAPE-analysis/TestOutput",
-        help="Output directory for output to be written to",
+        help="Output directory and filename template for output to be written to",
     )
 
     # Parse the arguments
