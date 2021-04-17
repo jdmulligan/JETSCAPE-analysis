@@ -98,7 +98,7 @@ class PlotResults(common_base.CommonBase):
         
         #----------------------------
         # Some extra fun
-        have_fun = False
+        have_fun = True
         
         if have_fun:
         
@@ -431,7 +431,7 @@ class PlotResults(common_base.CommonBase):
                                   
     #-------------------------------------------------------------------------------------------
     def plot_chjet_subjetz(self):
-        
+            
         for R in [0.2, 0.4]:
             for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
                 if r < R:
@@ -538,13 +538,16 @@ class PlotResults(common_base.CommonBase):
             h_AA.Rebin(5)
             h_pp.Rebin(5)
         if raa_type in ['chjet_subjetz']:
-            h_AA.Rebin(10)
-            h_pp.Rebin(10)
+            bins = np.array(self.inclusive_chjet_observables['subjetz_alice']['bins'])
+            h_AA = h_AA.Rebin(bins.size-1, f'{h_AA.GetName()}_rebinned', bins)
+            h_pp = h_pp.Rebin(bins.size-1, f'{h_pp.GetName()}_rebinned', bins)
         if raa_type in ['chjet_axis']:
             h_AA.Rebin(20)
             h_pp.Rebin(20)
             
         # Normalization
+        h_pp.Scale(1., 'width')
+        h_AA.Scale(1., 'width')
         if self_normalize:
             h_AA.Scale(1./h_AA.Integral(0, h_AA.GetNbinsX()+1))
             h_pp.Scale(1./h_pp.Integral(0, h_pp.GetNbinsX()+1))
@@ -573,7 +576,7 @@ class PlotResults(common_base.CommonBase):
                 output_filename = os.path.join(self.output_dir, f'ratio_{outputfilename}')
                 ytitle = f'#frac{{dN}}{{d#it{{{xtitle}}}}}'
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle, cent=mc_centralities[0],
-                                        eta_cut=eta_cut, label=raa_type, R=R, save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_IAA', 'hjet_dphi']))
+                                        eta_cut=eta_cut, label=raa_type, R=R, save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_IAA', 'hjet_dphi', 'chjet_subjetz']))
                 if raa_type == 'chjet_mass':
                     return
 
@@ -725,7 +728,7 @@ class PlotResults(common_base.CommonBase):
         else:
             h_pp.SetMaximum(h_pp.GetMaximum()*2.)
             h_pp.SetMinimum(h_pp.GetMinimum()/2.)
-
+        
         h_pp.Draw('PE X0 same')
         h_AA.Draw('PE X0 same')
 
