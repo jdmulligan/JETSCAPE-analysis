@@ -1,0 +1,199 @@
+#------------------------------------------------------------------
+# We group observables into blocks according to type of observable
+# for convenience, e.g. {type}: {observable}_{experiment}
+#
+# For each observable, we include its specific cuts in its block
+#
+# In the analysis code, we will store observables in a dictionary,
+# labeled as: {type}_{observable}_{experiment}
+# For example: hadron_pt_cms
+#              jet_mass_alice_R0.2
+#
+# We assume we will compute every observable for every centrality,
+# although this can in principle be treated more specifically.
+#
+# Include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
+# to be used for plotting
+#------------------------------------------------------------------
+sqrt_s: 5020
+output_file: 'observables.pkl'
+
+# General jet finding parameters
+jet_R: [0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
+min_jet_pt: 20.
+max_jet_y: 3.
+
+# General grooming parameters
+SoftDrop:
+  - {'zcut': 0.1, 'beta': 0}
+  - {'zcut': 0.2, 'beta': 0}
+  - {'zcut': 0.4, 'beta': 0}
+  - {'zcut': 0.5, 'beta': 1.5}
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron spectra
+# Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+hadron:
+
+  # ALICE, https://www.hepdata.net/record/ins1657384
+  # Centrality: 0-5, 5-10, 30-40, 40-50
+  # Cuts:
+  #   - |eta|<0.8
+  pt_ch_alice:
+    eta_cut: 0.8
+    pt: [5.0, 50.]
+    hepdata: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+  
+  # ALICE, https://inspirehep.net/literature/1759506 (no hepdata)
+  # charged pions
+  pt_pi_alice:
+    eta_cut: 0.8
+    pt: [5.0, 20.]
+
+  # ATLAS, ATLAS-CONF-2017-012 (no hepdata)
+  # Centrality: 0-5, 30-40
+  # Cuts:
+  #   - |eta|<2.5
+  #   - leptons removed
+  pt_ch_atlas:
+    eta_cut: 2.5
+    pt: [5.0, 300.]
+    bins: [5.5, 7, 8, 9, 10, 11, 13, 15, 17, 20, 22, 25, 30, 38, 48, 59, 74, 90, 120, 150, 200, 250, 300]
+    datapoints_0_5: 'data/PHYS_RAA/data_hadron/ATLAS/0_5/hadronRaa0-5.txt'
+    datapoints_30_40: 'data/PHYS_RAA/data_hadron/ATLAS/30_40/hadronRaa30-40.txt'
+    
+  # CMS, https://www.hepdata.net/record/ins1496050
+  # Centrality: 0-5, 5-10, 30-50
+  # Cuts:
+  #   - |eta|<1
+  pt_ch_cms:
+    eta_cut: 1.0
+    pt: [5.0, 400.]
+    hepdata_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
+    hepdata_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
+    hepdata_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron correlations
+hadron_correlations:
+
+  # ATLAS, https://www.hepdata.net/record/ins1686834
+  v2_atlas:
+    eta_cut: 2.5
+    pt: [5., 60.]
+  
+  # CMS, https://www.hepdata.net/record/ins1511868
+  v2_cms:
+    pt: [5., 100.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Inclusive jet observables -- full jets
+inclusive_jet:
+
+  # ALICE, https://www.hepdata.net/record/ins1755387
+  # Centrality: 0-10
+  # Cuts:
+  #   - pT^{ch lead} > 5,7 GeV (for R=0.2,0.4)
+  #   - |eta_jet|<0.3,0.5
+  # Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
+  # Here, we use the result where the cut is applied on both PbPb and pp
+  pt_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.7
+    pt: [40., 140.]
+    hepdata_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
+    hepdata_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
+    hepdata_0_10_R02_biasratio: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_26.root'
+    
+  # ATLAS, https://www.hepdata.net/record/ins1673184
+  # Centrality: 0-10, 30-40, 40-50
+  # Cuts:
+  #   - |y_jet|<2.8
+  #   - Two charged tracks with pt>4 GeV are required in Pb-Pb
+  #     (they argue this is small...unclear if they correct for it...we will ignore it here)
+  pt_atlas:
+    jet_R: [0.4]
+    y_cut: 2.8
+    pt: [50., 1000.]
+    hepdata_0_10: 'data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
+    hepdata_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
+    hepdata_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
+    
+  # ATLAS, https://www.hepdata.net/record/ins1673177
+  Dz_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [126., 398.]
+  
+  # CMS, https://inspirehep.net/literature/1848440 (no hepdata yet)
+  # Centrality: 0-10, 10-30, 30-50, 50-90
+  # Cuts:
+  #   - |eta_jet|<2.0
+  pt_cms:
+    jet_R: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0]
+    eta_cut: 2.0
+    pt: [200., 1000.]
+    bins: [250., 300., 400., 500., 1000.]
+    hepdata_0_10_R02: 'data/PHYS_RAA/data_jet/CMS/0_10_R02/CMS_JetRAA_R02_0-10_Rescanned.txt'
+    hepdata_0_10_R04: 'data/PHYS_RAA/data_jet/CMS/0_10_R04/CMS_JetRAA_R04_0-10_Rescanned.txt'
+    hepdata_30_50_R02: 'data/PHYS_RAA/data_jet/CMS/30_50_R02/CMS_JetRAA_R02_30-50_Rescanned.txt'
+    hepdata_30_50_R04: 'data/PHYS_RAA/data_jet/CMS/30_50_R04/CMS_JetRAA_R04_30-50_Rescanned.txt'
+  
+  # CMS, https://www.hepdata.net/record/ins1789224
+  charge_cms:
+    jet_R: [0.4]
+    eta_cut: 1.5
+    pt_min: 120.
+    kappa: [0.5]
+    
+  # CMS, https://www.hepdata.net/record/ins1672962
+  mg_cms:
+    jet_R: [0.4]
+    eta_cut: 1.3
+    pt: [140., 300.]
+    dR: 0.1
+    SoftDrop:
+      - {'zcut': 0.1, 'beta': 0}
+      - {'zcut': 0.5, 'beta': 1.5}
+      
+  # CMS, https://www.hepdata.net/record/ins1620905
+  zg_cms:
+    jet_R: [0.4]
+    eta_cut: 1.3
+    pt: [140., 500.]
+    dR: 0.1
+    SoftDrop:
+      - {'zcut': 0.1, 'beta': 0}
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Inclusive jet observables -- charged jets
+inclusive_chjet:
+  
+  # ALICE, ALICE-PUBLIC-2020-006 (no hepdata)
+  #   Centrality: 0-10, 30-50
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  #       - z_cut = 0.2, beta = 0
+  zg_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.9
+    pt_ch: [60., 80.]
+    bins: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+    SoftDrop:
+      - {'zcut': 0.2, 'beta': 0}
+      - {'zcut': 0.4, 'beta': 0}
+    
+  # ALICE, ALICE-PUBLIC-2020-006 (no hepdata)
+  #   Centrality: 0-10, 30-50
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  #       - z_cut = 0.2, beta = 0
+  tg_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.9
+    pt_ch: [60., 80.]
+    bins: [0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0]
+    SoftDrop:
+      - {'zcut': 0.2, 'beta': 0}
+      - {'zcut': 0.4, 'beta': 0}
+#------------------------------------------------------------------

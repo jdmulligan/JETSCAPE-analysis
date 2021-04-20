@@ -1,0 +1,81 @@
+#------------------------------------------------------------------
+# We group observables into blocks according to type of observable
+# for convenience, e.g. {type}: {observable}_{experiment}
+#
+# For each observable, we include its specific cuts in its block
+#
+# In the analysis code, we will store observables in a dictionary,
+# labeled as: {type}_{observable}_{experiment}
+# For example: hadron_pt_cms
+#              jet_mass_alice_R0.2
+#
+# We assume we will compute every observable for every centrality,
+# although this can in principle be treated more specifically.
+#
+# Include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
+# to be used for plotting
+#------------------------------------------------------------------
+sqrt_s: 200
+output_file: 'observables.pkl'
+
+# General jet finding parameters
+jet_R: [0.2, 0.4, 0.5]
+min_jet_pt: 10.
+max_jet_y: 3.
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron spectra
+# Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+hadron:
+
+  # PHENIX, https://inspirehep.net/literature/778168 (no hepdata)
+  # pi0
+  pt_pi0_phenix:
+    eta_cut: 0.35
+    pt: [5., 20.]
+
+  # STAR, https://www.hepdata.net/record/ins619063
+  # Summed yields of pi+-, K+-, p, anti-p
+  pt_ch_star:
+    eta_cut: 0.5
+    pt: [5., 12.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron correlations
+hadron_correlations:
+
+  # PHENIX, https://inspirehep.net/literature/1658594 (no hepdata)
+  # Di-hadrons wrt event plane
+  dihadron_phenix:
+    pt_trig: [5., 10.]
+    
+  # STAR, https://www.hepdata.net/record/ins715470
+  # Di-hadron correlations -- delta-phi and D(z)
+  dihadron_star:
+    pt_trig: [8., 15.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Inclusive jet observables -- charged jets
+inclusive_chjet:
+
+  # STAR, https://inspirehep.net/literature/1798665 (no hepdata)
+  # Charged jet RAA and RCP
+  pt_star:
+    jet_R: [0.2, 0.3, 0.4]
+    eta_cut: 1.0
+    pt_ch: [5., 30]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Jet correlation observables
+semi_inclusive_chjet:
+
+  # STAR, https://www.hepdata.net/record/ins1512115
+  #   Cuts / Notes:
+  #       - |eta_jet| < 1.0 - R
+  hjet_star:
+    jet_R: [0.2, 0.4, 0.5]
+    eta_cut_R: 1.
+    pt_ch: [5., 30.]
+    hadron_eta_cut: 0.9
+    trigger_range: [9., 30.]
+#------------------------------------------------------------------

@@ -1,0 +1,216 @@
+#------------------------------------------------------------------
+# We group observables into blocks according to type of observable
+# for convenience, e.g. {type}: {observable}_{experiment}
+#
+# For each observable, we include its specific cuts in its block
+#
+# In the analysis code, we will store observables in a dictionary,
+# labeled as: {type}_{observable}_{experiment}
+# For example: hadron_pt_cms
+#              jet_mass_alice_R0.2
+#
+# We assume we will compute every observable for every centrality,
+# although this can in principle be treated more specifically.
+#
+# Include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
+# to be used for plotting
+#------------------------------------------------------------------
+sqrt_s: 2760
+output_file: 'observables.pkl'
+
+# General jet finding parameters
+jet_R: [0.2, 0.3, 0.4, 0.5]
+min_jet_pt: 20.
+max_jet_y: 3.
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron spectra
+# Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+hadron:
+
+  # ALICE, https://www.hepdata.net/record/ins1657384
+  # Centrality: 0-5, 5-10, 30-40, 40-50
+  pt_ch_alice:
+    eta_cut: 0.8
+    pt: [5.0, 50.]
+    hepdata: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+    
+  # ALICE, https://www.hepdata.net/record/ins1377750
+  # charged pions
+  pt_pi_alice:
+    eta_cut: 0.8
+    pt: [5.0, 20.]
+    
+  # ALICE, https://www.hepdata.net/record/ins1662651
+  # neutral pions
+  pt_pi0_alice:
+    eta_cut: 0.7
+    pt: [5.0, 20.]
+    
+  # ATLAS, https://www.hepdata.net/record/ins1360290
+  # Cuts:
+  #   - |eta|<2.
+  # leptons from W/Z decays removed
+  pt_ch_atlas:
+    eta_cut: 2.
+    pt: [5.0, 150.]
+
+  # CMS, https://www.hepdata.net/record/ins1088823
+  # Cuts:
+  #   - |eta|<1
+  pt_ch_cms:
+    eta_cut: 1.0
+    pt: [5.0, 100.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron correlations
+hadron_correlations:
+
+  # ALICE, https://www.hepdata.net/record/ins1483164
+  # pi0-hadron correlations
+  pi0_hadron_alice:
+    pt_trig: [8., 16.]
+    
+  # ALICE, https://www.hepdata.net/record/ins1116150
+  # v2
+  v2_alice:
+    eta_cut: 0.8
+    pt: [5., 20.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Inclusive jet observables -- full jets
+inclusive_jet:
+
+  # ALICE, https://www.hepdata.net/record/ins1343112
+  # Centrality: 0-10, 10-30
+  # Cuts:
+  #   - pT^{ch lead} > 5 GeV
+  #   - |eta_jet|<0.5
+  pt_alice:
+    jet_R: [0.2]
+    eta_cut_R: 0.7
+    pt: [30., 120.]
+    
+  # ATLAS, https://www.hepdata.net/record/ins1326911
+  # RAA
+  pt_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [32., 500.]
+    
+  # ATLAS, https://www.hepdata.net/record/ins1126965
+  # RCP
+  pt_rcp_atlas:
+    jet_R: [0.2, 0.3, 0.4, 0.5]
+    eta_cut: 2.1
+    pt: [38., 210.]
+
+  # ATLAS, https://www.hepdata.net/record/ins1511869
+  Dz_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [100., 398.]
+
+  # CMS, https://www.hepdata.net/record/ins1487278
+  pt_cms:
+    jet_R: [0.2, 0.3, 0.4]
+    eta_cut: 2.0
+    pt: [70., 300.]
+    
+  # CMS, https://inspirehep.net/literature/1299142 (no hepdata)
+  Dz_cms:
+    jet_R: [0.3]
+    eta_cut: [0.3, 2.]
+    pt: [100., 300.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Inclusive jet observables -- charged jets
+inclusive_chjet:
+
+  # ALICE, https://www.hepdata.net/record/ins1263194
+  # Charged jet RAA
+  pt_alice:
+    jet_R: [0.2, 0.3]
+    eta_cut: 0.5
+    pt_ch: [30., 110.]
+    
+  # ALICE, https://www.hepdata.net/record/ins1512107 (tgraph...no binning)
+  #   Centrality: 0-10
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  mass_alice:
+    jet_R: [0.4]
+    eta_cut_R: 0.9
+    pt_ch: [60., 80.]
+    bins: [0., 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    hepdata_AA: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
+    hepdata_pp: 'data/TG3/m/HEPData-ins1512107-v1-Table_1.root'
+
+  # ALICE, https://www.hepdata.net/record/ins1682990
+  #   Centrality: 0-10
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  g_alice:
+    jet_R: [0.2]
+    eta_cut_R: 0.9
+    pt: [40., 60.]
+    hepdata: 'data/TG3/g/HEPData-ins1682990-v1-Table_11.root'
+    
+  # ALICE, https://www.hepdata.net/record/ins1682990
+  #   Centrality: 0-10
+  #   Cuts / Notes:
+  #       - |eta_jet| < 0.9 - R
+  ptd_alice:
+    jet_R: [0.2]
+    eta_cut_R: 0.9
+    pt: [40., 60.]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Jet correlation observables
+semi_inclusive_chjet:
+
+  # ALICE, https://www.hepdata.net/record/ins1376027
+  #   Centrality: 0-10%
+  #   Cuts / Notes:
+  #       - pi - dPhi < 0.6 for accepting recoil jets
+  #       - |eta_jet| < 0.9 - R
+  #       - Track pt > 0.15 (not corrected)
+  hjet_alice:
+    jet_R: [0.2, 0.4, 0.5]
+    eta_cut_R: 0.9
+    pt_ch: [20., 100.]
+    hadron_eta_cut: 0.9
+    low_trigger_range: [8, 9]
+    high_trigger_range: [20, 50]
+    hepdata_IAA: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+    hepdata_dphi: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
+  
+  # ALICE, (no hepdata)
+  #   Centrality: 0-10
+  #   Cuts / Notes:
+  #       - pi - dPhi < 0.6 for accepting recoil jets
+  #       - |eta_jet| < 0.9 - R
+  nsubjettiness_alice:
+    jet_R: [0.4]
+    pt: [40., 60.]
+    low_trigger_range: [8, 9]
+    high_trigger_range: [15, 45]
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+dijet:
+
+  # ALICE, https://www.hepdata.net/record/ins1394678
+  v2_alice:
+    jet_R: [0.2]
+    eta_cut: 0.7
+    pt: [20., 90.]
+  
+  # ATLAS, https://www.hepdata.net/record/ins1240088
+  v2_atlas:
+    jet_R: [0.2]
+    pt: [45., 160.]
+  
+  # ATLAS, https://inspirehep.net/literature/1607896 (no hepdata)
+  xj_atlas:
+    jet_R: [0.3, 0.4]
+#------------------------------------------------------------------
