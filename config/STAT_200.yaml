@@ -72,10 +72,16 @@ semi_inclusive_chjet:
   # STAR, https://www.hepdata.net/record/ins1512115
   #   Cuts / Notes:
   #       - |eta_jet| < 1.0 - R
-  hjet_star:
-    jet_R: [0.2, 0.4, 0.5]
+  IAA_star:
+    jet_R: [0.2, 0.3, 0.4, 0.5]
     eta_cut_R: 1.
     pt_ch: [5., 30.]
+    hadron_eta_cut: 0.9
+    trigger_range: [9., 30.]
+  dphi_star:
+    jet_R: [0.2, 0.3, 0.4, 0.5]
+    eta_cut_R: 1.
+    pt_ch: [9., 13.]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
 #------------------------------------------------------------------

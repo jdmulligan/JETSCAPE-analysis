@@ -110,6 +110,10 @@ inclusive_jet:
     jet_R: [0.4]
     y_cut: 2.1
     pt: [100., 398.]
+  Dpt_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [100., 398.]
 
   # CMS, https://www.hepdata.net/record/ins1487278
   pt_cms:
@@ -122,6 +126,12 @@ inclusive_jet:
     jet_R: [0.3]
     eta_cut: [0.3, 2.]
     pt: [100., 300.]
+    track_pt_min: 1.
+  Dpt_cms:
+    jet_R: [0.3]
+    eta_cut: [0.3, 2.]
+    pt: [100., 300.]
+    track_pt_min: 1.
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
@@ -133,6 +143,7 @@ inclusive_chjet:
     jet_R: [0.2, 0.3]
     eta_cut: 0.5
     pt_ch: [30., 110.]
+    leading_track_min_pt: 5.
     
   # ALICE, https://www.hepdata.net/record/ins1512107 (tgraph...no binning)
   #   Centrality: 0-10
@@ -153,17 +164,12 @@ inclusive_chjet:
   g_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
-    pt: [40., 60.]
+    pt_ch: [40., 60.]
     hepdata: 'data/TG3/g/HEPData-ins1682990-v1-Table_11.root'
-    
-  # ALICE, https://www.hepdata.net/record/ins1682990
-  #   Centrality: 0-10
-  #   Cuts / Notes:
-  #       - |eta_jet| < 0.9 - R
   ptd_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
-    pt: [40., 60.]
+    pt_ch: [40., 60.]
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Jet correlation observables
@@ -175,15 +181,22 @@ semi_inclusive_chjet:
   #       - pi - dPhi < 0.6 for accepting recoil jets
   #       - |eta_jet| < 0.9 - R
   #       - Track pt > 0.15 (not corrected)
-  hjet_alice:
+  IAA_alice:
     jet_R: [0.2, 0.4, 0.5]
     eta_cut_R: 0.9
     pt_ch: [20., 100.]
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
-    hepdata_IAA: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
-    hepdata_dphi: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
+    hepdata: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+  dphi_alice:
+    jet_R: [0.2, 0.4, 0.5]
+    eta_cut_R: 0.9
+    pt_ch: [40., 60.]
+    hadron_eta_cut: 0.9
+    low_trigger_range: [8, 9]
+    high_trigger_range: [20, 50]
+    hepdata: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
   
   # ALICE, (no hepdata)
   #   Centrality: 0-10
@@ -192,7 +205,7 @@ semi_inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   nsubjettiness_alice:
     jet_R: [0.4]
-    pt: [40., 60.]
+    pt_ch: [40., 60.]
     low_trigger_range: [8, 9]
     high_trigger_range: [15, 45]
 #------------------------------------------------------------------

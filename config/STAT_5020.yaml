@@ -124,6 +124,10 @@ inclusive_jet:
     jet_R: [0.4]
     y_cut: 2.1
     pt: [126., 398.]
+  Dpt_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [126., 398.]
   
   # CMS, https://inspirehep.net/literature/1848440 (no hepdata yet)
   # Centrality: 0-10, 10-30, 30-50, 50-90
@@ -144,7 +148,8 @@ inclusive_jet:
     jet_R: [0.4]
     eta_cut: 1.5
     pt_min: 120.
-    kappa: [0.5]
+    track_pt_min: 1.
+    kappa: [0.3, 0.5, 0.7]
     
   # CMS, https://www.hepdata.net/record/ins1672962
   mg_cms:
@@ -181,13 +186,6 @@ inclusive_chjet:
     bins: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
-      - {'zcut': 0.4, 'beta': 0}
-    
-  # ALICE, ALICE-PUBLIC-2020-006 (no hepdata)
-  #   Centrality: 0-10, 30-50
-  #   Cuts / Notes:
-  #       - |eta_jet| < 0.9 - R
-  #       - z_cut = 0.2, beta = 0
   tg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9

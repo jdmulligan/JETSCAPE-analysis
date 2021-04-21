@@ -109,6 +109,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         self.output_dataframe = pd.DataFrame(self.output_event_list)
         with open(self.output_file, 'wb') as f:
             pickle.dump(self.output_dataframe, f)
+        print(self.output_dataframe.keys())
         print(self.output_dataframe)
 
     # ---------------------------------------------------------------
