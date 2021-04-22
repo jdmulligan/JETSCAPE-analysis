@@ -32,6 +32,7 @@ isort = {extras = ["pyproject"], version = "^4.3.21"}
 awkward = "^1.2"
 pyarrow = "^3.0.0"
 pandas = "^1.2.4"
+attrs = "^20.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2.2"

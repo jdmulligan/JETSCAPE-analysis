@@ -6,17 +6,88 @@
 """
 
 import logging
+import os
 import re
 import typing
 from pathlib import Path
-from typing import Any, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple
+from typing import Any, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple, TextIO
 from typing_extensions import Literal
 
 import awkward as ak
+import attr
 import numpy as np
 
 
 logger = logging.getLogger(__name__)
+
+@attr.s
+class CrossSection:
+    value: float = attr.ib()
+    error: float = attr.ib()
+
+
+def _retrieve_list_line_of_file(f: TextIO, chunk_size: int = 100) -> str:
+    """ Retrieve the last line of the file.
+
+    From: https://stackoverflow.com/a/7167316/12907985
+
+    Args:
+        f: File-like object.
+        chunk_size: Size of step to read backwards into the file. Default: 100.
+
+    Returns:
+        Last line of file, assuming it's found.
+    """
+    last_line = ""
+    while True:
+        # We grab chunks from the end of the file towards the beginning until we
+        # get a new line
+        f.seek(-len(last_line) - chunk_size, os.SEEK_END)
+        chunk = f.read(chunk_size)
+
+        if not chunk:
+            # The whole file is one big line
+            return last_line
+
+        if not last_line and chunk.endswith('\n'):
+            # Ignore the trailing newline at the end of the file (but include it
+            # in the output).
+            last_line = '\n'
+            chunk = chunk[:-1]
+
+        nl_pos = chunk.rfind('\n')
+        # What's being searched for will have to be modified if you are searching
+        # files with non-unix line endings.
+
+        last_line = chunk[nl_pos + 1:] + last_line
+
+        if nl_pos == -1:
+            # The whole chunk is part of the last line.
+            continue
+
+        return last_line
+
+
+def _extract_x_sec_and_error(f: TextIO, chunk_size: int = 100) -> Optional[CrossSection]:
+    """ Extract cross section and error from EOF.
+
+    Args:
+        f: File-like object.
+        chunk_size: Size of step to read backwards into the file. Default: 100.
+
+    Returns:
+        Cross section and error, if found.
+    """
+    # Retrieve the last line of the file.
+    last_line = _retrieve_list_line_of_file(f=f, chunk_size=chunk_size)
+    # Move the file back to the start to reset it for later use.
+    f.seek(0)
+
+    if last_line.startswith("# sigmaGen"):
+        # The latter two arguments are dummy arguments. This way, we can use one parser for comments.
+        return _parse_line_for_header_with_weight(line=last_line, n_events=0, events_per_chunk=100)
+
+    return None
 
 
 def _parse_line_for_header(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
@@ -125,8 +196,7 @@ def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chun
             # 0 1        2       3        4
             #
             header_info = [
-                float(values[2]),   # Cross section
-                float(values[4]),   # Cross section error
+                CrossSection(value=float(values[2]), error=float(values[4]))
             ]
 
             # This also means that we've hit the end of the file. Let's note it as such.
