@@ -139,7 +139,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         # Semi-inclusive jet binnings
         
         # Hadron-jet IAA, dphi
-        f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276'], 'READ')
+        f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R04'], 'READ')
         dir = f.Get('Table 33')
         h = dir.Get('Hist1D_y1')
         self.semi_inclusive_chjet_IAA_alice_276_bins = np.array(h.GetXaxis().GetXbins())
@@ -191,9 +191,20 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         h = ROOT.TH1F(hname, hname, len(self.hadron_pt_alice_bins)-1, self.hadron_pt_alice_bins)
         h.Sumw2()
         setattr(self, hname, h)
+        
+        # Holes
+        hname = 'h_hadron_pt_cms_holes'
+        h = ROOT.TH1F(hname, hname, len(self.hadron_pt_cms_bins)-1, self.hadron_pt_cms_bins)
+        h.Sumw2()
+        setattr(self, hname, h)
 
-        hname = 'h_hadron_pt_recoils'
-        h = ROOT.TH1F(hname, hname, 1000, 0, 100)
+        hname = 'h_hadron_pt_atlas_holes'
+        h = ROOT.TH1F(hname, hname, len(self.hadron_pt_atlas_bins)-1, self.hadron_pt_atlas_bins)
+        h.Sumw2()
+        setattr(self, hname, h)
+
+        hname = 'h_hadron_pt_alice_holes'
+        h = ROOT.TH1F(hname, hname, len(self.hadron_pt_alice_bins)-1, self.hadron_pt_alice_bins)
         h.Sumw2()
         setattr(self, hname, h)
 
@@ -447,29 +458,33 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             pt = particle.pt()
             eta = particle.eta()
 
-            # Skip negative recoils (holes)
-            if status == '-':
-                getattr(self, 'h_hadron_pt_recoils').Fill(pt)
-                continue
-
             # CMS
             # Fill charged hadron histograms (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             if abs(eta) < self.hadron_observables['pt_cms']['eta_cut']:
                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                    getattr(self, 'h_hadron_pt_cms').Fill(pt)
+                    if status == '-':
+                        getattr(self, 'h_hadron_pt_cms_holes').Fill(pt)
+                    else:
+                        getattr(self, 'h_hadron_pt_cms').Fill(pt)
 
             # ATLAS
             # Fill charged hadron histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             # Exclude e+, mu+ (11, 13)
             if abs(eta) < self.hadron_observables['pt_atlas']['eta_cut']:
                 if abs(pid) in [211, 321, 2212, 3222, 3112, 3312, 3334]:
-                    getattr(self, 'h_hadron_pt_atlas').Fill(pt)
-
+                    if status == '-':
+                        getattr(self, 'h_hadron_pt_atlas_holes').Fill(pt)
+                    else:
+                        getattr(self, 'h_hadron_pt_atlas').Fill(pt)
+                        
             # ALICE
             # Fill charged hadron histograms (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             if abs(eta) < self.hadron_observables['pt_alice']['eta_cut']:
                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                    getattr(self, 'h_hadron_pt_alice').Fill(pt)
+                    if status == '-':
+                        getattr(self, 'h_hadron_pt_alice_holes').Fill(pt)
+                    else:
+                        getattr(self, 'h_hadron_pt_alice').Fill(pt)
 
     # ---------------------------------------------------------------
     # Fill inclusive jet histograms
@@ -722,6 +737,9 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                 getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{jetR}_502').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
 
                             # Nsubjettiness
+                            # We use the jet pt including recoils here, since the Nsubjettiness is calculated
+                            # including recoils (but without hole subtraction).
+                            # Not ideal but not sure of an immediate better solution.
                             if nsubjettiness_found_low:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                     if 40 < jet_pt < 60:

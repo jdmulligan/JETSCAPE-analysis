@@ -280,8 +280,15 @@ class PlotResults(common_base.CommonBase):
         R=0.4
         c_ref = 0.96 # R02: 0.99, R04: 0.96, R05: 0.93
         h_data_list = []
-        f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276'], 'READ')
-        dir = f.Get('Table 33')
+        if R == 0.2:
+            f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R02'], 'READ')
+            dir = f.Get('Table 32')
+        elif R == 0.4:
+            f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R04'], 'READ')
+            dir = f.Get('Table 33')
+        elif R == 0.5:
+            f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R05'], 'READ')
+            dir = f.Get('Table 34')
         h_data = dir.Get('Graph1D_y1')
         h_data_list.append([h_data, '0-10%'])
         f.Close()
@@ -555,7 +562,7 @@ class PlotResults(common_base.CommonBase):
             h_recoil = f_AA.Get(h_recoil_name)
             h_recoil.SetDirectory(0)
             h_recoil_rebinned = h_recoil.Rebin(h_AA_xbins.size-1, f'{h_recoil_name}_{self.dir_AA}', h_AA_xbins)
-            h_AA.Add(h_AA, h_recoil_rebinned, 1, -1)
+            h_AA.Add(h_recoil_rebinned, -1)
             h_AA.SetDirectory(0)
             f_AA.Close()
             

@@ -188,7 +188,9 @@ semi_inclusive_chjet:
     low_trigger_range_276: [8, 9]
     low_trigger_range_502: [5, 7]
     high_trigger_range: [20, 50]
-    hepdata_IAA_276: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+    hepdata_IAA_276_R02: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_32.root'
+    hepdata_IAA_276_R04: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+    hepdata_IAA_276_R05: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_34.root'
     hepdata_dphi_276: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
   
     # ALICE, (no hepdata)
