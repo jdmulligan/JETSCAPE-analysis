@@ -293,31 +293,79 @@ class PlotResults(common_base.CommonBase):
         h_data_list.append([h_data, '0-10%'])
         f.Close()
         
-        hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
-        hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276Scaled'
-        hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276Scaled'
-        
-        # Get JETSCAPE pp prediction
-        filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
-        f_pp = ROOT.TFile(filename_pp, 'READ')
-        h_pp_ntrigger = f_pp.Get(hname_ntrigger)
-        h_pp_ntrigger.SetDirectory(0)
-        h_pp_high = f_pp.Get(hname_high)
-        h_pp_high.SetDirectory(0)
-        h_pp_low = f_pp.Get(hname_low)
-        h_pp_low.SetDirectory(0)
-        f_pp.Close()
-        
-        # Get JETSCAPE AA prediction
-        filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
-        f_AA = ROOT.TFile(filename, 'READ')
-        h_AA_ntrigger = f_AA.Get(hname_ntrigger)
-        h_AA_ntrigger.SetDirectory(0)
-        h_AA_high = f_AA.Get(hname_high)
-        h_AA_high.SetDirectory(0)
-        h_AA_low = f_AA.Get(hname_low)
-        h_AA_low.SetDirectory(0)
-        f_AA.Close()
+        sqrts=2760
+        if sqrts == 2760:
+            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
+            hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276Scaled'
+            hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276Scaled'
+            
+            # Get JETSCAPE pp prediction
+            filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
+            f_pp = ROOT.TFile(filename_pp, 'READ')
+            h_pp_ntrigger = f_pp.Get(hname_ntrigger)
+            h_pp_ntrigger.SetDirectory(0)
+            h_pp_high = f_pp.Get(hname_high)
+            h_pp_high.SetDirectory(0)
+            h_pp_low = f_pp.Get(hname_low)
+            h_pp_low.SetDirectory(0)
+            f_pp.Close()
+            
+            # Get JETSCAPE AA prediction
+            filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
+            f_AA = ROOT.TFile(filename, 'READ')
+            h_AA_ntrigger = f_AA.Get(hname_ntrigger)
+            h_AA_ntrigger.SetDirectory(0)
+            h_AA_high = f_AA.Get(hname_high)
+            h_AA_high.SetDirectory(0)
+            h_AA_low = f_AA.Get(hname_low)
+            h_AA_low.SetDirectory(0)
+            f_AA.Close()
+        elif sqrts == 5020:
+            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
+            hname_high = f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{R}_502Scaled'
+            hname_low = f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{R}_502Scaled'
+            
+            # Get JETSCAPE pp prediction
+            filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
+            f_pp = ROOT.TFile(filename_pp, 'READ')
+            h_pp_ntrigger = f_pp.Get(hname_ntrigger)
+            h_pp_ntrigger.SetDirectory(0)
+            
+            h_pp_high2d = f_pp.Get(hname_high)
+            h_pp_high2d.SetDirectory(0)
+            h_pp_high2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
+            h_pp_high = h_pp_high2d.ProjectionX()
+            h_pp_high.Rebin(20)
+            h_pp_high.SetDirectory(0)
+                        
+            h_pp_low2d = f_pp.Get(hname_low)
+            h_pp_low2d.SetDirectory(0)
+            h_pp_low2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
+            h_pp_low = h_pp_low2d.ProjectionX()
+            h_pp_low.Rebin(20)
+            h_pp_low.SetDirectory(0)
+            f_pp.Close()
+
+            # Get JETSCAPE AA prediction
+            filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
+            f_AA = ROOT.TFile(filename, 'READ')
+            h_AA_ntrigger = f_AA.Get(hname_ntrigger)
+            h_AA_ntrigger.SetDirectory(0)
+            
+            h_AA_high2d = f_AA.Get(hname_high)
+            h_AA_high2d.SetDirectory(0)
+            h_AA_high2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
+            h_AA_high = h_AA_high2d.ProjectionX()
+            h_AA_high.Rebin(20)
+            h_AA_high.SetDirectory(0)
+              
+            h_AA_low2d = f_AA.Get(hname_low)
+            h_AA_low2d.SetDirectory(0)
+            h_AA_low2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
+            h_AA_low = h_AA_low2d.ProjectionX()
+            h_AA_low.Rebin(20)
+            h_AA_low.SetDirectory(0)
+            f_AA.Close()
         
         # Delta recoil
         n_trig_high_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(30.))
@@ -548,17 +596,17 @@ class PlotResults(common_base.CommonBase):
         if raa_type == 'hadron':
             # Impose 1 Gev minimum
             h_pp_xbins = np.array(h_pp.GetXaxis().GetXbins())
-            h_pp_xbins = h_pp_xbins[(h_pp_xbins>=1.)]
+            h_pp_xbins = h_pp_xbins[(h_pp_xbins>=8.)]
             h_pp = h_pp.Rebin(h_pp_xbins.size-1, f'{hname}_pp_rebinned', h_pp_xbins)
 
             h_AA_xbins = np.array(h_AA.GetXaxis().GetXbins())
-            h_AA_xbins = h_AA_xbins[(h_AA_xbins>=1.)]
+            h_AA_xbins = h_AA_xbins[(h_AA_xbins>=8.)]
             h_AA = h_AA.Rebin(h_AA_xbins.size-1, f'{hname}_{self.dir_AA}rebinned', h_AA_xbins)
         
             # Subtract holes
             filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
             f_AA = ROOT.TFile(filename, 'READ')
-            h_recoil_name = 'h_hadron_pt_recoilsScaled'
+            h_recoil_name = 'h_hadron_pt_alice_holesScaled'
             h_recoil = f_AA.Get(h_recoil_name)
             h_recoil.SetDirectory(0)
             h_recoil_rebinned = h_recoil.Rebin(h_AA_xbins.size-1, f'{h_recoil_name}_{self.dir_AA}', h_AA_xbins)
