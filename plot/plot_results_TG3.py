@@ -643,9 +643,16 @@ class PlotResults(common_base.CommonBase):
         h_RAA.GetXaxis().SetTitleSize(0.07)
         h_RAA.GetXaxis().SetTitleOffset(1.1)
         h_RAA.SetXTitle(xtitle)
-        h_RAA.GetYaxis().SetTitleSize(0.07)
-        h_RAA.GetYaxis().SetTitleOffset(1.)
-        h_RAA.SetYTitle("#it{R}_{AA}")
+        h_RAA.GetXaxis().SetLabelSize(0.05)
+        h_RAA.GetYaxis().SetLabelSize(0.05)
+        if raa_type in ['hadron', 'jet']:
+            h_RAA.SetYTitle("#it{R}_{AA}")
+            h_RAA.GetYaxis().SetTitleSize(0.07)
+            h_RAA.GetYaxis().SetTitleOffset(1.)
+        else:
+            h_RAA.SetYTitle("#frac{Pb-Pb}{pp}")
+            h_RAA.GetYaxis().SetTitleSize(0.06)
+            h_RAA.GetYaxis().SetTitleOffset(1.1)
         h_RAA.GetYaxis().SetRangeUser(0,ymax)
         h_RAA.Draw('PE same')
 
