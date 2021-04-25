@@ -5,12 +5,13 @@
 .. codeauthor:: Raymond Ehlers
 """
 
+import itertools
 import logging
 import os
 import re
 import typing
 from pathlib import Path
-from typing import Any, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple, TextIO
+from typing import Any, Callable, Generator, Iterator, Iterable, List, Optional, Sequence, Union, TextIO, Tuple, Type
 from typing_extensions import Literal
 
 import awkward as ak
@@ -20,13 +21,21 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-@attr.s
+@attr.s(frozen=True)
 class CrossSection:
     value: float = attr.ib()
     error: float = attr.ib()
 
 
-def _retrieve_list_line_of_file(f: TextIO, chunk_size: int = 100) -> str:
+@attr.s(frozen=True)
+class HeaderInfo:
+    event_number: int = attr.ib()
+    event_plane_angle: float = attr.ib()
+    n_particles: int = attr.ib()
+    event_weight: Optional[float] = attr.ib(default=-1)
+
+
+def _retrieve_last_line_of_file(f: TextIO, chunk_size: int = 100) -> str:
     """ Retrieve the last line of the file.
 
     From: https://stackoverflow.com/a/7167316/12907985
@@ -42,7 +51,8 @@ def _retrieve_list_line_of_file(f: TextIO, chunk_size: int = 100) -> str:
     while True:
         # We grab chunks from the end of the file towards the beginning until we
         # get a new line
-        f.seek(-len(last_line) - chunk_size, os.SEEK_END)
+        f.seek(0, os.SEEK_END)
+        f.seek(f.tell() - len(last_line) - chunk_size, os.SEEK_SET)
         chunk = f.read(chunk_size)
 
         if not chunk:
@@ -79,15 +89,26 @@ def _extract_x_sec_and_error(f: TextIO, chunk_size: int = 100) -> Optional[Cross
         Cross section and error, if found.
     """
     # Retrieve the last line of the file.
-    last_line = _retrieve_list_line_of_file(f=f, chunk_size=chunk_size)
+    last_line = _retrieve_last_line_of_file(f=f, chunk_size=chunk_size)
     # Move the file back to the start to reset it for later use.
     f.seek(0)
 
-    if last_line.startswith("# sigmaGen"):
+    logger.info(f"last line: {last_line}")
+
+    if last_line.startswith("#\tsigmaGen"):
+        logger.info("Parsing xsec")
         # The latter two arguments are dummy arguments. This way, we can use one parser for comments.
-        return _parse_line_for_header_with_weight(line=last_line, n_events=0, events_per_chunk=100)
+        #return _parse_line_for_header_with_weight(line=last_line, n_events=0, events_per_chunk=100)
+        return _parse_line_for_header_with_weight(line=last_line, initial_extraction_of_x_sec=True)
 
     return None
+
+
+class HitEndOfFileException(Exception):
+    ...
+
+class HitXSecAtEndOfFileException(HitEndOfFileException):
+    ...
 
 
 def _parse_line_for_header(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
@@ -147,7 +168,9 @@ def _parse_line_for_header(line: str, n_events: int, events_per_chunk: int) -> T
 
     return time_to_stop, header_info
 
-def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
+
+#def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
+def _parse_line_for_header_with_weight(line: str, initial_extraction_of_x_sec: bool = False) -> Tuple[bool, Optional[Any]]:
     """ Parse line as appropriate.
 
     If it's just a standard particle line, we just pass it on. However, if it's a header, we parse
@@ -166,8 +189,9 @@ def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chun
         Whether we've reached the desired number of events and should stop this block, any information parsed from the header.
         The header info is None if it's not a header line.
     """
-    time_to_stop = False
+    #time_to_stop = False
     header_info = None
+    logger.info(f"line: {line}")
     if line.startswith("#"):
         # We've found a comment line. This is either a header, or a summary of the cross section and error.
 
@@ -177,9 +201,9 @@ def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chun
         # next event. However, we check for exact agreement because we don't increment the number
         # of events until after we find a header. Basically, it all works out here.
         #if n_events > 0 and n_events % events_per_chunk == 0:
-        if n_events == events_per_chunk:
-            logger.debug("Hit end of chunk - time to stop!")
-            time_to_stop = True
+        #if n_events == events_per_chunk:
+        #    logger.debug("Hit end of chunk - time to stop!")
+        #    time_to_stop = True
 
         # Parse the string.
         # For now, we don't construct any objects to organize the information because I don't think
@@ -195,13 +219,13 @@ def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chun
             # # sigmaGen 182.423 sigmaErr 11.234
             # 0 1        2       3        4
             #
-            header_info = [
-                CrossSection(value=float(values[2]), error=float(values[4]))
-            ]
+            header_info = CrossSection(value=float(values[2]), error=float(values[4]))
 
             # This also means that we've hit the end of the file. Let's note it as such.
-            logger.debug("Hit end of file - time to stop!")
-            time_to_stop = True
+            #logger.debug("Hit end of file - time to stop!")
+            #time_to_stop = True
+            if not initial_extraction_of_x_sec:
+                raise HitXSecAtEndOfFileException()
 
         elif len(values) == 19 and values[1] == "Event":
             #######################
@@ -215,16 +239,149 @@ def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chun
             #
             # NOTE: Everything after the "|" is just documentation for the particle entries stored below.
             #
-            header_info = [
-                int(values[2]),     # Event number
-                float(values[4]),   # Event weight
-                float(values[6]),   # EP angle
-                int(values[8]),     # Number of particles
-            ]
+            header_info = HeaderInfo(
+                event_number=int(values[2]),     # Event number
+                event_plane_angle=float(values[6]),   # EP angle
+                n_particles=int(values[8]),     # Number of particles
+                event_weight=float(values[4]),   # Event weight
+            )
         else:
             raise ValueError(f"Parsing of comment line failed: {values}")
 
-    return time_to_stop, header_info
+    #return time_to_stop, header_info
+    return header_info
+
+
+def _parse_event(f: Iterator[str], header_parser: Callable[[str], HeaderInfo]) -> ...:
+    """Parse a single event in a FinalState* file.
+
+    Raises:
+        HitXSecAtEndOfFileException: We've found the line with the xsec and error at the
+            end of the file. Effectively, we've exhausted the iterator.
+        HitEndOfFileException: We've hit the end of file without finding the xsec and
+            error. This may be totally fine, depending on the version of the FinalState*
+            output.
+    """
+    # Our first line should be the header, which will be denoted by a "#".
+    # Let the calling know if there are no events left due to exhausting the iterator.
+    try:
+        header = header_parser(next(f))
+        logger.info(f"header: {header}")
+        yield header
+    except StopIteration:
+        raise HitEndOfFileException()
+
+    # From the header, we know how many particles we have in the event, so we can
+    # immediately yield the next n_particles lines. And this will leave the generator
+    # at the next event, or (if we've exhausted the iterator) at the end of file (either
+    # at the xsec and error, or truly exhausted).
+    yield from itertools.islice(f, header.n_particles)
+
+
+#def _parse_chunk(f: Iterator[str], events_per_chunk: int, header_parser: Callable[[str], HeaderInfo] = _parse_line_for_header_with_weight) -> ...:
+#    headers = []
+#
+#    for _ in range(events_per_chunk):
+#        try:
+#            event_iter = _parse_event(f, header_parser=header_parser)
+#            # First, get the header
+#            headers.append(
+#                next(event_iter)
+#            )
+#            logger.debug(f"headers: {headers}")
+#            # Then we yield the rest of the particles in the event
+#            yield from event_iter
+#        except (HitEndOfFileException, HitXSecAtEndOfFileException) as e:
+#            # We want this to continue coming up.
+#            raise e
+#        except StopIteration:
+#            # We've exhausted our file iterator.
+#            ...
+
+
+@attr.s
+class ChunkGenerator:
+    """ Generator a chunk of the file.
+
+    Args:
+        g: Generator to be wrapped.
+    """
+    g: Iterator[str] = attr.ib()
+    _events_per_chunk: int = attr.ib()
+    header_parser: Callable[[str], HeaderInfo] = attr.ib(default=_parse_line_for_header_with_weight)
+    _headers: List[HeaderInfo] = attr.ib(factory=list)
+    _reached_end_of_file = attr.ib(default=False)
+
+    @property
+    def events_per_chunk(self) -> int:
+        return self._events_per_chunk
+
+    @property
+    def events_contained_in_chunk(self) -> int:
+        return len(self._headers)
+
+    @property
+    def headers(self) -> List[HeaderInfo]:
+        return self._headers
+
+    @property
+    def reached_end_of_file(self) -> bool:
+        return self._reached_end_of_file
+
+    def event_split_index(self) -> np.ndarray:
+        # NOTE: We skip the last header due to the way that np.split works.
+        #       It will go from the last index to the end of the array.
+        return np.array([
+            header.n_particles for header in self._headers
+        ])[:-1]
+
+    def __iter__(self) -> Iterator[str]:
+        for _ in range(self._events_per_chunk):
+            try:
+                event_iter = _parse_event(self.g, header_parser=self.header_parser)
+                # First, get the header
+                self.headers.append(
+                    next(event_iter)
+                )
+                # Then we yield the rest of the particles in the event
+                yield from event_iter
+            except StopIteration as e:
+                # We've exhausted our file iterator.
+                #self.reached_end_of_file = True
+                raise HitEndOfFileException()
+            except (HitEndOfFileException, HitXSecAtEndOfFileException) as e:
+                # We want this to continue coming up.
+                #raise e
+                break
+
+
+def parse_file(filename: Path, events_per_chunk: int,
+               header_parser: Callable[[str], HeaderInfo]
+               ) -> Iterator[ChunkGenerator]:
+    # Validation
+    filename = Path(filename)
+
+    with open(filename, "r") as f:
+        # First step, extract the final cross section and header.
+        cross_section = _extract_x_sec_and_error(f)
+
+        # Define an iterator so we can increment it in different locations in the code.
+        # Fine to use if it the entire file fits in memory.
+        #read_lines = iter(f.readlines())
+        # Use this if the file doesn't fit in memory (fairly likely for these type of files)
+        read_lines = iter(f)
+
+        # Now, need to setup chunks.
+        # NOTE: The headers are passed through the ChunkGenerator.
+        while True:
+            chunk = ChunkGenerator(
+                g=f,
+                events_per_chunk=events_per_chunk,
+                header_parser=header_parser,
+            )
+            yield chunk
+            if chunk.reached_end_of_file:
+                break
 
 
 def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = int(1e5)) -> Iterator[Tuple[Iterator[str], List[int], List[Any], List[bool]]]:
@@ -528,16 +685,23 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
     parsing_function = parsing_function_map[parser]
 
     # Read the file, creating chunks of events.
-    for chunk_generator, event_split_index, event_header_info, reached_end_of_file in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
+    #for chunk_generator, event_split_index, event_header_info, reached_end_of_file in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
+    for chunk_generator in parse_file(filename=filename, events_per_chunk=events_per_chunk, header_parser=_parse_line_for_header_with_weight):
         # Give a notification just in case the parsing is slow...
         logger.debug("New chunk")
+        logger.info(f"Before: {chunk_generator.headers}")
 
         # Parse the file and create the awkward event structure.
+        res = parsing_function(iter(chunk_generator))
         array_with_events = ak.Array(
             np.split(
-                parsing_function(chunk_generator), event_split_index
+                res, chunk_generator.event_split_index()
             )
         )
+
+        logger.info(f"After: {chunk_generator.headers}")
+
+        continue
 
         # Cross check that everything is in order and was parsed correctly.
         if events_per_chunk > 0:
