@@ -8,11 +8,9 @@
 import itertools
 import logging
 import os
-import re
 import typing
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple, Type
-from typing_extensions import Literal
+from typing import Any, Iterator, List, Optional, Union
 
 import awkward as ak
 import attr
@@ -471,7 +469,7 @@ def _parse_with_numpy(chunk_generator: Iterator[str]) -> np.ndarray:
     return np.loadtxt(chunk_generator)
 
 
-def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas") -> Optional[Iterator[ak.Array]]:
+def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas") -> Iterator[ak.Array]:
     """ Read a JETSCAPE FinalState{Hadrons,Partons} ASCII output file in chunks.
 
     This is the primary user function. We read in chunks to keep the memory usage manageable.
@@ -589,7 +587,7 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
 
 def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
                      input_filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas",
-                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None) -> Iterator[ak.Array]:
+                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None) -> None:
     """ Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
 
     Args:
