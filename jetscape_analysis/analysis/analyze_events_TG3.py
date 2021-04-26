@@ -134,6 +134,11 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         
         # Jet axis
         self.inclusive_chjet_axis_alice_bins = np.linspace(0., 0.2, 200+1)
+
+        # Hardest kt
+        self.inclusive_chjet_hardest_kt_alice_R02_bins = np.array(self.inclusive_chjet_observables["hardest_kt_alice"]["bins_ktg_R02"])
+        self.inclusive_chjet_hardest_kt_alice_R04_bins = np.array(self.inclusive_chjet_observables["hardest_kt_alice"]["bins_ktg_R04"])
+        self.inclusive_chjet_hardest_kt_alice_R05_bins = np.array(self.inclusive_chjet_observables["hardest_kt_alice"]["bins_ktg_R05"])
         
         #------------------------------------------------------
         # Semi-inclusive jet binnings
@@ -328,7 +333,21 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                             self.inclusive_chjet_axis_alice_bins)
             h.Sumw2()
             setattr(self, hname, h)
-            
+
+            # Hardest kt
+            for a in self.inclusive_chjet_observables["hardest_kt_alice"]["dynamical_grooming_a"]:
+                hname = f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}"
+                h = ROOT.TH1F(hname, hname, len(getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))-1,
+                                            getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))
+                h.Sumw2()
+                setattr(self, hname, h)
+
+            hname = f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}"
+            h = ROOT.TH1F(hname, hname, len(getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))-1,
+                                        getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))
+            h.Sumw2()
+            setattr(self, hname, h)
+
             hname = f'h_chjet_pt_recoils_R{jetR}'
             h = ROOT.TH2F(hname, hname, 100, 0, 1000, 1000, 0, 100)
             h.GetXaxis().SetTitle('chjet pt')
@@ -515,11 +534,10 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
-        jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], self.inclusive_chjet_observables['soft_drop_zcut'], jetR)
 
         # Fill histograms
         if charged:
-            self.fill_charged_jet_histograms(jet, jet_groomed_lund, holes_in_jet, jet_pt, jetR)
+            self.fill_charged_jet_histograms(jet, gshop, holes_in_jet, jet_pt, jetR)
         else:
             self.fill_full_jet_histograms(jet, jet_pt, jetR)
 
@@ -561,8 +579,10 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # ---------------------------------------------------------------
     # Fill inclusive charged jet histograms
     # ---------------------------------------------------------------
-    def fill_charged_jet_histograms(self, jet, jet_groomed_lund, holes_in_jet, jet_pt, jetR):
-    
+    def fill_charged_jet_histograms(self, jet, gshop, holes_in_jet, jet_pt, jetR):
+        # Grooming jet
+        jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], self.inclusive_chjet_observables['soft_drop_zcut'], jetR)
+
         # g
         if 40 < jet_pt < 60 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             g = 0
@@ -656,6 +676,18 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             if jet_groomed_lund:
                 deltaR = jet_wta.delta_R(jet_groomed_lund.pair())
                 getattr(self, f'h_chjet_axis_SD_WTA_alice_R{jetR}').Fill(deltaR)
+
+        # Hardest kt
+        if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables["eta_cut_alice_R"] - jetR):
+            for a in self.inclusive_chjet_observables["hardest_kt_alice"]["dynamical_grooming_a"]:
+                groomed = gshop.dynamical(a)
+                kt = groomed.kt()
+                # Note: untagged will return kt = 0
+                getattr(self, f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}").Fill(ktg)
+
+            ktg = jet_groomed_lund.kt()
+            # Note: untagged jets will return kt = 0
+            getattr(self, f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}").Fill(ktg)
 
     # ---------------------------------------------------------------
     # Fill semi-inclusive charged jet histograms
