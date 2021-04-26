@@ -11,16 +11,19 @@ import pytest
 from jetscape_analysis.analysis.reader import parse_ascii
 
 @pytest.mark.parametrize(
+    "header_version",
+    [1, 2],
+    ids=["Header v1", "Header v2"]
+)
+@pytest.mark.parametrize(
     "events_per_chunk",
     [
         5, 16, 50, 5000,
     ], ids=["Multiple, divisible: 5", "Multiple, indivisible: 16", "Equal: 50", "Larger: 5000"]
 )
-def test_parsing(events_per_chunk: int) -> None:
+def test_parsing(header_version: int, events_per_chunk: int) -> None:
     here = Path(__file__).parent
-    input_filename = here / "parsing" / "test_hadrons_v2.dat"
-
-    # TODO: Parse different versions...
+    input_filename = here / "parsing" / f"final_state_hadrons_header_v{header_version}.dat"
 
     # Remap column names that have been renamed.
     rename_columns = {
@@ -39,8 +42,13 @@ def test_parsing(events_per_chunk: int) -> None:
             depth_limit = 1
         )
 
+        # Create the reference arrays by checking out the parser v1 (e477e0277fa560f9aba82310c02da8177e61c9e4), setting
+        # the chunk size in skim_ascii, and then calling:
+        # $ python jetscape_analysis/analysis/reader/skim_ascii.py -i tests/parsing/final_state_hadrons_header_v1.dat -o tests/parsing/events_per_chunk_50/parser_v1_header_v1/test.parquet
+        # NOTE: The final state hadron files won't exist when you check out that branch, so
+        #       it's best to copy them for your existing branch.
         reference_arrays = ak.from_parquet(
-            Path(f"{here}/parsing/events_per_chunk_{events_per_chunk}/parse_v1/test_{i:02}.parquet")
+            Path(f"{here}/parsing/events_per_chunk_{events_per_chunk}/parser_v1_header_v1/test_{i:02}.parquet")
         )
         # There are more fields in v2 than in the reference arrays (v1), so only take those
         # that are present in reference for comparison.
@@ -49,4 +57,9 @@ def test_parsing(events_per_chunk: int) -> None:
         for field in ak.fields(reference_arrays):
             new_field = rename_columns.get(field, field)
             assert ak.all(reference_arrays[field] == arrays[new_field])
+
+        # Check for cross section if header v2
+        if header_version == 2:
+            assert "cross_section" in ak.fields(arrays)
+            assert "cross_section_error" in ak.fields(arrays)
 
