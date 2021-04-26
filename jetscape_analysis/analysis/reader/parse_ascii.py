@@ -139,9 +139,9 @@ def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> Op
     # Move the file back to the start to reset it for later use.
     f.seek(0)
 
-    logger.debug(f"last line: {last_line}")
+    # logger.debug(f"last line: {last_line}")
     if last_line.startswith("#\tsigmaGen"):
-        logger.debug("Parsing xsec")
+        # logger.debug("Parsing xsec")
         return _parse_cross_section(line = last_line)
 
     return None
@@ -230,10 +230,10 @@ def _parse_event(f: Iterator[str]) -> Iterator[Union[HeaderInfo, str]]:
     # Let the calling know if there are no events left due to exhausting the iterator.
     try:
         header = _parse_header_line(next(f))
-        logger.info(f"header: {header}")
+        # logger.info(f"header: {header}")
         yield header
     except StopIteration:
-        logger.debug("Hit end of file exception!")
+        # logger.debug("Hit end of file exception!")
         raise ReachedEndOfFileException()
 
     # From the header, we know how many particles we have in the event, so we can
@@ -309,8 +309,8 @@ class ChunkGenerator:
         return len(self._headers) != self._events_per_chunk
 
     def __iter__(self) -> Iterator[str]:
-        for i in range(self._events_per_chunk):
-            logger.debug(f"i: {i}")
+        for _ in range(self._events_per_chunk):
+            # logger.debug(f"i: {i}")
             try:
                 event_iter = _parse_event(self.g)
                 # NOTE: Typing gets ignored here because I don't know how to encode the additional
@@ -554,33 +554,27 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
             header_level_info["cross_section_error"] = np.full_like(header_level_info["event_plane_angle"], chunk_generator.cross_section.error)
 
         # Assemble all of the information in a single awkward array and pass it on.
-        # TODO: Check that types are actually propagating...
-        #       Depending on how they're wrapped, they may not go through...
         yield ak.zip(
             {
                 # Header level info
                 **header_level_info,
-                # Cross section info
-                # Here, we unpack and promote them to the same length.
-                #**{k: v[:, np.newaxis] for k, v in cross_section_info.items()},
                 # Particle level info
                 "particle_ID": ak.values_astype(array_with_events[:, :, 1], np.int32),
-                # Status is only a couple of numbers, but it's not always 0. It identifies recoils (1?) and holes (-1?)
+                # We're only considering final state hadrons or partons, so status codes are limited to a few values.
+                # -1 are holes, while >= 0 are signal particles (includes both the jet signal and the recoils).
+                # So we can't differentiate the recoil from the signal.
                 "status": ak.values_astype(array_with_events[:, :, 2], np.int8),
                 "E": ak.values_astype(array_with_events[:, :, 3], np.float32),
                 "px": ak.values_astype(array_with_events[:, :, 4], np.float32),
                 "py": ak.values_astype(array_with_events[:, :, 5], np.float32),
                 "pz": ak.values_astype(array_with_events[:, :, 6], np.float32),
-                # Skip these because we're going to be working with four vectors anyway, so it shouldn't be a
-                # big deal to recalculate them, especially compare to the added storage space.
+                # We could skip eta and phi since we can always recalculate them. However, since we've already parsed
+                # them, we may as well pass them along.:w
                 "eta": ak.values_astype(array_with_events[:, :, 7], np.float32),
                 "phi": ak.values_astype(array_with_events[:, :, 8], np.float32),
             },
             depth_limit=1,
         )
-
-
-    #import IPython; IPython.embed()
 
 
 def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Array:
@@ -595,8 +589,7 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
 
 def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
                      input_filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas",
-                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None,
-                     test_parsing_v2: bool = True) -> Iterator[ak.Array]:
+                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None) -> Iterator[ak.Array]:
     """ Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
 
     Args:
@@ -616,6 +609,8 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
     base_output_filename = Path(base_output_filename)
     # Setup the base output directory
     base_output_filename.parent.mkdir(parents=True, exist_ok=True)
+    # We will check which fields actually exist when writing.
+    possible_fields_containing_floats = ["event_plane_angle", "event_weight", "cross_section", "cross_section_error", "px", "py", "pz", "E"]
 
     for i, arrays in enumerate(read(filename=input_filename, events_per_chunk=events_per_chunk, parser=parser)):
         # Reduce to the minimum required data.
@@ -630,17 +625,6 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
             depth_limit = 1
         )
 
-        if test_parsing_v2:
-            v1_arrays = ak.from_parquet(
-                Path(f"tests/events_per_chunk_{events_per_chunk}/parse_v1/test_{i:02}.parquet")
-            )
-            # There are more fields in v2 than in v1, so only take those that are present in
-            # v1 for comparison.
-            # NOTE: We have to compare the fields one-by-one because the shapes of the fields
-            #       are different, and apparently don't broadcast nicely with `__eq__`
-            for field in ak.fields(v1_arrays):
-                assert ak.all(v1_arrays[field] == arrays[field]), f"Field {field} doesn't match."
-
         # Parquet with zlib seems to do about the same as ascii tar.gz when we drop unneeded columns.
         # And it should load much faster!
         if events_per_chunk > 0:
@@ -648,19 +632,22 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
             output_filename = (base_output_filename.parent / f"{base_output_filename.stem}_{i:02}").with_suffix(suffix)
         else:
             output_filename = base_output_filename
+        use_byte_stream_fields = [field for field in ak.fields(arrays) if field in possible_fields_containing_floats]
+        use_dict_fields = [field for field in ak.fields(arrays) if field not in possible_fields_containing_floats]
+        # logger.debug(f"use_dict_fields: {use_dict_fields}")
+        # logger.debug(f"use_byte_stream_fields: {use_byte_stream_fields}")
         ak.to_parquet(
             arrays, output_filename,
             compression=compression, compression_level=compression_level,
             explode_records=False,
+            # Additional parquet options are based on https://stackoverflow.com/a/66854439/12907985
+            use_dictionary=use_dict_fields,
+            use_byte_stream_split=use_byte_stream_fields,
         )
 
         # Break now so we don't have to read the next chunk.
         if (i + 1) == max_chunks:
             break
-
-    if test_parsing_v2:
-        # We got through the entire file, so it looks like parsing was successful!
-        logger.info("Success! Parsing appaers to work")
 
 
 if __name__ == "__main__":
