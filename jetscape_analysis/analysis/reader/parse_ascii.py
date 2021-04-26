@@ -269,6 +269,7 @@ def _parse_event(f: Iterator[str], header_parser: Callable[[str], HeaderInfo]) -
         logger.info(f"header: {header}")
         yield header
     except StopIteration:
+        logger.debug(f"Hit end of file exception!")
         raise HitEndOfFileException()
 
     # From the header, we know how many particles we have in the event, so we can
@@ -297,6 +298,10 @@ def _parse_event(f: Iterator[str], header_parser: Callable[[str], HeaderInfo]) -
 #        except StopIteration:
 #            # We've exhausted our file iterator.
 #            ...
+
+
+class ChunkNotReadyException(Exception):
+    ...
 
 
 @attr.s
@@ -331,12 +336,19 @@ class ChunkGenerator:
     def event_split_index(self) -> np.ndarray:
         # NOTE: We skip the last header due to the way that np.split works.
         #       It will go from the last index to the end of the array.
-        return np.array([
+        return np.cumsum([
             header.n_particles for header in self._headers
         ])[:-1]
 
+    @property
+    def incomplete_chunk(self) -> bool:
+        if len(self._headers) == 0 and not self.reached_end_of_file:
+            raise ChunkNotReadyException()
+        return len(self._headers) != self._events_per_chunk
+
     def __iter__(self) -> Iterator[str]:
-        for _ in range(self._events_per_chunk):
+        for i in range(self._events_per_chunk):
+            logger.debug(f"i: {i}")
             try:
                 event_iter = _parse_event(self.g, header_parser=self.header_parser)
                 # First, get the header
@@ -345,14 +357,15 @@ class ChunkGenerator:
                 )
                 # Then we yield the rest of the particles in the event
                 yield from event_iter
-            except StopIteration as e:
-                # We've exhausted our file iterator.
-                #self.reached_end_of_file = True
-                raise HitEndOfFileException()
             except (HitEndOfFileException, HitXSecAtEndOfFileException) as e:
                 # We want this to continue coming up.
+                self._reached_end_of_file = True
                 #raise e
                 break
+            #except StopIteration as e:
+            #    # We've exhausted our file iterator.
+            #    #self.reached_end_of_file = True
+            #    raise HitEndOfFileException()
 
 
 def parse_file(filename: Path, events_per_chunk: int,
@@ -374,6 +387,7 @@ def parse_file(filename: Path, events_per_chunk: int,
         # Now, need to setup chunks.
         # NOTE: The headers are passed through the ChunkGenerator.
         while True:
+            #try:
             chunk = ChunkGenerator(
                 g=f,
                 events_per_chunk=events_per_chunk,
@@ -382,6 +396,14 @@ def parse_file(filename: Path, events_per_chunk: int,
             yield chunk
             if chunk.reached_end_of_file:
                 break
+            #except (HitEndOfFileException, HitXSecAtEndOfFileException) as e:
+            #    chunk.reached_end_of_file = True
+            #    yield chunk
+            #    break
+            #except StopIteration as e:
+            #    # We've exhausted our file iterator.
+            #    #self.reached_end_of_file = True
+            #    raise HitEndOfFileException()
 
 
 def read_events_in_chunks(filename: Union[Path, str], events_per_chunk: int = int(1e5)) -> Iterator[Tuple[Iterator[str], List[int], List[Any], List[bool]]]:
@@ -686,9 +708,9 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
 
     # Read the file, creating chunks of events.
     #for chunk_generator, event_split_index, event_header_info, reached_end_of_file in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
-    for chunk_generator in parse_file(filename=filename, events_per_chunk=events_per_chunk, header_parser=_parse_line_for_header_with_weight):
+    for i, chunk_generator in enumerate(parse_file(filename=filename, events_per_chunk=events_per_chunk, header_parser=_parse_line_for_header_with_weight)):
         # Give a notification just in case the parsing is slow...
-        logger.debug("New chunk")
+        logger.debug(f"New chunk {i}")
         logger.info(f"Before: {chunk_generator.headers}")
 
         # Parse the file and create the awkward event structure.
@@ -700,6 +722,17 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         )
 
         logger.info(f"After: {chunk_generator.headers}")
+        # N particles check
+        n_particles_from_header = np.array([header.n_particles for header in chunk_generator.headers])
+        logger.info(f"n_particles from headers: {n_particles_from_header}")
+        logger.info(f"n_particles from array: {ak.num(array_with_events, axis = 1)}")
+        assert (np.asarray(ak.num(array_with_events, axis = 1)) == n_particles_from_header).all()
+
+        # Length check
+        assert (ak.num(array_with_events, axis = 0) == len(chunk_generator.headers))
+
+        logger.info(f"Reached end of file: {chunk_generator.reached_end_of_file}")
+        logger.info(f"incomplete chunk: {chunk_generator.incomplete_chunk}")
 
         continue
 
@@ -724,6 +757,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         hydro_event_id = [x[1] for x in event_header_info]
 
         # Convert to the desired structure for our awkward array.
+        # TODO: Check that types are actually propagating...
+        #       Depending on how they're wrapped, they may not go through...
         yield ak.zip(
             {
                 # TODO: Does the conversion add any real computation time?
