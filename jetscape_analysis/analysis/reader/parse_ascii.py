@@ -625,24 +625,35 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
             depth_limit = 1
         )
 
-        # Parquet with zlib seems to do about the same as ascii tar.gz when we drop unneeded columns.
-        # And it should load much faster!
+        # If converting in chunks, add an index to the output file so the chunks don't overwrite each other.
         if events_per_chunk > 0:
             suffix = base_output_filename.suffix
             output_filename = (base_output_filename.parent / f"{base_output_filename.stem}_{i:02}").with_suffix(suffix)
         else:
             output_filename = base_output_filename
-        use_byte_stream_fields = [field for field in ak.fields(arrays) if field in possible_fields_containing_floats]
-        use_dict_fields = [field for field in ak.fields(arrays) if field not in possible_fields_containing_floats]
-        # logger.debug(f"use_dict_fields: {use_dict_fields}")
-        # logger.debug(f"use_byte_stream_fields: {use_byte_stream_fields}")
+
+        # Optimize the output
+        # Additional parquet options are based on https://stackoverflow.com/a/66854439/12907985
+        # byte_stream_fields apparently only work for float fields. Other fields should be handled
+        # by use_dictionary. Apparently it can't handle this automatically, we so we have to define it
+        # ourselves. This is a bit brittle if fields change, but they don't change so often, and
+        # it's simpler than parsing field types, so it should be fine for now.
+        byte_stream_fields = [field for field in ak.fields(arrays) if field in possible_fields_containing_floats]
+        dict_fields = [field for field in ak.fields(arrays) if field not in possible_fields_containing_floats]
+        # logger.debug(f"dict_fields: {dict_fields}")
+        # logger.debug(f"byte_stream_fields: {byte_stream_fields}")
+
+        # Parquet with zlib seems to do about the same as ascii tar.gz when we drop unneeded columns.
+        # And it should load much faster!
         ak.to_parquet(
             arrays, output_filename,
             compression=compression, compression_level=compression_level,
             explode_records=False,
             # Additional parquet options are based on https://stackoverflow.com/a/66854439/12907985
-            use_dictionary=use_dict_fields,
-            use_byte_stream_split=use_byte_stream_fields,
+            #use_dictionary=True,
+            #use_byte_stream_split=True,
+            use_dictionary=dict_fields,
+            use_byte_stream_split=byte_stream_fields,
         )
 
         # Break now so we don't have to read the next chunk.
