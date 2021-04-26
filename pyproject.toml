@@ -27,7 +27,6 @@ tqdm = "^4.37.0"
 numpy = "^1.17.3"
 pyhepmc_ng = "^0.4.3"
 pyyaml = "^5.1.2"
-mypy = "^0.740"
 isort = {extras = ["pyproject"], version = "^4.3.21"}
 awkward = "^1.2"
 pyarrow = "^3.0.0"
@@ -40,6 +39,7 @@ flake8 = "^3.7.9"
 flake8-colors = "^0.1.6"
 black = "^19.10b0"
 pre-commit = "^1.20.0"
+mypy = "^0.8"
 
 [tool.isort]
 known_standard_library = ["setuptools"]

@@ -11,7 +11,7 @@ import os
 import re
 import typing
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterator, Iterable, List, Optional, Sequence, Union, TextIO, Tuple, Type
+from typing import Any, Callable, Generator, Iterator, Iterable, List, Optional, Sequence, Union, Tuple, Type
 from typing_extensions import Literal
 
 import awkward as ak
@@ -20,6 +20,21 @@ import numpy as np
 
 
 logger = logging.getLogger(__name__)
+
+
+class HitEndOfFileException(Exception):
+    """Indicates that we've somehow hit the end of the file.
+
+    We have a separate exception so we can pass additional information
+    about the context if desired.
+    """
+    ...
+
+
+class HitXSecAtEndOfFileException(HitEndOfFileException):
+    """Indicates that we've hit the cross section in the last line of the file."""
+    ...
+
 
 @attr.s(frozen=True)
 class CrossSection:
@@ -32,10 +47,10 @@ class HeaderInfo:
     event_number: int = attr.ib()
     event_plane_angle: float = attr.ib()
     n_particles: int = attr.ib()
-    event_weight: Optional[float] = attr.ib(default=-1)
+    event_weight: float = attr.ib(default=-1)
 
 
-def _retrieve_last_line_of_file(f: TextIO, read_chunk_size: int = 100) -> str:
+def _retrieve_last_line_of_file(f: typing.TextIO, read_chunk_size: int = 100) -> str:
     """ Retrieve the last line of the file.
 
     From: https://stackoverflow.com/a/7167316/12907985
@@ -87,158 +102,59 @@ def _retrieve_last_line_of_file(f: TextIO, read_chunk_size: int = 100) -> str:
         return last_line
 
 
-def _extract_x_sec_and_error(f: TextIO, chunk_size: int = 100) -> Optional[CrossSection]:
-    """ Extract cross section and error from EOF.
+def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> Optional[CrossSection]:
+    """ Extract cross section and error from the end of the file.
 
     Args:
         f: File-like object.
-        chunk_size: Size of step in bytes to read backwards into the file. Default: 100.
+        read_chunk_size: Size of step in bytes to read backwards into the file. Default: 100.
 
     Returns:
         Cross section and error, if found.
     """
     # Retrieve the last line of the file.
-    last_line = _retrieve_last_line_of_file(f=f, chunk_size=chunk_size)
+    last_line = _retrieve_last_line_of_file(f=f, read_chunk_size=read_chunk_size)
     # Move the file back to the start to reset it for later use.
     f.seek(0)
 
     logger.debug(f"last line: {last_line}")
     if last_line.startswith("#\tsigmaGen"):
         logger.debug("Parsing xsec")
-        # The latter two arguments are dummy arguments. This way, we can use one parser for comments.
-        #return _parse_line_for_header_with_weight(line=last_line, n_events=0, events_per_chunk=100)
-        return _parse_line_for_header_with_weight(line=last_line, initial_extraction_of_x_sec=True)
+        res = _parse_comment_line(line=last_line, initial_extraction_of_x_sec=True)
+        if res is not None:
+            # Help out mypy
+            assert isinstance(res, CrossSection)
+        return res
 
     return None
 
 
-class HitEndOfFileException(Exception):
-    ...
-
-class HitXSecAtEndOfFileException(HitEndOfFileException):
-    ...
-
-
-def _parse_line_for_header(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
+def _parse_comment_line(line: str, initial_extraction_of_x_sec: bool = False) -> Optional[Union[HeaderInfo, CrossSection]]:
     """ Parse line as appropriate.
 
-    If it's just a standard particle line, we just pass it on. However, if it's a header, we parse
-    the header, as well as perform both an event count check. This way, we can split files without
-    having to worry about getting only part of an event (which would happen if we just trivially
-    split on lines).
-
-    Note:
-        We don't even have to yield the line back because we don't ever modify it.
+    If the line is a comment, we attempt to parse the information out of it. As of April 2021, this
+    can either be the event header or cross section information. If it's not a comment line, we skip
+    over it.
 
     Args:
         line: Line to be parsed.
-        n_events: Number of events processed so far.
-        events_per_chunk: Number of events per chunk.
+        initial_extraction_of_x_sec: True if we're doing the initial extraction of the cross section.
+            If that case, we don't want to notify that we're at the end of the file. Default: False.
     Returns:
-        Whether we've reached the desired number of events and should stop this block, any information parsed from the header.
-        The header info is None if it's not a header line.
+        If a comment line, the HeaderInfo or CrossSection information that was extracted.
     """
-    time_to_stop = False
-    header_info = None
-    if line.startswith("#"):
-        # We've found a header line.
-
-        # We need to be able to chunk the files into something smaller and more manageable.
-        # Therefore, when we hit the target, we provide a signal that it's time to end the block.
-        # This is a bit awkward because we don't know that an event has ended until we get to the
-        # next event. However, we check for exact agreement because we don't increment the number
-        # of events until after we find a header. Basically, it all works out here.
-        #if n_events > 0 and n_events % events_per_chunk == 0:
-        if n_events == events_per_chunk:
-            logger.debug("Hit end of chunk - time to stop!")
-            time_to_stop = True
-
-        # Parse the header string.
-        # As of 9 October 2020, the formatting isn't really right. This should be fixed in JS.
-        # Due to this formatting issue:
-        # - We ignore all of the column names.
-        # - We only parse the numbers:
-        #   1. Event plane angle. float, potentially in scientific notation.
-        #   3. (hydro?) event number. int
-        #   3. Number of particles. int. (This wasn't clear, originally)
-        #
-        # It's unclear where the hydro ID is stored.
-        #
-        # For now, we don't construct any objects to contain the information because
-        # it's not worth the computing time - we're not really using this information...
-        header_values = line.split()
-        # Validation
-        if len(header_values) != 9:
-            raise ValueError(f"Parsing of header failed: {header_values}")
-        # The second value has to be clever because the file is improperly spaced for parsing...
-        # It's of the form: "Event5ID", where all we care about is the event number (in this case, 5)
-        header_info = [float(header_values[1]), int(header_values[2][5:-2]), int(header_values[3])]
-
-    return time_to_stop, header_info
-
-
-#def _parse_line_for_header_with_weight(line: str, n_events: int, events_per_chunk: int) -> Tuple[bool, Optional[Any]]:
-def _parse_line_for_header_with_weight(line: str, initial_extraction_of_x_sec: bool = False) -> Tuple[bool, Optional[Any]]:
-    """ Parse line as appropriate.
-
-    If it's just a standard particle line, we just pass it on. However, if it's a header, we parse
-    the header, as well as perform both an event count check. This way, we can split files without
-    having to worry about getting only part of an event (which would happen if we just trivially
-    split on lines).
-
-    Note:
-        We don't even have to yield the line back because we don't ever modify it.
-
-    Args:
-        line: Line to be parsed.
-        n_events: Number of events processed so far.
-        events_per_chunk: Number of events per chunk.
-    Returns:
-        Whether we've reached the desired number of events and should stop this block, any information parsed from the header.
-        The header info is None if it's not a header line.
-    """
-    #time_to_stop = False
-    header_info = None
-    logger.info(f"line: {line}")
+    header_info: Optional[Union[HeaderInfo, CrossSection]] = None
     if line.startswith("#"):
         # We've found a comment line. This is either a header, or a summary of the cross section and error.
 
-        # We need to be able to chunk the files into something smaller and more manageable.
-        # Therefore, when we hit the target, we provide a signal that it's time to end the block.
-        # This is a bit awkward because we don't know that an event has ended until we get to the
-        # next event. However, we check for exact agreement because we don't increment the number
-        # of events until after we find a header. Basically, it all works out here.
-        #if n_events > 0 and n_events % events_per_chunk == 0:
-        #if n_events == events_per_chunk:
-        #    logger.debug("Hit end of chunk - time to stop!")
-        #    time_to_stop = True
-
         # Parse the string.
-        # For now, we don't construct any objects to organize the information because I don't think
-        # it's worth the computing time to construct the object. This may change as we add more info.
         values = line.split("\t")
         # Compare by length first so we can short circuit immediately if it doesn't match, which should
         # save some string comparisons.
-        if len(values) == 5 and values[1] == "sigmaGen":
-            ###################################
-            # Cross section info specification:
-            ###################################
-            # The cross section info is formatted as follows, with each entry separated by a `\t` character:
-            # # sigmaGen 182.423 sigmaErr 11.234
-            # 0 1        2       3        4
-            #
-            header_info = CrossSection(value=float(values[2]), error=float(values[4]))
-
-            # This also means that we've hit the end of the file. Let's note it as such.
-            #logger.debug("Hit end of file - time to stop!")
-            #time_to_stop = True
-            if not initial_extraction_of_x_sec:
-                raise HitXSecAtEndOfFileException()
-
-        elif len(values) == 19 and values[1] == "Event":
-            #######################
-            # Header specification:
-            #######################
+        if len(values) == 19 and values[1] == "Event":
+            ##########################
+            # Header v2 specification:
+            ##########################
             # As of 20 April 2021, the formatting of the header has been improved.
             # This function was developed to parse it.
             # The header is defined as follows, with each entry separated by a `\t` character:
@@ -248,19 +164,58 @@ def _parse_line_for_header_with_weight(line: str, initial_extraction_of_x_sec: b
             # NOTE: Everything after the "|" is just documentation for the particle entries stored below.
             #
             header_info = HeaderInfo(
-                event_number=int(values[2]),     # Event number
-                event_plane_angle=float(values[6]),   # EP angle
-                n_particles=int(values[8]),     # Number of particles
-                event_weight=float(values[4]),   # Event weight
+                event_number=int(values[2]),        # Event number
+                event_plane_angle=float(values[6]), # EP angle
+                n_particles=int(values[8]),         # Number of particles
+                event_weight=float(values[4]),      # Event weight
             )
+        elif len(values) == 9 and "Event" in values[2]:
+            ##########################
+            # Header v1 specification:
+            ##########################
+            # The header v1 specification is as follows, with ">" followed by same spaces indicating a "\t" character:
+            # #>  0.0116446>  Event1ID>   236>pstat-EPx>  Py> Pz> Eta>Phi
+            # 0   1           2           3   4           5   6   7   8
+            #
+            # NOTE: There are some difficulties in parsing this header due to inconsistent spacing.
+            #
+            # The values that we want to extract are:
+            # index: Meaning
+            #   1: Event plane angle. float, potentially in scientific notation.
+            #   2: Event number, of the from "EventNNNNID". Can be parsed as val[5:-2] to generically extract `NNNN`. int.
+            #   3: Number of particles. int.
+            header_info = HeaderInfo(
+                event_number=int(values[2][5:-2]),  # Event number
+                event_plane_angle=float(values[1]), # EP angle
+                n_particles=int(values[3]),         # Number of particles
+            )
+        elif len(values) == 5 and values[1] == "sigmaGen":
+            ###################################
+            # Cross section info specification:
+            ###################################
+            # The cross section info is formatted as follows, with each entry separated by a `\t` character:
+            # # sigmaGen 182.423 sigmaErr 11.234
+            # 0 1        2       3        4
+            #
+            # I _think_ the units are mb^-1
+            header_info = CrossSection(
+                value=float(values[2]),     # Cross section
+                error=float(values[4]),     # Cross section error
+            )
+
+            # If we've hit the cross section, and we're not doing the initial extraction of the cross
+            # section, this means that we're at the last line of the file, and should notify as such.
+            # NOTE: By raising with the cross section, we make it possible to retrieve it, even though
+            #       we've raised an exception here.
+            if not initial_extraction_of_x_sec:
+                raise HitXSecAtEndOfFileException(header_info)
         else:
             raise ValueError(f"Parsing of comment line failed: {values}")
 
-    #return time_to_stop, header_info
     return header_info
 
 
-def _parse_event(f: Iterator[str], header_parser: Callable[[str], HeaderInfo]) -> ...:
+def _parse_event(f: Iterator[str]) -> Iterator[Union[HeaderInfo, str]]: 
     """Parse a single event in a FinalState* file.
 
     Raises:
@@ -273,7 +228,7 @@ def _parse_event(f: Iterator[str], header_parser: Callable[[str], HeaderInfo]) -
     # Our first line should be the header, which will be denoted by a "#".
     # Let the calling know if there are no events left due to exhausting the iterator.
     try:
-        header = header_parser(next(f))
+        header = _parse_comment_line(next(f))
         logger.info(f"header: {header}")
         yield header
     except StopIteration:
@@ -321,7 +276,6 @@ class ChunkGenerator:
     """
     g: Iterator[str] = attr.ib()
     _events_per_chunk: int = attr.ib()
-    header_parser: Callable[[str], HeaderInfo] = attr.ib(default=_parse_line_for_header_with_weight)
     _headers: List[HeaderInfo] = attr.ib(factory=list)
     _reached_end_of_file = attr.ib(default=False)
 
@@ -358,7 +312,7 @@ class ChunkGenerator:
         for i in range(self._events_per_chunk):
             logger.debug(f"i: {i}")
             try:
-                event_iter = _parse_event(self.g, header_parser=self.header_parser)
+                event_iter = _parse_event(self.g)
                 # First, get the header
                 self.headers.append(
                     next(event_iter)
@@ -376,9 +330,7 @@ class ChunkGenerator:
             #    raise HitEndOfFileException()
 
 
-def parse_file(filename: Path, events_per_chunk: int,
-               header_parser: Callable[[str], HeaderInfo]
-               ) -> Iterator[ChunkGenerator]:
+def parse_file(filename: Path, events_per_chunk: int) -> Iterator[ChunkGenerator]:
     # Validation
     filename = Path(filename)
 
@@ -399,7 +351,6 @@ def parse_file(filename: Path, events_per_chunk: int,
             chunk = ChunkGenerator(
                 g=f,
                 events_per_chunk=events_per_chunk,
-                header_parser=header_parser,
             )
             yield chunk
             if chunk.reached_end_of_file:
@@ -687,7 +638,7 @@ def _parse_with_numpy(chunk_generator: Iterator[str]) -> np.ndarray:
     return np.loadtxt(chunk_generator)
 
 
-def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas", header_version: int = 2) -> Optional[Iterator[ak.Array]]:
+def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas") -> Optional[Iterator[ak.Array]]:
     """ Read a JETSCAPE ascii output file in chunks.
 
     This is the main user function. We read in chunks to keep the memory usage manageable.
@@ -700,8 +651,6 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         events_per_chunk: Number of events to provide in each chunk.
         parser: Name of the parser to use. Default: `pandas`, which uses `pandas.read_csv`. It uses
             compiled c, and seems to be the fastest available option. Other options: ["python", "numpy"].
-        header_version: Header version for the final state hadrons output. Default: 2, which should be
-            used from April 2021.
     Returns:
         Generator of an array of events_per_chunk events.
     """
@@ -715,15 +664,10 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         "numpy": _parse_with_numpy,
     }
     parsing_function = parsing_function_map[parser]
-    header_version_to_parser_map = {
-        1: _parse_line_for_header,
-        2: _parse_line_for_header_with_weight,
-    }
-    header_parser = header_version_to_parser_map[header_version]
 
     # Read the file, creating chunks of events.
     #for chunk_generator, event_split_index, event_header_info, reached_end_of_file in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
-    for i, chunk_generator in enumerate(parse_file(filename=filename, events_per_chunk=events_per_chunk, header_parser=header_parser)):
+    for i, chunk_generator in enumerate(parse_file(filename=filename, events_per_chunk=events_per_chunk)):
         # Give a notification just in case the parsing is slow...
         logger.debug(f"New chunk {i}")
         logger.info(f"Before: {chunk_generator.headers}")
@@ -821,18 +765,6 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         )
 
     #import IPython; IPython.embed()
-
-
-def full_events_to_only_necessary_columns_pt_eta_phi(arrays: ak.Array) -> ak.Array:
-    return ak.zip(
-        {
-            "particle_ID": arrays["particle_ID"],
-            "status": arrays["status"],
-            "pt": np.sqrt(arrays["px"] ** 2 + arrays["py"] ** 2),
-            "eta": arrays["eta"],
-            "phi": arrays["phi"],
-        },
-    )
 
 
 def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Array:
