@@ -579,7 +579,7 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
 
 def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Array:
     columns_to_drop = ["eta", "phi"]
-    columns_to_keep = [field for field in ak.fields(arrays) if field != columns_to_drop]
+    columns_to_keep = [field for field in ak.fields(arrays) if field not in columns_to_drop]
     return ak.zip(
         {
             column: arrays[column] for column in columns_to_keep
