@@ -616,14 +616,15 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
         # Reduce to the minimum required data.
         if store_only_necessary_columns:
             arrays = full_events_to_only_necessary_columns_E_px_py_pz(arrays)
-
-        # We limit the depth of the zip to ensure that we can write the parquet successfully.
-        # (parquet can't handle lists of structs at the moment). Later, we'll recreate this
-        # structure fully zipped together.
-        ak.zip(
-            dict(zip(ak.fields(arrays), ak.unzip(arrays))),
-            depth_limit = 1
-        )
+        else:
+            # To match the steps taken when reducing the columns, we'll re-zip with the depth limited to 1.
+            # As of April 2021, I'm not certainly this is truly required anymore, but it may be needed for
+            # parquet writing to be successful (apparently parquet couldn't handle lists of structs sometime
+            # in 2020. The status in April 2021 is unclear, but not worth digging into now).
+            arrays = ak.zip(
+                dict(zip(ak.fields(arrays), ak.unzip(arrays))),
+                depth_limit = 1
+            )
 
         # If converting in chunks, add an index to the output file so the chunks don't overwrite each other.
         if events_per_chunk > 0:
