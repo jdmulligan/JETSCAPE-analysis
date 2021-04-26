@@ -35,14 +35,14 @@ class HeaderInfo:
     event_weight: Optional[float] = attr.ib(default=-1)
 
 
-def _retrieve_last_line_of_file(f: TextIO, chunk_size: int = 100) -> str:
+def _retrieve_last_line_of_file(f: TextIO, read_chunk_size: int = 100) -> str:
     """ Retrieve the last line of the file.
 
     From: https://stackoverflow.com/a/7167316/12907985
 
     Args:
         f: File-like object.
-        chunk_size: Size of step to read backwards into the file. Default: 100.
+        read_chunk_size: Size of step in bytes to read backwards into the file. Default: 100.
 
     Returns:
         Last line of file, assuming it's found.
@@ -51,9 +51,18 @@ def _retrieve_last_line_of_file(f: TextIO, chunk_size: int = 100) -> str:
     while True:
         # We grab chunks from the end of the file towards the beginning until we
         # get a new line
+        # However, we need to be more careful because seeking directly from the end
+        # of a text file is apparently undefined behavior. To address this, we
+        # follow the approach from here: https://stackoverflow.com/a/51131242/12907985
+        # First, move to the end of the file.
         f.seek(0, os.SEEK_END)
-        f.seek(f.tell() - len(last_line) - chunk_size, os.SEEK_SET)
-        chunk = f.read(chunk_size)
+        # Then, just back from the current position (based on SEEK_SET and tell()
+        # of the current position).
+        f.seek(f.tell() - len(last_line) - read_chunk_size, os.SEEK_SET)
+        # NOTE: This chunk isn't necessarily going back read_chunk_size characters, but
+        #       rather just some number of bytes. Depending on the encoding, it may be.
+        #       In any case, we don't care - we're just looking for the last line.
+        chunk = f.read(read_chunk_size)
 
         if not chunk:
             # The whole file is one big line
@@ -83,7 +92,7 @@ def _extract_x_sec_and_error(f: TextIO, chunk_size: int = 100) -> Optional[Cross
 
     Args:
         f: File-like object.
-        chunk_size: Size of step to read backwards into the file. Default: 100.
+        chunk_size: Size of step in bytes to read backwards into the file. Default: 100.
 
     Returns:
         Cross section and error, if found.
@@ -93,10 +102,9 @@ def _extract_x_sec_and_error(f: TextIO, chunk_size: int = 100) -> Optional[Cross
     # Move the file back to the start to reset it for later use.
     f.seek(0)
 
-    logger.info(f"last line: {last_line}")
-
+    logger.debug(f"last line: {last_line}")
     if last_line.startswith("#\tsigmaGen"):
-        logger.info("Parsing xsec")
+        logger.debug("Parsing xsec")
         # The latter two arguments are dummy arguments. This way, we can use one parser for comments.
         #return _parse_line_for_header_with_weight(line=last_line, n_events=0, events_per_chunk=100)
         return _parse_line_for_header_with_weight(line=last_line, initial_extraction_of_x_sec=True)
@@ -679,7 +687,7 @@ def _parse_with_numpy(chunk_generator: Iterator[str]) -> np.ndarray:
     return np.loadtxt(chunk_generator)
 
 
-def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas") -> Optional[Iterator[ak.Array]]:
+def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas", header_version: int = 2) -> Optional[Iterator[ak.Array]]:
     """ Read a JETSCAPE ascii output file in chunks.
 
     This is the main user function. We read in chunks to keep the memory usage manageable.
@@ -692,6 +700,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         events_per_chunk: Number of events to provide in each chunk.
         parser: Name of the parser to use. Default: `pandas`, which uses `pandas.read_csv`. It uses
             compiled c, and seems to be the fastest available option. Other options: ["python", "numpy"].
+        header_version: Header version for the final state hadrons output. Default: 2, which should be
+            used from April 2021.
     Returns:
         Generator of an array of events_per_chunk events.
     """
@@ -705,16 +715,26 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         "numpy": _parse_with_numpy,
     }
     parsing_function = parsing_function_map[parser]
+    header_version_to_parser_map = {
+        1: _parse_line_for_header,
+        2: _parse_line_for_header_with_weight,
+    }
+    header_parser = header_version_to_parser_map[header_version]
 
     # Read the file, creating chunks of events.
     #for chunk_generator, event_split_index, event_header_info, reached_end_of_file in read_events_in_chunks(filename=filename, events_per_chunk=events_per_chunk):
-    for i, chunk_generator in enumerate(parse_file(filename=filename, events_per_chunk=events_per_chunk, header_parser=_parse_line_for_header_with_weight)):
+    for i, chunk_generator in enumerate(parse_file(filename=filename, events_per_chunk=events_per_chunk, header_parser=header_parser)):
         # Give a notification just in case the parsing is slow...
         logger.debug(f"New chunk {i}")
         logger.info(f"Before: {chunk_generator.headers}")
 
         # Parse the file and create the awkward event structure.
         res = parsing_function(iter(chunk_generator))
+        logger.debug(f"len res: {len(res)}")
+        # Our events_per_chunk is a division of the total number of events. We're done.
+        if len(res) == 0:
+            break
+
         array_with_events = ak.Array(
             np.split(
                 res, chunk_generator.event_split_index()
@@ -729,10 +749,31 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         assert (np.asarray(ak.num(array_with_events, axis = 1)) == n_particles_from_header).all()
 
         # Length check
+        logger.info(f"ak.num: {ak.num(array_with_events, axis = 0)}, len headers: {len(chunk_generator.headers)}")
         assert (ak.num(array_with_events, axis = 0) == len(chunk_generator.headers))
 
         logger.info(f"Reached end of file: {chunk_generator.reached_end_of_file}")
         logger.info(f"incomplete chunk: {chunk_generator.incomplete_chunk}")
+
+        yield ak.zip(
+            {
+                # TODO: Does the conversion add any real computation time?
+                "event_plane_angle": np.array([header.event_plane_angle for header in chunk_generator.headers], np.float32),
+                "hydro_event_id": np.array([header.event_number for header in chunk_generator.headers], np.uint16),
+                "particle_ID": ak.values_astype(array_with_events[:, :, 1], np.int32),
+                # Status is only a couple of numbers, but it's not always 0. It identifies recoils (1?) and holes (-1?)
+                "status": ak.values_astype(array_with_events[:, :, 2], np.int8),
+                "E": ak.values_astype(array_with_events[:, :, 3], np.float32),
+                "px": ak.values_astype(array_with_events[:, :, 4], np.float32),
+                "py": ak.values_astype(array_with_events[:, :, 5], np.float32),
+                "pz": ak.values_astype(array_with_events[:, :, 6], np.float32),
+                # Skip these because we're going to be working with four vectors anyway, so it shouldn't be a
+                # big deal to recalculate them, especially compare to the added storage space.
+                "eta": ak.values_astype(array_with_events[:, :, 7], np.float32),
+                "phi": ak.values_astype(array_with_events[:, :, 8], np.float32),
+            },
+            depth_limit=1,
+        )
 
         continue
 
@@ -811,7 +852,8 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
 
 def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
                      input_filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas",
-                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None) -> Iterator[ak.Array]:
+                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None,
+                     test_parsing_v2: bool = True) -> Iterator[ak.Array]:
     """ Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
 
     Args:
@@ -845,6 +887,17 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
             depth_limit = 1
         )
 
+        if test_parsing_v2:
+            v1_arrays = ak.from_parquet(
+                Path(f"tests/events_per_chunk_{events_per_chunk}/parse_v1/test_{i:02}.parquet")
+            )
+            # There are more fields in v2 than in v1, so only take those that are present in
+            # v1 for comparison.
+            # NOTE: We have to compare the fields one-by-one because the shapes of the fields
+            #       are different, and apparently don't broadcast nicely with `__eq__`
+            for field in ak.fields(v1_arrays):
+                assert ak.all(v1_arrays[field] == arrays[field]), f"Field {field} doesn't match."
+
         # Parquet with zlib seems to do about the same as ascii tar.gz when we drop unneeded columns.
         # And it should load much faster!
         if events_per_chunk > 0:
@@ -861,6 +914,10 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
         # Break now so we don't have to read the next chunk.
         if (i + 1) == max_chunks:
             break
+
+    if test_parsing_v2:
+        # We got through the entire file, so it looks like parsing was successful!
+        logger.info("Success! Parsing appaers to work")
 
 
 if __name__ == "__main__":
