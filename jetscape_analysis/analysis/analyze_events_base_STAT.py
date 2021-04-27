@@ -16,13 +16,15 @@ from __future__ import print_function
 # General
 import os
 import yaml
-import pickle
 
 # Analysis
 import itertools
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import numpy as np
 import ROOT
+from pathlib import Path
 
 # Fastjet via python (from external library heppy)
 import fjext
@@ -40,7 +42,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         
         self.config_file = config_file
         self.input_file_hadrons = input_file
-        self.output_dir = output_dir
+        self.output_dir = Path(output_dir)
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
             
@@ -105,10 +107,27 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     # Save output event list into a dataframe
     # ---------------------------------------------------------------
     def write_output_objects(self):
-        
+
+        # Convert to pandas, and then arrow.
         self.output_dataframe = pd.DataFrame(self.output_event_list)
-        with open(self.output_file, 'wb') as f:
-            pickle.dump(self.output_dataframe, f)
+        table = pa.Table.from_pandas(self.output_dataframe)
+
+        # Write to parquet
+        # Determine the types for improved compression when writing
+        # See writing to parquet in the final state hadrons parser for more info.
+        float_types = [np.float32, np.float64]
+        float_columns = list(self.output_dataframe.select_dtypes(include=float_types).keys())
+        other_columns = list(self.output_dataframe.select_dtypes(exclude=float_types).keys())
+        # NOTE: As of 27 April 2021, this doesn't really work right because too many columns
+        #       are of the "object" type. We may need to revise the output format to optimize
+        #       the output size.
+        print(f"float_columns: {float_columns}")
+        print(f"other_columns: {other_columns}")
+        pq.write_table(
+            table, self.output_dir / self.output_file, compression="zstd",
+            use_dictionary=other_columns,
+            use_byte_stream_split=float_columns,
+        )
         print(self.output_dataframe.keys())
         print(self.output_dataframe)
 

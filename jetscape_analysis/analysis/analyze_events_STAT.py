@@ -18,6 +18,7 @@ import argparse
 import yaml
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 # Fastjet via python (from external library heppy)
 import fastjet as fj
@@ -51,10 +52,18 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         # Read config file
         with open(self.config_file, 'r') as stream:
             config = yaml.safe_load(stream)
-            
+
         self.sqrts = config['sqrt_s']
         self.output_file = config['output_file']
-         
+        # Update the output_file to contain the labeling in the final_state_hadrons file.
+        # We use this naming convention as the flag for whether we should attempt to rename it.
+        if "final_state_hadrons" in self.input_file_hadrons:
+            _input_filename = Path(self.input_file_hadrons).name
+            # The filename will be something like "observables_{sqrts}_0000_00.parquet", assuming
+            # that the original name was "observables_{sqrts}"
+            self.output_file = _input_filename.replace("final_state_hadrons", self.output_file)
+            print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
+
         # Load observable blocks
         self.hadron_observables = config['hadron']
         self.hadron_correlation_observables = config['hadron_correlations']

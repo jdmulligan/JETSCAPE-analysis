@@ -16,7 +16,7 @@
 # to be used for plotting
 #------------------------------------------------------------------
 sqrt_s: 5020
-output_file: 'observables.pkl'
+output_file: 'observables_5020'
 
 # General jet finding parameters
 jet_R: [0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
