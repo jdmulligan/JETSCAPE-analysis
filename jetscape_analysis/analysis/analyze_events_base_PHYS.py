@@ -16,6 +16,7 @@ from __future__ import print_function
 # General
 import os
 import yaml
+import time
 
 # Analysis
 import itertools
@@ -124,13 +125,14 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # Analyze event chunk
     # ---------------------------------------------------------------
     def analyze_event_chunk(self, df_event_chunk):
-
+    
         # Loop through events
+        start = time.time()
         for i,event in df_event_chunk.iterrows():
 
             if i % 1000 == 0:
-                print('event: {}'.format(i))
-
+                print(f'event: {i}    (time elapsed: {time.time() - start})')
+                
             # Call user-defined function to analyze event
             self.analyze_event(event)
 

@@ -57,6 +57,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.jet_R = config['jet_R']
         self.min_jet_pt = config['min_jet_pt']
         self.max_jet_y = config['max_jet_y']
+        self.constituent_threshold = config['constituent_threshold']
     
     # ---------------------------------------------------------------
     # Initialize binnings
@@ -220,49 +221,51 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     
         # Inclusive full jet histograms
         for jetR in self.jet_R:
+            for constituent_threshold in self.constituent_threshold:
+
         
-            hname = f'h_jet_pt_atlas_R{jetR}_0_10'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_atlas_bins_0_10)-1,
-                                            self.inclusive_jet_pt_atlas_bins_0_10)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            hname = f'h_jet_pt_atlas_R{jetR}_30_40'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_atlas_bins_30_40)-1,
-                                            self.inclusive_jet_pt_atlas_bins_30_40)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            hname = f'h_jet_pt_atlas_R{jetR}_40_50'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_atlas_bins_40_50)-1,
-                                            self.inclusive_jet_pt_atlas_bins_40_50)
-            h.Sumw2()
-            setattr(self, hname, h)
+                hname = f'h_jet_pt_atlas_R{jetR}_0_10_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_atlas_bins_0_10)-1,
+                                                self.inclusive_jet_pt_atlas_bins_0_10)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                hname = f'h_jet_pt_atlas_R{jetR}_30_40_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_atlas_bins_30_40)-1,
+                                                self.inclusive_jet_pt_atlas_bins_30_40)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                hname = f'h_jet_pt_atlas_R{jetR}_40_50_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_atlas_bins_40_50)-1,
+                                                self.inclusive_jet_pt_atlas_bins_40_50)
+                h.Sumw2()
+                setattr(self, hname, h)
 
-            hname = f'h_jet_pt_cms_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_cms_bins)-1,
-                                            self.inclusive_jet_pt_cms_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
+                hname = f'h_jet_pt_cms_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_cms_bins)-1,
+                                                self.inclusive_jet_pt_cms_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
 
-            hname = f'h_jet_pt_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_alice)-1,
+                hname = f'h_jet_pt_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_alice)-1,
+                                                self.inclusive_jet_pt_alice)
+                h.Sumw2()
+                setattr(self, hname, h)
+
+                hname = f'h_jet_pt_alice_no_ptlead_cut_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_alice)-1,
                                             self.inclusive_jet_pt_alice)
-            h.Sumw2()
-            setattr(self, hname, h)
-
-            hname = f'h_jet_pt_alice_no_ptlead_cut_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_jet_pt_alice)-1,
-                                        self.inclusive_jet_pt_alice)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            hname = f'h_jet_pt_recoils_R{jetR}'
-            h = ROOT.TH2F(hname, hname, 100, 0, 1000, 1000, 0, 100)
-            h.GetXaxis().SetTitle('jet pt')
-            h.GetYaxis().SetTitle('recoil pt')
-            h.Sumw2()
-            setattr(self, hname, h)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                hname = f'h_jet_pt_recoils_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH2F(hname, hname, 100, 0, 1000, 1000, 0, 100)
+                h.GetXaxis().SetTitle('jet pt')
+                h.GetYaxis().SetTitle('recoil pt')
+                h.Sumw2()
+                setattr(self, hname, h)
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -270,90 +273,91 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     def initialize_inclusive_chjet_histograms(self):
 
         for jetR in self.jet_R:
+            for constituent_threshold in self.constituent_threshold:
 
-            # g
-            hname = f'h_chjet_g_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_g_alice_bins)-1,
-                                            self.inclusive_chjet_g_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
+                # g
+                hname = f'h_chjet_g_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_g_alice_bins)-1,
+                                                self.inclusive_chjet_g_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                # Angularity (5.02 definition)
+                for label in ['groomed', 'ungroomed']:
+                    for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
+                        hname = f'h_chjet_angularity_{label}_alice_R{jetR}_alpha{alpha}_pt{constituent_threshold}'
+                        h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_angularity_alice_bins)-1,
+                                                    self.inclusive_chjet_angularity_alice_bins)
+                        h.Sumw2()
+                        setattr(self, hname, h)
+
+                # Jet mass
+                hname = f'h_chjet_mass_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_mass_alice_bins)-1,
+                                                self.inclusive_chjet_mass_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+
+                # Soft Drop
+                hname = f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_zg_alice_bins)-1,
+                                                self.inclusive_chjet_zg_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+
+                hname = f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_tg_alice_bins)-1,
+                                            self.inclusive_chjet_tg_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                # Subjet z
+                for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
+                    hname = f'h_chjet_subjetz_alice_R{jetR}_r{r}_pt{constituent_threshold}'
+                    h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_subjets_alice_bins)-1,
+                                                    self.inclusive_chjet_subjets_alice_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
             
-            # Angularity (5.02 definition)
-            for label in ['groomed', 'ungroomed']:
-                for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
-                    hname = f'h_chjet_angularity_{label}_alice_R{jetR}_alpha{alpha}'
-                    h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_angularity_alice_bins)-1,
-                                                self.inclusive_chjet_angularity_alice_bins)
+                # Jet axis
+                hname = f'h_chjet_axis_Standard_WTA_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
+                                                self.inclusive_chjet_axis_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                hname = f'h_chjet_axis_Standard_SD_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
+                                                self.inclusive_chjet_axis_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                hname = f'h_chjet_axis_SD_WTA_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
+                                                self.inclusive_chjet_axis_alice_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+
+                # Hardest kt
+                for a in self.inclusive_chjet_observables["hardest_kt_alice"]["dynamical_grooming_a"]:
+                    hname = f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}_pt{constituent_threshold}"
+                    h = ROOT.TH1F(hname, hname, len(getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))-1,
+                                                getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))
                     h.Sumw2()
                     setattr(self, hname, h)
 
-            # Jet mass
-            hname = f'h_chjet_mass_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_mass_alice_bins)-1,
-                                            self.inclusive_chjet_mass_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-
-            # Soft Drop
-            hname = f'h_chjet_zg_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_zg_alice_bins)-1,
-                                            self.inclusive_chjet_zg_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-
-            hname = f'h_chjet_tg_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_tg_alice_bins)-1,
-                                        self.inclusive_chjet_tg_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            # Subjet z
-            for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
-                hname = f'h_chjet_subjetz_alice_R{jetR}_r{r}'
-                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_subjets_alice_bins)-1,
-                                                self.inclusive_chjet_subjets_alice_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
-        
-            # Jet axis
-            hname = f'h_chjet_axis_Standard_WTA_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
-                                            self.inclusive_chjet_axis_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            hname = f'h_chjet_axis_Standard_SD_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
-                                            self.inclusive_chjet_axis_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            hname = f'h_chjet_axis_SD_WTA_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
-                                            self.inclusive_chjet_axis_alice_bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-
-            # Hardest kt
-            for a in self.inclusive_chjet_observables["hardest_kt_alice"]["dynamical_grooming_a"]:
-                hname = f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}"
+                hname = f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}_pt{constituent_threshold}"
                 h = ROOT.TH1F(hname, hname, len(getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))-1,
                                             getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))
                 h.Sumw2()
                 setattr(self, hname, h)
 
-            hname = f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}"
-            h = ROOT.TH1F(hname, hname, len(getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))-1,
-                                        getattr(self, f"inclusive_chjet_hardest_kt_alice_R{round(jetR * 10):02}_bins"))
-            h.Sumw2()
-            setattr(self, hname, h)
-
-            hname = f'h_chjet_pt_recoils_R{jetR}'
-            h = ROOT.TH2F(hname, hname, 100, 0, 1000, 1000, 0, 100)
-            h.GetXaxis().SetTitle('chjet pt')
-            h.GetYaxis().SetTitle('recoil pt')
-            h.Sumw2()
-            setattr(self, hname, h)
+                hname = f'h_chjet_pt_recoils_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH2F(hname, hname, 100, 0, 1000, 1000, 0, 100)
+                h.GetXaxis().SetTitle('chjet pt')
+                h.GetYaxis().SetTitle('recoil pt')
+                h.Sumw2()
+                setattr(self, hname, h)
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -361,54 +365,55 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     def initialize_semi_inclusive_chjet_histograms(self):
 
         for jetR in self.jet_R:
+            for constituent_threshold in self.constituent_threshold:
 
-            # h-jet
-            for hist_label in ['low', 'high']:
-            
-                # Yield
-                hname = f'h_semi_inclusive_chjet_IAA_{hist_label}Trigger_alice_R{jetR}_276'
-                h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_276_bins)-1,
-                                                self.semi_inclusive_chjet_IAA_alice_276_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
+                # h-jet
+                for hist_label in ['low', 'high']:
                 
-                # Delta Phi
-                hname = f'h_semi_inclusive_chjet_dphi_{hist_label}Trigger_alice_R{jetR}_276'
-                h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_dphi_alice_276_bins)-1,
-                                                self.semi_inclusive_chjet_dphi_alice_276_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
-                
-                # For 5.02 TeV, make 2D hist instead
-                hname = f'h_semi_inclusive_chjet_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_502'
-                h = ROOT.TH2F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_502_bins)-1,
-                                            self.semi_inclusive_chjet_IAA_alice_502_bins,
-                                            len(self.semi_inclusive_chjet_dphi_alice_502_bins)-1,
-                                            self.semi_inclusive_chjet_dphi_alice_502_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
-                
-                # Nsubjettiness
-                hname = f'h_semi_inclusive_chjet_nsubjettiness_{hist_label}Trigger_alice_R{jetR}'
-                h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_nsubjettiness_alice_bins)-1,
-                                                self.semi_inclusive_chjet_nsubjettiness_alice_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
+                    # Yield
+                    hname = f'h_semi_inclusive_chjet_IAA_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
+                    h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_276_bins)-1,
+                                                    self.semi_inclusive_chjet_IAA_alice_276_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
+                    
+                    # Delta Phi
+                    hname = f'h_semi_inclusive_chjet_dphi_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
+                    h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_dphi_alice_276_bins)-1,
+                                                    self.semi_inclusive_chjet_dphi_alice_276_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
+                    
+                    # For 5.02 TeV, make 2D hist instead
+                    hname = f'h_semi_inclusive_chjet_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_502_pt{constituent_threshold}'
+                    h = ROOT.TH2F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_502_bins)-1,
+                                                self.semi_inclusive_chjet_IAA_alice_502_bins,
+                                                len(self.semi_inclusive_chjet_dphi_alice_502_bins)-1,
+                                                self.semi_inclusive_chjet_dphi_alice_502_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
+                    
+                    # Nsubjettiness
+                    hname = f'h_semi_inclusive_chjet_nsubjettiness_{hist_label}Trigger_alice_R{jetR}_pt{constituent_threshold}'
+                    h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_nsubjettiness_alice_bins)-1,
+                                                    self.semi_inclusive_chjet_nsubjettiness_alice_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
 
-            # N triggers
-            bins = np.array([5., 7, 8, 9, 20, 50])
-            hname = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
-            # N triggers
-            bins = np.array([8., 9, 15, 45])
-            hname = f'h_semi_inclusive_chjet_nsubjettiness_ntrigger_alice_R{jetR}'
-            h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
-            h.Sumw2()
-            setattr(self, hname, h)
-            
+                # N triggers
+                bins = np.array([5., 7, 8, 9, 20, 50])
+                hname = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
+                # N triggers
+                bins = np.array([8., 9, 15, 45])
+                hname = f'h_semi_inclusive_chjet_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
+                h.Sumw2()
+                setattr(self, hname, h)
+                
     # ---------------------------------------------------------------
     # Analyze a single event -- fill user-defined output objects
     #
@@ -419,49 +424,58 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     def analyze_event(self, event):
 
         # Create list of fastjet::PseudoJets (separately for jet shower particles and holes)
-        fj_hadrons_positive = self.fill_fastjet_constituents(event, select_status='+')
-        fj_hadrons_negative = self.fill_fastjet_constituents(event, select_status='-')
+        fj_hadrons_positive_all = self.fill_fastjet_constituents(event, select_status='+')
+        fj_hadrons_negative_all = self.fill_fastjet_constituents(event, select_status='-')
         
         # Create list of charged particles
-        fj_hadrons_positive_charged = self.fill_fastjet_constituents(event, select_status='+',
-                                                                     select_charged=True)
-        fj_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
-                                                                     select_charged=True)
+        fj_hadrons_positive_charged_all = self.fill_fastjet_constituents(event, select_status='+',
+                                                                         select_charged=True)
+        fj_hadrons_negative_charged_all = self.fill_fastjet_constituents(event, select_status='-',
+                                                                         select_charged=True)
         
         # Fill hadron histograms for jet shower particles
-        self.fill_hadron_histograms(fj_hadrons_positive, status='+')
-        self.fill_hadron_histograms(fj_hadrons_negative, status='-')
+        self.fill_hadron_histograms(fj_hadrons_positive_all, status='+')
+        self.fill_hadron_histograms(fj_hadrons_negative_all, status='-')
 
         # Loop through specified jet R
         for jetR in self.jet_R:
         
-            # Set jet definition and a jet selector
-            jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
-            jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.max_jet_y)
-            if self.debug_level > 0:
-                print('jet definition is:', jet_def)
-                print('jet selector is:', jet_selector, '\n')
+            # Loop through several different constituent thresholds
+            for constituent_threshold in self.constituent_threshold:
+                        
+                # Set constituent threshold
+                fj_hadrons_positive = [hadron for hadron in fj_hadrons_positive_all if hadron.pt() > constituent_threshold]
+                fj_hadrons_negative = [hadron for hadron in fj_hadrons_negative_all if hadron.pt() > constituent_threshold]
+                fj_hadrons_positive_charged = [hadron for hadron in fj_hadrons_positive_charged_all if hadron.pt() > constituent_threshold]
+                fj_hadrons_negative_charged = [hadron for hadron in fj_hadrons_negative_charged_all if hadron.pt() > constituent_threshold]
+                
+                # Set jet definition and a jet selector
+                jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
+                jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.max_jet_y)
+                if self.debug_level > 0:
+                    print('jet definition is:', jet_def)
+                    print('jet selector is:', jet_selector, '\n')
 
-            # Full jets
-            # -----------------
-            cs = fj.ClusterSequence(fj_hadrons_positive, jet_def)
-            jets = fj.sorted_by_pt(cs.inclusive_jets())
-            jets_selected = jet_selector(jets)
+                # Full jets
+                # -----------------
+                cs = fj.ClusterSequence(fj_hadrons_positive, jet_def)
+                jets = fj.sorted_by_pt(cs.inclusive_jets())
+                jets_selected = jet_selector(jets)
 
-            # Fill inclusive full jet histograms
-            [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, jetR, charged=False) for jet in jets_selected]
-            
-            # Charged jets
-            # -----------------
-            cs_charged = fj.ClusterSequence(fj_hadrons_positive_charged, jet_def)
-            jets_charged = fj.sorted_by_pt(cs_charged.inclusive_jets())
-            jets_selected_charged = jet_selector(jets_charged)
+                # Fill inclusive full jet histograms
+                [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, jetR, constituent_threshold, charged=False) for jet in jets_selected]
+                
+                # Charged jets
+                # -----------------
+                cs_charged = fj.ClusterSequence(fj_hadrons_positive_charged, jet_def)
+                jets_charged = fj.sorted_by_pt(cs_charged.inclusive_jets())
+                jets_selected_charged = jet_selector(jets_charged)
 
-            # Fill inclusive charged jet histograms
-            [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, charged=True) for jet in jets_selected_charged]
-            
-            # Fill jet correlations
-            self.fill_semi_inclusive_chjet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR)
+                # Fill inclusive charged jet histograms
+                [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, constituent_threshold, charged=True) for jet in jets_selected_charged]
+                
+                # Fill jet correlations
+                self.fill_semi_inclusive_chjet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, constituent_threshold)
 
     # ---------------------------------------------------------------
     # Fill hadron histograms
@@ -514,7 +528,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     #   - For identified objects within jets or between jets (groomed jet, subjet, jet axis, delta_phi),
     #     construct the observable only from the positive status particles, and correct only the jet pt
     # ---------------------------------------------------------------
-    def analyze_inclusive_jet(self, jet, fj_hadrons_positive, fj_hadrons_negative, jetR, charged=False):
+    def analyze_inclusive_jet(self, jet, fj_hadrons_positive, fj_hadrons_negative, jetR, constituent_threshold, charged=False):
 
         # Get the corrected jet pt by subtracting the negative recoils within R
         holes_in_jet = []
@@ -528,33 +542,33 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         jet_pt = jet_pt_uncorrected - negative_pt   # corrected pt: shower+recoil-holes
         
         if charged:
-            getattr(self, f'h_chjet_pt_recoils_R{jetR}').Fill(jet_pt, negative_pt)
+            getattr(self, f'h_chjet_pt_recoils_R{jetR}_pt{constituent_threshold}').Fill(jet_pt, negative_pt)
         else:
-            getattr(self, f'h_jet_pt_recoils_R{jetR}').Fill(jet_pt, negative_pt)
+            getattr(self, f'h_jet_pt_recoils_R{jetR}_pt{constituent_threshold}').Fill(jet_pt, negative_pt)
             
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
 
         # Fill histograms
         if charged:
-            self.fill_charged_jet_histograms(jet, gshop, holes_in_jet, jet_pt, jetR)
+            self.fill_charged_jet_histograms(jet, gshop, holes_in_jet, jet_pt, jetR, constituent_threshold)
         else:
-            self.fill_full_jet_histograms(jet, jet_pt, jetR)
+            self.fill_full_jet_histograms(jet, jet_pt, jetR, constituent_threshold)
 
     # ---------------------------------------------------------------
     # Fill inclusive full jet histograms
     # ---------------------------------------------------------------
-    def fill_full_jet_histograms(self, jet, jet_pt, jetR):
+    def fill_full_jet_histograms(self, jet, jet_pt, jetR, constituent_threshold):
 
         # CMS RAA
         if abs(jet.eta()) < self.inclusive_jet_observables['pt_cms']['eta_cut']:
-            getattr(self, f'h_jet_pt_cms_R{jetR}').Fill(jet_pt)
+            getattr(self, f'h_jet_pt_cms_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
 
         # ATLAS RAA
         if abs(jet.rap()) < self.inclusive_jet_observables['pt_atlas']['y_cut']:
-            getattr(self, f'h_jet_pt_atlas_R{jetR}_0_10').Fill(jet_pt)
-            getattr(self, f'h_jet_pt_atlas_R{jetR}_30_40').Fill(jet_pt)
-            getattr(self, f'h_jet_pt_atlas_R{jetR}_40_50').Fill(jet_pt)
+            getattr(self, f'h_jet_pt_atlas_R{jetR}_0_10_pt{constituent_threshold}').Fill(jet_pt)
+            getattr(self, f'h_jet_pt_atlas_R{jetR}_30_40_pt{constituent_threshold}').Fill(jet_pt)
+            getattr(self, f'h_jet_pt_atlas_R{jetR}_40_50_pt{constituent_threshold}').Fill(jet_pt)
 
         # ALICE RAA
         if abs(jet.eta()) < (self.inclusive_jet_observables['pt_alice']['eta_cut_R'] - jetR):
@@ -573,13 +587,13 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                         accept_jet = True
 
             if accept_jet:
-                getattr(self, f'h_jet_pt_alice_R{jetR}').Fill(jet_pt)
-            getattr(self, f'h_jet_pt_alice_no_ptlead_cut_R{jetR}').Fill(jet_pt)
+                getattr(self, f'h_jet_pt_alice_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
+            getattr(self, f'h_jet_pt_alice_no_ptlead_cut_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
     
     # ---------------------------------------------------------------
     # Fill inclusive charged jet histograms
     # ---------------------------------------------------------------
-    def fill_charged_jet_histograms(self, jet, gshop, holes_in_jet, jet_pt, jetR):
+    def fill_charged_jet_histograms(self, jet, gshop, holes_in_jet, jet_pt, jetR, constituent_threshold):
         # Grooming jet
         jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], self.inclusive_chjet_observables['soft_drop_zcut'], jetR)
 
@@ -590,7 +604,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 g += constituent.pt() / jet_pt * constituent.delta_R(jet)
             for hadron in holes_in_jet:
                 g -= hadron.pt() / jet_pt * hadron.delta_R(jet)
-            getattr(self, f'h_chjet_g_alice_R{jetR}').Fill(g)
+            getattr(self, f'h_chjet_g_alice_R{jetR}_pt{constituent_threshold}').Fill(g)
 
         # Angularity (5.02 definition)
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
@@ -600,13 +614,13 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 lambda_alpha = fjext.lambda_beta_kappa(jet, alpha, kappa, jetR)
                 for hadron in holes_in_jet:
                     lambda_alpha -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet), alpha)
-                getattr(self, f'h_chjet_angularity_ungroomed_alice_R{jetR}_alpha{alpha}').Fill(lambda_alpha)
+                getattr(self, f'h_chjet_angularity_ungroomed_alice_R{jetR}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha)
                 
                 if jet_groomed_lund:
                     lambda_alpha_g = fjext.lambda_beta_kappa(jet_groomed_lund.pair(), alpha, kappa, jetR)
                     for hadron in holes_in_jet:
                         lambda_alpha_g -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet), alpha)
-                    getattr(self, f'h_chjet_angularity_groomed_alice_R{jetR}_alpha{alpha}').Fill(lambda_alpha_g)
+                    getattr(self, f'h_chjet_angularity_groomed_alice_R{jetR}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha_g)
 
         # Jet mass
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
@@ -623,7 +637,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Remove mass from holes
                 jet_mass -= hole_four_vector.m()
 
-            getattr(self, f'h_chjet_mass_alice_R{jetR}').Fill(jet_mass)
+            getattr(self, f'h_chjet_mass_alice_R{jetR}_pt{constituent_threshold}').Fill(jet_mass)
 
         # Soft Drop
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
@@ -631,8 +645,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 theta_g = jet_groomed_lund.Delta() / jetR
                 zg = jet_groomed_lund.z()
                 # Note: untagged jets will return negative value
-            getattr(self, f'h_chjet_zg_alice_R{jetR}').Fill(zg)
-            getattr(self, f'h_chjet_tg_alice_R{jetR}').Fill(theta_g)
+            getattr(self, f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}').Fill(zg)
+            getattr(self, f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}').Fill(theta_g)
             
         # Subjet z
         if 80 < jet_pt < 100 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
@@ -652,7 +666,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Compute corrected subjet pt, and fill histograms
                 subjet_pt = leading_subjet.pt() - negative_pt
                 z_leading = subjet_pt / jet_pt
-                getattr(self, f'h_chjet_subjetz_alice_R{jetR}_r{r}').Fill(z_leading)
+                getattr(self, f'h_chjet_subjetz_alice_R{jetR}_r{r}_pt{constituent_threshold}').Fill(z_leading)
         
         # Jet axis
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
@@ -665,29 +679,29 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             
             # Standard-WTA
             deltaR = jet.delta_R(jet_wta)
-            getattr(self, f'h_chjet_axis_Standard_WTA_alice_R{jetR}').Fill(deltaR)
+            getattr(self, f'h_chjet_axis_Standard_WTA_alice_R{jetR}_pt{constituent_threshold}').Fill(deltaR)
 
             # Standard-SD
             if jet_groomed_lund:
                 deltaR = jet.delta_R(jet_groomed_lund.pair())
-                getattr(self, f'h_chjet_axis_Standard_SD_alice_R{jetR}').Fill(deltaR)
+                getattr(self, f'h_chjet_axis_Standard_SD_alice_R{jetR}_pt{constituent_threshold}').Fill(deltaR)
 
             # SD-WTA
             if jet_groomed_lund:
                 deltaR = jet_wta.delta_R(jet_groomed_lund.pair())
-                getattr(self, f'h_chjet_axis_SD_WTA_alice_R{jetR}').Fill(deltaR)
+                getattr(self, f'h_chjet_axis_SD_WTA_alice_R{jetR}_pt{constituent_threshold}').Fill(deltaR)
 
         # Hardest kt
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables["eta_cut_alice_R"] - jetR):
             for a in self.inclusive_chjet_observables["hardest_kt_alice"]["dynamical_grooming_a"]:
                 groomed = gshop.dynamical(a)
-                kt = groomed.kt()
+                ktg = groomed.kt()
                 # Note: untagged will return kt = 0
-                getattr(self, f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}").Fill(ktg)
+                getattr(self, f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}_pt{constituent_threshold}").Fill(ktg)
 
             ktg = jet_groomed_lund.kt()
             # Note: untagged jets will return kt = 0
-            getattr(self, f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}").Fill(ktg)
+            getattr(self, f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}_pt{constituent_threshold}").Fill(ktg)
 
     # ---------------------------------------------------------------
     # Fill semi-inclusive charged jet histograms
@@ -695,7 +709,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # Note: We may need a lower jet pt range to determine cref, but I didn't look into this.
     # Note: Doesn't account for detector effects on hadron.
     # ---------------------------------------------------------------
-    def fill_semi_inclusive_chjet_histograms(self, jets_selected, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR):
+    def fill_semi_inclusive_chjet_histograms(self, jets_selected, fj_hadrons_positive_charged,
+                                             fj_hadrons_negative_charged, jetR, constituent_threshold):
 
         # Define trigger classes for both traditional h-jet analysis and Nsubjettiness analysis
         hjet_low_trigger_range_276 = self.semi_inclusive_chjet_observables['hjet_alice']['low_trigger_range_276']
@@ -734,8 +749,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 found_trigger =  hjet_found_low_276 or hjet_found_low_502 or hjet_found_high or nsubjettiness_found_low or nsubjettiness_found_high
 
                 # Record N triggers
-                getattr(self, f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{jetR}').Fill(hadron.pt())
-                getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_ntrigger_alice_R{jetR}').Fill(hadron.pt())
+                getattr(self, f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
+                getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
                 
                 # Search for recoil jets
                 if found_trigger:
@@ -751,22 +766,22 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                             # Jet yield and Delta phi
                             if hjet_found_low_276:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    getattr(self, f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{jetR}_276').Fill(jet_pt)
+                                    getattr(self, f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
 
                                 if 40 < jet_pt < 60:
-                                    getattr(self, f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{jetR}_276').Fill(np.abs(hadron.delta_phi_to(jet)))
+                                    getattr(self, f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
 
                             if hjet_found_low_502:
-                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_502').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
                                     
                             if hjet_found_high:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    getattr(self, f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{jetR}_276').Fill(jet_pt)
+                                    getattr(self, f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
 
                                 if 40 < jet_pt < 60:
-                                    getattr(self, f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{jetR}_276').Fill(np.abs(hadron.delta_phi_to(jet)))
+                                    getattr(self, f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
 
-                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{jetR}_502').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
 
                             # Nsubjettiness
                             # We use the jet pt including recoils here, since the Nsubjettiness is calculated
@@ -778,7 +793,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
                                         if tau1 > 1e-3:
-                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_lowTrigger_alice_R{jetR}').Fill(tau2/tau1)
+                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_lowTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
 
                             if nsubjettiness_found_high:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
@@ -786,7 +801,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
                                         if tau1 > 1e-3:
-                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_highTrigger_alice_R{jetR}').Fill(tau2/tau1)
+                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_highTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
 
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
