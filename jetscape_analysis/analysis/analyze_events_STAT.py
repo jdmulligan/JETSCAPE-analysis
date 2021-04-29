@@ -152,10 +152,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # Fill dijet histograms
             if self.dijet_observables:
                 self.fill_dijet_histograms(jets_selected, fj_hadrons_negative, jetR)
-            
-        # Fill the observables dict to a new entry in the event list
-        self.output_event_list.append(self.observable_dict_event)
-
+        
     # ---------------------------------------------------------------
     # Initialize empty list for each output observable
     # ---------------------------------------------------------------

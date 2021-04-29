@@ -95,17 +95,22 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 
             # Store dictionary of all observables for the event
             self.observable_dict_event = {}
-        
-            # Fill event cross-section weight
-            self.observable_dict_event['event_weight'] = event['event_weight']
             
-            # Get total cross-section from last event
-            if i == df_event_chunk.shape[0]-1:
-                self.cross_section_dict['cross_section'] = event['cross_section']
-                self.cross_section_dict['cross_section_error'] = event['cross_section_error']
-
             # Call user-defined function to analyze event
             self.analyze_event(event)
+            
+            # Fill the observables dict to a new entry in the event list
+            if self.event_has_entries(self.observable_dict_event):
+            
+                # Fill event cross-section weight
+                self.observable_dict_event['event_weight'] = event['event_weight']
+                
+                self.output_event_list.append(self.observable_dict_event)
+                
+            # Get total cross-section (same for all events at this point)
+            if i == 0:
+                self.cross_section_dict['cross_section'] = event['cross_section']
+                self.cross_section_dict['cross_section_error'] = event['cross_section_error']
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -119,6 +124,13 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         # Store also the total cross-section (one number per file)
         self.cross_section_dict = {}
 
+    # ---------------------------------------------------------------
+    # Save output event list into a dataframe
+    # ---------------------------------------------------------------
+    def event_has_entries(self, event_dict):
+    
+        return bool([obs for obs in event_dict.values() if obs != []])
+        
     # ---------------------------------------------------------------
     # Save output event list into a dataframe
     # ---------------------------------------------------------------
