@@ -113,6 +113,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         
         # Fill hadron histograms for jet shower particles
         self.fill_hadron_histograms(fj_hadrons_positive, status='+')
+        self.fill_hadron_histograms(fj_hadrons_negative, status='-')        
 
         # Loop through specified jet R
         for jetR in self.jet_R:
@@ -162,6 +163,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     
         for observable in self.hadron_observables:
             self.observable_dict_event[f'hadron_{observable}'] = []
+            self.observable_dict_event[f'hadron_{observable}_holes'] = []
             
         for observable in self.hadron_correlation_observables:
             self.observable_dict_event[f'hadron_correlations_{observable}'] = []
@@ -215,6 +217,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     def fill_hadron_histograms(self, fj_particles, status='+'):
     
+        # Note that for identified particles, we store holes of the identified species
+        suffix = ''
+        if status == '-':
+            suffix = '_holes'
+    
         # Loop through hadrons
         for i,particle in enumerate(fj_particles):
 
@@ -232,7 +239,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_ch_alice']['eta_cut']:
                         if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                            self.observable_dict_event['hadron_pt_ch_alice'].append(pt)
+                            self.observable_dict_event[f'hadron_pt_ch_alice{suffix}'].append(pt)
                         
                 # Charged pion
                 pt_min = self.hadron_observables['pt_pi_alice']['pt'][0]
@@ -240,7 +247,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_pi_alice']['eta_cut']:
                         if abs(pid) == 211:
-                            self.observable_dict_event['hadron_pt_pi_alice'].append(pt)
+                            self.observable_dict_event[f'hadron_pt_pi_alice{suffix}'].append(pt)
                           
                 # Neutral pions
                 if self.sqrts in [2760]:
@@ -249,7 +256,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     if pt > pt_min and pt < pt_max:
                         if abs(eta) < self.hadron_observables['pt_pi0_alice']['eta_cut']:
                             if abs(pid) == 111:
-                                self.observable_dict_event['hadron_pt_pi0_alice'].append(pt)
+                                self.observable_dict_event[f'hadron_pt_pi0_alice{suffix}'].append(pt)
 
                 # ATLAS
                 # Fill charged hadron histograms (pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
@@ -259,7 +266,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_ch_atlas']['eta_cut']:
                         if abs(pid) in [211, 321, 2212, 3222, 3112, 3312, 3334]:
-                            self.observable_dict_event['hadron_pt_ch_atlas'].append(pt)
+                            self.observable_dict_event[f'hadron_pt_ch_atlas{suffix}'].append(pt)
 
                 # CMS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
@@ -268,7 +275,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_ch_cms']['eta_cut']:
                         if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                            self.observable_dict_event['hadron_pt_ch_cms'].append(pt)
+                            self.observable_dict_event[f'hadron_pt_ch_cms{suffix}'].append(pt)
                             
             elif self.sqrts in [200]:
             
@@ -279,7 +286,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_pi0_phenix']['eta_cut']:
                         if abs(pid) == 111:
-                            self.observable_dict_event['hadron_pt_pi0_phenix'].append(pt)
+                            self.observable_dict_event[f'hadron_pt_pi0_phenix{suffix}'].append(pt)
             
                 # STAR
                 # Charged hadrons (pi+, K+, p+)
@@ -288,7 +295,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_ch_star']['eta_cut']:
                         if abs(pid) in [211, 321, 2212]:
-                            self.observable_dict_event['hadron_pt_ch_star'].append(pt)
+                            self.observable_dict_event[f'hadron_pt_ch_star{suffix}'].append(pt)
 
     # ---------------------------------------------------------------
     # Fill inclusive jet histograms
