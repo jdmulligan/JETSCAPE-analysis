@@ -15,8 +15,10 @@ from __future__ import print_function
 
 # General
 import os
+import sys
 import yaml
 import time
+from numba import jit
 
 # Analysis
 import itertools
@@ -186,6 +188,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # ---------------------------------------------------------------
     def fill_fastjet_constituents(self, event, select_status=None, select_charged=False):
     
+        # Construct indices according to particle status
         if select_status == '-':
             status_mask = (event['status'] < 0)
         elif select_status == '+':
@@ -194,17 +197,8 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
             # Picked a value to make an all true mask. We don't select anything
             status_mask = event["status"] > -1e6
 
-        # Default to an all true mask
-        charged_mask = np.ones(len(status_mask)) > 0
-        if select_charged:
-            # NOTE: This is super inefficient - we can seriously accelerate this with numba.
-            #       But this apparently works for now, so we leave it as is for now.
-            # Create an all false mask. We'll fill it in with the charged constituents
-            charged_mask = np.ones(len(event['particle_ID'])) < 0
-            for i, pid_value in enumerate(event['particle_ID']):
-                # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                if np.abs(pid_value) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                    charged_mask[i] = True
+        # Construct indices according to charge
+        charged_mask = get_charged_mask(event['particle_ID'], select_charged)
 
         full_mask = status_mask & charged_mask
         px = event['px'][full_mask]
@@ -217,8 +211,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
 
         # Set pid as user_index
-        for i,p in enumerate(fj_particles):
-            fj_particles[i].set_user_index(int(pid[i]))
+        [particle.set_user_index(int(pid[i])) for i,particle in enumerate(fj_particles)]
 
         return fj_particles
 
@@ -235,3 +228,21 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
     # ---------------------------------------------------------------
     def analyze_event(self, event):
         raise NotImplementedError('You must implement analyze_event()!')
+
+# ---------------------------------------------------------------
+# Construct charged particle mask
+# ---------------------------------------------------------------
+@jit(nopython=True)
+def get_charged_mask(pid, select_charged):
+
+    # Default to an all true mask
+    charged_mask = np.ones(len(pid)) > 0
+    if select_charged:
+        # Create an all false mask. We'll fill it in with the charged constituents
+        charged_mask = np.ones(len(pid)) < 0
+        for i, pid_value in enumerate(pid):
+            # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+            if np.abs(pid_value) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                charged_mask[i] = True
+                
+    return charged_mask

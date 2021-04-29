@@ -437,17 +437,17 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.fill_hadron_histograms(fj_hadrons_positive_all, status='+')
         self.fill_hadron_histograms(fj_hadrons_negative_all, status='-')
 
-        # Loop through specified jet R
-        for jetR in self.jet_R:
-        
-            # Loop through several different constituent thresholds
-            for constituent_threshold in self.constituent_threshold:
-                        
-                # Set constituent threshold
-                fj_hadrons_positive = [hadron for hadron in fj_hadrons_positive_all if hadron.pt() > constituent_threshold]
-                fj_hadrons_negative = [hadron for hadron in fj_hadrons_negative_all if hadron.pt() > constituent_threshold]
-                fj_hadrons_positive_charged = [hadron for hadron in fj_hadrons_positive_charged_all if hadron.pt() > constituent_threshold]
-                fj_hadrons_negative_charged = [hadron for hadron in fj_hadrons_negative_charged_all if hadron.pt() > constituent_threshold]
+        # Loop through several different constituent thresholds
+        for constituent_threshold in self.constituent_threshold:
+                    
+            # Set constituent threshold
+            fj_hadrons_positive = [hadron for hadron in fj_hadrons_positive_all if hadron.pt() > constituent_threshold]
+            fj_hadrons_negative = [hadron for hadron in fj_hadrons_negative_all if hadron.pt() > constituent_threshold]
+            fj_hadrons_positive_charged = [hadron for hadron in fj_hadrons_positive_charged_all if hadron.pt() > constituent_threshold]
+            fj_hadrons_negative_charged = [hadron for hadron in fj_hadrons_negative_charged_all if hadron.pt() > constituent_threshold]
+                
+            # Loop through specified jet R
+            for jetR in self.jet_R:
                 
                 # Set jet definition and a jet selector
                 jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
