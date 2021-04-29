@@ -151,7 +151,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             
             # Fill dijet histograms
             if self.dijet_observables:
-                self.fill_dijet_histograms(jets_selected_charged, fj_hadrons_negative_charged, jetR)
+                self.fill_dijet_histograms(jets_selected, fj_hadrons_negative, jetR)
             
         # Fill the observables dict to a new entry in the event list
         self.output_event_list.append(self.observable_dict_event)
@@ -282,7 +282,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 # PHENIX
                 # Neutral pions
                 pt_min = self.hadron_observables['pt_pi0_phenix']['pt'][0]
-                pt_max = self.hadron_observables['pt_pi0_phenix']['pt'][1]
+                pt_max = 100. # Open upper bound
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_pi0_phenix']['eta_cut']:
                         if abs(pid) == 111:
@@ -291,7 +291,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 # STAR
                 # Charged hadrons (pi+, K+, p+)
                 pt_min = self.hadron_observables['pt_ch_star']['pt'][0]
-                pt_max = self.hadron_observables['pt_ch_star']['pt'][1]
+                pt_max = 100. # Open upper bound
                 if pt > pt_min and pt < pt_max:
                     if abs(eta) < self.hadron_observables['pt_ch_star']['eta_cut']:
                         if abs(pid) in [211, 321, 2212]:
@@ -552,6 +552,27 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             jet_mass -= hole_four_vector.m()
 
                         self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}'].append(jet_mass)
+                        
+        elif self.sqrts == 200:
+
+            # STAR RAA
+            pt_min = self.inclusive_chjet_observables['pt_star']['pt'][0]
+            pt_max = 100. # Open upper bound
+            if jetR in self.inclusive_chjet_observables['pt_star']['jet_R']:
+                if abs(jet.eta()) < (self.inclusive_chjet_observables['pt_star']['eta_cut_R'] - jetR):
+                    if jet_pt > pt_min and jet_pt < pt_max:
+
+                        # Check leading track requirement
+                        min_leading_track_pt = 5.
+
+                        accept_jet = False
+                        for constituent in jet.constituents():
+                            if constituent.pt() > min_leading_track_pt:
+                                # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+                                if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                    accept_jet = True
+                        if accept_jet:
+                            self.observable_dict_event[f'inclusive_jet_pt_star_R{jetR}'].append(jet_pt)
 
     # ---------------------------------------------------------------
     # Fill inclusive full jet histograms
@@ -720,10 +741,62 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill dijet histograms
     # ---------------------------------------------------------------
-    def fill_dijet_histograms(self, jets_selected_charged, fj_hadrons_negative_charged, jetR):
+    def fill_dijet_histograms(self, jets_selected, fj_hadrons_negative, jetR):
 
         if self.sqrts == 2760:
-            x = 1
+        
+            # ATLAS xj
+            if jetR in self.dijet_observables['xj_atlas']['jet_R']:
+            
+                # First, find jets passing kinematic cuts
+                jet_candidates = []
+                for i,jet in enumerate(jets_selected):
+                
+                    # Get the corrected jet pt by subtracting the negative recoils within R
+                    jet_pt = jet.pt()
+                    for temp_hadron in fj_hadrons_negative_charged:
+                        if jet.delta_R(temp_hadron) < jetR:
+                            jet_pt -= temp_hadron.pt()
+                            
+                    if jet_pt > self.dijet_observables['xj_atlas']['pt_subleading_min']:
+                        if np.abs(jet.eta()) < self.dijet_observables['xj_atlas']['eta_cut']:
+                            jet_candidates.append(jet)
+                            
+                # Find the leading two jets
+                leading_jet, leading_jet_pt, i_leading_jet = self.leading_jet(jet_candidates, fj_hadrons_negative)
+                del jet_candidates[i]
+                subleading_jet, subleading_jet_pt, _ = self.leading_jet(jet_candidates, fj_hadrons_negative)
+
+                if np.abs(leading_jet.delta_phi_to(subleading_jet)) > 7*np.pi/8:
+                    pt_min = self.dijet_observables['xj_atlas']['pt_leading_min']
+                    if leading_jet_pt > pt_min:
+                        xj = subleading_jet_pt / leading_jet_pt
+                        self.observable_dict_event[f'dijet_xj_atlas_R{jetR}'].append(xj)
+
+    #---------------------------------------------------------------
+    # Return leading jet (or subjet)
+    #---------------------------------------------------------------
+    def leading_jet(self, jets, fj_hadrons_negative):
+
+        leading_jet = None
+        leading_jet_pt = 0.
+        for i,jet in enumerate(jets):
+                         
+            # Get the corrected jet pt by subtracting the negative recoils within R
+            jet_pt = jet.pt()
+            for temp_hadron in fj_hadrons_negative_charged:
+                if jet.delta_R(temp_hadron) < jetR:
+                    jet_pt -= temp_hadron.pt()
+                    
+            if not leading_jet:
+                leading_jet = jet
+                leading_jet_pt = jet_pt
+            
+            if jet_pt > leading_jet_pt:
+                leading_jet = jet
+                leading_jet_pt = jet_pt
+
+        return leading_jet, leading_jet_pt, i
 
     # ---------------------------------------------------------------
     # Compute electric charge from pid

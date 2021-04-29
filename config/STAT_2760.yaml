@@ -226,4 +226,7 @@ dijet:
   # ATLAS, https://inspirehep.net/literature/1607896 (no hepdata)
   xj_atlas:
     jet_R: [0.3, 0.4]
+    pt_leading_min: 79.
+    pt_subleading_min: 25.
+    eta_cut: 2.1
 #------------------------------------------------------------------

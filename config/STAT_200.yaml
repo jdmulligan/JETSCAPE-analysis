@@ -60,9 +60,12 @@ inclusive_chjet:
 
   # STAR, https://inspirehep.net/literature/1798665 (no hepdata)
   # Charged jet RAA and RCP
+  # Cuts:
+  #   - pT^{ch lead} > 5 GeV
+  #   - |eta_jet|<1-R
   pt_star:
     jet_R: [0.2, 0.3, 0.4]
-    eta_cut: 1.0
+    eta_cut_R: 1.0
     pt_ch: [5., 30]
 #------------------------------------------------------------------
 #------------------------------------------------------------------
