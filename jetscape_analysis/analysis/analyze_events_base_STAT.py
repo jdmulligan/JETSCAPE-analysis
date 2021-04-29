@@ -96,9 +96,13 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             # Store dictionary of all observables for the event
             self.observable_dict_event = {}
         
-            # Fill event cross-section
-            xsec = 0.1
-            self.observable_dict_event['xsec'] = xsec
+            # Fill event cross-section weight
+            self.observable_dict_event['event_weight'] = event['event_weight']
+            
+            # Get total cross-section from last event
+            if i == df_event_chunk.shape[0]-1:
+                self.cross_section_dict['cross_section'] = event['cross_section']
+                self.cross_section_dict['cross_section_error'] = event['cross_section_error']
 
             # Call user-defined function to analyze event
             self.analyze_event(event)
@@ -111,6 +115,9 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         # Initialize list to store observables
         # Each entry in the list stores a dict for a given event
         self.output_event_list = []
+        
+        # Store also the total cross-section (one number per file)
+        self.cross_section_dict = {}
 
     # ---------------------------------------------------------------
     # Save output event list into a dataframe
@@ -138,6 +145,12 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             use_byte_stream_split=float_columns,
         )
         print(self.output_dataframe)
+
+        # Write cross-section to separate file
+        cross_section_dataframe = pd.DataFrame(self.cross_section_dict, index=[0])
+        cross_section_table = pa.Table.from_pandas(cross_section_dataframe)
+        filename = self.output_file.replace('observables', 'cross_section')
+        pq.write_table(cross_section_table, self.output_dir / filename, compression="zstd")
 
     # ---------------------------------------------------------------
     # Fill hadrons into vector of fastjet pseudojets
