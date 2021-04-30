@@ -649,23 +649,21 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             getattr(self, f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}').Fill(theta_g)
             
         # Subjet z
-        if 80 < jet_pt < 100 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+        if 80 < jet_pt < 120 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
                 
                 cs_subjet = fj.ClusterSequence(jet.constituents(), fj.JetDefinition(fj.antikt_algorithm, r))
                 subjets = fj.sorted_by_pt(cs_subjet.inclusive_jets())
-                # Note: May be better to subtract holes before deciding leading subjet
-                leading_subjet = self.leading_jet(subjets)
-                
-                # Sum the negative recoils within subjetR
-                negative_pt = 0.
-                for hadron in holes_in_jet:
-                    if leading_subjet.delta_R(hadron) < r:
-                        negative_pt += hadron.pt()
 
-                # Compute corrected subjet pt, and fill histograms
-                subjet_pt = leading_subjet.pt() - negative_pt
-                z_leading = subjet_pt / jet_pt
+                # Get leading subjet (accounts for holes)
+                leading_subjet, leading_subjet_pt = self.leading_jet(subjets, holes_in_jet)
+                z_leading = leading_subjet_pt / jet_pt
+                
+                # If z=1, it will be default be placed in overflow bin -- prevent this
+                if np.isclose(z_leading, 1.):
+                    z_leading = 0.999
+                
+                # Fill histogram
                 getattr(self, f'h_chjet_subjetz_alice_R{jetR}_r{r}_pt{constituent_threshold}').Fill(z_leading)
         
         # Jet axis
@@ -802,22 +800,31 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
                                         if tau1 > 1e-3:
                                             getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_highTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
-
+        
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
     #---------------------------------------------------------------
-    def leading_jet(self, jets):
+    def leading_jet(self, jets, fj_hadrons_negative):
 
         leading_jet = None
-        for jet in jets:
-
+        leading_jet_pt = 0.
+        for i,jet in enumerate(jets):
+                         
+            # Get the corrected jet pt by subtracting the negative recoils within R
+            jet_pt = jet.pt()
+            for temp_hadron in fj_hadrons_negative:
+                if jet.delta_R(temp_hadron) < jetR:
+                    jet_pt -= temp_hadron.pt()
+                    
             if not leading_jet:
                 leading_jet = jet
+                leading_jet_pt = jet_pt
             
-            if jet.pt() > leading_jet.pt():
+            if jet_pt > leading_jet_pt:
                 leading_jet = jet
+                leading_jet_pt = jet_pt
 
-        return leading_jet
+        return leading_jet, leading_jet_pt
 
 ##################################################################
 if __name__ == "__main__":
