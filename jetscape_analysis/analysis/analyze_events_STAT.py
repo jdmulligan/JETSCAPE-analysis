@@ -781,7 +781,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                          
             # Get the corrected jet pt by subtracting the negative recoils within R
             jet_pt = jet.pt()
-            for temp_hadron in fj_hadrons_negative_charged:
+            for temp_hadron in fj_hadrons_negative:
                 if jet.delta_R(temp_hadron) < jetR:
                     jet_pt -= temp_hadron.pt()
                     
