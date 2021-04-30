@@ -656,7 +656,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 subjets = fj.sorted_by_pt(cs_subjet.inclusive_jets())
 
                 # Get leading subjet (accounts for holes)
-                leading_subjet, leading_subjet_pt = self.leading_jet(subjets, holes_in_jet)
+                leading_subjet, leading_subjet_pt = self.leading_jet(subjets, holes_in_jet, r)
                 z_leading = leading_subjet_pt / jet_pt
                 
                 # If z=1, it will be default be placed in overflow bin -- prevent this
@@ -804,7 +804,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
     #---------------------------------------------------------------
-    def leading_jet(self, jets, fj_hadrons_negative):
+    def leading_jet(self, jets, fj_hadrons_negative, jetR):
 
         leading_jet = None
         leading_jet_pt = 0.

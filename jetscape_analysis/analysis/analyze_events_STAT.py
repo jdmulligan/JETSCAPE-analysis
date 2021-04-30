@@ -760,7 +760,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             jet_candidates.append(jet)
                             
                 # Find the leading two jets
-                leading_jet, leading_jet_pt, i_leading_jet = self.leading_jet(jet_candidates, fj_hadrons_negative)
+                leading_jet, leading_jet_pt, i_leading_jet = self.leading_jet(jet_candidates, fj_hadrons_negative, jetR)
                 del jet_candidates[i]
                 subleading_jet, subleading_jet_pt, _ = self.leading_jet(jet_candidates, fj_hadrons_negative)
 
@@ -773,7 +773,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
     #---------------------------------------------------------------
-    def leading_jet(self, jets, fj_hadrons_negative):
+    def leading_jet(self, jets, fj_hadrons_negative, jetR):
 
         leading_jet = None
         leading_jet_pt = 0.
