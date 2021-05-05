@@ -28,12 +28,15 @@ fi
 
 # Define output path from relevant sub-path of input file
 # Note: suffix depends on file structure of input file -- need to edit appropriately
-OUTPUT_SUFFIX1=$(echo $INPUT_FILE | cut -d/ -f5-5)
-FILENAME=$(echo $INPUT_FILE | cut -d/ -f6-6)
+OUTPUT_SUFFIX1=$(echo $INPUT_FILE | cut -d/ -f5-6)
+FILENAME=$(echo $INPUT_FILE | cut -d/ -f7-7)
 OUTPUT_SUFFIX2=$(echo $FILENAME | cut -d. -f 1)
 OUTPUT_DIR="/rstorage/jetscape/JETSCAPE-AA-events/skim/$JOB_ID/$OUTPUT_SUFFIX1/$OUTPUT_SUFFIX2"
+#echo "SUFFIX1: $OUTPUT_SUFFIX1"
+#echo "FILENAME: $FILENAME"
+#echo "SUFFIX2: $OUTPUT_SUFFIX2"
 echo "Output dir: $OUTPUT_DIR"
-mkdir -p $OUTPUT_DIR
+#mkdir -p $OUTPUT_DIR
 
 # Load modules
 module use /software/users/james/heppy/modules

@@ -55,11 +55,12 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
 
         # Get pt-hat scale factor from file in same directory
         self.input_dir = os.path.dirname(input_file)
-        pt_hat_filename = os.path.join(self.input_dir, '../SigmaHardBin{}_{}.out'.format(self.pt_hat_min, self.pt_hat_max))
+        pt_hat_filename = os.path.join(self.input_dir, 'SigmaHardBin{}_{}.out'.format(self.pt_hat_min, self.pt_hat_max))
         with open(pt_hat_filename) as f:
             first_line = f.readline()
-            self.pt_hat_xsec = float(first_line.split(' ')[0])
-            self.pt_hat_xsec_err = float(first_line.split(' ')[1])
+            line = first_line.replace('\t', '  ').strip()
+            self.pt_hat_xsec = float(line.split('  ')[0])
+            self.pt_hat_xsec_err = float(line.split('  ')[1])
 
         self.initialize_config()
 
