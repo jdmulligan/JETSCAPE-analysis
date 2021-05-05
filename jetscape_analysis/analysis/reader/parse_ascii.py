@@ -293,6 +293,12 @@ class ChunkGenerator:
         self._require_chunk_ready()
         return self._headers
 
+    def n_particles_per_event(self) -> np.ndarray:
+        self._require_chunk_ready()
+        return np.array([
+            header.n_particles for header in self._headers
+        ])
+
     def event_split_index(self) -> np.ndarray:
         self._require_chunk_ready()
         # NOTE: We skip the last header due to the way that np.split works.
@@ -501,8 +507,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         # Give a notification just in case the parsing is slow...
         logger.debug(f"New chunk {i}")
 
-        # First, parse the lines. We need to make this call first because the event_split_index is only valid
-        # after we've parse the lines.
+        # First, parse the lines. We need to make this call before attempt to convert into events because the necessary
+        # info (namely, n particles per event) is only available and valid after we've parse the lines.
         res = parsing_function(iter(chunk_generator))
 
         # Before we do anything else, if our events_per_chunk is a even divisor of the total number of events
@@ -514,10 +520,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
             break
 
         # Now, convert into the awkward array structure.
-        array_with_events = ak.Array(
-            np.split(
-                res, chunk_generator.event_split_index()
-            )
+        array_with_events = ak.unflatten(
+            ak.Array(res), chunk_generator.n_particles_per_event()
         )
 
         # Cross checks.
