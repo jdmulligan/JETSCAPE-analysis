@@ -58,15 +58,41 @@ class PlotResults(common_base.CommonBase):
         self.inclusive_chjet_observables = config['inclusive_chjet']
         self.semi_inclusive_chjet_observables = config['semi_inclusive_chjet']
         
-        self.dir_pp = '5020_PP'
-        self.dir_AA = 'OutputFile_Type5_qhatA10_B100_5020_PbPb_0-10_0.30_2.0_1'
-        
+        self.sqrts_list = [2760, 5020]
+        self.cent_list = [ [0,10], [0,5], [5,10] ]
+        self.constituent_threshold_list = config['constituent_threshold']
+                
         print(self)
 
     #-------------------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------------------
     def plot_results(self):
+    
+        for sqrts in self.sqrts_list:
+            for cent in self.cent_list:
+                for constituent_threshold in self.constituent_threshold_list:
+                
+                    self.sqrts = sqrts
+                    self.min_cent = cent[0]
+                    self.max_cent = cent[1]
+                    self.constituent_threshold = constituent_threshold
+                    
+                    self.dir_pp = f'{self.sqrts}_PP_Colorless'
+                    self.dir_AA = f'{self.sqrts}_PbPb_{self.min_cent}-{self.max_cent}_0.30_2.0_1'
+                    
+                    self.suffix = f'_pt{constituent_threshold}'
+                    self.output_dir_suffix = f'plot/{self.sqrts}_{self.min_cent}-{self.max_cent}_{self.suffix}'
+                    outdir = os.path.join(self.output_dir, self.output_dir_suffix)
+                    if not os.path.exists(outdir):
+                        os.makedirs(outdir)
+                
+                    self.plot_single_result()
+
+    #-------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------------------
+    def plot_single_result(self):
 
         self.setOptions()
         ROOT.gROOT.ForceStyle()
@@ -130,11 +156,11 @@ class PlotResults(common_base.CommonBase):
                       h_data_list=h_data_list,
                       eta_cut=np.round(self.hadron_observables['pt_alice']['eta_cut'], decimals=1),
                       data_centralities=['0-5%', '5-10%'],
-                      mc_centralities=['0-10'],
+                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                       xtitle="#it{p}_{T} (GeV/#it{c})",
                       ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
                       ymax=1.8,
-                      outputfilename=f'h_hadron_RAA_alice{self.file_format}',
+                      outputfilename=f'h_hadron_RAA_alice_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                       do_chi2=True)
 
     #-------------------------------------------------------------------------------------------
@@ -156,15 +182,15 @@ class PlotResults(common_base.CommonBase):
             
             # Plot
             self.plot_raa(raa_type='jet',
-                          hname = f'h_jet_pt_alice_R{R}Scaled',
+                          hname = f'h_jet_pt_alice_R{R}{self.suffix}Scaled',
                           h_data_list=h_data_list,
                           eta_cut=np.round(self.inclusive_jet_observables['pt_alice']['eta_cut_R']-R, decimals=1),
                           data_centralities=['0-10'],
-                          mc_centralities=['0-10'],
+                          mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                           xtitle="#it{p}_{T,jet} (GeV/#it{c})",
                           ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
                           ymax=1.8,
-                          outputfilename=f'h_jet_RAA_alice_R{R}{self.file_format}',
+                          outputfilename=f'h_jet_RAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                           R=R,
                           do_chi2=True)
                           
@@ -183,16 +209,16 @@ class PlotResults(common_base.CommonBase):
         R = 0.2
         xtitle="#it{g}"
         self.plot_raa(raa_type='chjet_g',
-                      hname = f'h_chjet_g_alice_R{R}Scaled',
+                      hname = f'h_chjet_g_alice_R{R}{self.suffix}Scaled',
                       h_data_list=None,
                       h_data_list_ratio=h_data_list,
                       eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                       data_centralities=['0-10'],
-                      mc_centralities=['0-10'],
+                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                       xtitle=xtitle,
                       ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                       ymax=2.8,
-                      outputfilename=f'h_chjet_g_alice_R{R}{self.file_format}',
+                      outputfilename=f'h_chjet_g_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                       R=R,
                       self_normalize=True,
                       do_chi2=True)
@@ -219,16 +245,16 @@ class PlotResults(common_base.CommonBase):
         R = 0.4
         xtitle="#it{m}"
         self.plot_raa(raa_type='chjet_mass',
-                      hname = f'h_chjet_mass_alice_R{R}Scaled',
+                      hname = f'h_chjet_mass_alice_R{R}{self.suffix}Scaled',
                       h_data_list=None,
                       h_data_list_ratio=None,
                       eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                       data_centralities=['0-10'],
-                      mc_centralities=['0-10'],
+                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                       xtitle=xtitle,
                       ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                       ymax=2.8,
-                      outputfilename=f'h_chjet_mass_alice_R{R}{self.file_format}',
+                      outputfilename=f'h_chjet_mass_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                       R=R,
                       self_normalize=True,
                       do_chi2=True)
@@ -240,15 +266,15 @@ class PlotResults(common_base.CommonBase):
         R = 0.2
         xtitle="#it{z}_{g}"
         self.plot_raa(raa_type='chjet_zg',
-                      hname = f'h_chjet_zg_alice_R{R}Scaled',
+                      hname = f'h_chjet_zg_alice_R{R}{self.suffix}Scaled',
                       h_data_list=None,
                       eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                       data_centralities=['0-10'],
-                      mc_centralities=['0-10'],
+                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                       xtitle=xtitle,
                       ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                       ymax=2.8,
-                      outputfilename=f'h_chjet_zg_alice_R{R}{self.file_format}',
+                      outputfilename=f'h_chjet_zg_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                       R=R,
                       self_normalize=True,
                       do_chi2=False)
@@ -260,15 +286,15 @@ class PlotResults(common_base.CommonBase):
         R = 0.2
         xtitle="#it{#theta}_{g}"
         self.plot_raa(raa_type='chjet_tg',
-                      hname = f'h_chjet_tg_alice_R{R}Scaled',
+                      hname = f'h_chjet_tg_alice_R{R}{self.suffix}Scaled',
                       h_data_list=None,
                       eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                       data_centralities=['0-10'],
-                      mc_centralities=['0-10'],
+                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                       xtitle=xtitle,
                       ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                       ymax=2.8,
-                      outputfilename=f'h_chjet_tg_alice_R{R}{self.file_format}',
+                      outputfilename=f'h_chjet_tg_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                       R=R,
                       self_normalize=True,
                       do_chi2=False)
@@ -293,11 +319,10 @@ class PlotResults(common_base.CommonBase):
         h_data_list.append([h_data, '0-10%'])
         f.Close()
         
-        sqrts=2760
-        if sqrts == 2760:
-            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
-            hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276Scaled'
-            hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276Scaled'
+        if self.sqrts == 2760:
+            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
+            hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276{self.suffix}Scaled'
+            hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276{self.suffix}Scaled'
             
             # Get JETSCAPE pp prediction
             filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
@@ -320,10 +345,10 @@ class PlotResults(common_base.CommonBase):
             h_AA_low = f_AA.Get(hname_low)
             h_AA_low.SetDirectory(0)
             f_AA.Close()
-        elif sqrts == 5020:
-            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
-            hname_high = f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{R}_502Scaled'
-            hname_low = f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{R}_502Scaled'
+        elif self.sqrts == 5020:
+            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
+            hname_high = f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{R}_502{self.suffix}Scaled'
+            hname_low = f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{R}_502{self.suffix}Scaled'
             
             # Get JETSCAPE pp prediction
             filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
@@ -396,11 +421,11 @@ class PlotResults(common_base.CommonBase):
                             h_data_list=h_data_list,
                             eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                             data_centralities=['0-10'],
-                            mc_centralities=['0-10'],
+                            mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                             xtitle=xtitle,
                             ytitle = '#DeltaI_{AA}',
                             ymax=1.8,
-                            outputfilename=f'h_semi_inclusive_chjet_IAA_alice_R{R}{self.file_format}',
+                            outputfilename=f'h_semi_inclusive_chjet_IAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                             R=R,
                             do_chi2=True)
 
@@ -417,9 +442,9 @@ class PlotResults(common_base.CommonBase):
         h_data_list.append([h_data, 'pp'])
         f.Close()
         
-        hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}Scaled'
-        hname_high = f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{R}_276Scaled'
-        hname_low = f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{R}_276Scaled'
+        hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
+        hname_high = f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{R}_276{self.suffix}Scaled'
+        hname_low = f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{R}_276{self.suffix}Scaled'
         
         # Get JETSCAPE pp prediction
         filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
@@ -472,11 +497,11 @@ class PlotResults(common_base.CommonBase):
                             h_data_list=h_data_list,
                             eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                             data_centralities=['0-10'],
-                            mc_centralities=['0-10'],
+                            mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                             xtitle=xtitle,
                             ytitle = '#Phi(#Delta#it{#varphi})',
                             ymax=0.1,
-                            outputfilename=f'h_semi_inclusive_chjet_dphi_alice_R{R}{self.file_format}',
+                            outputfilename=f'h_semi_inclusive_chjet_dphi_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                             R=R,
                             do_chi2=True)
 
@@ -489,15 +514,15 @@ class PlotResults(common_base.CommonBase):
                 
                     xtitle=f"#it{{#lambda}}_{{{alpha},{label}}}"
                     self.plot_raa(raa_type='chjet_angularity',
-                                  hname = f'h_chjet_angularity_{label}_alice_R{R}_alpha{alpha}Scaled',
+                                  hname = f'h_chjet_angularity_{label}_alice_R{R}_alpha{alpha}{self.suffix}Scaled',
                                   h_data_list=None,
                                   eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                                   data_centralities=['0-10'],
-                                  mc_centralities=['0-10'],
+                                  mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                                   xtitle=xtitle,
                                   ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                                   ymax=2.8,
-                                  outputfilename=f'h_chjet_angularity_{label}_alice_R{R}_alpha{alpha}{self.file_format}',
+                                  outputfilename=f'h_chjet_angularity_{label}_alice_R{R}_alpha{alpha}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                                   R=R,
                                   self_normalize=True,
                                   do_chi2=False)
@@ -511,15 +536,15 @@ class PlotResults(common_base.CommonBase):
                 
                     xtitle=f"#it{{z}}_{{{r}}}"
                     self.plot_raa(raa_type='chjet_subjetz',
-                                  hname = f'h_chjet_subjetz_alice_R{R}_r{r}Scaled',
+                                  hname = f'h_chjet_subjetz_alice_R{R}_r{r}{self.suffix}Scaled',
                                   h_data_list=None,
                                   eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                                   data_centralities=['0-10'],
-                                  mc_centralities=['0-10'],
+                                  mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                                   xtitle=xtitle,
                                   ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                                   ymax=2.8,
-                                  outputfilename=f'h_chjet_subjetz_alice_R{R}_r{r}{self.file_format}',
+                                  outputfilename=f'h_chjet_subjetz_alice_R{R}_r{r}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                                   R=R,
                                   self_normalize=True,
                                   do_chi2=False)
@@ -531,45 +556,45 @@ class PlotResults(common_base.CommonBase):
 
             xtitle="#Delta#it{R}_{Standard_WTA}"
             self.plot_raa(raa_type='chjet_axis',
-                          hname = f'h_chjet_axis_Standard_WTA_alice_R{R}Scaled',
+                          hname = f'h_chjet_axis_Standard_WTA_alice_R{R}{self.suffix}Scaled',
                           h_data_list=None,
                           eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                           data_centralities=['0-10'],
-                          mc_centralities=['0-10'],
+                          mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                           xtitle=xtitle,
                           ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                           ymax=2.8,
-                          outputfilename=f'h_chjet_axis_Standard_WTA_alice_R{R}{self.file_format}',
+                          outputfilename=f'h_chjet_axis_Standard_WTA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                           R=R,
                           self_normalize=True,
                           do_chi2=False)
                           
             xtitle="#Delta#it{R}_{Standard_SD}"
             self.plot_raa(raa_type='chjet_axis',
-                          hname = f'h_chjet_axis_Standard_SD_alice_R{R}Scaled',
+                          hname = f'h_chjet_axis_Standard_SD_alice_R{R}{self.suffix}Scaled',
                           h_data_list=None,
                           eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                           data_centralities=['0-10'],
-                          mc_centralities=['0-10'],
+                          mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                           xtitle=xtitle,
                           ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                           ymax=2.8,
-                          outputfilename=f'h_chjet_axis_Standard_SD_alice_R{R}{self.file_format}',
+                          outputfilename=f'h_chjet_axis_Standard_SD_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                           R=R,
                           self_normalize=True,
                           do_chi2=False)
                    
             xtitle="#Delta#it{R}_{SD_WTA}"
             self.plot_raa(raa_type='chjet_axis',
-                          hname = f'h_chjet_axis_SD_WTA_alice_R{R}Scaled',
+                          hname = f'h_chjet_axis_SD_WTA_alice_R{R}{self.suffix}Scaled',
                           h_data_list=None,
                           eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
                           data_centralities=['0-10'],
-                          mc_centralities=['0-10'],
+                          mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                           xtitle=xtitle,
                           ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
                           ymax=2.8,
-                          outputfilename=f'h_chjet_axis_SD_WTA_alice_R{R}{self.file_format}',
+                          outputfilename=f'h_chjet_axis_SD_WTA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                           R=R,
                           self_normalize=True,
                           do_chi2=False)
@@ -643,16 +668,17 @@ class PlotResults(common_base.CommonBase):
 
         # Plot the ratio
         if h_pp and h_AA:
+            outdir = os.path.join(self.output_dir, self.output_dir_suffix)
             if raa_type == 'hadron':
-                output_filename = os.path.join(self.output_dir, f'h_hadron_pt_alice{self.file_format}')
+                output_filename = os.path.join(outdir, f'h_hadron_pt_alice{self.file_format}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
                                         cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, logy=True, do_chi2=do_chi2)
             elif raa_type == 'jet':
-                output_filename = os.path.join(self.output_dir, f'h_jet_pt_alice_R{R}{self.file_format}')
+                output_filename = os.path.join(outdir, f'h_jet_pt_alice_R{R}{self.file_format}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
                                         cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, R=R, logy=True, do_chi2=do_chi2, h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio)
             elif raa_type in ['chjet_g', 'chjet_mass', 'chjet_zg', 'chjet_tg', 'chjet_angularity', 'chjet_subjetz', 'chjet_axis', 'hjet_IAA', 'hjet_dphi']:
-                output_filename = os.path.join(self.output_dir, f'ratio_{outputfilename}')
+                output_filename = os.path.join(outdir, f'ratio_{outputfilename}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
                                         cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, R=R, do_chi2=do_chi2,
                                         save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi', 'chjet_subjetz']), h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio)
@@ -666,7 +692,7 @@ class PlotResults(common_base.CommonBase):
         
         #---------------------------------------
         # Draw RAA
-        cname = f'c_{outputfilename}'
+        cname = f'c_{outputfilename}_{self.constituent_threshold}'
         c = ROOT.TCanvas(cname, cname, 600, 450)
         c.SetRightMargin(0.05);
         c.SetLeftMargin(0.15);
@@ -747,7 +773,7 @@ class PlotResults(common_base.CommonBase):
         system1.SetTextSize(size)
         system1.Draw()
 
-        system2 = ROOT.TLatex(x,ymax-2*dy,'Pb-Pb  #sqrt{#it{s}} = 5.02 TeV')
+        system2 = ROOT.TLatex(x,ymax-2*dy,f'Pb-Pb  #sqrt{{#it{{s}}}} = {self.sqrts/1000.} TeV')
         system2.SetNDC()
         system2.SetTextSize(size)
         system2.Draw()
@@ -760,7 +786,8 @@ class PlotResults(common_base.CommonBase):
         system3.SetTextSize(size)
         system3.Draw()
         
-        output_filename = os.path.join(self.output_dir, outputfilename)
+        outdir = os.path.join(self.output_dir, self.output_dir_suffix)
+        output_filename = os.path.join(outdir, outputfilename)
         c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
@@ -856,7 +883,7 @@ class PlotResults(common_base.CommonBase):
         system1.SetTextSize(size)
         system1.Draw()
 
-        system2 = ROOT.TLatex(x,ymax-2*dy,'Pb-Pb  #sqrt{#it{s}} = 5.02 TeV')
+        system2 = ROOT.TLatex(x,ymax-2*dy,f'Pb-Pb  #sqrt{{#it{{s}}}} = {self.sqrts/1000.} TeV')
         system2.SetNDC()
         system2.SetTextSize(size)
         system2.Draw()
