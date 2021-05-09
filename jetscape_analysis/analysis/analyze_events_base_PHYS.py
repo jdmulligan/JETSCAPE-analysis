@@ -212,7 +212,7 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
 
         # Set pid as user_index
-        [particle.set_user_index(int(pid[i])) for i,particle in enumerate(fj_particles)]
+        [fj_particles[i].set_user_index(int(pid[i])) for i,_ in enumerate(fj_particles)]
 
         return fj_particles
 
