@@ -147,7 +147,7 @@ class PlotResults(common_base.CommonBase):
         h_data_0_5 = dir.Get('Graph1D_y1')
         h_data_5_10 = dir.Get('Graph1D_y2')
         h_data_list.append([h_data_0_5, '0-5%'])
-        h_data_list.append([h_data_5_10, '5-10%'])
+        #h_data_list.append([h_data_5_10, '5-10%'])
         f.Close()
 
         # Plot
@@ -155,7 +155,7 @@ class PlotResults(common_base.CommonBase):
                       hname = 'h_hadron_pt_aliceScaled',
                       h_data_list=h_data_list,
                       eta_cut=np.round(self.hadron_observables['pt_alice']['eta_cut'], decimals=1),
-                      data_centralities=['0-5%', '5-10%'],
+                      data_centralities=['0-5%'],
                       mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                       xtitle="#it{p}_{T} (GeV/#it{c})",
                       ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
@@ -614,6 +614,8 @@ class PlotResults(common_base.CommonBase):
         filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
         f_AA = ROOT.TFile(filename, 'READ')
         h_AA = f_AA.Get(hname)
+        if raa_type == 'jet':
+            h_AA.Scale(0.5) # Since we hadd [0,5] and [5,10]
         h_AA.SetDirectory(0)
         f_AA.Close()
 
@@ -655,8 +657,12 @@ class PlotResults(common_base.CommonBase):
         h_pp.Scale(1., 'width')
         h_AA.Scale(1., 'width')
         if self_normalize:
-            h_AA.Scale(1./h_AA.Integral(0, h_AA.GetNbinsX()+1))
-            h_pp.Scale(1./h_pp.Integral(0, h_pp.GetNbinsX()+1))
+            if raa_type in ['chjet_zg', 'chjet_tg']:
+                min_bin = 0
+            else:
+                min_bin = 1
+            h_AA.Scale(1./h_AA.Integral(min_bin, h_AA.GetNbinsX()))
+            h_pp.Scale(1./h_pp.Integral(min_bin, h_pp.GetNbinsX()))
             
         # Plot RAA
         self.plot_raa_ratio(raa_type, h_pp, h_AA, eta_cut, data_centralities, mc_centralities,
@@ -665,6 +671,13 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def plot_raa_ratio(self, raa_type, h_pp, h_AA, eta_cut, data_centralities, mc_centralities,
                  xtitle, ytitle, ymax, outputfilename, h_data_list=None, h_data_list_ratio=None, R=None, do_chi2=False):
+                 
+        # pt bin label
+        pt_label = None
+        if raa_type in ['chjet_g', 'hjet_dphi']:
+            pt_label = '40 < p_{T, ch jet} < 60 GeV/c'
+        elif raa_type in ['chjet_mass', 'chjet_zg', 'chjet_tg']:
+            pt_label = '60 < p_{T, ch jet} < 80 GeV/c'
 
         # Plot the ratio
         if h_pp and h_AA:
@@ -672,16 +685,16 @@ class PlotResults(common_base.CommonBase):
             if raa_type == 'hadron':
                 output_filename = os.path.join(outdir, f'h_hadron_pt_alice{self.file_format}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
-                                        cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, logy=True, do_chi2=do_chi2)
+                                        cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, logy=True, do_chi2=do_chi2, pt_label=pt_label)
             elif raa_type == 'jet':
                 output_filename = os.path.join(outdir, f'h_jet_pt_alice_R{R}{self.file_format}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
-                                        cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, R=R, logy=True, do_chi2=do_chi2, h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio)
+                                        cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, R=R, logy=True, do_chi2=do_chi2, h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio, pt_label=pt_label)
             elif raa_type in ['chjet_g', 'chjet_mass', 'chjet_zg', 'chjet_tg', 'chjet_angularity', 'chjet_subjetz', 'chjet_axis', 'hjet_IAA', 'hjet_dphi']:
                 output_filename = os.path.join(outdir, f'ratio_{outputfilename}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
                                         cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, R=R, do_chi2=do_chi2,
-                                        save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi', 'chjet_subjetz']), h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio)
+                                        save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi', 'chjet_subjetz']), h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio, pt_label=pt_label)
                 if raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi']:
                     return
 
@@ -786,13 +799,19 @@ class PlotResults(common_base.CommonBase):
         system3.SetTextSize(size)
         system3.Draw()
         
+        if pt_label:
+            system4 = ROOT.TLatex(x,ymax-4.4*dy, pt_label)
+            system4.SetNDC()
+            system4.SetTextSize(size)
+            system4.Draw()
+        
         outdir = os.path.join(self.output_dir, self.output_dir_suffix)
         output_filename = os.path.join(outdir, outputfilename)
         c.SaveAs(output_filename)
 
     #-------------------------------------------------------------------------------------------
     # Plot ratio h1/h2
-    def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, cent, eta_cut, h_data_list=None, h_data_list_ratio=None, label='jet', logy=False, R=None, self_normalize=False, do_chi2=False, save_plot=False):
+    def plot_ratio(self, h_pp, h_AA, outputFilename, xtitle, ytitle, cent, eta_cut, h_data_list=None, h_data_list_ratio=None, label='jet', logy=False, R=None, self_normalize=False, do_chi2=False, save_plot=False, pt_label=None):
 
         # Create canvas
         cname = f'c_ratio_{outputFilename}'
@@ -892,6 +911,12 @@ class PlotResults(common_base.CommonBase):
         system3.SetNDC()
         system3.SetTextSize(size)
         system3.Draw()
+        
+        if pt_label:
+            system4 = ROOT.TLatex(x,ymax-4.4*dy, pt_label)
+            system4.SetNDC()
+            system4.SetTextSize(size)
+            system4.Draw()
         
         # # # # # # # # # # # # # # # # # # # # # # # #
         # # # # # # # # # # # # # # # # # # # # # # # #
