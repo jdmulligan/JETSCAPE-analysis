@@ -112,6 +112,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             if i == 0:
                 self.cross_section_dict['cross_section'] = event['cross_section']
                 self.cross_section_dict['cross_section_error'] = event['cross_section_error']
+                self.cross_section_dict['n_events'] = self.n_event_max
 
     # ---------------------------------------------------------------
     # Initialize output objects

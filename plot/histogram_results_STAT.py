@@ -52,6 +52,14 @@ class HistogramResults(common_base.CommonBase):
         self.weights = self.observables_df['event_weight']
         
         #------------------------------------------------------
+        # Read cross-section file
+        cross_section_file = 'cross_section'.join(input_file.rsplit('observables', 1))
+        cross_section_df = pd.read_parquet(cross_section_file)
+        self.cross_section = cross_section_df['cross_section'][0]
+        self.cross_section_error = cross_section_df['cross_section_error'][0]
+        self.n_events = cross_section_df['n_events'][0]
+        
+        #------------------------------------------------------
         # Create output list to store histograms
         self.output_list = []
 
@@ -265,13 +273,6 @@ class HistogramResults(common_base.CommonBase):
     # Save all ROOT histograms to file
     # ---------------------------------------------------------------
     def write_output_objects(self):
-
-        # Fill cross-section
-        #self.hCrossSection.SetBinContent(self.pt_hat_bin+1, self.pt_hat_xsec)
-        #self.hCrossSection.SetBinError(self.pt_hat_bin+1, self.pt_hat_xsec_err)
-
-        # Set N events
-        #self.hNevents.SetBinContent(self.pt_hat_bin+1, self.n_event_max)
 
         # Save output objects
         outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
