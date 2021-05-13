@@ -24,6 +24,7 @@ import itertools
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import awkward as ak
 import numpy as np
 import ROOT
 from pathlib import Path
@@ -138,6 +139,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
 
         # Convert to pandas, and then arrow.
         self.output_dataframe = pd.DataFrame(self.output_event_list)
+        #self.output_dataframe = ak.Array(self.output_event_list)
         table = pa.Table.from_pandas(self.output_dataframe)
 
         # Write to parquet
@@ -196,7 +198,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
 
         # Set pid as user_index
-        [particle.set_user_index(int(pid[i])) for i,particle in enumerate(fj_particles)]
+        [fj_particles[i].set_user_index(int(pid[i])) for i,_ in enumerate(fj_particles)]
 
         return fj_particles
 
