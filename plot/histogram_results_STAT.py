@@ -95,8 +95,8 @@ class HistogramResults(common_base.CommonBase):
                 continue
                 
             # Histogram observable
-            self.histogram_1d_observable(column_name=f'{observable_type}_{observable}', bins=bins)
-            self.histogram_1d_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins)
+            self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins)
+            self.histogram_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins)
 
     #-------------------------------------------------------------------------------------------
     # Histogram hadron correlation observables
@@ -113,7 +113,7 @@ class HistogramResults(common_base.CommonBase):
                 continue
                     
             # Histogram observable
-            self.histogram_1d_observable(column_name=f'{observable_type}_{observable}', bins=bins)
+            self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -140,9 +140,9 @@ class HistogramResults(common_base.CommonBase):
                             zcut = grooming_setting['zcut']
                             beta = grooming_setting['beta']
                             column_name = f'{observable_type}_{observable}_R{jet_R}_zcut{zcut}_beta{beta}'
-                            self.histogram_1d_observable(column_name=column_name, bins=bins)
+                            self.histogram_observable(column_name=column_name, bins=bins)
                 else:
-                    self.histogram_1d_observable(column_name=f'{observable_type}_{observable}_R{jet_R}', bins=bins)
+                    self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}', bins=bins)
 
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
@@ -162,33 +162,73 @@ class HistogramResults(common_base.CommonBase):
                 print(f'    R = {jet_R}')
 
                 column_name = f'{observable_type}_{observable}_R{jetR}_lowTrigger'
-                self.histogram_1d_observable(column_name=column_name, bins=bins)
+                self.histogram_observable(column_name=column_name, bins=bins)
                 
                 column_name = f'{observable_type}_{observable}_R{jetR}_highTrigger'
-                self.histogram_1d_observable(column_name=column_name, bins=bins)
+                self.histogram_observable(column_name=column_name, bins=bins)
                 
                 if self.sqrts == '2760':
                     column_name = f'{observable_type}_alice_trigger_pt'
                 if self.sqrts == '200':
                     column_name = f'{observable_type}_star_trigger_pt'
-                self.histogram_1d_observable(column_name=column_name, bins=bins)
+                self.histogram_observable(column_name=column_name, bins=bins)
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_1d_observable(self, column_name=None, bins=None):
+    def histogram_observable(self, column_name=None, bins=None):
 
+        # Get column
+        col = self.observables_df[column_name]
+        
+        # Find dimension of observable
+        dim_observable = 0
+        for i,_ in enumerate(col):
+            if len(col[i]) > 0:
+                dim_observable = len(col[0])
+                break
+        
         # Construct histogram
+        if dim_observable == 1:
+            self.histogram_1d_observable(col, column_name=column_name, bins=bins)
+        elif dim_observable == 2:
+            self.histogram_2d_observable(col, column_name=column_name, bins=bins)
+        else:
+            return
+
+    #-------------------------------------------------------------------------------------------
+    # Histogram a single observable
+    #-------------------------------------------------------------------------------------------
+    def histogram_1d_observable(self, col, column_name=None, bins=None):
+
         hname = f'h_{column_name}'
         h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
         h.Sumw2()
         
         # Fill histogram
-        col = self.observables_df[column_name]
         for i,_ in enumerate(col):
             if len(col[i]) > 0:
                 for value in col[i]:
                     h.Fill(value, self.weights[i])
+                    
+        # Save histogram to output list
+        self.output_list.append(h)
+        
+    #-------------------------------------------------------------------------------------------
+    # Histogram a single observable
+    # TODO: construct sets of binnings from hepdata
+    #-------------------------------------------------------------------------------------------
+    def histogram_2d_observable(self, col, column_name=None, bins=None):
+
+        hname = f'h_{column_name}'
+        h = ROOT.TH2F(hname, hname, len(bins)-1, bins, len(bins)-1, bins)
+        h.Sumw2()
+        
+        # Fill histogram
+        for i,_ in enumerate(col):
+            if len(col[i]) > 0:
+                for value in col[i]:
+                    h.Fill(value[0], value[1], self.weights[i])
                     
         # Save histogram to output list
         self.output_list.append(h)
@@ -251,6 +291,7 @@ class HistogramResults(common_base.CommonBase):
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
 if __name__ == '__main__':
+    print()
     print('Executing histogram_results_STAT.py...')
 
     # Define arguments
