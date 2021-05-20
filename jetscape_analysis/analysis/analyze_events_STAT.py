@@ -553,7 +553,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         elif self.sqrts == 200:
 
             # STAR RAA
-            pt_min = self.inclusive_chjet_observables['pt_star']['pt'][0]
+            pt_min = self.inclusive_chjet_observables['pt_star']['pt_ch'][0]
             pt_max = 100. # Open upper bound
             if jetR in self.inclusive_chjet_observables['pt_star']['jet_R']:
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['pt_star']['eta_cut_R'] - jetR):
@@ -777,6 +777,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
         leading_jet = None
         leading_jet_pt = 0.
+        i = 0
         for i,jet in enumerate(jets):
                          
             # Get the corrected jet pt by subtracting the negative recoils within R
