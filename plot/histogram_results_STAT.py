@@ -143,11 +143,6 @@ class HistogramResults(common_base.CommonBase):
             for jet_R in block['jet_R']:
                 print(f'    R = {jet_R}')
                 
-                # Construct appropriate binning
-                bins = self.plot_utils.bins_from_config(block, observable, jet_R=jet_R)
-                if not bins.any():
-                    continue
-                
                 if 'SoftDrop' in block:
                     for grooming_setting in block['SoftDrop']:
                         if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
@@ -156,10 +151,23 @@ class HistogramResults(common_base.CommonBase):
                             print(f'      grooming_setting = {grooming_setting}')
                             zcut = grooming_setting['zcut']
                             beta = grooming_setting['beta']
-                            column_name = f'{observable_type}_{observable}_R{jet_R}_zcut{zcut}_beta{beta}'
+                            
+                            self.suffix = f'_R{jet_R}_zcut{zcut}_beta{beta}'
+                            bins = self.plot_utils.bins_from_config(block, observable, suffix=self.suffix)
+                            if not bins.any():
+                                continue
+                            
+                            column_name = f'{observable_type}_{observable}{self.suffix}'
                             self.histogram_observable(column_name=column_name, bins=bins)
+                            
                 else:
-                    self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}', bins=bins)
+                
+                    self.suffix = f'_R{jet_R}'                                
+                    bins = self.plot_utils.bins_from_config(block, observable, suffix=self.suffix)
+                    if not bins.any():
+                        continue
+                
+                    self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}', bins=bins)
 
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
@@ -202,10 +210,7 @@ class HistogramResults(common_base.CommonBase):
         dim_observable = 0
         for i,_ in enumerate(col):
             if len(col[i]) > 0:
-                if isinstance(col[i], list):
-                    dim_observable = len(col[i][0])
-                else:
-                    dim_observable = 1
+                dim_observable = col[i][0].size
                 break
         
         # Construct histogram

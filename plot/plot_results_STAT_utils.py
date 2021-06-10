@@ -34,11 +34,7 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get bin array specified in config block
     # ---------------------------------------------------------------
-    def bins_from_config(self, block, observable, jet_R = None):
-    
-        suffix = ''
-        if jet_R:
-            suffix += f'_R{jet_R}'
+    def bins_from_config(self, block, observable, suffix=''):
     
         if f'hepdata{suffix}' in block:
             print(f'  Histogram with hepdata binning for {observable}')

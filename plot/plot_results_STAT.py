@@ -86,7 +86,8 @@ class PlotResults(common_base.CommonBase):
                 
         for observable, block in self.config[observable_type].items():
         
-            if 'hepdata' not in block:
+            self.suffix = ''
+            if f'hepdata{self.suffix}' not in block:
                 continue
         
             # Initialize observable configuration
@@ -104,7 +105,8 @@ class PlotResults(common_base.CommonBase):
 
         for observable, block in self.config[observable_type].items():
         
-            if 'hepdata' not in block:
+            self.suffix = ''
+            if f'hepdata{self.suffix}' not in block:
                 continue
 
             # Initialize observable configuration
@@ -122,8 +124,8 @@ class PlotResults(common_base.CommonBase):
 
         for observable, block in self.config[observable_type].items():
                 
-            for jet_R_index,jet_R in enumerate(block['jet_R']):
-                print(f'    R = {jet_R}')
+            for self.jet_R in block['jet_R']:
+                print(f'    R = {self.jet_R}')
                 if 'SoftDrop' in block:
                     for grooming_setting in block['SoftDrop']:
                         if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
@@ -133,24 +135,24 @@ class PlotResults(common_base.CommonBase):
                             zcut = grooming_setting['zcut']
                             beta = grooming_setting['beta']
                             
-                            
-                            if f'hepdata_R{jet_R}' not in block:
+                            self.suffix = f'_R{self.jet_R}_zcut{zcut}_beta{beta}'
+                            if f'hepdata{self.suffix}' not in block:
                                 continue
                 
                             # Initialize observable configuration
-                            self.init_observable(observable_type, observable, block, jet_R_index=jet_R_index)
+                            self.init_observable(observable_type, observable, block)
                       
                             # Histogram observable
                             self.plot_distribution_and_ratio(observable_type, observable)
-                            
-                            column_name = f'{observable_type}_{observable}_R{jet_R}_zcut{zcut}_beta{beta}'
+                    
                 else:
 
-                    if f'hepdata_R{jet_R}' not in block:
+                    self.suffix = f'_R{self.jet_R}'
+                    if f'hepdata{self.suffix}' not in block:
                         continue
 
                     # Initialize observable configuration
-                    self.init_observable(observable_type, observable, block, jet_R_index=jet_R_index)
+                    self.init_observable(observable_type, observable, block)
               
                     # Histogram observable
                     self.plot_distribution_and_ratio(observable_type, observable)
@@ -187,22 +189,17 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Initialize a single observable's config
     #-------------------------------------------------------------------------------------------
-    def init_observable(self, observable_type, observable, block, jet_R_index=None, self_normalize=False):
+    def init_observable(self, observable_type, observable, block, self_normalize=False):
     
         # Initialize an empty dict containing relevant info
         self.observable_settings = {}
-        
-        self.suffix = ''
-                    
+                            
         # Common settings
         self.xtitle = block['xtitle']
         if 'eta_cut' in block:
             self.eta_cut = block['eta_cut']
         if 'pt' in block:
             self.pt = block['pt']
-        if 'jet_R' in block:
-            self.jetR = block['jet_R'][jet_R_index]
-            self.suffix += f'_R{self.jetR}'
         if 'eta_R' in block:
             self.eta_R = block['eta_R']
             self.eta_cut = np.round(self.eta_R - self.jetR, decimals=1)

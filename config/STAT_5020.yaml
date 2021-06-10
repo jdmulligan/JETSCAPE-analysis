@@ -195,6 +195,17 @@ inclusive_jet:
       - {'zcut': 0.1, 'beta': 0}
       - {'zcut': 0.5, 'beta': 1.5}
       
+    xtitle: '#it{m}/#it{p}_{T,jet}'
+    hepdata_R0.4_zcut0.1_beta0: 'data/STAT/inclusive_jet/mg_cms/HEPData-ins1672962-v1-Figure_2a.root'
+    hepdata_R0.4_zcut0.5_beta1.5: 'data/STAT/inclusive_jet/mg_cms/HEPData-ins1672962-v1-Figure_2b.root'
+    hepdata_dir_R0.4_zcut0.1_beta0: 'Figure 2a'
+    hepdata_dir_R0.4_zcut0.5_beta1.5: 'Figure 2b'
+    hepdata_gname: 'Graph1D_y1'
+    hepdata_hname: 'Hist1D_y1'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d(#it{m}/#it{p}_{T,jet})}'
+    y_min_pp: 0.
+    y_max_pp: 25
+      
   # CMS, https://www.hepdata.net/record/ins1620905
   zg_cms:
     jet_R: [0.4]
