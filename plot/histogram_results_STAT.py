@@ -139,14 +139,15 @@ class HistogramResults(common_base.CommonBase):
         print(f'Histogram {observable_type} observables...')
 
         for observable, block in self.config[observable_type].items():
-
-            # Construct appropriate binning
-            bins = self.plot_utils.bins_from_config(block, observable)
-            if not bins.any():
-                continue
                 
             for jet_R in block['jet_R']:
                 print(f'    R = {jet_R}')
+                
+                # Construct appropriate binning
+                bins = self.plot_utils.bins_from_config(block, observable, jet_R=jet_R)
+                if not bins.any():
+                    continue
+                
                 if 'SoftDrop' in block:
                     for grooming_setting in block['SoftDrop']:
                         if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:

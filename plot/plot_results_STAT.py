@@ -64,12 +64,12 @@ class PlotResults(common_base.CommonBase):
     
         self.plot_hadron_observables(observable_type='hadron')
         
-        #self.plot_hadron_correlation_observables(observable_type='hadron_correlations')
+        self.plot_hadron_correlation_observables(observable_type='hadron_correlations')
         
         #self.plot_jet_observables(observable_type='inclusive_chjet')
         
-        #if 'inclusive_jet' in self.config:
-        #    self.plot_jet_observables(observable_type='inclusive_jet')
+        if 'inclusive_jet' in self.config:
+            self.plot_jet_observables(observable_type='inclusive_jet')
             
         #if 'semi_inclusive_chjet' in self.config:
         #    self.plot_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
@@ -86,19 +86,113 @@ class PlotResults(common_base.CommonBase):
                 
         for observable, block in self.config[observable_type].items():
         
+            if 'hepdata' not in block:
+                continue
+        
             # Initialize observable configuration
             self.init_observable(observable_type, observable, block)
                 
             # Plot observable
-            self.plot_distribution_and_ratio(observable_type, observable, logy=True)
+            self.plot_distribution_and_ratio(observable_type, observable)
+
+    #-------------------------------------------------------------------------------------------
+    # Plot hadron correlation observables
+    #-------------------------------------------------------------------------------------------
+    def plot_hadron_correlation_observables(self, observable_type=''):
+        print()
+        print(f'Plot {observable_type} observables...')
+
+        for observable, block in self.config[observable_type].items():
+        
+            if 'hepdata' not in block:
+                continue
+
+            # Initialize observable configuration
+            self.init_observable(observable_type, observable, block)
+              
+            # Histogram observable
+            self.plot_distribution_and_ratio(observable_type, observable)
+
+    #-------------------------------------------------------------------------------------------
+    # Histogram inclusive jet observables
+    #-------------------------------------------------------------------------------------------
+    def plot_jet_observables(self, observable_type=''):
+        print()
+        print(f'Plot {observable_type} observables...')
+
+        for observable, block in self.config[observable_type].items():
+                
+            for jet_R_index,jet_R in enumerate(block['jet_R']):
+                print(f'    R = {jet_R}')
+                if 'SoftDrop' in block:
+                    for grooming_setting in block['SoftDrop']:
+                        if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
+                            continue
+                        else:
+                            print(f'      grooming_setting = {grooming_setting}')
+                            zcut = grooming_setting['zcut']
+                            beta = grooming_setting['beta']
+                            
+                            
+                            if f'hepdata_R{jet_R}' not in block:
+                                continue
+                
+                            # Initialize observable configuration
+                            self.init_observable(observable_type, observable, block, jet_R_index=jet_R_index)
+                      
+                            # Histogram observable
+                            self.plot_distribution_and_ratio(observable_type, observable)
+                            
+                            column_name = f'{observable_type}_{observable}_R{jet_R}_zcut{zcut}_beta{beta}'
+                else:
+
+                    if f'hepdata_R{jet_R}' not in block:
+                        continue
+
+                    # Initialize observable configuration
+                    self.init_observable(observable_type, observable, block, jet_R_index=jet_R_index)
+              
+                    # Histogram observable
+                    self.plot_distribution_and_ratio(observable_type, observable)
+
+    #-------------------------------------------------------------------------------------------
+    # Histogram semi-inclusive jet observables
+    #-------------------------------------------------------------------------------------------
+    def histogram_semi_inclusive_jet_observables(self, observable_type=''):
+        print()
+        print(f'Histogram {observable_type} observables...')
+        
+        for observable, block in self.config[observable_type].items():
+
+            # Construct appropriate binning
+            bins = plot_results_STAT_utils.bins_from_config(block, observable)
+            if not bins.any():
+                continue
+                
+            for jet_R in block['jet_R']:
+                print(f'    R = {jet_R}')
+
+                column_name = f'{observable_type}_{observable}_R{jetR}_lowTrigger'
+                self.histogram_observable(column_name=column_name, bins=bins)
+                
+                column_name = f'{observable_type}_{observable}_R{jetR}_highTrigger'
+                self.histogram_observable(column_name=column_name, bins=bins)
+                
+                if self.sqrts == '2760':
+                    column_name = f'{observable_type}_alice_trigger_pt'
+                if self.sqrts == '200':
+                    column_name = f'{observable_type}_star_trigger_pt'
+                self.histogram_observable(column_name=column_name, bins=bins)
 
     #-------------------------------------------------------------------------------------------
     # Initialize a single observable's config
     #-------------------------------------------------------------------------------------------
-    def init_observable(self, observable_type, observable, block, self_normalize=False):
+    def init_observable(self, observable_type, observable, block, jet_R_index=None, self_normalize=False):
     
         # Initialize an empty dict containing relevant info
         self.observable_settings = {}
+        
+        self.suffix = ''
                     
         # Common settings
         self.xtitle = block['xtitle']
@@ -106,11 +200,16 @@ class PlotResults(common_base.CommonBase):
             self.eta_cut = block['eta_cut']
         if 'pt' in block:
             self.pt = block['pt']
-        if 'jetR' in block:
-            self.jetR = block['jetR']
+        if 'jet_R' in block:
+            self.jetR = block['jet_R'][jet_R_index]
+            self.suffix += f'_R{self.jetR}'
         if 'eta_R' in block:
             self.eta_R = block['eta_R']
             self.eta_cut = np.round(self.eta_R - self.jetR, decimals=1)
+        if 'logy' in block:
+            self.logy = block['logy']
+        else:
+            self.logy = False
             
         if 'ytitle_pp' in block:
             self.ytitle = block['ytitle_pp']
@@ -125,15 +224,15 @@ class PlotResults(common_base.CommonBase):
             self.y_ratio_max = 1.99
         
         # Initialize data
-        if 'hepdata' in block:
-            f = ROOT.TFile(block['hepdata'], 'READ')
-            dir = f.Get(block['hepdata_dir'])
+        if f'hepdata{self.suffix}' in block:
+            f = ROOT.TFile(block[f'hepdata{self.suffix}'], 'READ')
+            dir = f.Get(block[f'hepdata_dir{self.suffix}'])
             self.observable_settings['data_distribution'] = dir.Get(block['hepdata_gname'])
             if self.observable_settings['data_distribution'].InheritsFrom(ROOT.TH1.Class()):
                 self.observable_settings['data_distribution'].SetDirectory(0)
             
         # Initialize JETSCAPE
-        self.hname = f'h_{observable_type}_{observable}'
+        self.hname = f'h_{observable_type}_{observable}{self.suffix}'
         h_jetscape = self.input_file.Get(self.hname)
         h_jetscape.SetDirectory(0)
         self.observable_settings['jetscape_distribution'] = h_jetscape
@@ -144,7 +243,9 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
             sigma_inel = 0.0676
             self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-        
+        elif observable_type == 'inclusive_jet' and 'pt' in observable:
+            self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+
         ## For hadrons, impose a 1 GeV minimum, and subtract the recoil hadrons
         #if self.observable == 'hadron_raa':
 
@@ -174,37 +275,6 @@ class PlotResults(common_base.CommonBase):
         elif self.observable_settings['data_distribution'].InheritsFrom(ROOT.TGraph.Class()):
             self.observable_settings['ratio'] = self.plot_utils.divide_tgraph(self.observable_settings['jetscape_distribution'],
                                                                               self.observable_settings['data_distribution'])
-                                                                              
-    #-------------------------------------------------------------------------------------------
-    def plot_jet_raa(self):
-
-        for R in [0.2, 0.4]:
-        
-            # Get experimental data
-            h_data_list = []
-            if R==0.2:
-                f = ROOT.TFile(self.inclusive_jet_observables['pt_alice']['hepdata_0_10_R02'], 'READ')
-                dir = f.Get('Table 30')
-            elif R==0.4:
-                f = ROOT.TFile(self.inclusive_jet_observables['pt_alice']['hepdata_0_10_R04'], 'READ')
-                dir = f.Get('Table 31')
-            h_data = dir.Get('Graph1D_y1')
-            h_data_list.append([h_data, '0-10%'])
-            f.Close()
-            
-            # Plot
-            self.plot_raa(raa_type='jet',
-                          hname = f'h_jet_pt_alice_R{R}{self.suffix}Scaled',
-                          h_data_list=h_data_list,
-                          eta_cut=np.round(self.inclusive_jet_observables['pt_alice']['eta_cut_R']-R, decimals=1),
-                          data_centralities=['0-10'],
-                          mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                          xtitle="#it{p}_{T,jet} (GeV/#it{c})",
-                          ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
-                          ymax=1.8,
-                          outputfilename=f'h_jet_RAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                          R=R,
-                          do_chi2=True)
                           
     #-------------------------------------------------------------------------------------------
     def plot_chjet_g(self):
@@ -535,7 +605,7 @@ class PlotResults(common_base.CommonBase):
         pad1.SetBottomMargin(0.)
         pad1.SetTicks(0,1)
         pad1.Draw()
-        if logy:
+        if self.logy:
             pad1.SetLogy()
         pad1.cd()
         

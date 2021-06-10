@@ -34,11 +34,15 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get bin array specified in config block
     # ---------------------------------------------------------------
-    def bins_from_config(self, block, observable):
+    def bins_from_config(self, block, observable, jet_R = None):
     
-        if 'hepdata' in block:
+        suffix = ''
+        if jet_R:
+            suffix += f'_R{jet_R}'
+    
+        if f'hepdata{suffix}' in block:
             print(f'  Histogram with hepdata binning for {observable}')
-            return self.bins_from_hepdata(block)
+            return self.bins_from_hepdata(block, suffix)
         elif 'bins' in block:
             print(f'  Histogram with custom binning for {observable}')
             return np.array(block['bins'])
@@ -49,10 +53,10 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get bin array from hepdata file specified in config block
     # ---------------------------------------------------------------
-    def bins_from_hepdata(self, block):
+    def bins_from_hepdata(self, block, suffix=''):
 
-        f = ROOT.TFile(block['hepdata'], 'READ')
-        dir = f.Get(block['hepdata_dir'])
+        f = ROOT.TFile(block[f'hepdata{suffix}'], 'READ')
+        dir = f.Get(block[f'hepdata_dir{suffix}'])
         h = dir.Get(block['hepdata_hname'])
         bins = np.array(h.GetXaxis().GetXbins())
         f.Close()
