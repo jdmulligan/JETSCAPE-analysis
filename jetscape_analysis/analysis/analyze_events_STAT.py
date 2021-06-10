@@ -62,7 +62,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # The filename will be something like "observables_{sqrts}_0000_00.parquet", assuming
             # that the original name was "observables_{sqrts}"
             self.output_file = _input_filename.replace("final_state_hadrons", self.output_file)
-            print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
+            #print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
 
         # Load observable blocks
         self.hadron_observables = config['hadron']
@@ -110,6 +110,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                                      select_charged=True)
         fj_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
                                                                      select_charged=True)
+        
         
         # Fill hadron histograms for jet shower particles
         self.fill_hadron_histograms(fj_hadrons_positive, status='+')
@@ -569,7 +570,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                     accept_jet = True
                         if accept_jet:
-                            self.observable_dict_event[f'inclusive_jet_pt_star_R{jetR}'].append(jet_pt)
+                            self.observable_dict_event[f'inclusive_chjet_pt_star_R{jetR}'].append(jet_pt)
 
     # ---------------------------------------------------------------
     # Fill inclusive full jet histograms
@@ -751,9 +752,10 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 
                     # Get the corrected jet pt by subtracting the negative recoils within R
                     jet_pt = jet.pt()
-                    for temp_hadron in fj_hadrons_negative_charged:
-                        if jet.delta_R(temp_hadron) < jetR:
-                            jet_pt -= temp_hadron.pt()
+                    if fj_hadrons_negative:
+                        for temp_hadron in fj_hadrons_negative:
+                            if jet.delta_R(temp_hadron) < jetR:
+                                jet_pt -= temp_hadron.pt()
                             
                     if jet_pt > self.dijet_observables['xj_atlas']['pt_subleading_min']:
                         if np.abs(jet.eta()) < self.dijet_observables['xj_atlas']['eta_cut']:
@@ -761,14 +763,15 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             
                 # Find the leading two jets
                 leading_jet, leading_jet_pt, i_leading_jet = self.leading_jet(jet_candidates, fj_hadrons_negative, jetR)
-                del jet_candidates[i]
-                subleading_jet, subleading_jet_pt, _ = self.leading_jet(jet_candidates, fj_hadrons_negative)
-
-                if np.abs(leading_jet.delta_phi_to(subleading_jet)) > 7*np.pi/8:
-                    pt_min = self.dijet_observables['xj_atlas']['pt_leading_min']
-                    if leading_jet_pt > pt_min:
-                        xj = subleading_jet_pt / leading_jet_pt
-                        self.observable_dict_event[f'dijet_xj_atlas_R{jetR}'].append(xj)
+                if leading_jet:
+                    del jet_candidates[i_leading_jet]
+                    subleading_jet, subleading_jet_pt, _ = self.leading_jet(jet_candidates, fj_hadrons_negative, jetR)
+                    if subleading_jet:
+                        if np.abs(leading_jet.delta_phi_to(subleading_jet)) > 7*np.pi/8:
+                            pt_min = self.dijet_observables['xj_atlas']['pt_leading_min']
+                            if leading_jet_pt > pt_min:
+                                xj = subleading_jet_pt / leading_jet_pt
+                                self.observable_dict_event[f'dijet_xj_atlas_R{jetR}'].append(xj)
 
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
