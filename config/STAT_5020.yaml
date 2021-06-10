@@ -42,13 +42,28 @@ hadron:
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
-    hepdata: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    hepdata: 'data/STAT/hadron/pt_ch_alice/HEPData-ins1657384-v1-Table_4.root'
+    hepdata_dir: 'Table 4'
+    hepdata_gname: 'Graph1D_y1'
+    hepdata_hname: 'Hist1D_y1'
+    ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e4
+    
+    #hepdata: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+    #hepdata_dir: 'Table 8'
+    #hepdata_name: 'Hist1D_y1'
+    #h_data_0_5 = dir.Get('Graph1D_y1')
+    #h_data_5_10 = dir.Get('Graph1D_y2')
+    ytitle: '#it{R}_{AA}'
   
   # ALICE, https://inspirehep.net/literature/1759506 (no hepdata)
   # charged pions
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
+    xtitle: '#it{p}_{T}'
 
   # ATLAS, ATLAS-CONF-2017-012 (no hepdata)
   # Centrality: 0-5, 30-40
@@ -61,6 +76,7 @@ hadron:
     bins: [5.5, 7, 8, 9, 10, 11, 13, 15, 17, 20, 22, 25, 30, 38, 48, 59, 74, 90, 120, 150, 200, 250, 300]
     datapoints_0_5: 'data/PHYS_RAA/data_hadron/ATLAS/0_5/hadronRaa0-5.txt'
     datapoints_30_40: 'data/PHYS_RAA/data_hadron/ATLAS/30_40/hadronRaa30-40.txt'
+    xtitle: '#it{p}_{T}'
     
   # CMS, https://www.hepdata.net/record/ins1496050
   # Centrality: 0-5, 5-10, 30-50
@@ -72,6 +88,7 @@ hadron:
     hepdata_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
     hepdata_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
     hepdata_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
+    xtitle: '#it{p}_{T}'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations

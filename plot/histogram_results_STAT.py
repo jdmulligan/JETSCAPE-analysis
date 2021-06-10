@@ -24,6 +24,7 @@ import awkward as ak
 # Base class
 sys.path.append('.')
 from jetscape_analysis.base import common_base
+from plot import plot_results_STAT_utils
 
 # Prevent ROOT from stealing focus when plotting
 ROOT.gROOT.SetBatch(True)
@@ -36,7 +37,10 @@ class HistogramResults(common_base.CommonBase):
     # ---------------------------------------------------------------
     def __init__(self, config_file='', input_file='', output_dir='', **kwargs):
         super(HistogramResults, self).__init__(**kwargs)
+        self.input_file = input_file
         self.output_dir = output_dir
+        
+        self.plot_utils = plot_results_STAT_utils.PlotUtils()
 
         #------------------------------------------------------
         # Read config file
@@ -47,13 +51,13 @@ class HistogramResults(common_base.CommonBase):
                     
         #------------------------------------------------------
         # Read input file
-        self.observables_df = pd.read_parquet(input_file)
-        #self.observables_df = ak.Array(input_file)
+        self.observables_df = pd.read_parquet(self.input_file)
+        #self.observables_df = ak.Array(self.input_file)
         self.weights = self.observables_df['event_weight']
         
         #------------------------------------------------------
         # Read cross-section file
-        cross_section_file = 'cross_section'.join(input_file.rsplit('observables', 1))
+        cross_section_file = 'cross_section'.join(self.input_file.rsplit('observables', 1))
         cross_section_df = pd.read_parquet(cross_section_file)
         self.cross_section = cross_section_df['cross_section'][0]
         self.cross_section_error = cross_section_df['cross_section_error'][0]
@@ -85,6 +89,10 @@ class HistogramResults(common_base.CommonBase):
             
         if 'dijet' in self.config:
             self.histogram_jet_observables(observable_type='dijet')
+            
+        h = ROOT.TH1F('h_n_events', 'h_n_events', 1, 0, 1)
+        h.SetBinContent(1, self.n_events)
+        self.output_list.append(h)
 
         self.write_output_objects()
 
@@ -98,7 +106,7 @@ class HistogramResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
         
             # Construct appropriate binning
-            bins = self.bins_from_config(block, observable)
+            bins = self.plot_utils.bins_from_config(block, observable)
             if not bins.any():
                 continue
                 
@@ -116,7 +124,7 @@ class HistogramResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
 
             # Construct appropriate binning
-            bins = self.bins_from_config(block, observable)
+            bins = self.plot_utils.bins_from_config(block, observable)
             if not bins.any():
                 continue
                     
@@ -133,7 +141,7 @@ class HistogramResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
 
             # Construct appropriate binning
-            bins = self.bins_from_config(block, observable)
+            bins = self.plot_utils.bins_from_config(block, observable)
             if not bins.any():
                 continue
                 
@@ -162,7 +170,7 @@ class HistogramResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
 
             # Construct appropriate binning
-            bins = self.bins_from_config(block, observable)
+            bins = plot_results_STAT_utils.bins_from_config(block, observable)
             if not bins.any():
                 continue
                 
@@ -193,7 +201,10 @@ class HistogramResults(common_base.CommonBase):
         dim_observable = 0
         for i,_ in enumerate(col):
             if len(col[i]) > 0:
-                dim_observable = len(col[0])
+                if isinstance(col[i], list):
+                    dim_observable = len(col[i][0])
+                else:
+                    dim_observable = 1
                 break
         
         # Construct histogram
@@ -224,7 +235,6 @@ class HistogramResults(common_base.CommonBase):
         
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
-    # TODO: construct sets of binnings from hepdata
     #-------------------------------------------------------------------------------------------
     def histogram_2d_observable(self, col, column_name=None, bins=None):
 
@@ -242,41 +252,14 @@ class HistogramResults(common_base.CommonBase):
         self.output_list.append(h)
 
     # ---------------------------------------------------------------
-    # Get bin array specified in config block
-    # ---------------------------------------------------------------
-    def bins_from_config(self, block, observable):
-    
-        if 'hepdata' in block:
-            print(f'  Histogram with hepdata binning for {observable}')
-            return self.bins_from_hepdata(block)
-        elif 'bins' in block:
-            print(f'  Histogram with custom binning for {observable}')
-            return np.array(block['bins'])
-        else:
-            print(f'  Warning: No binning found for {observable}')
-            return np.array([])
-            
-    # ---------------------------------------------------------------
-    # Get bin array from hepdata file specified in config block
-    # ---------------------------------------------------------------
-    def bins_from_hepdata(self, block):
-
-        f = ROOT.TFile(block['hepdata'], 'READ')
-        dir = f.Get(block['hepdata_dir'])
-        h = dir.Get(block['hepdata_hname'])
-        bins = np.array(h.GetXaxis().GetXbins())
-        f.Close()
-        
-        return bins
-
-    # ---------------------------------------------------------------
     # Save all ROOT histograms to file
     # ---------------------------------------------------------------
     def write_output_objects(self):
 
         # Save output objects
-        outputfilename = os.path.join(self.output_dir, 'AnalysisResults.root')
-        fout = ROOT.TFile(outputfilename, 'recreate')
+        output_file = self.input_file.replace('observables', 'histograms').replace('parquet', 'root')
+        output_path = os.path.join(self.output_dir, output_file)
+        fout = ROOT.TFile(output_path, 'recreate')
         fout.cd()
         for obj in self.output_list:
 
