@@ -63,7 +63,7 @@ hadron:
 #------------------------------------------------------------------
 # Some general jet parameters
 jet_R: [0.2, 0.4, 0.5]
-min_jet_pt: 20.
+min_jet_pt: 10.
 max_jet_y: 3.
 constituent_threshold: [0., 0.15, 0.5]
 
@@ -160,7 +160,8 @@ inclusive_chjet:
   # ALICE, (no hepdata)
   subjetz_alice:
     r: [0.1, 0.2]
-    bins: [0.7, 0.8, 0.86, 0.9, 0.94, 0.98, 1.0]
+    bins_r01: [0.6, 0.7, 0.77, 0.83, 0.89, 0.95, 1.0]
+    bins_r02: [0.7, 0.8, 0.86, 0.9, 0.94, 0.98, 1.0]
   
   # ALICE, (no hepdata)
   axis_alice:

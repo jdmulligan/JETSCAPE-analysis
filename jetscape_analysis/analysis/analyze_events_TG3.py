@@ -141,6 +141,9 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.inclusive_chjet_hardest_kt_alice_R04_bins = np.array(self.inclusive_chjet_observables["hardest_kt_alice"]["bins_ktg_R04"])
         self.inclusive_chjet_hardest_kt_alice_R05_bins = np.array(self.inclusive_chjet_observables["hardest_kt_alice"]["bins_ktg_R05"])
         
+        # Charged jet RAA
+        self.inclusive_chjet_pt_bins = np.linspace(0., 300., 300+1)
+        
         #------------------------------------------------------
         # Semi-inclusive jet binnings
         
@@ -159,7 +162,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         
         self.semi_inclusive_chjet_IAA_alice_502_bins = np.linspace(0., 200., 200+1)
         self.semi_inclusive_chjet_dphi_alice_502_bins = np.linspace(np.pi/2, np.pi, 100+1)
-        
+                
         # Nsubjettiness
         self.semi_inclusive_chjet_nsubjettiness_alice_bins = np.linspace(0., 1., 100+1)
         
@@ -175,7 +178,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.initialize_hadron_histograms()
         self.initialize_inclusive_jet_histograms()
         self.initialize_inclusive_chjet_histograms()
-        self.initialize_semi_inclusive_chjet_histograms()
+        self.initialize_semi_inclusive_chjet_histograms(charged=True)
+        self.initialize_semi_inclusive_chjet_histograms(charged=False)
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -358,11 +362,23 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 h.GetYaxis().SetTitle('recoil pt')
                 h.Sumw2()
                 setattr(self, hname, h)
+                
+                # Charged jet pt
+                hname = f'h_chjet_pt_R{jetR}_pt{constituent_threshold}'
+                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_pt_bins)-1,
+                                                self.inclusive_chjet_pt_bins)
+                h.Sumw2()
+                setattr(self, hname, h)
 
     # ---------------------------------------------------------------
     # Initialize output objects
     # ---------------------------------------------------------------
-    def initialize_semi_inclusive_chjet_histograms(self):
+    def initialize_semi_inclusive_chjet_histograms(self, charged=True):
+
+        if charged:
+            ch_label = 'chjet'
+        else:
+            ch_label = 'jet'
 
         for jetR in self.jet_R:
             for constituent_threshold in self.constituent_threshold:
@@ -371,30 +387,30 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 for hist_label in ['low', 'high']:
                 
                     # Yield
-                    hname = f'h_semi_inclusive_chjet_IAA_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
+                    hname = f'h_semi_inclusive_{ch_label}_IAA_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
                     h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_276_bins)-1,
                                                     self.semi_inclusive_chjet_IAA_alice_276_bins)
                     h.Sumw2()
                     setattr(self, hname, h)
                     
                     # Delta Phi
-                    hname = f'h_semi_inclusive_chjet_dphi_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
+                    hname = f'h_semi_inclusive_{ch_label}_dphi_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
                     h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_dphi_alice_276_bins)-1,
                                                     self.semi_inclusive_chjet_dphi_alice_276_bins)
                     h.Sumw2()
                     setattr(self, hname, h)
 
                     # For 2.76 TeV, make the 2D hist for folding (but keep the above so we can make predictions easily)
-                    hname = f'h_semi_inclusive_chjet_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
-                    h = ROOT.TH2F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_276_bins)-1,
-                                                self.semi_inclusive_chjet_IAA_alice_276_bins,
-                                                len(self.semi_inclusive_chjet_dphi_alice_276_bins)-1,
-                                                self.semi_inclusive_chjet_dphi_alice_276_bins)
+                    hname = f'h_semi_inclusive_{ch_label}_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
+                    h = ROOT.TH2F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_502_bins)-1,
+                                                self.semi_inclusive_chjet_IAA_alice_502_bins,
+                                                len(self.semi_inclusive_chjet_dphi_alice_502_bins)-1,
+                                                self.semi_inclusive_chjet_dphi_alice_502_bins)
                     h.Sumw2()
                     setattr(self, hname, h)
                     
                     # For 5.02 TeV, make 2D hist instead
-                    hname = f'h_semi_inclusive_chjet_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_502_pt{constituent_threshold}'
+                    hname = f'h_semi_inclusive_{ch_label}_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_502_pt{constituent_threshold}'
                     h = ROOT.TH2F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_502_bins)-1,
                                                 self.semi_inclusive_chjet_IAA_alice_502_bins,
                                                 len(self.semi_inclusive_chjet_dphi_alice_502_bins)-1,
@@ -403,7 +419,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                     setattr(self, hname, h)
                     
                     # Nsubjettiness
-                    hname = f'h_semi_inclusive_chjet_nsubjettiness_{hist_label}Trigger_alice_R{jetR}_pt{constituent_threshold}'
+                    hname = f'h_semi_inclusive_{ch_label}_nsubjettiness_{hist_label}Trigger_alice_R{jetR}_pt{constituent_threshold}'
                     h = ROOT.TH1F(hname, hname, len(self.semi_inclusive_chjet_nsubjettiness_alice_bins)-1,
                                                     self.semi_inclusive_chjet_nsubjettiness_alice_bins)
                     h.Sumw2()
@@ -411,14 +427,14 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
                 # N triggers
                 bins = np.array([5., 7, 8, 9, 20, 50])
-                hname = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}'
+                hname = f'h_semi_inclusive_{ch_label}_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}'
                 h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
                 h.Sumw2()
                 setattr(self, hname, h)
                 
                 # N triggers
                 bins = np.array([8., 9, 15, 45])
-                hname = f'h_semi_inclusive_chjet_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}'
+                hname = f'h_semi_inclusive_{ch_label}_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}'
                 h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
                 h.Sumw2()
                 setattr(self, hname, h)
@@ -474,6 +490,9 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Fill inclusive full jet histograms
                 [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, jetR, constituent_threshold, charged=False) for jet in jets_selected]
                 
+                # Fill jet correlations -- full
+                self.fill_semi_inclusive_jet_histograms(jets_selected, fj_hadrons_positive, fj_hadrons_negative, jetR, constituent_threshold, charged=False)
+                
                 # Charged jets
                 # -----------------
                 cs_charged = fj.ClusterSequence(fj_hadrons_positive_charged, jet_def)
@@ -483,8 +502,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Fill inclusive charged jet histograms
                 [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, constituent_threshold, charged=True) for jet in jets_selected_charged]
                 
-                # Fill jet correlations
-                self.fill_semi_inclusive_chjet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, constituent_threshold)
+                # Fill jet correlations -- charged
+                self.fill_semi_inclusive_jet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, constituent_threshold, charged=True)
 
     # ---------------------------------------------------------------
     # Fill hadron histograms
@@ -598,7 +617,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             if accept_jet:
                 getattr(self, f'h_jet_pt_alice_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
             getattr(self, f'h_jet_pt_alice_no_ptlead_cut_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
-    
+                
     # ---------------------------------------------------------------
     # Fill inclusive charged jet histograms
     # ---------------------------------------------------------------
@@ -709,6 +728,10 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             ktg = jet_groomed_lund.kt()
             # Note: untagged jets will return kt = 0
             getattr(self, f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}_pt{constituent_threshold}").Fill(ktg)
+            
+        # Charged jet pt
+        if abs(jet.eta()) < (self.inclusive_jet_observables['pt_alice']['eta_cut_R'] - jetR):
+            getattr(self, f'h_chjet_pt_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
 
     # ---------------------------------------------------------------
     # Fill semi-inclusive charged jet histograms
@@ -716,8 +739,13 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # Note: We may need a lower jet pt range to determine cref, but I didn't look into this.
     # Note: Doesn't account for detector effects on hadron.
     # ---------------------------------------------------------------
-    def fill_semi_inclusive_chjet_histograms(self, jets_selected, fj_hadrons_positive_charged,
-                                             fj_hadrons_negative_charged, jetR, constituent_threshold):
+    def fill_semi_inclusive_jet_histograms(self, jets_selected, fj_hadrons_positive_charged,
+                                             fj_hadrons_negative_charged, jetR, constituent_threshold, charged=True):
+
+        if charged:
+            ch_label = 'chjet'
+        else:
+            ch_label = 'jet'
 
         # Define trigger classes for both traditional h-jet analysis and Nsubjettiness analysis
         hjet_low_trigger_range_276 = self.semi_inclusive_chjet_observables['hjet_alice']['low_trigger_range_276']
@@ -756,8 +784,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 found_trigger =  hjet_found_low_276 or hjet_found_low_502 or hjet_found_high or nsubjettiness_found_low or nsubjettiness_found_high
 
                 # Record N triggers
-                getattr(self, f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
-                getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
+                getattr(self, f'h_semi_inclusive_{ch_label}_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
+                getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
                 
                 # Search for recoil jets
                 if found_trigger:
@@ -773,24 +801,25 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                             # Jet yield and Delta phi
                             if hjet_found_low_276:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    getattr(self, f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
+                                    getattr(self, f'h_semi_inclusive_{ch_label}_IAA_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
 
                                 if 40 < jet_pt < 60:
-                                    getattr(self, f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
+                                    getattr(self, f'h_semi_inclusive_{ch_label}_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
 
-                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
 
                             if hjet_found_low_502:
-                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_lowTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
                                     
                             if hjet_found_high:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    getattr(self, f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
+                                    getattr(self, f'h_semi_inclusive_{ch_label}_IAA_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
 
                                 if 40 < jet_pt < 60:
-                                    getattr(self, f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
+                                    getattr(self, f'h_semi_inclusive_{ch_label}_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
 
-                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_highTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
 
                             # Nsubjettiness
                             # We use the jet pt including recoils here, since the Nsubjettiness is calculated
@@ -802,7 +831,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
                                         if tau1 > 1e-3:
-                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_lowTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
+                                            getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_lowTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
 
                             if nsubjettiness_found_high:
                                 if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
@@ -810,7 +839,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                         tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
                                         tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
                                         if tau1 > 1e-3:
-                                            getattr(self, f'h_semi_inclusive_chjet_nsubjettiness_highTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
+                                            getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_highTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
         
     #---------------------------------------------------------------
     # Return leading jet (or subjet)

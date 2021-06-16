@@ -59,7 +59,7 @@ class PlotResults(common_base.CommonBase):
         self.semi_inclusive_chjet_observables = config['semi_inclusive_chjet']
         
         self.sqrts_list = [2760, 5020]
-        self.cent_list = [ [0,10], [0,5], [5,10] ]
+        self.cent_list = [ [0,10], [0,5], [5,10], [30,50] ]
         self.constituent_threshold_list = config['constituent_threshold']
                 
         print(self)
@@ -124,7 +124,7 @@ class PlotResults(common_base.CommonBase):
         
         #----------------------------
         # Some extra fun
-        have_fun = False
+        have_fun = True
         
         if have_fun:
         
@@ -423,7 +423,7 @@ class PlotResults(common_base.CommonBase):
                             data_centralities=['0-10'],
                             mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
                             xtitle=xtitle,
-                            ytitle = '#DeltaI_{AA}',
+                            ytitle = '#Delta_{recoil}',
                             ymax=1.8,
                             outputfilename=f'h_semi_inclusive_chjet_IAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                             R=R,
@@ -650,8 +650,8 @@ class PlotResults(common_base.CommonBase):
             h_AA = h_AA.Rebin(bins.size-1, f'{h_AA.GetName()}_rebinned', bins)
             h_pp = h_pp.Rebin(bins.size-1, f'{h_pp.GetName()}_rebinned', bins)
         if raa_type in ['chjet_axis']:
-            h_AA.Rebin(20)
-            h_pp.Rebin(20)
+            h_AA.Rebin(2)
+            h_pp.Rebin(2)
             
         # Normalization
         h_pp.Scale(1., 'width')
@@ -694,7 +694,7 @@ class PlotResults(common_base.CommonBase):
                 output_filename = os.path.join(outdir, f'ratio_{outputfilename}')
                 h_RAA = self.plot_ratio(h_pp, h_AA, output_filename, xtitle, ytitle,
                                         cent=mc_centralities[0], eta_cut=eta_cut, label=raa_type, R=R, do_chi2=do_chi2,
-                                        save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi', 'chjet_subjetz']), h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio, pt_label=pt_label)
+                                        save_plot = (raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi', 'hjet_IAA', 'chjet_subjetz', 'chjet_angularity', 'chjet_axis']), h_data_list=h_data_list, h_data_list_ratio=h_data_list_ratio, pt_label=pt_label)
                 if raa_type in ['chjet_g', 'chjet_mass', 'hjet_dphi']:
                     return
 
