@@ -383,6 +383,15 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                                     self.semi_inclusive_chjet_dphi_alice_276_bins)
                     h.Sumw2()
                     setattr(self, hname, h)
+
+                    # For 2.76 TeV, make the 2D hist for folding (but keep the above so we can make predictions easily)
+                    hname = f'h_semi_inclusive_chjet_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_276_pt{constituent_threshold}'
+                    h = ROOT.TH2F(hname, hname, len(self.semi_inclusive_chjet_IAA_alice_276_bins)-1,
+                                                self.semi_inclusive_chjet_IAA_alice_276_bins,
+                                                len(self.semi_inclusive_chjet_dphi_alice_276_bins)-1,
+                                                self.semi_inclusive_chjet_dphi_alice_276_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
                     
                     # For 5.02 TeV, make 2D hist instead
                     hname = f'h_semi_inclusive_chjet_IAA_dphi_{hist_label}Trigger_alice_R{jetR}_502_pt{constituent_threshold}'
@@ -768,6 +777,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
                                 if 40 < jet_pt < 60:
                                     getattr(self, f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
+
+                                getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
 
                             if hjet_found_low_502:
                                 getattr(self, f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
