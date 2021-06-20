@@ -124,7 +124,7 @@ class PlotResults(common_base.CommonBase):
         
         #----------------------------
         # Some extra fun
-        have_fun = True
+        have_fun = False
         
         if have_fun:
         
@@ -162,7 +162,28 @@ class PlotResults(common_base.CommonBase):
                       ymax=1.8,
                       outputfilename=f'h_hadron_RAA_alice_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                       do_chi2=True)
+                      
+        # Also plot CMS RAA
+        h_data_list = []
+        f = ROOT.TFile(self.hadron_observables['pt_cms']['hepdata_0_5'], 'READ')
+        dir = f.Get('Table 8')
+        h_data_0_5 = dir.Get('Graph1D_y1')
+        h_data_list.append([h_data_0_5, '0-5%'])
+        f.Close()
 
+        # Plot
+        self.plot_raa(raa_type='hadron',
+                      hname = 'h_hadron_pt_cmsScaled',
+                      h_data_list=h_data_list,
+                      eta_cut=np.round(self.hadron_observables['pt_cms']['eta_cut'], decimals=1),
+                      data_centralities=['0-5%'],
+                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
+                      xtitle="#it{p}_{T} (GeV/#it{c})",
+                      ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
+                      ymax=1.8,
+                      outputfilename=f'h_hadron_RAA_cms_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
+                      do_chi2=True)
+                      
     #-------------------------------------------------------------------------------------------
     def plot_jet_raa(self):
 
