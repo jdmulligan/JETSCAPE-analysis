@@ -119,7 +119,8 @@ class PlotResults(common_base.CommonBase):
         self.plot_chjet_tg()
         
         # h-jet
-        self.plot_semi_inclusive_chjet_IAA()
+        self.plot_semi_inclusive_chjet_IAA(charged=True)
+        self.plot_semi_inclusive_chjet_IAA(charged=False)
         self.plot_semi_inclusive_chjet_dphi()
         
         #----------------------------
@@ -212,6 +213,20 @@ class PlotResults(common_base.CommonBase):
                           ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
                           ymax=1.8,
                           outputfilename=f'h_jet_RAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
+                          R=R,
+                          do_chi2=True)
+                          
+            # Also plot charged jet RAA
+            self.plot_raa(raa_type='jet',
+                          hname = f'h_chjet_pt_R{R}{self.suffix}Scaled',
+                          h_data_list=h_data_list,
+                          eta_cut=np.round(self.inclusive_jet_observables['pt_alice']['eta_cut_R']-R, decimals=1),
+                          data_centralities=['0-10'],
+                          mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
+                          xtitle="#it{p}_{T,jet} (GeV/#it{c})",
+                          ytitle = '#frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]',
+                          ymax=1.8,
+                          outputfilename=f'h_chjet_RAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                           R=R,
                           do_chi2=True)
                           
@@ -321,7 +336,12 @@ class PlotResults(common_base.CommonBase):
                       do_chi2=False)
                       
     #-------------------------------------------------------------------------------------------
-    def plot_semi_inclusive_chjet_IAA(self):
+    def plot_semi_inclusive_chjet_IAA(self, charged=True):
+    
+        if charged:
+            ch_label = 'chjet'
+        else:
+            ch_label = 'jet'
             
         # Get experimental data
         R=0.4
@@ -341,9 +361,9 @@ class PlotResults(common_base.CommonBase):
         f.Close()
         
         if self.sqrts == 2760:
-            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
-            hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276{self.suffix}Scaled'
-            hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276{self.suffix}Scaled'
+            hname_ntrigger = f'h_semi_inclusive_{ch_label}_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
+            hname_high = f'h_semi_inclusive_{ch_label}_IAA_highTrigger_alice_R{R}_276{self.suffix}Scaled'
+            hname_low = f'h_semi_inclusive_{ch_label}_IAA_lowTrigger_alice_R{R}_276{self.suffix}Scaled'
             
             # Get JETSCAPE pp prediction
             filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
@@ -367,9 +387,9 @@ class PlotResults(common_base.CommonBase):
             h_AA_low.SetDirectory(0)
             f_AA.Close()
         elif self.sqrts == 5020:
-            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
-            hname_high = f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{R}_502{self.suffix}Scaled'
-            hname_low = f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{R}_502{self.suffix}Scaled'
+            hname_ntrigger = f'h_semi_inclusive_{ch_label}_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
+            hname_high = f'h_semi_inclusive_{ch_label}_IAA_dphi_highTrigger_alice_R{R}_502{self.suffix}Scaled'
+            hname_low = f'h_semi_inclusive_{ch_label}_IAA_dphi_lowTrigger_alice_R{R}_502{self.suffix}Scaled'
             
             # Get JETSCAPE pp prediction
             filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
@@ -446,7 +466,7 @@ class PlotResults(common_base.CommonBase):
                             xtitle=xtitle,
                             ytitle = '#Delta_{recoil}',
                             ymax=1.8,
-                            outputfilename=f'h_semi_inclusive_chjet_IAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
+                            outputfilename=f'h_semi_inclusive_{ch_label}_IAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
                             R=R,
                             do_chi2=True)
 
@@ -637,8 +657,12 @@ class PlotResults(common_base.CommonBase):
         h_AA = f_AA.Get(hname)
         if raa_type == 'jet':
             h_AA.Scale(0.5) # Since we hadd [0,5] and [5,10]
+            if 'chjet' in hname:
+               h_pp.Rebin(10)
+               h_AA.Rebin(10)
         h_AA.SetDirectory(0)
         f_AA.Close()
+        
 
         # For hadrons, impose a 1 GeV minimum, and subtract the recoil hadrons
         if raa_type == 'hadron':
