@@ -164,7 +164,7 @@ def _parse_header_line(line: str) -> HeaderInfo:
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
     info: Union[HeaderInfo, CrossSection]
-    if len(values) == 19 and values[1] == "Event":
+    if (len(values) == 19 and values[1] == "Event") or (len(values) == 17 and values[1] == "Event"):
         ##########################
         # Header v2 specification:
         ##########################
@@ -423,6 +423,9 @@ def _parse_with_pandas(chunk_generator: Iterator[str]) -> np.ndarray:
 
     return pd.read_csv(
         FileLikeGenerator(chunk_generator),
+        # NOTE: If the field is missing (such as eta and phi), they will exist, but they willl be filled with NaN
+        #       We actively take advantage of this so we don't have to change the parsing for header v1 (which
+        #       includes eta and phi) vs header v2 (which does not)
         names=["particle_index", "particle_ID", "status", "E", "px", "py", "pz", "eta", "phi"],
         header=None,
         comment="#",
