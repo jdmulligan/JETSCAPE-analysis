@@ -54,7 +54,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             config = yaml.safe_load(stream)
 
         self.sqrts = config['sqrt_s']
-        self.output_file = config['output_file']
+        self.output_file = f'observables_{self.sqrts}'
         # Update the output_file to contain the labeling in the final_state_hadrons file.
         # We use this naming convention as the flag for whether we should attempt to rename it.
         if "final_state_hadrons" in self.input_file_hadrons:

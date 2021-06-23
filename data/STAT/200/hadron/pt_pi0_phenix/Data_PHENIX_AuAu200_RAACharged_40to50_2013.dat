@@ -1,0 +1,14 @@
+# Version 1.0
+# DOI https://doi.org/10.1103/PhysRevC.87.034911
+# Source https://www.phenix.bnl.gov/phenix/WWW/info/data/ppg133/app_pi0raa.txt
+# Experiment PHENIX
+# System AuAu200
+# Centrality 40to50
+# XY pT RAA 
+# Label x y stat,low stat,high corr,low corr,high global,low global,high 
+9.75 6.0590e-01 3.8079e-02 3.8079e-02 7.6612e-02 7.6612e-02 8.8645e-02 8.8645e-02
+11 5.2305e-01 2.5272e-02 2.5272e-02 7.8265e-02 7.8265e-02 7.6524e-02 7.6524e-02
+13 5.6896e-01 5.1153e-02 5.1153e-02 1.1881e-01 1.1881e-01 8.3240e-02 8.3240e-02
+15 4.3622e-01 2.4810e-01 2.4810e-01 1.2182e-01 1.2182e-01 6.3819e-02 6.3819e-02
+17 6.2795e-01 1.9945e-01 1.9945e-01 2.2412e-01 2.2412e-01 9.1870e-02 9.1870e-02
+19 9.6547e-01 4.7647e-01 4.7647e-01 4.2141e-01 4.2141e-01 1.4125e-01 1.4125e-01

@@ -1,0 +1,98 @@
+*author: CHATRCHYAN
+*reference: ARXIV:1406.0932 : 2014
+*reference: CERN-PH-EP-2014-100 : 2014
+*experiment: CERN-LHC-CMS
+*detector: CMS
+*title: Measurement of jet fragmentation in PbPb and pp collisions at sqrt(s[NN]) = 2.76 TeV
+
+*dataset:
+*location: Figure 2
+*dscomment: (Top) The PbPb fragmentation function in bins of centrality (increasing from left to right) overlaid with pp reference data. Jets have 100 < pT < 120 GeV/c, and tracks have pT > 1 GeV/c. (Bottom) The ratio of each PbPb fragmentation function to its pp reference. Error bars are statistical, and boxes show the systematic uncertainty.
+*obskey: DN/DXI
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB / P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 50 TO 100
+*xheader: XI = LN(1/Z)
+*yheader: (1/N(JET)) DN(TRACK)/DXI
+*data: x : y : y : y
+ 0.0 TO 0.5; 0.0412  +- 0.0010 ; 0.0380 +- 0.0053 (DSYS=+0.0235 ,-0.0237 ); 0.92   +- 0.13   (DSYS=+0.18  ,-0.19  )
+ 0.5 TO 1.0; 0.3069  +- 0.0026 ; 0.294  +- 0.012  (DSYS=+0.114  ,-0.116  ); 0.959  +- 0.041  (DSYS=+0.102 ,-0.119 )
+ 1.0 TO 1.5; 0.8234  +- 0.0043 ; 0.841  +- 0.021  (DSYS=+0.234  ,-0.237  ); 1.021  +- 0.026  (DSYS=+0.052 ,-0.067 )
+ 1.5 TO 2.0; 1.4496  +- 0.0057 ; 1.413  +- 0.027  (DSYS=+0.243  ,-0.245  ); 0.975  +- 0.019  (DSYS=+0.022 ,-0.031 )
+ 2.0 TO 2.5; 1.9781  +- 0.0066 ; 1.903  +- 0.032  (DSYS=+0.142  ,-0.138  ); 0.962  +- 0.016  (DSYS=+0.020 ,-0.014 )
+ 2.5 TO 3.0; 2.3062  +- 0.0071 ; 2.213  +- 0.034  (DSYS=+0.160  ,-0.150  ); 0.960  +- 0.015  (DSYS=+0.025 ,-0.009 )
+ 3.0 TO 3.5; 2.3498  +- 0.0072 ; 2.180  +- 0.034  (DSYS=+0.265  ,-0.256  ); 0.928  +- 0.015  (DSYS=+0.029 ,-0.006 )
+ 3.5 TO 4.0; 2.0968  +- 0.0070 ; 2.085  +- 0.037  (DSYS=+0.305  ,-0.293  ); 0.994  +- 0.018  (DSYS=+0.042 ,-0.010 )
+ 4.0 TO 4.5; 1.5297  +- 0.0065 ; 1.678  +- 0.045  (DSYS=+0.253  ,-0.234  ); 1.097  +- 0.030  (DSYS=+0.072 ,-0.033 )
+ 4.5 TO 5.0; 0.4434  +- 0.0038 ; 0.439  +- 0.033  (DSYS=+0.073  ,-0.064  ); 0.991  +- 0.075  (DSYS=+0.104 ,-0.064 )
+*dataend:
+
+*dataset:
+*location: Figure 2
+*dscomment: (Top) The PbPb fragmentation function in bins of centrality (increasing from left to right) overlaid with pp reference data. Jets have 100 < pT < 120 GeV/c, and tracks have pT > 1 GeV/c. (Bottom) The ratio of each PbPb fragmentation function to its pp reference. Error bars are statistical, and boxes show the systematic uncertainty.
+*obskey: DN/DXI
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB / P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 30 TO 50
+*xheader: XI = LN(1/Z)
+*yheader: (1/N(JET)) DN(TRACK)/DXI
+*data: x : y : y : y
+ 0.0 TO 0.5; 0.0427  +- 0.0011 ; 0.0424 +- 0.0028 (DSYS=+0.0256 ,-0.0262 ); 0.994  +- 0.071  (DSYS=+0.216 ,-0.250 )
+ 0.5 TO 1.0; 0.3213  +- 0.0028 ; 0.3364 +- 0.0076 (DSYS=+0.1499 ,-0.1524 ); 1.047  +- 0.025  (DSYS=+0.126 ,-0.153 )
+ 1.0 TO 1.5; 0.8573  +- 0.0045 ; 0.811  +- 0.012  (DSYS=+0.264  ,-0.268  ); 0.946  +- 0.015  (DSYS=+0.055 ,-0.075 )
+ 1.5 TO 2.0; 1.4539  +- 0.0057 ; 1.365  +- 0.016  (DSYS=+0.269  ,-0.271  ); 0.939  +- 0.011  (DSYS=+0.033 ,-0.039 )
+ 2.0 TO 2.5; 1.9432  +- 0.0064 ; 1.753  +- 0.018  (DSYS=+0.144  ,-0.136  ); 0.9021 +- 0.0095 (DSYS=+0.0333,-0.0226)
+ 2.5 TO 3.0; 2.2631  +- 0.0069 ; 2.089  +- 0.019  (DSYS=+0.178  ,-0.162  ); 0.9230 +- 0.0090 (DSYS=+0.0388,-0.0207)
+ 3.0 TO 3.5; 2.3001  +- 0.0070 ; 2.230  +- 0.021  (DSYS=+0.325  ,-0.309  ); 0.9694 +- 0.0096 (DSYS=+0.0481,-0.0213)
+ 3.5 TO 4.0; 2.0522  +- 0.0068 ; 2.140  +- 0.027  (DSYS=+0.371  ,-0.351  ); 1.043  +- 0.014  (DSYS=+0.063 ,-0.024 )
+ 4.0 TO 4.5; 1.5303  +- 0.0064 ; 1.922  +- 0.041  (DSYS=+0.323  ,-0.294  ); 1.256  +- 0.027  (DSYS=+0.093 ,-0.033 )
+ 4.5 TO 5.0; 0.4517  +- 0.0038 ; 0.595  +- 0.032  (DSYS=+0.092  ,-0.077  ); 1.316  +- 0.072  (DSYS=+0.124 ,-0.054 )
+*dataend:
+
+*dataset:
+*location: Figure 2
+*dscomment: (Top) The PbPb fragmentation function in bins of centrality (increasing from left to right) overlaid with pp reference data. Jets have 100 < pT < 120 GeV/c, and tracks have pT > 1 GeV/c. (Bottom) The ratio of each PbPb fragmentation function to its pp reference. Error bars are statistical, and boxes show the systematic uncertainty.
+*obskey: DN/DXI
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB / P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 10 TO 30
+*xheader: XI = LN(1/Z)
+*yheader: (1/N(JET)) DN(TRACK)/DXI
+*data: x : y : y : y
+ 0.0 TO 0.5; 0.0424  +- 0.0011 ; 0.0427 +- 0.0020 (DSYS=+0.0244 ,-0.0247 ); 1.009  +- 0.054  (DSYS=+0.285 ,-0.300 )
+ 0.5 TO 1.0; 0.3248  +- 0.0028 ; 0.3302 +- 0.0049 (DSYS=+0.1323 ,-0.1348 ); 1.017  +- 0.017  (DSYS=+0.172 ,-0.189 )
+ 1.0 TO 1.5; 0.8550  +- 0.0044 ; 0.7821 +- 0.0074 (DSYS=+0.2229 ,-0.2266 ); 0.9148 +- 0.0099 (DSYS=+0.0918,-0.1032)
+ 1.5 TO 2.0; 1.4449  +- 0.0056 ; 1.2751 +- 0.0096 (DSYS=+0.2156 ,-0.2162 ); 0.8825 +- 0.0075 (DSYS=+0.0623,-0.0633)
+ 2.0 TO 2.5; 1.9310  +- 0.0063 ; 1.657  +- 0.011  (DSYS=+0.121  ,-0.109  ); 0.8579 +- 0.0063 (DSYS=+0.0564,-0.0492)
+ 2.5 TO 3.0; 2.2300  +- 0.0067 ; 1.932  +- 0.012  (DSYS=+0.203  ,-0.187  ); 0.8663 +- 0.0060 (DSYS=+0.0597,-0.0482)
+ 3.0 TO 3.5; 2.2501  +- 0.0067 ; 2.129  +- 0.014  (DSYS=+0.353  ,-0.339  ); 0.9461 +- 0.0068 (DSYS=+0.0689,-0.0528)
+ 3.5 TO 4.0; 2.0388  +- 0.0066 ; 2.230  +- 0.023  (DSYS=+0.397  ,-0.381  ); 1.094  +- 0.012  (DSYS=+0.085 ,-0.064 )
+ 4.0 TO 4.5; 1.5356  +- 0.0063 ; 1.922  +- 0.038  (DSYS=+0.251  ,-0.223  ); 1.251  +- 0.025  (DSYS=+0.108 ,-0.079 )
+ 4.5 TO 5.0; 0.4549  +- 0.0037 ; 0.703  +- 0.031  (DSYS=+0.082  ,-0.063  ); 1.545  +- 0.069  (DSYS=+0.161 ,-0.111 )
+*dataend:
+
+*dataset:
+*location: Figure 2
+*dscomment: (Top) The PbPb fragmentation function in bins of centrality (increasing from left to right) overlaid with pp reference data. Jets have 100 < pT < 120 GeV/c, and tracks have pT > 1 GeV/c. (Bottom) The ratio of each PbPb fragmentation function to its pp reference. Error bars are statistical, and boxes show the systematic uncertainty.
+*obskey: DN/DXI
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB / P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 0 TO 10
+*xheader: XI = LN(1/Z)
+*yheader: (1/N(JET)) DN(TRACK)/DXI
+*data: x : y : y : y
+ 0.0 TO 0.5; 0.0415  +- 0.0011 ; 0.0403 +- 0.0021 (DSYS=+0.0249 ,-0.0253 ); 0.970  +- 0.056  (DSYS=+0.342 ,-0.357 )
+ 0.5 TO 1.0; 0.3184  +- 0.0027 ; 0.3186 +- 0.0052 (DSYS=+0.1384 ,-0.1405 ); 1.001  +- 0.018  (DSYS=+0.228 ,-0.240 )
+ 1.0 TO 1.5; 0.8188  +- 0.0042 ; 0.7512 +- 0.0079 (DSYS=+0.2113 ,-0.2129 ); 0.917  +- 0.011  (DSYS=+0.143 ,-0.146 )
+ 1.5 TO 2.0; 1.4148  +- 0.0054 ; 1.220  +- 0.010  (DSYS=+0.197  ,-0.194  ); 0.8620 +- 0.0079 (DSYS=+0.1060,-0.1026)
+ 2.0 TO 2.5; 1.9049  +- 0.0061 ; 1.569  +- 0.011  (DSYS=+0.177  ,-0.167  ); 0.8236 +- 0.0066 (DSYS=+0.0926,-0.0871)
+ 2.5 TO 3.0; 2.1908  +- 0.0064 ; 1.826  +- 0.013  (DSYS=+0.271  ,-0.258  ); 0.8336 +- 0.0062 (DSYS=+0.0937,-0.0859)
+ 3.0 TO 3.5; 2.2070  +- 0.0064 ; 2.083  +- 0.016  (DSYS=+0.408  ,-0.393  ); 0.9437 +- 0.0076 (DSYS=+0.1090,-0.0968)
+ 3.5 TO 4.0; 2.0557  +- 0.0065 ; 2.162  +- 0.029  (DSYS=+0.438  ,-0.420  ); 1.051  +- 0.015  (DSYS=+0.128 ,-0.113 )
+ 4.0 TO 4.5; 1.5483  +- 0.0062 ; 2.094  +- 0.052  (DSYS=+0.324  ,-0.303  ); 1.353  +- 0.034  (DSYS=+0.190 ,-0.175 )
+ 4.5 TO 5.0; 0.4581  +- 0.0037 ; 0.724  +- 0.043  (DSYS=+0.258  ,-0.258  ); 1.579  +- 0.095  (DSYS=+0.234 ,-0.231 )
+*dataend:

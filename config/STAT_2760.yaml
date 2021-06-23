@@ -5,18 +5,21 @@
 # For each observable, we include its specific cuts in its block
 #
 # In the analysis code, we will store observables in a dictionary,
-# labeled as: {type}_{observable}_{experiment}
+# labeled as: {type}_{observable}_{experiment}_{suffix}
 # For example: hadron_pt_cms
 #              jet_mass_alice_R0.2
+# where the optional suffix is only present when needed.
 #
-# We assume we will compute every observable for every centrality,
-# although this can in principle be treated more specifically.
+# We compute each observable only if it lies in the specified centrality range.
+# We include all available centralities up to 50% centrality, at present.
 #
-# Include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
-# to be used for plotting
+# We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
+# to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
+# Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+# Note that we bin pp observables according to the binning in each AA centrality;
+# the pp hepdata tgraphs are included only for QA.
 #------------------------------------------------------------------
 sqrt_s: 2760
-output_file: 'observables_2760'
 
 # General jet finding parameters
 jet_R: [0.2, 0.3, 0.4, 0.5]
@@ -28,50 +31,104 @@ max_jet_y: 3.
 # Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
 hadron:
 
-  # ALICE, https://www.hepdata.net/record/ins1657384
-  # Centrality: 0-5, 5-10, 30-40, 40-50
+  # https://www.hepdata.net/record/ins1657384
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
-    hepdata: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+    centrality: ['0_5', '5_10', '10_20', '20_30', '30_40', '40_50']
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
     
-  # ALICE, https://www.hepdata.net/record/ins1377750
-  # charged pions
+    hepdata_pp: 'data/STAT/hadron/pt_ch_alice/HEPData-ins1657384-v1-Table_4.root'
+    hepdata_pp_gname: 'Graph1D_y2'
+    ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e4
+    
+    hepdata_AA: 'data/STAT/hadron/pt_ch_alice/HEPData-ins1657384-v1-Table_7.root'
+    hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
+    hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
+    ytitle: '#it{R}_{AA}'
+    
+  # https://www.hepdata.net/record/ins1377750 -- charged pions (no pp hepdata)
+  # Figs 22,23
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
+    centrality: ['0_5', '5_10', '10_20', '20_40']
+    xtitle: '#it{p}_{T}'
+    logy: True
     
-  # ALICE, https://www.hepdata.net/record/ins1662651
-  # neutral pions
+    hepdata_AA: ['HEPData-ins1377750-v1-Table_7.root', 'HEPData-ins1377750-v1-Table_8.root', 'HEPData-ins1377750-v1-Table_9.root', 'HEPData-ins1377750-v1-Table_10.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
+    
+  # https://www.hepdata.net/record/ins1662651 (no pp hepdata)
   pt_pi0_alice:
     eta_cut: 0.7
     pt: [5.0, 20.]
+    centrality: ['0_10', '20_50']
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
     
-  # ATLAS, https://www.hepdata.net/record/ins1360290
-  # Cuts:
-  #   - |eta|<2.
+    hepdata_AA: ['HEPData-ins1662651-v1-Table_5.root', 'HEPData-ins1662651-v1-Table_6.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
+    
+  # https://www.hepdata.net/record/ins1360290
   # leptons from W/Z decays removed
+  # Figs 10,13
+  # Note: The paper also performs pseudorapidity dependence for 0-5%, which we omit for now (Fig 14)
   pt_ch_atlas:
     eta_cut: 2.
     pt: [5.0, 150.]
+    centrality: ['0_5', '5_10', '10_20', '20_30', '30_40', '40_50']
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+    
+    hepdata_pp: 'HEPData-ins1360290-v2-Table_1.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e4
+    
+    hepdata_AA: ['HEPData-ins1360290-v2-Table_33.root', 'HEPData-ins1360290-v2-Table_34.root', 'HEPData-ins1360290-v2-Table_35.root', 'HEPData-ins1360290-v2-Table_36.root', 'HEPData-ins1360290-v2-Table_37.root', 'HEPData-ins1360290-v2-Table_38.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
 
-  # CMS, https://www.hepdata.net/record/ins1088823
-  # Cuts:
-  #   - |eta|<1
+  # https://www.hepdata.net/record/ins1088823
+  # Figs 3a,5
   pt_ch_cms:
     eta_cut: 1.0
     pt: [5.0, 100.]
+    centrality: ['0_5', '5_10', '10_30']
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+    
+    hepdata_pp: 'HEPData-ins1088823-v1-Table_1.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e4
+    
+    hepdata_AA: 'HEPData-ins1088823-v1-Table_5.root'
+    hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
+    hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
+    ytitle: '#it{R}_{AA}'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations
 hadron_correlations:
 
-  # ALICE, https://www.hepdata.net/record/ins1483164
+  # https://www.hepdata.net/record/ins1483164
   # pi0-hadron correlations
   pi0_hadron_alice:
     pt_trig: [8., 16.]
     
-  # ALICE, https://www.hepdata.net/record/ins1116150
+  # https://www.hepdata.net/record/ins1116150
   # v2
   v2_alice:
     eta_cut: 0.8
@@ -81,149 +138,344 @@ hadron_correlations:
 # Inclusive jet observables -- full jets
 inclusive_jet:
 
-  # ALICE, https://www.hepdata.net/record/ins1343112
-  # Centrality: 0-10, 10-30
-  # Cuts:
-  #   - pT^{ch lead} > 5 GeV
-  #   - |eta_jet|<0.5
+  # https://www.hepdata.net/record/ins1343112
+  # pT^{ch lead} > 5 GeV
   pt_alice:
     jet_R: [0.2]
     eta_cut_R: 0.7
     pt: [30., 120.]
+    centrality: ['0_10', '10_30']
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
     
-  # ATLAS, https://www.hepdata.net/record/ins1326911
-  # RAA
+    hepdata_pp_R0.2: 'HEPData-ins1343112-v1-Table_2.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    hepdata_AA_R0.2: ['HEPData-ins1343112-v1-Table_6.root', 'HEPData-ins1343112-v1-Table_7.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
+    
+  # https://www.hepdata.net/record/ins1326911
+  # Figs 1,3
+  # Note: the paper also considers the rapidity dependence, which we omit here for now
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.1
     pt: [32., 500.]
+    centrality: ['0_10', '10_20', '20_30', '30_40', '40_50']
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
     
-  # ATLAS, https://www.hepdata.net/record/ins1126965
-  # RCP
-  pt_rcp_atlas:
-    jet_R: [0.2, 0.3, 0.4, 0.5]
-    eta_cut: 2.1
-    pt: [38., 210.]
-
-  # ATLAS, https://www.hepdata.net/record/ins1511869
-  Dz_atlas:
-    jet_R: [0.4]
-    y_cut: 2.1
-    pt: [100., 398.]
-  Dpt_atlas:
-    jet_R: [0.4]
-    y_cut: 2.1
-    pt: [100., 398.]
-
-  # CMS, https://www.hepdata.net/record/ins1487278
+    hepdata_pp_R0.4: 'HEPData-ins1326911-v1-Table_2.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    hepdata_AA_R0.4: ['HEPData-ins1326911-v1-Table_27.root', 'HEPData-ins1326911-v1-Table_28.root', 'HEPData-ins1326911-v1-Table_29.root', 'HEPData-ins1326911-v1-Table_30.root', 'HEPData-ins1326911-v1-Table_31.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
+    
+  # https://www.hepdata.net/record/ins1126965
+  # We omit this for now, since we don't consider peripheral events
+  #pt_rcp_atlas:
+  #  jet_R: [0.2, 0.3, 0.4, 0.5]
+  #  eta_cut: 2.1
+  #  pt: [38., 210.]
+  
+  # https://www.hepdata.net/record/ins1487278
+  # Figs 4,8
   pt_cms:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut: 2.0
     pt: [70., 300.]
+    centrality: ['0_5', '5_10', '10_30', '30_50']
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
+
+    hepdata_pp_R0.2: 'HEPData-ins1487278-v1-Table_4.root'
+    hepdata_pp_R0.3: 'HEPData-ins1487278-v1-Table_4.root'
+    hepdata_pp_R0.4: 'HEPData-ins1487278-v1-Table_4.root'
+    hepdata_pp_gname_R0.2: 'Graph1D_y1'
+    hepdata_pp_gname_R0.3: 'Graph1D_y2'
+    hepdata_pp_gname_R0.4: 'Graph1D_y3'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
     
-  # CMS, https://inspirehep.net/literature/1299142 (no hepdata)
+    hepdata_AA_R0.2: ['HEPData-ins1487278-v1-Table_8a.root', 'HEPData-ins1487278-v1-Table_8b.root', 'HEPData-ins1487278-v1-Table_8c.root', 'HEPData-ins1487278-v1-Table_8d.root'
+    hepdata_AA_R0.3: ['HEPData-ins1487278-v1-Table_8a.root', 'HEPData-ins1487278-v1-Table_8b.root', 'HEPData-ins1487278-v1-Table_8c.root', 'HEPData-ins1487278-v1-Table_8d.root'
+    hepdata_AA_R0.4: ['HEPData-ins1487278-v1-Table_8a.root', 'HEPData-ins1487278-v1-Table_8b.root', 'HEPData-ins1487278-v1-Table_8c.root', 'HEPData-ins1487278-v1-Table_8d.root'
+    hepdata_AA_gname_R0.2: 'Graph1D_y1'
+    hepdata_AA_gname_R0.3: 'Graph1D_y2'
+    hepdata_AA_gname_R0.4: 'Graph1D_y3'
+    hepdata_AA_hname_R0.2: 'Hist1D_y1'
+    hepdata_AA_hname_R0.3: 'Hist1D_y2'
+    hepdata_AA_hname_R0.4: 'Hist1D_y3'
+    ytitle: '#it{R}_{AA}'
+
+  # https://www.hepdata.net/record/ins1511869
+  # Note: the paper also considers the rapidity dependence, which we omit here for now (Figs 4,5)
+  # Figs 3,7
+  Dz_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [100., 126., 158., 398.]
+    centrality: ['0_10', '20_30', '30_40']
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    
+    hepdata_pp_R0.4: 'HEPData-ins1511869-v1-Table_5.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    hepdata_AA_R0.4_pt0: ['HEPData-ins1511869-v1-Table_61.root', 'HEPData-ins1511869-v1-Table_62.root', 'HEPData-ins1511869-v1-Table_63.root']
+    hepdata_AA_R0.4_pt1: ['HEPData-ins1511869-v1-Table_65.root', 'HEPData-ins1511869-v1-Table_66.root', 'HEPData-ins1511869-v1-Table_67.root']
+    hepdata_AA_R0.4_pt2: ['HEPData-ins1511869-v1-Table_69.root', 'HEPData-ins1511869-v1-Table_70.root', 'HEPData-ins1511869-v1-Table_71.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{D(z)}'
+    
+  # Figs 2,6
+  Dpt_atlas:
+    jet_R: [0.4]
+    y_cut: 2.1
+    pt: [100., 126., 158., 398.]
+    centrality: ['0_10', '20_30', '30_40']
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    
+    hepdata_pp_R0.4: 'HEPData-ins1511869-v1-Table_1.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    hepdata_AA_R0.4_pt0: ['HEPData-ins1511869-v1-Table_45.root', 'HEPData-ins1511869-v1-Table_46.root', 'HEPData-ins1511869-v1-Table_47.root']
+    hepdata_AA_R0.4_pt1: ['HEPData-ins1511869-v1-Table_49.root', 'HEPData-ins1511869-v1-Table_50.root', 'HEPData-ins1511869-v1-Table_51.root']
+    hepdata_AA_R0.4_pt2: ['HEPData-ins1511869-v1-Table_53.root', 'HEPData-ins1511869-v1-Table_54.root', 'HEPData-ins1511869-v1-Table_55.root']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{D(z)}'
+    
+  # https://inspirehep.net/literature/1299142 (no hepdata)
+  # https://twiki.cern.ch/CMSPublic/HIN12013DataTables
+  # Figs 2,3,4
   Dz_cms:
     jet_R: [0.3]
     eta_cut: [0.3, 2.]
-    pt: [100., 300.]
+    pt: [100., 120., 150., 300.]
+    centrality: ['0_10', '10_30', '30_50']
     track_pt_min: 1.
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    
+    data_pp_R0.3_pt0: 'hin_12_013_data_2.txt'
+    data_pp_R0.3_pt1: 'hin_12_013_data_3.txt'
+    data_pp_R0.3_pt2: 'hin_12_013_data_4.txt'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    data_AA_R0.3_pt0: 'hin_12_013_data_2.txt'
+    data_AA_R0.3_pt1: 'hin_12_013_data_3.txt'
+    data_AA_R0.3_pt2: 'hin_12_013_data_4.txt'
+    data_AA_gname: 'Graph1D_y1'
+    data_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{D(z)}'
+    
+  # Figs 6,7,8
   Dpt_cms:
     jet_R: [0.3]
     eta_cut: [0.3, 2.]
-    pt: [100., 300.]
+    pt: [100., 120., 150., 300.]
+    centrality: ['0_10', '10_30', '30_50']
     track_pt_min: 1.
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    
+    data_pp_R0.3_pt0: 'hin_12_013_data_6.txt'
+    data_pp_R0.3_pt1: 'hin_12_013_data_7.txt'
+    data_pp_R0.3_pt2: 'hin_12_013_data_8.txt'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    data_AA_R0.3_pt0: 'hin_12_013_data_6.txt'
+    data_AA_R0.3_pt1: 'hin_12_013_data_7.txt'
+    data_AA_R0.3_pt2: 'hin_12_013_data_8.txt'
+    data_AA_gname: 'Graph1D_y1'
+    data_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{D(z)}'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
 inclusive_chjet:
 
-  # ALICE, https://www.hepdata.net/record/ins1263194
-  # Charged jet RAA
+  # https://www.hepdata.net/record/ins1263194
+  # Mostly this paper is RCP, which we omit for now -- however it has R02/R03 ratio for 0-10%
   pt_alice:
     jet_R: [0.2, 0.3]
     eta_cut: 0.5
     pt_ch: [30., 110.]
+    centrality: ['0_10']
     leading_track_min_pt: 5.
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+
+    hepdata_AA: 'HEPData-ins1263194-v1-Table_30.root'
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{0.2} / #it{R}_{0.3}'
     
-  # ALICE, https://www.hepdata.net/record/ins1512107 (tgraph...no binning)
-  #   Centrality: 0-10
-  #   Cuts / Notes:
-  #       - |eta_jet| < 0.9 - R
+  # https://www.hepdata.net/record/ins1512107 (tgraph only...no binning)
+  # Fig 7
+  # Note: reference is p-Pb, which we use as a proxy for pp
+  # Note: PbPb/pPb ratio is missing from HEPData (Fig 8)
   mass_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
-    pt_ch: [60., 80.]
+    pt_ch: [60., 80., 100., 120.]
+    centrality: ['0_10']
     bins: [0., 2, 4, 6, 8, 10, 12, 14, 16, 18]
-    hepdata_AA: 'data/TG3/m/HEPData-ins1512107-v1-Table_4.root'
-    hepdata_pp: 'data/TG3/m/HEPData-ins1512107-v1-Table_1.root'
+    xtitle: '#it{m}_{jet}'
+    
+    data_pp_R0.4_pt0: 'HEPData-ins1512107-v1-Table_1.root'
+    data_pp_R0.4_pt1: 'HEPData-ins1512107-v1-Table_2.root'
+    data_pp_R0.4_pt2: 'HEPData-ins1512107-v1-Table_3.root'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    data_AA_R0.4_pt0: 'HEPData-ins1512107-v1-Table_4.root'
+    data_AA_R0.4_pt1: 'HEPData-ins1512107-v1-Table_5.root'
+    data_AA_R0.4_pt2: 'HEPData-ins1512107-v1-Table_6.root'
+    data_AA_gname: 'Graph1D_y1'
+    data_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{D(z)}'
 
-  # ALICE, https://www.hepdata.net/record/ins1682990
-  #   Centrality: 0-10
-  #   Cuts / Notes:
-  #       - |eta_jet| < 0.9 - R
+  # https://www.hepdata.net/record/ins1682990
+  # Note: reference is to PYTHIA
   g_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
     pt_ch: [40., 60.]
-    hepdata: 'data/TG3/g/HEPData-ins1682990-v1-Table_11.root'
+    centrality: ['0_10']
+    xtitle: '#it{g}'
+
+    hepdata_pp_R0.2: 'HEPData-ins1682990-v1-Table_10.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    hepdata_AA_R0.2: 'HEPData-ins1682990-v1-Table_11.root'
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
+    
   ptd_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
     pt_ch: [40., 60.]
+    centrality: ['0_10']
+    xtitle: '#it{p}_{T,D}'
+    
+    hepdata_pp_R0.2: 'HEPData-ins1682990-v1-Table_13.root'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    
+    hepdata_AA_R0.2: 'HEPData-ins1682990-v1-Table_14.root'
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Jet correlation observables
 semi_inclusive_chjet:
 
-  # ALICE, https://www.hepdata.net/record/ins1376027
-  #   Centrality: 0-10%
+  # https://www.hepdata.net/record/ins1376027
+  # Note: reference is PYTHIA
   #   Cuts / Notes:
   #       - pi - dPhi < 0.6 for accepting recoil jets
   #       - |eta_jet| < 0.9 - R
   #       - Track pt > 0.15 (not corrected)
+  # Fig 9,10
   IAA_alice:
     jet_R: [0.2, 0.4, 0.5]
     eta_cut_R: 0.9
     pt_ch: [20., 100.]
+    centrality: ['0_10']
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
-    hepdata: 'data/TG3/hjet_IAA/HEPData-ins1376027-v1-Table_33.root'
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+
+    hepdata_AA_R0.2: 'HEPData-ins1376027-v1-Table_32.root'
+    hepdata_AA_R0.4: 'HEPData-ins1376027-v1-Table_33.root'
+    hepdata_AA_R0.5: 'HEPData-ins1376027-v1-Table_34.root'
+    hepdata_AA_R0.2_R0.4: 'HEPData-ins1376027-v1-Table_35.root'
+    hepdata_AA_R0.2_R0.5: 'HEPData-ins1376027-v1-Table_35.root'
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
+   
+  # Fig 11
+  # Note: HEPData is the distribution, not the ratio
   dphi_alice:
-    jet_R: [0.2, 0.4, 0.5]
+    jet_R: [0.4]
     eta_cut_R: 0.9
     pt_ch: [40., 60.]
+    centrality: ['0_10']
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
-    hepdata: 'data/TG3/hjet_delta_phi/HEPData-ins1376027-v1-Table_37.root'
+    xtitle: '#Delta#varphi'
+    
+    hepdata_AA_R0.4: 'HEPData-ins1376027-v1-Table_37.root'
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{R}_{AA}'
   
-  # ALICE, (no hepdata)
-  #   Centrality: 0-10
+  # https://inspirehep.net/literature/1862792
+  # (hepdata not yet published)
   #   Cuts / Notes:
   #       - pi - dPhi < 0.6 for accepting recoil jets
   #       - |eta_jet| < 0.9 - R
+  # There is no pp reference at 2.76 TeV -- we consider only the Pb-Pb distribution
+  # We consider only tau2/tau1 w/CA reclustering for now
   nsubjettiness_alice:
     jet_R: [0.4]
     pt_ch: [40., 60.]
+    centrality: ['0_10']
     low_trigger_range: [8, 9]
     high_trigger_range: [15, 45]
+    xtitle: '#frac{#tau_{2}}{#tau_{1}}'
+
+    hepdata_AA: 'HEPData-1623946228-v1-frac{tau_{2}}{tau_{1}}_with_CA_reclustering_in_Pb-Pb.root'
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 dijet:
 
-  # ALICE, https://www.hepdata.net/record/ins1394678
+  # https://www.hepdata.net/record/ins1394678
   v2_alice:
     jet_R: [0.2]
     eta_cut: 0.7
     pt: [20., 90.]
   
-  # ATLAS, https://www.hepdata.net/record/ins1240088
+  # https://www.hepdata.net/record/ins1240088
   v2_atlas:
     jet_R: [0.2]
     pt: [45., 160.]
   
-  # ATLAS, https://inspirehep.net/literature/1607896 (no hepdata)
+  # https://inspirehep.net/literature/1607896 (no hepdata...requested to Dennis/Laura)
   xj_atlas:
     jet_R: [0.3, 0.4]
     pt_leading_min: 79.
