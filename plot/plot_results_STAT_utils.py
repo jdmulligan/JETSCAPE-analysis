@@ -78,7 +78,6 @@ class PlotUtils(common_base.CommonBase):
         else:
             print(f'hepdata_AA_hname{suffix} not found!')
             
-
         # Get the appropriate centrality entry in the dir/hist list
         if type(block[dir_key]) is list:
             
@@ -105,6 +104,47 @@ class PlotUtils(common_base.CommonBase):
         f.Close()
         
         return bins
+        
+    # ---------------------------------------------------------------
+    # Get tgraph from hepdata file specified in config block
+    # ---------------------------------------------------------------
+    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, suffix=''):
+
+        # Open the HEPData file
+        hepdata_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
+        hepdata_filename = os.path.join(hepdata_dir, block['hepdata'])
+        f = ROOT.TFile(hepdata_filename, 'READ')
+        
+        # Find the relevant directory:
+        # - The list of dir/hist names may contain a suffix,
+        #   which specifies e.g. the pt bin, jetR, or other parameters
+        
+        # First, check for dir/hist names in config
+        if f'hepdata_pp_dir{suffix}' in block:
+            dir_key = f'hepdata_pp_dir{suffix}'
+        elif f'hepdata_pp_dir' in block:
+            dir_key = f'hepdata_pp_dir'
+        else:
+            #print(f'hepdata_pp_dir{suffix} not found!')
+            return None
+            
+        if f'hepdata_pp_gname{suffix}' in block:
+            g_key = f'hepdata_pp_gname{suffix}'
+        elif f'hepdata_pp_gname' in block:
+            g_key = f'hepdata_pp_gname'
+        else:
+            #print(f'hepdata_pp_gname{suffix} not found!')
+            return None
+
+        dir_name = block[dir_key]
+        g_name = block[g_key]
+        
+        # Get the tgraph, and return the bins
+        dir = f.Get(dir_name)
+        g = dir.Get(g_name)
+        f.Close()
+        
+        return g
         
     #---------------------------------------------------------------
     # Divide a histogram by a tgraph, point-by-point
@@ -134,8 +174,12 @@ class PlotUtils(common_base.CommonBase):
             gx = g_x.value
             gy = g_y.value
 
+            # Skip if tgraph starts below hist (since hist has min cut)
+            if gx < h_x:
+                continue
+                
             if not np.isclose(h_x, gx):
-                sys.exit(f'ERROR: hist x: {h_x}, graph x: {gx}')
+                print(f'ERROR: hist x: {h_x}, graph x: {gx}')
           
             new_content = h_y / gy
             
