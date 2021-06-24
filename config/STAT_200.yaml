@@ -36,7 +36,7 @@ hadron:
   pt_pi0_phenix:
     eta_cut: 0.35
     pt: [5., 20.]
-    centrality: ['0_10', '10_20', '20_30', '30_40', '40_50']
+    centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     
     data_AA: ['Data_PHENIX_AuAu200_RAACharged_0to10_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_10to20_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_20to30_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_30to40_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_40to50_2013.dat']
@@ -47,7 +47,7 @@ hadron:
   pt_ch_star:
     eta_cut: 0.5
     pt: [5., 12.]
-    centrality: ['0_5', '10_20', '20_30', '30_40']
+    centrality: [[0,5], [10,20], [20,30], [30,40]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
     
@@ -86,7 +86,7 @@ inclusive_chjet:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut_R: 1.0
     pt_ch: [5., 30]
-    centrality: ['0_10']
+    centrality: [[0,10]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
        
@@ -110,7 +110,7 @@ semi_inclusive_chjet:
     jet_R: [0.2, 0.3, 0.4, 0.5]
     eta_cut_R: 1.
     pt_ch: [5., 30.]
-    centrality: ['0_10']
+    centrality: [[0,10]]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
@@ -126,7 +126,7 @@ semi_inclusive_chjet:
     jet_R: [0.2, 0.3, 0.4, 0.5]
     eta_cut_R: 1.
     pt_ch: [9., 13.]
-    centrality: ['0_10']
+    centrality: [[0,10]]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
