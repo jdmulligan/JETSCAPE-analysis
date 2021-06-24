@@ -51,13 +51,14 @@ hadron:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
     
-    hepdata_pp: 'HEPData-ins619063-v1-Table_1.root'
+    hepdata: 'HEPData-ins619063-v1-root.root'
+    hepdata_pp_dir: 'Table 1'
     hepdata_pp_gname: 'Graph1D_y8'
     ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e4
-       
-    hepdata_AA: 'HEPData-ins619063-v1-Table_3.root'
+    
+    hepdata_AA_dir: 'Table 3'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
     ytitle: '#it{R}_{AA}'
@@ -89,7 +90,8 @@ inclusive_chjet:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
        
-    hepdata_AA: 'HEPData-ins1798665-v1-Table_10.root'
+    hepdata: 'HEPData-ins1798665-v1-root.root'
+    hepdata_AA_dir: 'Table 10'
     hepdata_AA_gname_R0.2: ['Graph1D_y1']
     hepdata_AA_hname_R0.2: ['Hist1D_y1']
     hepdata_AA_gname_R0.3: ['Graph1D_y1']
@@ -114,7 +116,8 @@ semi_inclusive_chjet:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
        
-    hepdata_AA_R02_R05: 'HEPData-ins1512115-v1-Table_38'
+    hepdata: 'HEPData-ins1512115-v1-root.root'
+    hepdata_AA_R02_R05_dir: 'Table 38'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
@@ -129,13 +132,14 @@ semi_inclusive_chjet:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
     
-    hepdata_pp:  'HEPData-ins1512115-v1-Table_42'
+    hepdata: 'HEPData-ins1512115-v1-root.root'
+    hepdata_pp_dir:  'Table 42'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e4
        
-    hepdata_AA: 'HEPData-ins1512115-v1-Table_39'
+    hepdata_AA_dir: 'Table 39'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
