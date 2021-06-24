@@ -61,7 +61,7 @@ hadron:
     logy: True
     
     hepdata: 'HEPData-ins1377750-v1-root.root'
-    hepdata_AA_dir: ['Table 7', 'Table8', 'Table 9', 'Table 10']
+    hepdata_AA_dir: ['Table 7', 'Table 8', 'Table 9', 'Table 10']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle: '#it{R}_{AA}'
@@ -132,12 +132,14 @@ hadron_correlations:
   # pi0-hadron correlations
   pi0_hadron_alice:
     pt_trig: [8., 16.]
+    centrality: [[0,10]]
     
   # https://www.hepdata.net/record/ins1116150
   # v2
   v2_alice:
     eta_cut: 0.8
     pt: [5., 20.]
+    centrality: [[0,10]]
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
@@ -154,13 +156,13 @@ inclusive_jet:
     logy: True
     
     hepdata: 'HEPData-ins1343112-v1-root.root'
-    hepdata_pp_R0.2_dir: 'Table 2'
+    hepdata_pp_dir_R0.2: 'Table 2'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.2_dir: ['Table 6', 'Table 7']
+    hepdata_AA_dir_R0.2: ['Table 6', 'Table 7']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle: '#it{R}_{AA}'
@@ -177,13 +179,13 @@ inclusive_jet:
     logy: True
     
     hepdata: 'HEPData-ins1326911-v1-root.root'
-    hepdata_pp_R0.4_dir: 'Table 2'
+    hepdata_pp_dir_R0.4: 'Table 2'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.4_dir: ['Table 27', 'Table 28', 'Table 29', 'Table 30', 'Table 31']
+    hepdata_AA_dir_R0.4: ['Table 27', 'Table 28', 'Table 29', 'Table 30', 'Table 31']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle: '#it{R}_{AA}'
@@ -206,9 +208,9 @@ inclusive_jet:
     logy: True
 
     hepdata: 'HEPData-ins1487278-v1-root.root'
-    hepdata_pp_R0.2_dir: 'Table 4'
-    hepdata_pp_R0.3_dir: 'Table 4'
-    hepdata_pp_R0.4_dir: 'Table 4'
+    hepdata_pp_dir_R0.2: 'Table 4'
+    hepdata_pp_dir_R0.3: 'Table 4'
+    hepdata_pp_dir_R0.4: 'Table 4'
     hepdata_pp_gname_R0.2: 'Graph1D_y1'
     hepdata_pp_gname_R0.3: 'Graph1D_y2'
     hepdata_pp_gname_R0.4: 'Graph1D_y3'
@@ -216,9 +218,9 @@ inclusive_jet:
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.2_dir: ['Table 8a', 'Table 8b', 'Table 8c', 'Table 8d']
-    hepdata_AA_R0.3_dir: ['Table 8a', 'Table 8b', 'Table 8c', 'Table 8d']
-    hepdata_AA_R0.4_dir: ['Table 8a', 'Table 8b', 'Table 8c', 'Table 8d']
+    hepdata_AA_dir_R0.2: ['Table 8a', 'Table 8b', 'Table 8c', 'Table 8d']
+    hepdata_AA_dir_R0.3: ['Table 8a', 'Table 8b', 'Table 8c', 'Table 8d']
+    hepdata_AA_dir_R0.4: ['Table 8a', 'Table 8b', 'Table 8c', 'Table 8d']
     hepdata_AA_gname_R0.2: 'Graph1D_y1'
     hepdata_AA_gname_R0.3: 'Graph1D_y2'
     hepdata_AA_gname_R0.4: 'Graph1D_y3'
@@ -244,9 +246,9 @@ inclusive_jet:
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.4_pt0_dir: ['Table 61', 'Table 62', 'Table 63']
-    hepdata_AA_R0.4_pt1_dir: ['Table 65', 'Table 66', 'Table 67']
-    hepdata_AA_R0.4_pt2_dir: ['Table 69', 'Table 70', 'Table 71']
+    hepdata_AA_dir_R0.4_pt0: ['Table 61', 'Table 62', 'Table 63']
+    hepdata_AA_dir_R0.4_pt1: ['Table 65', 'Table 66', 'Table 67']
+    hepdata_AA_dir_R0.4_pt2: ['Table 69', 'Table 70', 'Table 71']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle: '#it{R}_{D(z)}'
@@ -266,9 +268,9 @@ inclusive_jet:
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.4_pt0_dir: ['Table 45', 'Table 46', 'Table 47']
-    hepdata_AA_R0.4_pt1_dir: ['Table 49', 'Table 50', 'Table 51']
-    hepdata_AA_R0.4_pt2_dir: ['Table 53', 'Table 54', 'Table 55']
+    hepdata_AA_dir_R0.4_pt0: ['Table 45', 'Table 46', 'Table 47']
+    hepdata_AA_dir_R0.4_pt1: ['Table 49', 'Table 50', 'Table 51']
+    hepdata_AA_dir_R0.4_pt2: ['Table 53', 'Table 54', 'Table 55']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle: '#it{R}_{D(z)}'
@@ -330,15 +332,15 @@ inclusive_chjet:
   pt_alice:
     jet_R: [0.2, 0.3]
     eta_cut: 0.5
-    pt_ch: [30., 110.]
+    pt: [30., 110.]
     centrality: [[0,10]]
     leading_track_min_pt: 5.
     xtitle: '#it{p}_{T} (GeV/#it{c})'
 
     hepdata: 'HEPData-ins1263194-v1-root.root'
     hepdata_AA_dir: 'Table 30'
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{0.2} / #it{R}_{0.3}'
     
   # https://www.hepdata.net/record/ins1512107 (tgraph only...no binning)
@@ -348,22 +350,22 @@ inclusive_chjet:
   mass_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
-    pt_ch: [60., 80., 100., 120.]
+    pt: [60., 80., 100., 120.]
     centrality: [[0,10]]
     bins: [0., 2, 4, 6, 8, 10, 12, 14, 16, 18]
     xtitle: '#it{m}_{jet}'
     
     hepdata: 'HEPData-ins1512107-v1-root.root'
-    data_pp_R0.4_pt0_dir: 'Table 1'
-    data_pp_R0.4_pt1_dir: 'Table 2'
-    data_pp_R0.4_pt2_dir: 'Table 3'
+    data_pp_dir_R0.4_pt0: 'Table 1'
+    data_pp_dir_R0.4_pt1: 'Table 2'
+    data_pp_dir_R0.4_pt2: 'Table 3'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    data_AA_R0.4_pt0_dir: 'Table 4'
-    data_AA_R0.4_pt1_dir: 'Table 5'
-    data_AA_R0.4_pt2_dir: 'Table 6'
+    data_AA_dir_R0.4_pt0: 'Table 4'
+    data_AA_dir_R0.4_pt1: 'Table 5'
+    data_AA_dir_R0.4_pt2: 'Table 6'
     data_AA_gname: 'Graph1D_y1'
     data_AA_hname: 'Hist1D_y1'
     ytitle: '#it{R}_{D(z)}'
@@ -373,39 +375,39 @@ inclusive_chjet:
   g_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
-    pt_ch: [40., 60.]
+    pt: [40., 60.]
     centrality: [[0,10]]
     xtitle: '#it{g}'
 
     hepdata: 'HEPData-ins1682990-v1-root.root'
-    hepdata_pp_R0.2_dir: 'Table 10'
+    hepdata_pp_dir_R0.2: 'Table 10'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.2_dir: 'Table 11'
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
+    hepdata_AA_dir_R0.2: 'Table 11'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
     
   ptd_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
-    pt_ch: [40., 60.]
+    pt: [40., 60.]
     centrality: [[0,10]]
     xtitle: '#it{p}_{T,D}'
     
     hepdata: 'HEPData-ins1682990-v1-root.root'
-    hepdata_pp_R0.2_dir: 'Table 13'
+    hepdata_pp_dir_R0.2: 'Table 13'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     
-    hepdata_AA_R0.2_dir: 'Table 14'
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
+    hepdata_AA_dir_R0.2: 'Table 14'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -422,21 +424,21 @@ semi_inclusive_chjet:
   IAA_alice:
     jet_R: [0.2, 0.4, 0.5]
     eta_cut_R: 0.9
-    pt_ch: [20., 100.]
+    pt: [20., 100.]
     centrality: [[0,10]]
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
 
-    hepdata: 'https://www.hepdata.net/record/ins1376027'
-    hepdata_AA_R0.2_dir: 'Table 32'
-    hepdata_AA_R0.4_dir: 'Table 33'
-    hepdata_AA_R0.5_dir: 'Table 34'
-    hepdata_AA_R0.2_R0.4_dir: 'Table 35'
-    hepdata_AA_R0.2_R0.5_dir: 'Table 36'
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
+    hepdata: 'HEPData-ins1376027-v1-root.root'
+    hepdata_AA_dir_R0.2: 'Table 32'
+    hepdata_AA_dir_R0.4: 'Table 33'
+    hepdata_AA_dir_R0.5: 'Table 34'
+    hepdata_AA_dir_R0.2_R0.4: 'Table 35'
+    hepdata_AA_dir_R0.2_R0.5: 'Table 36'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
    
   # Fig 11
@@ -444,17 +446,17 @@ semi_inclusive_chjet:
   dphi_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
-    pt_ch: [40., 60.]
+    pt: [40., 60.]
     centrality: [[0,10]]
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
     xtitle: '#Delta#varphi'
     
-    hepdata: 'https://www.hepdata.net/record/ins1376027'
-    hepdata_AA_R0.4_dir: 'Table 37'
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
+    hepdata: 'HEPData-ins1376027-v1-root.root'
+    hepdata_AA_dir_R0.4: 'Table 37'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
   
   # https://inspirehep.net/literature/1862792
@@ -466,16 +468,16 @@ semi_inclusive_chjet:
   # We consider only tau2/tau1 w/CA reclustering for now
   nsubjettiness_alice:
     jet_R: [0.4]
-    pt_ch: [40., 60.]
+    pt: [40., 60.]
     centrality: [[0,10]]
     low_trigger_range: [8, 9]
     high_trigger_range: [15, 45]
     xtitle: '#frac{#tau_{2}}{#tau_{1}}'
 
     hepdata: 'HEPData-1623946228-v1-frac{tau_{2}}{tau_{1}}_with_CA_reclustering_in_Pb-Pb.root'
-    hepdata_AA_dir: 'frac{tau_{2}}{tau_{1}}_with_CA_reclustering_in_Pb-Pb'
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
+    hepdata_AA_dir: 'frac{tau_{2}}{tau_{1}} with CA reclustering in Pb-Pb'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -486,16 +488,19 @@ dijet:
     jet_R: [0.2]
     eta_cut: 0.7
     pt: [20., 90.]
+    centrality: [[0,10]]
   
   # https://www.hepdata.net/record/ins1240088
   v2_atlas:
     jet_R: [0.2]
     pt: [45., 160.]
+    centrality: [[0,10]]
   
   # https://inspirehep.net/literature/1607896 (no hepdata...requested to Dennis/Laura)
   xj_atlas:
     jet_R: [0.3, 0.4]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
+    pt: [25., 79.]
     pt_leading_min: 79.
     pt_subleading_min: 25.
     eta_cut: 2.1

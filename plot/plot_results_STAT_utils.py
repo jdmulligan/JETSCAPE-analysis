@@ -34,26 +34,73 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get bin array specified in config block
     # ---------------------------------------------------------------
-    def bins_from_config(self, block, observable, suffix=''):
+    def bins_from_config(self, block, sqrts, observable_type, observable, centrality, centrality_index, suffix=''):
     
-        if f'hepdata{suffix}' in block:
-            print(f'  Histogram with hepdata binning for {observable}')
-            return self.bins_from_hepdata(block, suffix)
-        elif 'bins' in block:
-            print(f'  Histogram with custom binning for {observable}')
+        if 'bins' in block:
+            print(f'  Histogram with custom binning found for {observable} {centrality} {suffix}')
             return np.array(block['bins'])
+        elif f'hepdata' in block:
+            print(f'  Histogram with hepdata binning found for {observable} {centrality} {suffix}')
+            return self.bins_from_hepdata(block, sqrts, observable_type, observable, centrality_index, suffix)
         else:
-            print(f'  Warning: No binning found for {observable}')
+            print(f'  Warning: No binning found for {observable} {centrality} {suffix}')
             return np.array([])
             
     # ---------------------------------------------------------------
     # Get bin array from hepdata file specified in config block
     # ---------------------------------------------------------------
-    def bins_from_hepdata(self, block, suffix=''):
+    def bins_from_hepdata(self, block, sqrts, observable_type, observable, centrality_index, suffix=''):
 
-        f = ROOT.TFile(block[f'hepdata{suffix}'], 'READ')
-        dir = f.Get(block[f'hepdata_dir{suffix}'])
-        h = dir.Get(block['hepdata_hname'])
+        # Open the HEPData file
+        hepdata_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
+        hepdata_filename = os.path.join(hepdata_dir, block['hepdata'])
+        f = ROOT.TFile(hepdata_filename, 'READ')
+        
+        # Find the relevant directory:
+        # - We require that the centrality index is specified -- but
+        #   the directory name may be found either in the config either
+        #   as a list of dirs, or a single dir with a list of histogram names
+        # - The list of dir/hist names may also contain a suffix,
+        #   which specifies e.g. the pt bin, jetR, or other parameters
+        
+        # First, check for dir/hist names in config
+        if f'hepdata_AA_dir{suffix}' in block:
+            dir_key = f'hepdata_AA_dir{suffix}'
+        elif f'hepdata_AA_dir' in block:
+            dir_key = f'hepdata_AA_dir'
+        else:
+            print(f'hepdata_AA_dir{suffix} not found!')
+            
+        if f'hepdata_AA_hname{suffix}' in block:
+            h_key = f'hepdata_AA_hname{suffix}'
+        elif f'hepdata_AA_hname' in block:
+            h_key = f'hepdata_AA_hname'
+        else:
+            print(f'hepdata_AA_hname{suffix} not found!')
+            
+
+        # Get the appropriate centrality entry in the dir/hist list
+        if type(block[dir_key]) is list:
+            
+            # If fewer entries than the observable's centrality, skip
+            if centrality_index > len(block[dir_key])-1:
+                return np.array([])
+        
+            dir_name = block[dir_key][centrality_index]
+            h_name = block[h_key]
+            
+        else:
+        
+            # If fewer entries than the observable's centrality, skip
+            if centrality_index > len(block[h_key])-1:
+                return np.array([])
+        
+            dir_name = block[dir_key]
+            h_name = block[h_key][centrality_index]
+        
+        # Get the histogram, and return the bins
+        dir = f.Get(dir_name)
+        h = dir.Get(h_name)
         bins = np.array(h.GetXaxis().GetXbins())
         f.Close()
         

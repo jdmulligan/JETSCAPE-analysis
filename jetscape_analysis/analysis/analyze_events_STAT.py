@@ -491,8 +491,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         
             # ALICE charged jet RAA
             if self.centrality_accepted(self.inclusive_chjet_observables['pt_alice']['centrality']):
-                pt_min = self.inclusive_chjet_observables['pt_alice']['pt_ch'][0]
-                pt_max = self.inclusive_chjet_observables['pt_alice']['pt_ch'][1]
+                pt_min = self.inclusive_chjet_observables['pt_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['pt_alice']['pt'][1]
                 if jetR in self.inclusive_chjet_observables['pt_alice']['jet_R']:
                     if abs(jet.eta()) < (self.inclusive_chjet_observables['pt_alice']['eta_cut']):
                         if jet_pt > pt_min and jet_pt < pt_max:
@@ -509,8 +509,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # g
             if self.centrality_accepted(self.inclusive_chjet_observables['g_alice']['centrality']):
-                pt_min = self.inclusive_chjet_observables['g_alice']['pt_ch'][0]
-                pt_max = self.inclusive_chjet_observables['g_alice']['pt_ch'][1]
+                pt_min = self.inclusive_chjet_observables['g_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['g_alice']['pt'][1]
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['g_alice']['eta_cut_R'] - jetR):
                     if jetR in self.inclusive_chjet_observables['g_alice']['jet_R']:
                         if jet_pt > pt_min and jet_pt < pt_max:
@@ -523,8 +523,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     
             # pTD
             if self.centrality_accepted(self.inclusive_chjet_observables['ptd_alice']['centrality']):
-                pt_min = self.inclusive_chjet_observables['ptd_alice']['pt_ch'][0]
-                pt_max = self.inclusive_chjet_observables['ptd_alice']['pt_ch'][1]
+                pt_min = self.inclusive_chjet_observables['ptd_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['ptd_alice']['pt'][1]
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['ptd_alice']['eta_cut_R'] - jetR):
                     if jetR in self.inclusive_chjet_observables['ptd_alice']['jet_R']:
                         if jet_pt > pt_min and jet_pt < pt_max:
@@ -537,8 +537,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # Jet mass
             if self.centrality_accepted(self.inclusive_chjet_observables['mass_alice']['centrality']):
-                pt_min = self.inclusive_chjet_observables['mass_alice']['pt_ch'][0]
-                pt_max = self.inclusive_chjet_observables['mass_alice']['pt_ch'][-1]
+                pt_min = self.inclusive_chjet_observables['mass_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['mass_alice']['pt'][-1]
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['mass_alice']['eta_cut_R'] - jetR):
                     if jetR in self.inclusive_chjet_observables['mass_alice']['jet_R']:
                         if jet_pt > pt_min and jet_pt < pt_max:
@@ -555,13 +555,13 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 # Remove mass from holes
                                 jet_mass -= hole_four_vector.m()
 
-                            self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}'].append(jet_mass)
+                            self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}'].append([jet_pt, jet_mass])
                             
         elif self.sqrts == 200:
 
             # STAR RAA
             if self.centrality_accepted(self.inclusive_chjet_observables['pt_star']['centrality']):
-                pt_min = self.inclusive_chjet_observables['pt_star']['pt_ch'][0]
+                pt_min = self.inclusive_chjet_observables['pt_star']['pt'][0]
                 pt_max = 100. # Open upper bound
                 if jetR in self.inclusive_chjet_observables['pt_star']['jet_R']:
                     if abs(jet.eta()) < (self.inclusive_chjet_observables['pt_star']['eta_cut_R'] - jetR):
@@ -597,8 +597,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # Soft Drop
             if self.centrality_accepted(self.inclusive_chjet_observables['zg_alice']['centrality']):
                 if grooming_setting in self.inclusive_chjet_observables['zg_alice']['SoftDrop']:
-                    pt_min = self.inclusive_chjet_observables['zg_alice']['pt_ch'][0]
-                    pt_max = self.inclusive_chjet_observables['zg_alice']['pt_ch'][1]
+                    pt_min = self.inclusive_chjet_observables['zg_alice']['pt'][0]
+                    pt_max = self.inclusive_chjet_observables['zg_alice']['pt'][1]
                     if abs(jet.eta()) < (self.inclusive_chjet_observables['zg_alice']['eta_cut_R'] - jetR):
                         if jetR in self.inclusive_chjet_observables['zg_alice']['jet_R']:
                             if jet_pt > pt_min and jet_pt < pt_max:
@@ -621,9 +621,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             nsubjettiness_low_trigger_range = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['low_trigger_range']
             nsubjettiness_high_trigger_range = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['high_trigger_range']
             
-            pt_IAA = self.semi_inclusive_chjet_observables['IAA_alice']['pt_ch']
-            pt_dphi = self.semi_inclusive_chjet_observables['dphi_alice']['pt_ch']
-            pt_nsubjettiness = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['pt_ch']
+            pt_IAA = self.semi_inclusive_chjet_observables['IAA_alice']['pt']
+            pt_dphi = self.semi_inclusive_chjet_observables['dphi_alice']['pt']
+            pt_nsubjettiness = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['pt']
             
             # Define Nsubjettiness calculators
             axis_definition = fjcontrib.KT_Axes()
@@ -711,8 +711,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if self.sqrts == 200:
         
             hjet_trigger_range = self.semi_inclusive_chjet_observables['IAA_star']['trigger_range']
-            pt_IAA = self.semi_inclusive_chjet_observables['IAA_star']['pt_ch']
-            pt_dphi = self.semi_inclusive_chjet_observables['dphi_star']['pt_ch']
+            pt_IAA = self.semi_inclusive_chjet_observables['IAA_star']['pt']
+            pt_dphi = self.semi_inclusive_chjet_observables['dphi_star']['pt']
             
             for hadron in fj_hadrons_positive_charged:
             
@@ -741,12 +741,13 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
                                 # Jet yield and Delta phi
                                 if self.centrality_accepted(self.semi_inclusive_chjet_observables['IAA_star']['centrality']):
+                                
                                     if jetR in self.semi_inclusive_chjet_observables['IAA_star']['jet_R']:
-
                                             if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                                 if pt_IAA[0] < jet_pt < pt_IAA[1]:
                                                     self.observable_dict_event[f'semi_inclusive_chjet_IAA_star_R{jetR}'].append(jet_pt)
 
+                                    if jetR in self.semi_inclusive_chjet_observables['dphi_star']['jet_R']:
                                             if pt_dphi[0] < jet_pt < pt_dphi[1]:
                                                 self.observable_dict_event[f'semi_inclusive_chjet_dphi_star_R{jetR}'].append(np.abs(hadron.delta_phi_to(jet)))
 

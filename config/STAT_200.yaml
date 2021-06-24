@@ -73,6 +73,7 @@ hadron_correlations:
   # See Fig 3 here: https://arxiv.org/pdf/nucl-th/0701045.pdf
   dihadron_star:
     pt_trig: [8., 15.]
+    centrality: [[0,10]]
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
@@ -85,7 +86,7 @@ inclusive_chjet:
   pt_star:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut_R: 1.0
-    pt_ch: [5., 30]
+    pt: [5., 30]
     centrality: [[0,10]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
@@ -107,9 +108,9 @@ semi_inclusive_chjet:
   # https://www.hepdata.net/record/ins1512115
   # Note: no pp reference -- RCP and R02/R05 -- we include only R02/R05 for now
   IAA_star:
-    jet_R: [0.2, 0.3, 0.4, 0.5]
+    jet_R: [0.2, 0.5]
     eta_cut_R: 1.
-    pt_ch: [5., 30.]
+    pt: [5., 30.]
     centrality: [[0,10]]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
@@ -117,15 +118,18 @@ semi_inclusive_chjet:
     logy: True
        
     hepdata: 'HEPData-ins1512115-v1-root.root'
-    hepdata_AA_R02_R05_dir: 'Table 38'
+    hepdata_AA_dir: 'Table 38'
+    hepdata_AA_dir_R02_R05: 'Table 38'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
     ytitle: '#it{R}_{AA}'
     
+  # HEPData does not contain histogram bins -- appears to be 25 bins from [pi/2,3pi/2]
+  # TODO: Confirm binning
   dphi_star:
-    jet_R: [0.2, 0.3, 0.4, 0.5]
+    jet_R: [0.3]
     eta_cut_R: 1.
-    pt_ch: [9., 13.]
+    pt: [9., 13.]
     centrality: [[0,10]]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
@@ -139,6 +143,12 @@ semi_inclusive_chjet:
     y_min_pp: 2e-8
     y_max_pp: 1e4
        
+    bins: [1.57079633, 1.69646003, 1.82212374, 1.94778745, 2.07345115,
+       2.19911486, 2.32477856, 2.45044227, 2.57610598, 2.70176968,
+       2.82743339, 2.95309709, 3.0787608 , 3.20442451, 3.33008821,
+       3.45575192, 3.58141563, 3.70707933, 3.83274304, 3.95840674,
+       4.08407045, 4.20973416, 4.33539786, 4.46106157, 4.58672527,
+       4.71238898]
     hepdata_AA_dir: 'Table 39'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']

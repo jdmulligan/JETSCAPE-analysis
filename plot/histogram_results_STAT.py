@@ -104,15 +104,16 @@ class HistogramResults(common_base.CommonBase):
         print(f'Histogram {observable_type} observables...')
                 
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
         
-            # Construct appropriate binning
-            bins = self.plot_utils.bins_from_config(block, observable)
-            if not bins.any():
-                continue
-                
-            # Histogram observable
-            self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins)
-            self.histogram_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins)
+                # Construct appropriate binning
+                bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable, centrality, centrality_index)
+                if not bins.any():
+                    continue
+                    
+                # Histogram observable
+                self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins, centrality=centrality)
+                self.histogram_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins, centrality=centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram hadron correlation observables
@@ -122,14 +123,16 @@ class HistogramResults(common_base.CommonBase):
         print(f'Histogram {observable_type} observables...')
 
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
 
-            # Construct appropriate binning
-            bins = self.plot_utils.bins_from_config(block, observable)
-            if not bins.any():
-                continue
-                    
-            # Histogram observable
-            self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins)
+                # Construct appropriate binning
+                bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type,
+                                                        observable, centrality, centrality_index)
+                if not bins.any():
+                    continue
+                        
+                # Histogram observable
+                self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins, centrality=centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -139,69 +142,96 @@ class HistogramResults(common_base.CommonBase):
         print(f'Histogram {observable_type} observables...')
 
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
                 
-            for jet_R in block['jet_R']:
-                print(f'    R = {jet_R}')
+                for jet_R in block['jet_R']:
                 
-                if 'SoftDrop' in block:
-                    for grooming_setting in block['SoftDrop']:
-                        if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
-                            continue
+                    # Optional: Loop through pt bins
+                    for pt_bin in range(len(block['pt'])-1):
+
+                        if len(block['pt']) > 2:
+                            pt_suffix = f'_pt{pt_bin}'
                         else:
-                            print(f'      grooming_setting = {grooming_setting}')
-                            zcut = grooming_setting['zcut']
-                            beta = grooming_setting['beta']
+                            pt_suffix = ''
                             
-                            self.suffix = f'_R{jet_R}_zcut{zcut}_beta{beta}'
-                            bins = self.plot_utils.bins_from_config(block, observable, suffix=self.suffix)
-                            if not bins.any():
-                                continue
+                        # Optional: subobservable
+                        subobservable_label_list = ['']
+                        if 'kappa' in block:
+                            subobservable_label_list = [f'_k{kappa}' for kappa in block['kappa']]
+                        for subobservable_label in subobservable_label_list:
+                                        
+                            if 'SoftDrop' in block:
+                                for grooming_setting in block['SoftDrop']:
+                                    if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
+                                        continue
+                                    else:
+                                        zcut = grooming_setting['zcut']
+                                        beta = grooming_setting['beta']
+                                        
+                                        self.suffix = f'_R{jet_R}_zcut{zcut}_beta{beta}{subobservable_label}'
+                                        bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
+                                                                                centrality, centrality_index,
+                                                                                suffix=f'{self.suffix}{pt_suffix}')
+                                        if not bins.any():
+                                            continue
+                                        
+                                        column_name = f'{observable_type}_{observable}{self.suffix}'
+                                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
+                                        
+                            else:
                             
-                            column_name = f'{observable_type}_{observable}{self.suffix}'
-                            self.histogram_observable(column_name=column_name, bins=bins)
+                                self.suffix = f'_R{jet_R}{subobservable_label}'
+                                
+                                bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable, centrality,
+                                                                        centrality_index, suffix=f'{self.suffix}{pt_suffix}')
+                                if not bins.any():
+                                    continue
                             
-                else:
-                
-                    self.suffix = f'_R{jet_R}'                                
-                    bins = self.plot_utils.bins_from_config(block, observable, suffix=self.suffix)
-                    if not bins.any():
-                        continue
-                
-                    self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}', bins=bins)
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}',
+                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix)
 
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
     #-------------------------------------------------------------------------------------------
-    def histogram_semi_inclusive_jet_observables(self, observable_type=''):
+    def histogram_semi_inclusive_chjet_observables(self, observable_type=''):
         print()
         print(f'Histogram {observable_type} observables...')
         
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
+                    
+                for jet_R in block['jet_R']:
+                    self.suffix = f'_R{jet_R}'
+                    
+                    # Construct appropriate binning
+                    bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
+                                                            centrality, centrality_index, self.suffix)
+                    if not bins.any():
+                        continue
 
-            # Construct appropriate binning
-            bins = plot_results_STAT_utils.bins_from_config(block, observable)
-            if not bins.any():
-                continue
-                
-            for jet_R in block['jet_R']:
-                print(f'    R = {jet_R}')
-
-                column_name = f'{observable_type}_{observable}_R{jetR}_lowTrigger'
-                self.histogram_observable(column_name=column_name, bins=bins)
-                
-                column_name = f'{observable_type}_{observable}_R{jetR}_highTrigger'
-                self.histogram_observable(column_name=column_name, bins=bins)
-                
-                if self.sqrts == '2760':
-                    column_name = f'{observable_type}_alice_trigger_pt'
-                if self.sqrts == '200':
-                    column_name = f'{observable_type}_star_trigger_pt'
-                self.histogram_observable(column_name=column_name, bins=bins)
+                    if self.sqrts == '2760':
+                        
+                        column_name = f'{observable_type}_{observable}_R{jet_R}_lowTrigger'
+                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        
+                        column_name = f'{observable_type}_{observable}_R{jet_R}_highTrigger'
+                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        
+                        column_name = f'{observable_type}_alice_trigger_pt'
+                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        
+                    elif self.sqrts == '200':
+                    
+                        column_name = f'{observable_type}_{observable}_R{jet_R}'
+                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                    
+                        column_name = f'{observable_type}_star_trigger_pt'
+                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_observable(self, column_name=None, bins=None):
+    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix=''):
 
         # Get column
         col = self.observables_df[column_name]
@@ -215,18 +245,18 @@ class HistogramResults(common_base.CommonBase):
         
         # Construct histogram
         if dim_observable == 1:
-            self.histogram_1d_observable(col, column_name=column_name, bins=bins)
+            self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
         elif dim_observable == 2:
-            self.histogram_2d_observable(col, column_name=column_name, bins=bins)
+            self.histogram_2d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
         else:
             return
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_1d_observable(self, col, column_name=None, bins=None):
+    def histogram_1d_observable(self, col, column_name=None, bins=None, centrality=None, pt_suffix=''):
 
-        hname = f'h_{column_name}'
+        hname = f'h_{column_name}_{centrality}{pt_suffix}'
         h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
         h.Sumw2()
         
@@ -242,9 +272,9 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_2d_observable(self, col, column_name=None, bins=None):
+    def histogram_2d_observable(self, col, column_name=None, bins=None, centrality=None, pt_suffix=''):
 
-        hname = f'h_{column_name}'
+        hname = f'h_{column_name}_{centrality}{pt_suffix}'
         h = ROOT.TH2F(hname, hname, len(bins)-1, bins, len(bins)-1, bins)
         h.Sumw2()
         
