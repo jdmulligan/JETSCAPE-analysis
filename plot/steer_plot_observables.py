@@ -12,8 +12,7 @@ import shutil
 # ---------------------------------------------------------------
 def main():
 
-    #sqrts_list = ['200', '2760', '5020']
-    sqrts_list = ['5020']
+    sqrts_list = ['200', '2760', '5020']
     construct_observables = False
     construct_histograms = False
     merge_histograms = False

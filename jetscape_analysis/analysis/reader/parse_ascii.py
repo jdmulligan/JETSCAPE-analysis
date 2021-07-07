@@ -10,7 +10,7 @@ import logging
 import os
 import typing
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, Union
+from typing import Any, Callable, Iterator, List, Optional, Union
 
 import awkward as ak
 import attr
@@ -145,7 +145,7 @@ def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> Op
     return None
 
 
-def _parse_header_line(line: str) -> HeaderInfo:
+def _parse_header_line_format_unspecified(line: str) -> HeaderInfo:
     """Parse line that is expected to be a header.
 
     The most common case is that it's a header, in which case we parse the line. If it's not a header,
@@ -214,7 +214,61 @@ def _parse_header_line(line: str) -> HeaderInfo:
     return info
 
 
-def _parse_event(f: Iterator[str]) -> Iterator[Union[HeaderInfo, str]]:
+def _parse_header_line_format_v2(line: str) -> HeaderInfo:
+    """Parse line that is expected to be a header according to the v2 file format.
+
+    The most common case is that it's a header, in which case we parse the line. If it's not a header,
+    we also check if it's a cross section, which we note as having found at the end of the file via
+    an exception.
+
+    Args:
+        line: Line to be parsed.
+    Returns:
+        The HeaderInfo information that was extracted.
+    Raises:
+        ReachedXSecAtEndOfFileException: If we find the cross section.
+    """
+    # Parse the string.
+    values = line.split("\t")
+    # Compare by length first so we can short circuit immediately if it doesn't match, which should
+    # save some string comparisons.
+    info: Union[HeaderInfo, CrossSection]
+    if len(values) == 9 and values[1] == "Event":
+        ##########################
+        # Header v2 specification:
+        ##########################
+        # As of 22 June 2021, the formatting of the header is as follows:
+        # This function was developed to parse it.
+        # The header is defined as follows, with each entry separated by a `\t` character:
+        # `# Event 1 weight 0.129547 EPangle 0.0116446 N_hadrons 236`
+        #  0 1     2 3      4        5       6         7         8
+        #
+        info = HeaderInfo(
+            event_number=int(values[2]),            # Event number
+            event_plane_angle=float(values[6]),     # EP angle
+            n_particles=int(values[8]),             # Number of particles
+            event_weight=float(values[4]),          # Event weight
+        )
+    elif len(values) == 5 and values[1] == "sigmaGen":
+        # If we've hit the cross section, and we're not doing the initial extraction of the cross
+        # section, this means that we're at the last line of the file, and should notify as such.
+        # NOTE: By raising with the cross section, we make it possible to retrieve it, even though
+        #       we've raised an exception here.
+        raise ReachedXSecAtEndOfFileException(_parse_cross_section(line))
+    else:
+        raise ValueError(f"Parsing of comment line failed: {values}")
+
+    return info
+
+
+# Register header parsing functions
+_file_format_version_to_header_parser = {
+    2: _parse_header_line_format_v2,
+    -1: _parse_header_line_format_unspecified,
+}
+
+
+def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo]) -> Iterator[Union[HeaderInfo, str]]:
     """Parse a single event in a FinalState* file.
 
     Raises:
@@ -227,7 +281,7 @@ def _parse_event(f: Iterator[str]) -> Iterator[Union[HeaderInfo, str]]:
     # Our first line should be the header, which will be denoted by a "#".
     # Let the calling know if there are no events left due to exhausting the iterator.
     try:
-        header = _parse_header_line(next(f))
+        header = parse_header_line(next(f))
         # logger.info(f"header: {header}")
         yield header
     except StopIteration:
@@ -254,10 +308,13 @@ class ChunkGenerator:
         g: Iterator over the input file.
         events_per_chunk: Number of events for the chunk.
         cross_section: Cross section information.
+        file_format_version: File format version. Default: -1, which corresponds to before the format
+            was defined, and it will try it's best to guess the format.
     """
     g: Iterator[str] = attr.ib()
     _events_per_chunk: int = attr.ib()
     cross_section: Optional[CrossSection] = attr.ib(default=None)
+    _file_format_version: int = attr.ib(default=-1)
     _headers: List[HeaderInfo] = attr.ib(factory=list)
     _reached_end_of_file: bool = attr.ib(default=False)
 
@@ -313,10 +370,14 @@ class ChunkGenerator:
         return len(self._headers) != self._events_per_chunk
 
     def __iter__(self) -> Iterator[str]:
+        _parse_header_line = _file_format_version_to_header_parser[self._file_format_version]
         for _ in range(self._events_per_chunk):
             # logger.debug(f"i: {i}")
             try:
-                event_iter = _parse_event(self.g)
+                event_iter = _parse_event(
+                    self.g,
+                    parse_header_line=_parse_header_line,
+                )
                 # NOTE: Typing gets ignored here because I don't know how to encode the additional
                 #       information that the first yielded line will be the header, and then the rest
                 #       will be strings. So we just ignore typing here. In principle, we could split
@@ -357,7 +418,6 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
 
     with open(filename, "r") as f:
         # First step, extract the final cross section and header.
-        # TODO: How to store them??
         cross_section = _extract_x_sec_and_error(f)
 
         # Define an iterator so we can increment it in different locations in the code.
@@ -365,6 +425,23 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
         #read_lines = iter(f.readlines())
         # Use this if the file doesn't fit in memory (fairly likely for these type of files)
         read_lines = iter(f)
+
+        # Check for file format version indcating how we should parse it.
+        file_format_version = -1
+        first_line = next(read_lines)
+        first_line_split = first_line.split("\t")
+        if len(first_line_split) > 3 and first_line_split[1] == "JETSCAPE_FINAL_STATE":
+            # 1: is to remove the "v" in the version
+            file_format_version = int(first_line_split[2][1:])
+        else:
+            # We need to move back to the beginning of the file, so we just burned through
+            # a meaningful line (which almost certianly contains an event header).
+            # NOTE: My initial version of two separate iterators doesn't work because it appears
+            #       that you cannot do so for a file (which I suppose I can make sense of because
+            #       it points to a position in a file, but still unexpected).
+            f.seek(0)
+
+        logger.info(f"Found file format version: {file_format_version}")
 
         # Now, need to setup chunks.
         # NOTE: The headers and additional info are passed through the ChunkGenerator.
@@ -375,6 +452,7 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
                 g=read_lines,
                 events_per_chunk=events_per_chunk,
                 cross_section=cross_section,
+                file_format_version=file_format_version,
             )
             yield chunk
             if chunk.reached_end_of_file:

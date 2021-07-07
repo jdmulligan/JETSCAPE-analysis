@@ -132,6 +132,24 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     def event_has_entries(self, event_dict):
     
         return bool([obs for obs in event_dict.values() if obs != []])
+
+    # ---------------------------------------------------------------
+    # Check if event centrality is within observable's centrality
+    # ---------------------------------------------------------------
+    def centrality_accepted(self, observable_centrality_list):
+    
+        # AA
+        if self.event_centrality:
+        
+            for observable_centrality in observable_centrality_list:
+                if observable_centrality[0] >= self.event_centrality[0] or np.isclose(observable_centrality[0],self.event_centrality[0]):
+                    if observable_centrality[1] <= self.event_centrality[1] or np.isclose(observable_centrality[1],self.event_centrality[1]):
+                        return True
+            return False
+            
+        # pp
+        else:
+            return True
         
     # ---------------------------------------------------------------
     # Save output event list into a dataframe

@@ -113,7 +113,7 @@ inclusive_jet:
 inclusive_chjet:
 
   eta_cut_alice_R: 0.9
-  soft_drop_zcut: 0.2
+  soft_drop_zcut: [0.2, 0.4]
   soft_drop_beta: 0.
 
   # ALICE, https://www.hepdata.net/record/ins1682990
@@ -154,8 +154,11 @@ inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   #       - z_cut = 0.2, beta = 0
   softdrop_alice:
-    bins_zg: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
-    bins_tg: [0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0]
+    bins_zg_central: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+    bins_tg_central: [0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0]
+    bins_zg_semicentral: [0.2, 0.25, 0.3, 0.35, 0.4, 0.5]               
+    bins_tg_semicentral_zcut02: [0., 0.05, 0.1, 0.15, 0.25, 0.5, 0.875]
+    bins_tg_semicentral_zcut04: [0., 0.05, 0.1, 0.15, 0.25, 0.5]
   
   # ALICE, (no hepdata)
   subjetz_alice:
@@ -171,9 +174,9 @@ inclusive_chjet:
   hardest_kt_alice:
     dynamical_grooming_a: [0.5, 1, 2]
     # untagged at 0
-    bins_ktg_R02: [-0.001, 0.001, 0.5, 1, 2, 3, 4, 6, 8]
-    bins_ktg_R04: [-0.001, 0.001, 2, 3, 4, 5, 7, 10, 15]
-    bins_ktg_R05: [-0.001, 0.001, 2, 3, 4, 5, 7, 10, 15]
+    bins_ktg_R02: [-0.001, 0.001, 0.25, 0.5, 1, 1.5, 2, 3, 4, 6, 8]
+    bins_ktg_R04: [-0.001, 0.001, 0.25, 0.5, 1, 2, 4, 6, 8, 10, 15]
+    bins_ktg_R05: [-0.001, 0.001, 0.25, 0.5, 1, 2, 4, 6, 8, 10, 15]
 
   
 #------------------------------------------------------------------

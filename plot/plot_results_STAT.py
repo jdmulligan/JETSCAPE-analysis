@@ -66,7 +66,7 @@ class PlotResults(common_base.CommonBase):
         
         self.plot_hadron_correlation_observables(observable_type='hadron_correlations')
         
-        #self.plot_jet_observables(observable_type='inclusive_chjet')
+        self.plot_jet_observables(observable_type='inclusive_chjet')
         
         if 'inclusive_jet' in self.config:
             self.plot_jet_observables(observable_type='inclusive_jet')
@@ -85,16 +85,17 @@ class PlotResults(common_base.CommonBase):
         print(f'Plot {observable_type} observables...')
                 
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
         
-            self.suffix = ''
-            if f'hepdata{self.suffix}' not in block:
-                continue
-        
-            # Initialize observable configuration
-            self.init_observable(observable_type, observable, block)
-                
-            # Plot observable
-            self.plot_distribution_and_ratio(observable_type, observable)
+                if 'hepdata' not in block:
+                    continue
+            
+                # Initialize observable configuration
+                self.suffix = ''
+                self.init_observable(observable_type, observable, block, centrality)
+                    
+                # Plot observable
+                self.plot_distribution_and_ratio(observable_type, observable)
 
     #-------------------------------------------------------------------------------------------
     # Plot hadron correlation observables
@@ -104,16 +105,17 @@ class PlotResults(common_base.CommonBase):
         print(f'Plot {observable_type} observables...')
 
         for observable, block in self.config[observable_type].items():
-        
-            self.suffix = ''
-            if f'hepdata{self.suffix}' not in block:
-                continue
+            for centrality_index,centrality in enumerate(block['centrality']):
 
-            # Initialize observable configuration
-            self.init_observable(observable_type, observable, block)
-              
-            # Histogram observable
-            self.plot_distribution_and_ratio(observable_type, observable)
+                if 'hepdata' not in block:
+                    continue
+
+                # Initialize observable configuration
+                self.suffix = ''
+                self.init_observable(observable_type, observable, block, centrality)
+                  
+                # Histogram observable
+                self.plot_distribution_and_ratio(observable_type, observable)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -123,39 +125,54 @@ class PlotResults(common_base.CommonBase):
         print(f'Plot {observable_type} observables...')
 
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
                 
-            for self.jet_R in block['jet_R']:
-                print(f'    R = {self.jet_R}')
-                if 'SoftDrop' in block:
-                    for grooming_setting in block['SoftDrop']:
-                        if observable == 'tg_alice' and jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
-                            continue
+                for self.jet_R in block['jet_R']:
+                
+                    # Optional: Loop through pt bins
+                    for pt_bin in range(len(block['pt'])-1):
+
+                        if len(block['pt']) > 2:
+                            pt_suffix = f'_pt{pt_bin}'
                         else:
-                            print(f'      grooming_setting = {grooming_setting}')
-                            zcut = grooming_setting['zcut']
-                            beta = grooming_setting['beta']
+                            pt_suffix = ''
                             
-                            self.suffix = f'_R{self.jet_R}_zcut{zcut}_beta{beta}'
-                            if f'hepdata{self.suffix}' not in block:
-                                continue
-                
-                            # Initialize observable configuration
-                            self.init_observable(observable_type, observable, block)
-                      
-                            # Histogram observable
-                            self.plot_distribution_and_ratio(observable_type, observable)
-                    
-                else:
+                        # Optional: subobservable
+                        subobservable_label_list = ['']
+                        if 'kappa' in block:
+                            subobservable_label_list = [f'_k{kappa}' for kappa in block['kappa']]
+                        for subobservable_label in subobservable_label_list:
+                        
+                            if 'SoftDrop' in block:
+                                for grooming_setting in block['SoftDrop']:
+                                    if observable == 'tg_alice' and self.jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
+                                        continue
+                                    else:
+                                        print(f'      grooming_setting = {grooming_setting}')
+                                        zcut = grooming_setting['zcut']
+                                        beta = grooming_setting['beta']
+                                        
+                                        self.suffix = f'_R{self.jet_R}_zcut{zcut}_beta{beta}{subobservable_label}'
+                                        if 'hepdata' not in block:
+                                            continue
+                            
+                                        # Initialize observable configuration
+                                        self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix)
+                                  
+                                        # Histogram observable
+                                        self.plot_distribution_and_ratio(observable_type, observable)
+                                
+                            else:
 
-                    self.suffix = f'_R{self.jet_R}'
-                    if f'hepdata{self.suffix}' not in block:
-                        continue
+                                self.suffix = f'_R{self.jet_R}{subobservable_label}'
+                                if 'hepdata' not in block:
+                                    continue
 
-                    # Initialize observable configuration
-                    self.init_observable(observable_type, observable, block)
-              
-                    # Histogram observable
-                    self.plot_distribution_and_ratio(observable_type, observable)
+                                # Initialize observable configuration
+                                self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix)
+                          
+                                # Histogram observable
+                                self.plot_distribution_and_ratio(observable_type, observable)
 
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
@@ -189,7 +206,7 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Initialize a single observable's config
     #-------------------------------------------------------------------------------------------
-    def init_observable(self, observable_type, observable, block, self_normalize=False):
+    def init_observable(self, observable_type, observable, block, centrality, pt_suffix='', self_normalize=False):
     
         # Initialize an empty dict containing relevant info
         self.observable_settings = {}
@@ -221,27 +238,30 @@ class PlotResults(common_base.CommonBase):
             self.y_ratio_max = 1.99
         
         # Initialize data
-        if f'hepdata{self.suffix}' in block:
-            f = ROOT.TFile(block[f'hepdata{self.suffix}'], 'READ')
-            dir = f.Get(block[f'hepdata_dir{self.suffix}'])
-            self.observable_settings['data_distribution'] = dir.Get(block['hepdata_gname'])
-            if self.observable_settings['data_distribution'].InheritsFrom(ROOT.TH1.Class()):
-                self.observable_settings['data_distribution'].SetDirectory(0)
-            
+        if f'hepdata' in block:
+            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, suffix=self.suffix)
+        else:
+            self.observable_settings['data_distribution'] = None
+
         # Initialize JETSCAPE
-        self.hname = f'h_{observable_type}_{observable}{self.suffix}'
-        h_jetscape = self.input_file.Get(self.hname)
-        h_jetscape.SetDirectory(0)
+        self.hname = f'h_{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}'
+        keys = [key.ReadObj().GetTitle() for key in self.input_file.GetListOfKeys()]
+        if self.hname in keys:
+            h_jetscape = self.input_file.Get(self.hname)
+            h_jetscape.SetDirectory(0)
+        else:
+            h_jetscape = None
         self.observable_settings['jetscape_distribution'] = h_jetscape
         
         n_events = self.input_file.Get('h_n_events').GetBinContent(1)
-        if observable_type == 'hadron':
-            self.observable_settings['jetscape_distribution'].Scale(1./n_events)
-            self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-            sigma_inel = 0.0676
-            self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-        elif observable_type == 'inclusive_jet' and 'pt' in observable:
-            self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+        if self.observable_settings['jetscape_distribution']:
+            if observable_type == 'hadron':
+                self.observable_settings['jetscape_distribution'].Scale(1./n_events)
+                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                sigma_inel = 0.0676
+                self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
+            elif observable_type == 'inclusive_jet' and 'pt' in observable:
+                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
 
         ## For hadrons, impose a 1 GeV minimum, and subtract the recoil hadrons
         #if self.observable == 'hadron_raa':
@@ -256,22 +276,21 @@ class PlotResults(common_base.CommonBase):
         #    f_jetscape_AA.Close()
             
         # Normalization
-        h_jetscape.Scale(1., 'width')
-        if self_normalize:
-            if observable in ['zg', 'theta_g']:
-                min_bin = 0
-            else:
-                min_bin = 1
-            h_jetscape_pp.Scale(1./h_jetscape_pp.Integral(min_bin, h_jetscape_pp.GetNbinsX()))
+        if h_jetscape:
+            h_jetscape.Scale(1., 'width')
+            if self_normalize:
+                if observable in ['zg', 'theta_g']:
+                    min_bin = 0
+                else:
+                    min_bin = 1
+                h_jetscape_pp.Scale(1./h_jetscape_pp.Integral(min_bin, h_jetscape_pp.GetNbinsX()))
             
         # Form ratio of JETSCAPE to data
-        if self.observable_settings['data_distribution'].InheritsFrom(ROOT.TH1.Class()):
-            h_ratio = self.observable_settings['jetscape_distribution']
-            h_ratio.Divide(self.observable_settings['data_distribution'])
-            self.observable_settings['ratio'] = h_ratio
-        elif self.observable_settings['data_distribution'].InheritsFrom(ROOT.TGraph.Class()):
+        if self.observable_settings['data_distribution'] and self.observable_settings['jetscape_distribution'] and not self.observable_settings['jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()):
             self.observable_settings['ratio'] = self.plot_utils.divide_tgraph(self.observable_settings['jetscape_distribution'],
                                                                               self.observable_settings['data_distribution'])
+        else:
+            self.observable_settings['ratio'] = None
                           
     #-------------------------------------------------------------------------------------------
     def plot_chjet_g(self):
@@ -589,6 +608,11 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def plot_distribution_and_ratio(self, observable_type, observable, logy = False):
     
+        if not self.observable_settings['jetscape_distribution']:
+            return
+            
+        self.observable_settings['jetscape_distribution']
+    
         c = ROOT.TCanvas('c', 'c', 600, 650)
         c.Draw()
         c.cd()
@@ -661,26 +685,28 @@ class PlotResults(common_base.CommonBase):
         legend.AddEntry(self.observable_settings['jetscape_distribution'], 'JETSCAPE', 'f')
 
         # Draw distribution
-        self.observable_settings['data_distribution'].SetMarkerSize(self.marker_size)
-        self.observable_settings['data_distribution'].SetMarkerStyle(self.data_marker)
-        self.observable_settings['data_distribution'].SetMarkerColor(self.data_color)
-        self.observable_settings['data_distribution'].SetLineStyle(self.line_style)
-        self.observable_settings['data_distribution'].SetLineWidth(self.line_width)
-        self.observable_settings['data_distribution'].SetLineColor(self.data_color)
-        self.observable_settings['data_distribution'].Draw('PE Z X0 same')
-        legend.AddEntry(self.observable_settings['data_distribution'], 'Data', 'PE')
+        if self.observable_settings['data_distribution']:
+            self.observable_settings['data_distribution'].SetMarkerSize(self.marker_size)
+            self.observable_settings['data_distribution'].SetMarkerStyle(self.data_marker)
+            self.observable_settings['data_distribution'].SetMarkerColor(self.data_color)
+            self.observable_settings['data_distribution'].SetLineStyle(self.line_style)
+            self.observable_settings['data_distribution'].SetLineWidth(self.line_width)
+            self.observable_settings['data_distribution'].SetLineColor(self.data_color)
+            self.observable_settings['data_distribution'].Draw('PE Z X0 same')
+            legend.AddEntry(self.observable_settings['data_distribution'], 'Data', 'PE')
         
         legend.Draw()
         
         # Draw ratio
         pad2.cd()
-        self.observable_settings['ratio'].SetFillColor(self.jetscape_color)
-        self.observable_settings['ratio'].SetFillColorAlpha(self.jetscape_color, self.alpha)
-        self.observable_settings['ratio'].SetFillStyle(1001)
-        self.observable_settings['ratio'].SetMarkerSize(0.)
-        self.observable_settings['ratio'].SetMarkerStyle(0)
-        self.observable_settings['ratio'].SetLineWidth(0)
-        self.observable_settings['ratio'].Draw('E3 same')
+        if self.observable_settings['ratio']:
+            self.observable_settings['ratio'].SetFillColor(self.jetscape_color)
+            self.observable_settings['ratio'].SetFillColorAlpha(self.jetscape_color, self.alpha)
+            self.observable_settings['ratio'].SetFillStyle(1001)
+            self.observable_settings['ratio'].SetMarkerSize(0.)
+            self.observable_settings['ratio'].SetMarkerStyle(0)
+            self.observable_settings['ratio'].SetLineWidth(0)
+            self.observable_settings['ratio'].Draw('E3 same')
 
         line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
         line.SetLineColor(920+2)
@@ -692,7 +718,7 @@ class PlotResults(common_base.CommonBase):
         text_latex = ROOT.TLatex()
         text_latex.SetNDC()
         
-        x = 0.35
+        x = 0.25
         text_latex.SetTextSize(0.065)
         #text = f'#bf{{{self.observable}}} #sqrt{{#it{{s_{{#it{{NN}}}}}}}} = {self.sqrts/1000.} TeV'
         text = f'#bf{{{observable_type}_{observable}}} #sqrt{{#it{{s}}}} = {self.sqrts/1000.} TeV'

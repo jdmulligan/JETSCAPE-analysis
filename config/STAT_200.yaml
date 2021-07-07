@@ -5,18 +5,21 @@
 # For each observable, we include its specific cuts in its block
 #
 # In the analysis code, we will store observables in a dictionary,
-# labeled as: {type}_{observable}_{experiment}
+# labeled as: {type}_{observable}_{experiment}_{suffix}
 # For example: hadron_pt_cms
 #              jet_mass_alice_R0.2
+# where the optional suffix is only present when needed.
 #
-# We assume we will compute every observable for every centrality,
-# although this can in principle be treated more specifically.
+# We compute each observable only if it lies in the specified centrality range.
+# We include all available centralities up to 50% centrality, at present.
 #
-# Include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
-# to be used for plotting
+# We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
+# to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
+# Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+# Note that we bin pp observables according to the binning in each AA centrality;
+# the pp hepdata tgraphs are included only for QA.
 #------------------------------------------------------------------
 sqrt_s: 200
-output_file: 'observables_200'
 
 # General jet finding parameters
 jet_R: [0.2, 0.4, 0.5]
@@ -28,63 +31,126 @@ max_jet_y: 3.
 # Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
 hadron:
 
-  # PHENIX, https://inspirehep.net/literature/778168 (no hepdata)
-  # pi0
+  # https://inspirehep.net/literature/1127262 (no hepdata)
+  # Fig 11
   pt_pi0_phenix:
     eta_cut: 0.35
     pt: [5., 20.]
+    centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    
+    data_AA: ['Data_PHENIX_AuAu200_RAACharged_0to10_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_10to20_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_20to30_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_30to40_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_40to50_2013.dat']
+    ytitle: '#it{R}_{AA}'
 
-  # STAR, https://www.hepdata.net/record/ins619063
+  # https://www.hepdata.net/record/ins619063
   # Summed yields of pi+-, K+-, p, anti-p
   pt_ch_star:
     eta_cut: 0.5
     pt: [5., 12.]
+    centrality: [[0,5], [10,20], [20,30], [30,40]]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+    
+    hepdata: 'HEPData-ins619063-v1-root.root'
+    hepdata_pp_dir: 'Table 1'
+    hepdata_pp_gname: 'Graph1D_y8'
+    ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e4
+    
+    hepdata_AA_dir: 'Table 3'
+    hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    ytitle: '#it{R}_{AA}'
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations
 hadron_correlations:
-
-  # PHENIX, https://inspirehep.net/literature/1658594 (no hepdata)
-  # Di-hadrons wrt event plane
-  dihadron_phenix:
-    pt_trig: [5., 10.]
     
-  # STAR, https://www.hepdata.net/record/ins715470
+  # https://www.hepdata.net/record/ins715470
   # Di-hadron correlations -- delta-phi and D(z)
+  # See Fig 3 here: https://arxiv.org/pdf/nucl-th/0701045.pdf
   dihadron_star:
     pt_trig: [8., 15.]
+    centrality: [[0,10]]
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
 inclusive_chjet:
 
-  # STAR, https://inspirehep.net/literature/1798665 (no hepdata)
+  # https://www.hepdata.net/record/ins1798665
   # Charged jet RAA and RCP
   # Cuts:
   #   - pT^{ch lead} > 5 GeV
-  #   - |eta_jet|<1-R
   pt_star:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut_R: 1.0
-    pt_ch: [5., 30]
+    pt: [5., 30]
+    centrality: [[0,10]]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+       
+    hepdata: 'HEPData-ins1798665-v1-root.root'
+    hepdata_AA_dir: 'Table 10'
+    hepdata_AA_gname_R0.2: ['Graph1D_y1']
+    hepdata_AA_hname_R0.2: ['Hist1D_y1']
+    hepdata_AA_gname_R0.3: ['Graph1D_y1']
+    hepdata_AA_hname_R0.3: ['Hist1D_y1']
+    hepdata_AA_gname_R0.4: ['Graph1D_y1']
+    hepdata_AA_hname_R0.4: ['Hist1D_y1']
+    ytitle: '#it{R}_{AA}'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Jet correlation observables
 semi_inclusive_chjet:
 
-  # STAR, https://www.hepdata.net/record/ins1512115
-  #   Cuts / Notes:
-  #       - |eta_jet| < 1.0 - R
+  # https://www.hepdata.net/record/ins1512115
+  # Note: no pp reference -- RCP and R02/R05 -- we include only R02/R05 for now
   IAA_star:
-    jet_R: [0.2, 0.3, 0.4, 0.5]
+    jet_R: [0.2, 0.5]
     eta_cut_R: 1.
-    pt_ch: [5., 30.]
+    pt: [5., 30.]
+    centrality: [[0,10]]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+       
+    hepdata: 'HEPData-ins1512115-v1-root.root'
+    hepdata_AA_dir: 'Table 38'
+    hepdata_AA_dir_R02_R05: 'Table 38'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
+    ytitle: '#it{R}_{AA}'
+    
+  # HEPData does not contain histogram bins -- appears to be 25 bins from [pi/2,3pi/2]
+  # TODO: Confirm binning
   dphi_star:
-    jet_R: [0.2, 0.3, 0.4, 0.5]
+    jet_R: [0.3]
     eta_cut_R: 1.
-    pt_ch: [9., 13.]
+    pt: [9., 13.]
+    centrality: [[0,10]]
     hadron_eta_cut: 0.9
     trigger_range: [9., 30.]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+    
+    hepdata: 'HEPData-ins1512115-v1-root.root'
+    hepdata_pp_dir:  'Table 42'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-8
+    y_max_pp: 1e4
+       
+    bins: [1.57079633, 1.69646003, 1.82212374, 1.94778745, 2.07345115,
+       2.19911486, 2.32477856, 2.45044227, 2.57610598, 2.70176968,
+       2.82743339, 2.95309709, 3.0787608 , 3.20442451, 3.33008821,
+       3.45575192, 3.58141563, 3.70707933, 3.83274304, 3.95840674,
+       4.08407045, 4.20973416, 4.33539786, 4.46106157, 4.58672527,
+       4.71238898]
+    hepdata_AA_dir: 'Table 39'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
+    ytitle: '#it{R}_{AA}'
 #------------------------------------------------------------------

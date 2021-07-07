@@ -127,9 +127,12 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.inclusive_chjet_mass_alice_bins = np.array(self.inclusive_chjet_observables['mass_alice']['bins'])
 
         # Soft Drop
-        self.inclusive_chjet_zg_alice_bins = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_zg'])
-        self.inclusive_chjet_tg_alice_bins = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_tg'])
-        
+        self.inclusive_chjet_zg_alice_bins = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_zg_central'])
+        self.inclusive_chjet_tg_alice_bins = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_tg_central'])
+        self.inclusive_chjet_zg_alice_bins_semicentral = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_zg_semicentral'])
+        self.inclusive_chjet_tg_alice_bins_semicentral_zcut02 = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_tg_semicentral_zcut02'])
+        self.inclusive_chjet_tg_alice_bins_semicentral_zcut04 = np.array(self.inclusive_chjet_observables['softdrop_alice']['bins_tg_semicentral_zcut04'])
+
         # Subjet z
         self.inclusive_chjet_subjets_alice_bins = np.linspace(0., 1., 100+1)
         
@@ -303,17 +306,33 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 setattr(self, hname, h)
 
                 # Soft Drop
-                hname = f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}'
-                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_zg_alice_bins)-1,
-                                                self.inclusive_chjet_zg_alice_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
+                for zcut in self.inclusive_chjet_observables['soft_drop_zcut']:
+                    if np.isclose(jetR, 0.2):
+                        zg_bins_central = self.inclusive_chjet_zg_alice_bins
+                        zg_bins_semicentral = self.inclusive_chjet_zg_alice_bins
+                        tg_bins = self.inclusive_chjet_tg_alice_bins
+                    else:
+                        zg_bins_central = self.inclusive_chjet_zg_alice_bins
+                        zg_bins_semicentral = self.inclusive_chjet_zg_alice_bins_semicentral
+                        if np.isclose(zcut, 0.2):
+                            tg_bins = self.inclusive_chjet_tg_alice_bins_semicentral_zcut02
+                        else:
+                            tg_bins = self.inclusive_chjet_tg_alice_bins_semicentral_zcut04
+                    
+                    hname = f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}_central'
+                    h = ROOT.TH1F(hname, hname, len(zg_bins_central)-1, zg_bins_central)
+                    h.Sumw2()
+                    setattr(self, hname, h)
+                    
+                    hname = f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}_semicentral'
+                    h = ROOT.TH1F(hname, hname, len(zg_bins_semicentral)-1, zg_bins_semicentral)
+                    h.Sumw2()
+                    setattr(self, hname, h)
 
-                hname = f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}'
-                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_tg_alice_bins)-1,
-                                            self.inclusive_chjet_tg_alice_bins)
-                h.Sumw2()
-                setattr(self, hname, h)
+                    hname = f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}'
+                    h = ROOT.TH1F(hname, hname, len(tg_bins)-1, tg_bins)
+                    h.Sumw2()
+                    setattr(self, hname, h)
                 
                 # Subjet z
                 for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
@@ -622,9 +641,10 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # Fill inclusive charged jet histograms
     # ---------------------------------------------------------------
     def fill_charged_jet_histograms(self, jet, gshop, holes_in_jet, jet_pt, jetR, constituent_threshold):
+    
         # Grooming jet
-        jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], self.inclusive_chjet_observables['soft_drop_zcut'], jetR)
-
+        jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], self.inclusive_chjet_observables['soft_drop_zcut'][0], jetR)
+    
         # g
         if 40 < jet_pt < 60 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             g = 0
@@ -666,15 +686,6 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 jet_mass -= hole_four_vector.m()
 
             getattr(self, f'h_chjet_mass_alice_R{jetR}_pt{constituent_threshold}').Fill(jet_mass)
-
-        # Soft Drop
-        if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
-            if jet_groomed_lund:
-                theta_g = jet_groomed_lund.Delta() / jetR
-                zg = jet_groomed_lund.z()
-                # Note: untagged jets will return negative value
-            getattr(self, f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}').Fill(zg)
-            getattr(self, f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}').Fill(theta_g)
             
         # Subjet z
         if 80 < jet_pt < 120 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
@@ -732,6 +743,36 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         # Charged jet pt
         if abs(jet.eta()) < (self.inclusive_jet_observables['pt_alice']['eta_cut_R'] - jetR):
             getattr(self, f'h_chjet_pt_R{jetR}_pt{constituent_threshold}').Fill(jet_pt)
+
+
+        for zcut in self.inclusive_chjet_observables['soft_drop_zcut']:
+            self.fill_charged_groomed_jet_histograms(jet, gshop, jet_pt, jetR, constituent_threshold, zcut)
+
+    # ---------------------------------------------------------------
+    # Fill inclusive groomed charged jet histograms
+    # ---------------------------------------------------------------
+    def fill_charged_groomed_jet_histograms(self, jet, gshop, jet_pt, jetR, constituent_threshold, zcut):
+    
+        # Grooming jet
+        jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], zcut, jetR)
+        
+        if jet_groomed_lund and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+            
+            # Note: untagged jets will return negative value
+            zg = jet_groomed_lund.z()
+            theta_g = jet_groomed_lund.Delta() / jetR
+        
+            if 60 < jet_pt < 80:
+                getattr(self, f'h_chjet_tg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}').Fill(theta_g)
+        
+            if np.isclose(jetR, 0.2):
+                if 60 < jet_pt < 80:
+                    getattr(self, f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}_central').Fill(zg)
+            else:
+                if 60 < jet_pt < 80:
+                    getattr(self, f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}_semicentral').Fill(zg)
+                if 80 < jet_pt < 100:
+                    getattr(self, f'h_chjet_zg_alice_R{jetR}_pt{constituent_threshold}_zcut{zcut}_central').Fill(zg)
 
     # ---------------------------------------------------------------
     # Fill semi-inclusive charged jet histograms

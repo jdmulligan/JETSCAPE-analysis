@@ -1,0 +1,102 @@
+*author: CHATRCHYAN
+*reference: ARXIV:1406.0932 : 2014
+*reference: CERN-PH-EP-2014-100 : 2014
+*experiment: CERN-LHC-CMS
+*detector: CMS
+*title: Measurement of jet fragmentation in PbPb and pp collisions at sqrt(s[NN]) = 2.76 TeV
+
+*dataset:
+*location: Figure 8
+*dscomment: The spectrum of tracks inside the cone of jets with 150 < pT < 300 GeV/c, as a function of track pT, for PbPb (with increasing centrality from left to right) and pp. Both the PbPb and pp results are background subtracted, in the same manner as for the fragmentation function. The bottom panels show the difference of PbPb and pp spectra, demonstrating an excess of low-pT tracks in the PbPb events.
+*obskey: DN/DPT
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB - P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 50 TO 100
+*xheader: PT(TRACK) IN GEV/C
+*yheader: (1/N(JET)) DN(TRACK)/DPT IN C/GEV
+*data: x : y : y : y
+  1.0 TO  1.4; 0.963    +- 0.015   ; 1.08    +- 0.12    (DSYS=+0.08    ,-0.08    );  0.12    +- 0.12    (DSYS=+0.05   ,-0.05   )
+  1.4 TO  2.1; 0.963    +- 0.011   ; 0.971   +- 0.066   (DSYS=+0.067   ,-0.066   );  0.008   +- 0.067   (DSYS=+0.046  ,-0.045  )
+  2.1 TO  3.0; 0.8495   +- 0.0082  ; 1.000   +- 0.043   (DSYS=+0.066   ,-0.066   );  0.151   +- 0.044   (DSYS=+0.043  ,-0.043  )
+  3.0 TO  4.4; 0.6428   +- 0.0057  ; 0.663   +- 0.027   (DSYS=+0.042   ,-0.042   );  0.021   +- 0.028   (DSYS=+0.026  ,-0.027  )
+  4.4 TO  6.4; 0.4639   +- 0.0040  ; 0.452   +- 0.018   (DSYS=+0.028   ,-0.029   ); -0.012   +- 0.019   (DSYS=+0.017  ,-0.018  )
+  6.4 TO  9.3; 0.3135   +- 0.0027  ; 0.307   +- 0.013   (DSYS=+0.019   ,-0.019   ); -0.007   +- 0.013   (DSYS=+0.011  ,-0.012  )
+  9.3 TO 13.4; 0.2042   +- 0.0018  ; 0.2090  +- 0.0087  (DSYS=+0.0120  ,-0.0130  );  0.0048  +- 0.0088  (DSYS=+0.0059 ,-0.0077 )
+ 13.4 TO 19.5; 0.1230   +- 0.0012  ; 0.1160  +- 0.0053  (DSYS=+0.0060  ,-0.0068  ); -0.0070  +- 0.0054  (DSYS=+0.0014 ,-0.0035 )
+ 19.5 TO 28.2; 0.06931  +- 0.00074 ; 0.0744  +- 0.0035  (DSYS=+0.0041  ,-0.0045  );  0.0051  +- 0.0036  (DSYS=+0.0018 ,-0.0026 )
+ 28.2 TO 40.9; 0.03465  +- 0.00043 ; 0.0369  +- 0.0021  (DSYS=+0.0027  ,-0.0032  );  0.0023  +- 0.0021  (DSYS=+0.0019 ,-0.0027 )
+ 40.9 TO 59.3; 0.01501  +- 0.00023 ; 0.0164  +- 0.0011  (DSYS=+0.0027  ,-0.0032  );  0.0013  +- 0.0012  (DSYS=+0.0019 ,-0.0027 )
+*dataend:
+
+*dataset:
+*location: Figure 8
+*dscomment: The spectrum of tracks inside the cone of jets with 150 < pT < 300 GeV/c, as a function of track pT, for PbPb (with increasing centrality from left to right) and pp. Both the PbPb and pp results are background subtracted, in the same manner as for the fragmentation function. The bottom panels show the difference of PbPb and pp spectra, demonstrating an excess of low-pT tracks in the PbPb events.
+*obskey: DN/DPT
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB - P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 30 TO 50
+*xheader: PT(TRACK) IN GEV/C
+*yheader: (1/N(JET)) DN(TRACK)/DPT IN C/GEV
+*data: x : y : y : y
+  1.0 TO  1.4; 0.958    +- 0.014   ; 1.37    +- 0.11    (DSYS=+0.12    ,-0.08    );  0.41    +- 0.11    (DSYS=+0.10   ,-0.06   )
+  1.4 TO  2.1; 0.956    +- 0.011   ; 1.163   +- 0.058   (DSYS=+0.093   ,-0.070   );  0.208   +- 0.059   (DSYS=+0.077  ,-0.047  )
+  2.1 TO  3.0; 0.8216   +- 0.0078  ; 0.951   +- 0.029   (DSYS=+0.068   ,-0.056   );  0.129   +- 0.030   (DSYS=+0.052  ,-0.036  )
+  3.0 TO  4.4; 0.6252   +- 0.0054  ; 0.645   +- 0.016   (DSYS=+0.040   ,-0.037   );  0.020   +- 0.017   (DSYS=+0.027  ,-0.024  )
+  4.4 TO  6.4; 0.4552   +- 0.0038  ; 0.433   +- 0.010   (DSYS=+0.023   ,-0.025   ); -0.022   +- 0.011   (DSYS=+0.012  ,-0.016  )
+  6.4 TO  9.3; 0.3060   +- 0.0026  ; 0.2940  +- 0.0070  (DSYS=+0.0148  ,-0.0173  ); -0.0120  +- 0.0075  (DSYS=+0.0067 ,-0.0112 )
+  9.3 TO 13.4; 0.1977   +- 0.0017  ; 0.1916  +- 0.0047  (DSYS=+0.0098  ,-0.0118  ); -0.0061  +- 0.0050  (DSYS=+0.0047 ,-0.0081 )
+ 13.4 TO 19.5; 0.1225   +- 0.0012  ; 0.1157  +- 0.0030  (DSYS=+0.0064  ,-0.0077  ); -0.0069  +- 0.0032  (DSYS=+0.0038 ,-0.0057 )
+ 19.5 TO 28.2; 0.06933  +- 0.00073 ; 0.0638  +- 0.0019  (DSYS=+0.0040  ,-0.0046  ); -0.0055  +- 0.0020  (DSYS=+0.0028 ,-0.0036 )
+ 28.2 TO 40.9; 0.03590  +- 0.00044 ; 0.0354  +- 0.0012  (DSYS=+0.0021  ,-0.0027  ); -0.0005  +- 0.0012  (DSYS=+0.0014 ,-0.0022 )
+ 40.9 TO 59.3; 0.01563  +- 0.00024 ; 0.01599 +- 0.00064 (DSYS=+0.00214 ,-0.00271 );  0.00037 +- 0.00069 (DSYS=+0.00144,-0.00220)
+*dataend:
+
+*dataset:
+*location: Figure 8
+*dscomment: The spectrum of tracks inside the cone of jets with 150 < pT < 300 GeV/c, as a function of track pT, for PbPb (with increasing centrality from left to right) and pp. Both the PbPb and pp results are background subtracted, in the same manner as for the fragmentation function. The bottom panels show the difference of PbPb and pp spectra, demonstrating an excess of low-pT tracks in the PbPb events.
+*obskey: DN/DPT
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB - P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 10 TO 30
+*xheader: PT(TRACK) IN GEV/C
+*yheader: (1/N(JET)) DN(TRACK)/DPT IN C/GEV
+*data: x : y : y : y
+  1.0 TO  1.4; 0.969    +- 0.014   ; 1.43    +- 0.11    (DSYS=+0.11    ,-0.12    );  0.46    +- 0.11    (DSYS=+0.11   ,-0.12   )
+  1.4 TO  2.1; 0.959    +- 0.011   ; 1.280   +- 0.052   (DSYS=+0.096   ,-0.101   );  0.320   +- 0.054   (DSYS=+0.096  ,-0.101  )
+  2.1 TO  3.0; 0.8177   +- 0.0077  ; 0.935   +- 0.024   (DSYS=+0.066   ,-0.070   );  0.118   +- 0.025   (DSYS=+0.066  ,-0.070  )
+  3.0 TO  4.4; 0.6141   +- 0.0053  ; 0.643   +- 0.011   (DSYS=+0.042   ,-0.045   );  0.029   +- 0.012   (DSYS=+0.042  ,-0.045  )
+  4.4 TO  6.4; 0.4419   +- 0.0037  ; 0.4302  +- 0.0067  (DSYS=+0.0259  ,-0.0284  ); -0.0117  +- 0.0076  (DSYS=+0.0259 ,-0.0284 )
+  6.4 TO  9.3; 0.3051   +- 0.0026  ; 0.2738  +- 0.0043  (DSYS=+0.0156  ,-0.0173  ); -0.0313  +- 0.0050  (DSYS=+0.0156 ,-0.0173 )
+  9.3 TO 13.4; 0.1988   +- 0.0017  ; 0.1772  +- 0.0029  (DSYS=+0.0100  ,-0.0113  ); -0.0217  +- 0.0034  (DSYS=+0.0100 ,-0.0113 )
+ 13.4 TO 19.5; 0.1211   +- 0.0011  ; 0.1055  +- 0.0018  (DSYS=+0.0063  ,-0.0072  ); -0.0156  +- 0.0022  (DSYS=+0.0063 ,-0.0072 )
+ 19.5 TO 28.2; 0.07005  +- 0.00073 ; 0.0618  +- 0.0012  (DSYS=+0.0042  ,-0.0050  ); -0.0083  +- 0.0014  (DSYS=+0.0042 ,-0.0050 )
+ 28.2 TO 40.9; 0.03625  +- 0.00044 ; 0.03322 +- 0.00071 (DSYS=+0.00261 ,-0.00325 ); -0.00303 +- 0.00083 (DSYS=+0.00261,-0.00325)
+ 40.9 TO 59.3; 0.01584  +- 0.00024 ; 0.01588 +- 0.00040 (DSYS=+0.00261 ,-0.00325 );  0.00004 +- 0.00047 (DSYS=+0.00261,-0.00325)
+*dataend:
+
+*dataset:
+*location: Figure 8
+*dscomment: The spectrum of tracks inside the cone of jets with 150 < pT < 300 GeV/c, as a function of track pT, for PbPb (with increasing centrality from left to right) and pp. Both the PbPb and pp results are background subtracted, in the same manner as for the fragmentation function. The bottom panels show the difference of PbPb and pp spectra, demonstrating an excess of low-pT tracks in the PbPb events.
+*obskey: DN/DPT
+*qual: R(JETS) : 0.3
+*qual: RE : P P --> JET < CHARGED X > X : PB PB --> JET < CHARGED X > X : /PB PB - P P
+*qual: SQRT(S)/NUCLEON IN GEV : 2760.0
+*qual: CENTRALITY IN PCT : 0 TO 10
+*xheader: PT(TRACK) IN GEV/C
+*yheader: (1/N(JET)) DN(TRACK)/DPT IN C/GEV
+*data: x : y : y : y
+  1.0 TO  1.4; 0.973    +- 0.014   ; 1.83    +- 0.15    (DSYS=+0.28    ,-0.29    );  0.85    +- 0.15    (DSYS=+0.25   ,-0.29   )
+  1.4 TO  2.1; 0.957    +- 0.011   ; 1.250   +- 0.071   (DSYS=+0.173   ,-0.176   );  0.293   +- 0.072   (DSYS=+0.173  ,-0.176  )
+  2.1 TO  3.0; 0.8212   +- 0.0075  ; 0.992   +- 0.031   (DSYS=+0.121   ,-0.124   );  0.170   +- 0.032   (DSYS=+0.121  ,-0.124  )
+  3.0 TO  4.4; 0.6075   +- 0.0051  ; 0.635   +- 0.013   (DSYS=+0.069   ,-0.071   );  0.028   +- 0.014   (DSYS=+0.069  ,-0.071  )
+  4.4 TO  6.4; 0.4291   +- 0.0035  ; 0.4025  +- 0.0071  (DSYS=+0.0416  ,-0.0426  ); -0.0266  +- 0.0079  (DSYS=+0.0416 ,-0.0426 )
+  6.4 TO  9.3; 0.2990   +- 0.0025  ; 0.2645  +- 0.0046  (DSYS=+0.0279  ,-0.0284  ); -0.0345  +- 0.0052  (DSYS=+0.0279 ,-0.0284 )
+  9.3 TO 13.4; 0.1984   +- 0.0017  ; 0.1680  +- 0.0030  (DSYS=+0.0178  ,-0.0182  ); -0.0304  +- 0.0035  (DSYS=+0.0178 ,-0.0182 )
+ 13.4 TO 19.5; 0.1191   +- 0.0011  ; 0.1041  +- 0.0020  (DSYS=+0.0110  ,-0.0114  ); -0.0149  +- 0.0023  (DSYS=+0.0110 ,-0.0114 )
+ 19.5 TO 28.2; 0.06893  +- 0.00070 ; 0.0624  +- 0.0013  (DSYS=+0.0073  ,-0.0077  ); -0.0065  +- 0.0015  (DSYS=+0.0073 ,-0.0077 )
+ 28.2 TO 40.9; 0.03494  +- 0.00042 ; 0.03368 +- 0.00077 (DSYS=+0.00424 ,-0.00452 ); -0.00126 +- 0.00088 (DSYS=+0.00424,-0.00452)
+ 40.9 TO 59.3; 0.01598  +- 0.00024 ; 0.01555 +- 0.00043 (DSYS=+0.00424 ,-0.00452 ); -0.00043 +- 0.00050 (DSYS=+0.00424,-0.00452)
+*dataend:
