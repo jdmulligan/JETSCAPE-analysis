@@ -336,7 +336,11 @@ inclusive_chjet:
     centrality: [[0,10]]
     leading_track_min_pt: 5.
     xtitle: '#it{p}_{T} (GeV/#it{c})'
-
+    
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-10
+    y_max_pp: 1e-3
+    
     hepdata: 'HEPData-ins1263194-v1-root.root'
     hepdata_AA_dir: 'Table 30'
     hepdata_AA_gname: ['Graph1D_y1']
@@ -360,8 +364,8 @@ inclusive_chjet:
     data_pp_dir_R0.4_pt1: 'Table 2'
     data_pp_dir_R0.4_pt2: 'Table 3'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-8
-    y_max_pp: 1e-1
+    y_min_pp: 1e-3
+    y_max_pp: 1
     
     data_AA_dir_R0.4_pt0: 'Table 4'
     data_AA_dir_R0.4_pt1: 'Table 5'
@@ -429,7 +433,12 @@ semi_inclusive_chjet:
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
+    c_ref: [0.99, 0.96, 0.93]
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    
+    ytitle_pp: '#Delta_{recoil}'
+    y_min_pp: 0.
+    y_max_pp: 1.
 
     hepdata: 'HEPData-ins1376027-v1-root.root'
     hepdata_AA_dir_R0.2: 'Table 32'
@@ -451,7 +460,12 @@ semi_inclusive_chjet:
     hadron_eta_cut: 0.9
     low_trigger_range: [8, 9]
     high_trigger_range: [20, 50]
+    c_ref: [0.96]
     xtitle: '#Delta#varphi'
+    
+    ytitle_pp: '#Phi(#Delta#it{#varphi})'
+    y_min_pp: 0.
+    y_max_pp: 1.
     
     hepdata: 'HEPData-ins1376027-v1-root.root'
     hepdata_AA_dir_R0.4: 'Table 37'
@@ -473,6 +487,10 @@ semi_inclusive_chjet:
     low_trigger_range: [8, 9]
     high_trigger_range: [15, 45]
     xtitle: '#frac{#tau_{2}}{#tau_{1}}'
+    
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 0.
+    y_max_pp: 10.
 
     hepdata: 'HEPData-1623946228-v1-frac{tau_{2}}{tau_{1}}_with_CA_reclustering_in_Pb-Pb.root'
     hepdata_AA_dir: 'frac{tau_{2}}{tau_{1}} with CA reclustering in Pb-Pb'

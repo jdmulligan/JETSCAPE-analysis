@@ -16,6 +16,7 @@ import argparse
 import ROOT
 import ctypes
 import numpy as np
+import pptx             # pip install python-pptx
 
 # Base class
 sys.path.append('.')
@@ -49,6 +50,7 @@ class PlotResults(common_base.CommonBase):
         self.marker_size = 1.5
         self.line_width = 2
         self.line_style = 1
+        self.file_format = '.png'
 
         # Read config file
         with open(config_file, 'r') as stream:
@@ -71,11 +73,15 @@ class PlotResults(common_base.CommonBase):
         if 'inclusive_jet' in self.config:
             self.plot_jet_observables(observable_type='inclusive_jet')
             
-        #if 'semi_inclusive_chjet' in self.config:
-        #    self.plot_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
+        if 'semi_inclusive_chjet' in self.config:
+            self.plot_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
             
-        #if 'dijet' in self.config:
-        #    self.plot_jet_observables(observable_type='dijet')
+        if 'dijet' in self.config:
+            self.plot_jet_observables(observable_type='dijet')
+        
+        # Generate pptx for convenience
+        if self.file_format == '.png':
+            self.generate_pptx()
 
     #-------------------------------------------------------------------------------------------
     # Plot hadron observables
@@ -95,7 +101,7 @@ class PlotResults(common_base.CommonBase):
                 self.init_observable(observable_type, observable, block, centrality)
                     
                 # Plot observable
-                self.plot_distribution_and_ratio(observable_type, observable)
+                self.plot_distribution_and_ratio(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Plot hadron correlation observables
@@ -115,7 +121,7 @@ class PlotResults(common_base.CommonBase):
                 self.init_observable(observable_type, observable, block, centrality)
                   
                 # Histogram observable
-                self.plot_distribution_and_ratio(observable_type, observable)
+                self.plot_distribution_and_ratio(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -143,6 +149,12 @@ class PlotResults(common_base.CommonBase):
                             subobservable_label_list = [f'_k{kappa}' for kappa in block['kappa']]
                         for subobservable_label in subobservable_label_list:
                         
+                            # Set normalization
+                            self_normalize = False
+                            for x in ['mass', 'g', 'ptd', 'charge', 'mg', 'zg', 'tg']:
+                                if x in observable:
+                                    self_normalize = True
+                        
                             if 'SoftDrop' in block:
                                 for grooming_setting in block['SoftDrop']:
                                     if observable == 'tg_alice' and self.jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
@@ -157,10 +169,10 @@ class PlotResults(common_base.CommonBase):
                                             continue
                             
                                         # Initialize observable configuration
-                                        self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix)
+                                        self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
                                   
-                                        # Histogram observable
-                                        self.plot_distribution_and_ratio(observable_type, observable)
+                                        # Plot observable
+                                        self.plot_distribution_and_ratio(observable_type, observable, centrality, pt_suffix)
                                 
                             else:
 
@@ -169,39 +181,32 @@ class PlotResults(common_base.CommonBase):
                                     continue
 
                                 # Initialize observable configuration
-                                self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix)
+                                self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
                           
-                                # Histogram observable
-                                self.plot_distribution_and_ratio(observable_type, observable)
+                                # Plot observable
+                                self.plot_distribution_and_ratio(observable_type, observable, centrality, pt_suffix)
 
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
     #-------------------------------------------------------------------------------------------
-    def histogram_semi_inclusive_jet_observables(self, observable_type=''):
+    def plot_semi_inclusive_chjet_observables(self, observable_type=''):
         print()
-        print(f'Histogram {observable_type} observables...')
+        print(f'Plot {observable_type} observables...')
         
         for observable, block in self.config[observable_type].items():
+            for centrality_index,centrality in enumerate(block['centrality']):
+                    
+                for self.jet_R in block['jet_R']:
+                    
+                    self.suffix = f'_R{self.jet_R}'
+                    if 'hepdata' not in block:
+                        continue
 
-            # Construct appropriate binning
-            bins = plot_results_STAT_utils.bins_from_config(block, observable)
-            if not bins.any():
-                continue
-                
-            for jet_R in block['jet_R']:
-                print(f'    R = {jet_R}')
-
-                column_name = f'{observable_type}_{observable}_R{jetR}_lowTrigger'
-                self.histogram_observable(column_name=column_name, bins=bins)
-                
-                column_name = f'{observable_type}_{observable}_R{jetR}_highTrigger'
-                self.histogram_observable(column_name=column_name, bins=bins)
-                
-                if self.sqrts == '2760':
-                    column_name = f'{observable_type}_alice_trigger_pt'
-                if self.sqrts == '200':
-                    column_name = f'{observable_type}_star_trigger_pt'
-                self.histogram_observable(column_name=column_name, bins=bins)
+                    # Initialize observable configuration
+                    self.init_observable(observable_type, observable, block, centrality)
+              
+                    # Plot observable
+                    self.plot_distribution_and_ratio(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Initialize a single observable's config
@@ -220,16 +225,30 @@ class PlotResults(common_base.CommonBase):
         if 'eta_R' in block:
             self.eta_R = block['eta_R']
             self.eta_cut = np.round(self.eta_R - self.jetR, decimals=1)
+        if 'c_ref' in block:
+            index = block['jet_R'].index(self.jet_R)
+            self.c_ref = block['c_ref'][index]
+        if 'low_trigger_range' in block:
+            low_trigger_range = block['low_trigger_range']
+        if 'high_trigger_range' in block:
+            high_trigger_range = block['high_trigger_range']
+        if 'trigger_range' in block:
+            trigger_range = block['trigger_range']
         if 'logy' in block:
             self.logy = block['logy']
         else:
             self.logy = False
-            
+        
         if 'ytitle_pp' in block:
             self.ytitle = block['ytitle_pp']
+        else:
+            self.ytitle = ''
         if 'y_min_pp' in block:
             self.y_min = float(block['y_min_pp'])
             self.y_max = float(block['y_max_pp'])
+        else:
+            self.y_min = 0.
+            self.y_max = 1.
         if 'y_ratio_min' in block:
             self.y_ratio_min = block['y_ratio_min']
             self.y_ratio_max = block['y_ratio_max']
@@ -244,25 +263,53 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['data_distribution'] = None
 
         # Initialize JETSCAPE
-        self.hname = f'h_{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}'
         keys = [key.ReadObj().GetTitle() for key in self.input_file.GetListOfKeys()]
-        if self.hname in keys:
-            h_jetscape = self.input_file.Get(self.hname)
-            h_jetscape.SetDirectory(0)
+        if 'semi_inclusive' not in observable_type:
+            self.hname = f'h_{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}'
+            if self.hname in keys:
+                h_jetscape = self.input_file.Get(self.hname)
+                h_jetscape.SetDirectory(0)
+            else:
+                h_jetscape = None
+            self.observable_settings['jetscape_distribution'] = h_jetscape
         else:
-            h_jetscape = None
-        self.observable_settings['jetscape_distribution'] = h_jetscape
+            if self.sqrts == 2760: # Delta recoil
+                hname_low_trigger = f'{observable_type}_{observable}_R{self.jet_R}_lowTrigger'
+                hname_high_trigger = f'{observable_type}_{observable}_R{self.jet_R}_highTrigger'
+                hname_ntrigger = f'{observable_type}_alice_trigger_pt'
+                if hname_low_trigger in keys and hname_high_trigger in keys and hname_ntrigger in keys:
+                    h_jetscape_low = self.input_file.Get(hname_low)
+                    h_jetscape_low.SetDirectory(0)
+                    h_jetscape_high = self.input_file.Get(hname_high)
+                    h_jetscape_high.SetDirectory(0)
+                    h_jetscape_ntrigger = self.input_file.Get(hname_n_trigger)
+                    h_jetscape_ntrigger.SetDirectory(0)
+                    
+                    low_trigger = (low_trigger_range[0]+low_trigger_range[1])/2
+                    high_trigger = (high_trigger_range[0]+high_trigger_range[1])/2
+                    n_trig_high = h_jetscape_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(high_trigger))
+                    n_trig_low = h_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(low_trigger))
+                    h_jetscape_high.Scale(1./n_trig_high)
+                    h_jetscape_low.Scale(1./n_trig_low)
+                    self.observable_settings['jetscape_distribution'] = h_jetscape_high.Clone('h_delta_recoil')
+                    self.observable_settings['jetscape_distribution'].Add(h_jetscape_low, -1)
+                else:
+                    self.observable_settings['jetscape_distribution'] = None
+            elif self.sqrts == 200:
+                hname = f'{observable_type}_{observable}_R{jet_R}'
+                hname_ntrigger = f'{observable_type}_star_trigger_pt'
+                if hname in keys and hname_trigger in keys:
+                    self.observable_settings['jetscape_distribution'] = self.input_file.Get(hname)
+                    self.observable_settings['jetscape_distribution'].SetDirectory(0)
+                    h_jetscape_ntrigger = self.input_file.Get(hname_n_trigger)
+                    h_jetscape_ntrigger.SetDirectory(0)
+                    
+                    trigger = (trigger_range[0]+trigger_range[1])/2
+                    n_trig = h_jetscape_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(trigger))
+                    self.observable_settings['jetscape_distribution'].Scale(1./n_trig)
+                else:
+                    self.observable_settings['jetscape_distribution'] = None
         
-        n_events = self.input_file.Get('h_n_events').GetBinContent(1)
-        if self.observable_settings['jetscape_distribution']:
-            if observable_type == 'hadron':
-                self.observable_settings['jetscape_distribution'].Scale(1./n_events)
-                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                sigma_inel = 0.0676
-                self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-            elif observable_type == 'inclusive_jet' and 'pt' in observable:
-                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-
         ## For hadrons, impose a 1 GeV minimum, and subtract the recoil hadrons
         #if self.observable == 'hadron_raa':
 
@@ -274,16 +321,27 @@ class PlotResults(common_base.CommonBase):
         #    h_recoil_rebinned = h_recoil.Rebin(h_jetscape_AA_xbins.size-1, f'{h_recoil_name}_AA', h_jetscape_AA_xbins)
         #    h_jetscape_AA.Add(h_recoil_rebinned, -1)
         #    f_jetscape_AA.Close()
-            
+        
         # Normalization
-        if h_jetscape:
-            h_jetscape.Scale(1., 'width')
+        n_events = self.input_file.Get('h_n_events').GetBinContent(1)
+        if self.observable_settings['jetscape_distribution']:
+            if observable_type == 'hadron':
+                self.observable_settings['jetscape_distribution'].Scale(1./n_events)
+                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                sigma_inel = 0.0676
+                self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
+            elif observable_type == 'inclusive_jet' and 'pt' in observable:
+                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+
+            self.observable_settings['jetscape_distribution'].Scale(1., 'width')
             if self_normalize:
                 if observable in ['zg', 'theta_g']:
                     min_bin = 0
                 else:
                     min_bin = 1
-                h_jetscape_pp.Scale(1./h_jetscape_pp.Integral(min_bin, h_jetscape_pp.GetNbinsX()))
+                nbins = self.observable_settings['jetscape_distribution'].GetNbinsX()
+                integral = self.observable_settings['jetscape_distribution'].Integral(min_bin, nbins, 'width')
+                self.observable_settings['jetscape_distribution'].Scale(1./integral)
             
         # Form ratio of JETSCAPE to data
         if self.observable_settings['data_distribution'] and self.observable_settings['jetscape_distribution'] and not self.observable_settings['jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()):
@@ -291,322 +349,11 @@ class PlotResults(common_base.CommonBase):
                                                                               self.observable_settings['data_distribution'])
         else:
             self.observable_settings['ratio'] = None
-                          
-    #-------------------------------------------------------------------------------------------
-    def plot_chjet_g(self):
-        
-        # Get experimental data
-        h_data_list = []
-        f = ROOT.TFile(self.inclusive_chjet_observables['g_alice']['hepdata'], 'READ')
-        dir = f.Get('Table 11')
-        h_data = dir.Get('Graph1D_y1')
-        h_data_list.append([h_data, '0-10%'])
-        f.Close()
-        
-        # Plot
-        R = 0.2
-        xtitle="#it{g}"
-        self.plot_raa(raa_type='chjet_g',
-                      hname = f'h_chjet_g_alice_R{R}{self.suffix}Scaled',
-                      h_data_list=None,
-                      h_data_list_ratio=h_data_list,
-                      eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                      data_centralities=['0-10'],
-                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                      xtitle=xtitle,
-                      ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
-                      ymax=2.8,
-                      outputfilename=f'h_chjet_g_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                      R=R,
-                      self_normalize=True,
-                      do_chi2=True)
-                      
-    #-------------------------------------------------------------------------------------------
-    def plot_chjet_mass(self):
-        
-        # Get experimental data
-        h_data_list = []
-        
-        f_AA = ROOT.TFile(self.inclusive_chjet_observables['mass_alice']['hepdata_AA'], 'READ')
-        dir = f_AA.Get('Table 4')
-        h_data_PbPb = dir.Get('Graph1D_y1')
-        
-        f_pp = ROOT.TFile(self.inclusive_chjet_observables['mass_alice']['hepdata_pp'], 'READ')
-        dir = f_pp.Get('Table 1')
-        h_data_pp = dir.Get('Graph1D_y1')
-                
-        h_data_list.append([h_data_PbPb, '0-10%'])
-        f_AA.Close()
-        f_pp.Close()
-        
-        # Plot
-        R = 0.4
-        xtitle="#it{m}"
-        self.plot_raa(raa_type='chjet_mass',
-                      hname = f'h_chjet_mass_alice_R{R}{self.suffix}Scaled',
-                      h_data_list=None,
-                      h_data_list_ratio=None,
-                      eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                      data_centralities=['0-10'],
-                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                      xtitle=xtitle,
-                      ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
-                      ymax=2.8,
-                      outputfilename=f'h_chjet_mass_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                      R=R,
-                      self_normalize=True,
-                      do_chi2=True)
-                              
-    #-------------------------------------------------------------------------------------------
-    def plot_chjet_zg(self):
-        
-        # Plot
-        R = 0.4
-        xtitle="#it{z}_{g}"
-        self.plot_raa(raa_type='chjet_zg',
-                      hname = f'h_chjet_zg_alice_R{R}{self.suffix}Scaled',
-                      h_data_list=None,
-                      eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                      data_centralities=['0-10'],
-                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                      xtitle=xtitle,
-                      ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
-                      ymax=2.8,
-                      outputfilename=f'h_chjet_zg_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                      R=R,
-                      self_normalize=True,
-                      do_chi2=False)
-                      
-    #-------------------------------------------------------------------------------------------
-    def plot_chjet_tg(self):
-        
-        # Plot
-        R = 0.4
-        xtitle="#it{#theta}_{g}"
-        self.plot_raa(raa_type='chjet_tg',
-                      hname = f'h_chjet_tg_alice_R{R}{self.suffix}Scaled',
-                      h_data_list=None,
-                      eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                      data_centralities=['0-10'],
-                      mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                      xtitle=xtitle,
-                      ytitle = f'#frac{{1}}{{#sigma}} #frac{{d#sigma}}{{d#it{{{xtitle}}}}}',
-                      ymax=2.8,
-                      outputfilename=f'h_chjet_tg_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                      R=R,
-                      self_normalize=True,
-                      do_chi2=False)
-                      
-    #-------------------------------------------------------------------------------------------
-    def plot_semi_inclusive_chjet_IAA(self):
-            
-        # Get experimental data
-        R=0.4
-        c_ref = 0.96 # R02: 0.99, R04: 0.96, R05: 0.93
-        h_data_list = []
-        if R == 0.2:
-            f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R02'], 'READ')
-            dir = f.Get('Table 32')
-        elif R == 0.4:
-            f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R04'], 'READ')
-            dir = f.Get('Table 33')
-        elif R == 0.5:
-            f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_IAA_276_R05'], 'READ')
-            dir = f.Get('Table 34')
-        h_data = dir.Get('Graph1D_y1')
-        h_data_list.append([h_data, '0-10%'])
-        f.Close()
-        
-        if self.sqrts == 2760:
-            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
-            hname_high = f'h_semi_inclusive_chjet_IAA_highTrigger_alice_R{R}_276{self.suffix}Scaled'
-            hname_low = f'h_semi_inclusive_chjet_IAA_lowTrigger_alice_R{R}_276{self.suffix}Scaled'
-            
-            # Get JETSCAPE pp prediction
-            filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
-            f_pp = ROOT.TFile(filename_pp, 'READ')
-            h_pp_ntrigger = f_pp.Get(hname_ntrigger)
-            h_pp_ntrigger.SetDirectory(0)
-            h_pp_high = f_pp.Get(hname_high)
-            h_pp_high.SetDirectory(0)
-            h_pp_low = f_pp.Get(hname_low)
-            h_pp_low.SetDirectory(0)
-            f_pp.Close()
-            
-            # Get JETSCAPE AA prediction
-            filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
-            f_AA = ROOT.TFile(filename, 'READ')
-            h_AA_ntrigger = f_AA.Get(hname_ntrigger)
-            h_AA_ntrigger.SetDirectory(0)
-            h_AA_high = f_AA.Get(hname_high)
-            h_AA_high.SetDirectory(0)
-            h_AA_low = f_AA.Get(hname_low)
-            h_AA_low.SetDirectory(0)
-            f_AA.Close()
-        elif self.sqrts == 5020:
-            hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
-            hname_high = f'h_semi_inclusive_chjet_IAA_dphi_highTrigger_alice_R{R}_502{self.suffix}Scaled'
-            hname_low = f'h_semi_inclusive_chjet_IAA_dphi_lowTrigger_alice_R{R}_502{self.suffix}Scaled'
-            
-            # Get JETSCAPE pp prediction
-            filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
-            f_pp = ROOT.TFile(filename_pp, 'READ')
-            h_pp_ntrigger = f_pp.Get(hname_ntrigger)
-            h_pp_ntrigger.SetDirectory(0)
-            
-            h_pp_high2d = f_pp.Get(hname_high)
-            h_pp_high2d.SetDirectory(0)
-            h_pp_high2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
-            h_pp_high = h_pp_high2d.ProjectionX()
-            h_pp_high.Rebin(20)
-            h_pp_high.SetDirectory(0)
-                        
-            h_pp_low2d = f_pp.Get(hname_low)
-            h_pp_low2d.SetDirectory(0)
-            h_pp_low2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
-            h_pp_low = h_pp_low2d.ProjectionX()
-            h_pp_low.Rebin(20)
-            h_pp_low.SetDirectory(0)
-            f_pp.Close()
 
-            # Get JETSCAPE AA prediction
-            filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
-            f_AA = ROOT.TFile(filename, 'READ')
-            h_AA_ntrigger = f_AA.Get(hname_ntrigger)
-            h_AA_ntrigger.SetDirectory(0)
-            
-            h_AA_high2d = f_AA.Get(hname_high)
-            h_AA_high2d.SetDirectory(0)
-            h_AA_high2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
-            h_AA_high = h_AA_high2d.ProjectionX()
-            h_AA_high.Rebin(20)
-            h_AA_high.SetDirectory(0)
-              
-            h_AA_low2d = f_AA.Get(hname_low)
-            h_AA_low2d.SetDirectory(0)
-            h_AA_low2d.GetYaxis().SetRangeUser(np.pi-0.6, np.pi)
-            h_AA_low = h_AA_low2d.ProjectionX()
-            h_AA_low.Rebin(20)
-            h_AA_low.SetDirectory(0)
-            f_AA.Close()
-        
-        # Delta recoil
-        n_trig_high_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(30.))
-        n_trig_low_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(8.5))
-        n_trig_high_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(30.))
-        n_trig_low_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(8.5))
-        print(f'n_trig_high_pp: {n_trig_high_pp}')
-        print(f'n_trig_low_pp: {n_trig_low_pp}')
-        print(f'n_trig_high_AA: {n_trig_high_AA}')
-        print(f'n_trig_low_AA: {n_trig_low_AA}')
-
-        h_pp_high.Scale(1./n_trig_high_pp, 'width')
-        h_pp_low.Scale(1./n_trig_low_pp, 'width')
-        h_AA_high.Scale(1./n_trig_high_AA, 'width')
-        h_AA_low.Scale(1./n_trig_low_AA, 'width')
-        
-        h_delta_recoil_pp = h_pp_high.Clone('h_delta_recoil_pp')
-        h_delta_recoil_pp.Add(h_pp_low, -1)
-        
-        h_delta_recoil_AA = h_AA_high.Clone('h_delta_recoil_AA')
-        h_delta_recoil_AA.Add(h_AA_low, -1*c_ref)
- 
-        # Plot
-        xtitle="#it{p}_{T,ch} (GeV/#it{c})"
-        self.plot_raa_ratio(raa_type='hjet_IAA',
-                            h_pp=h_delta_recoil_pp,
-                            h_AA=h_delta_recoil_AA,
-                            h_data_list=h_data_list,
-                            eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                            data_centralities=['0-10'],
-                            mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                            xtitle=xtitle,
-                            ytitle = '#Delta_{recoil}',
-                            ymax=1.8,
-                            outputfilename=f'h_semi_inclusive_chjet_IAA_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                            R=R,
-                            do_chi2=True)
-
-    #-------------------------------------------------------------------------------------------
-    def plot_semi_inclusive_chjet_dphi(self):
-            
-        # Get experimental data
-        R=0.4
-        c_ref = 0.96 # R02: 0.99, R04: 0.96, R05: 0.93
-        h_data_list = []
-        f = ROOT.TFile(self.semi_inclusive_chjet_observables['hjet_alice']['hepdata_dphi_276'], 'READ')
-        dir = f.Get('Table 37')
-        h_data = dir.Get('Graph1D_y1')
-        h_data_list.append([h_data, 'pp'])
-        f.Close()
-        
-        hname_ntrigger = f'h_semi_inclusive_chjet_hjet_ntrigger_alice_R{R}{self.suffix}Scaled'
-        hname_high = f'h_semi_inclusive_chjet_dphi_highTrigger_alice_R{R}_276{self.suffix}Scaled'
-        hname_low = f'h_semi_inclusive_chjet_dphi_lowTrigger_alice_R{R}_276{self.suffix}Scaled'
-        
-        # Get JETSCAPE pp prediction
-        filename_pp = os.path.join(self.output_dir, f'{self.dir_pp}/AnalysisResultsFinal.root')
-        f_pp = ROOT.TFile(filename_pp, 'READ')
-        h_pp_ntrigger = f_pp.Get(hname_ntrigger)
-        h_pp_ntrigger.SetDirectory(0)
-        h_pp_high = f_pp.Get(hname_high)
-        h_pp_high.SetDirectory(0)
-        h_pp_low = f_pp.Get(hname_low)
-        h_pp_low.SetDirectory(0)
-        f_pp.Close()
-        
-        # Get JETSCAPE AA prediction
-        filename = os.path.join(self.output_dir, f'{self.dir_AA}/AnalysisResultsFinal.root')
-        f_AA = ROOT.TFile(filename, 'READ')
-        h_AA_ntrigger = f_AA.Get(hname_ntrigger)
-        h_AA_ntrigger.SetDirectory(0)
-        h_AA_high = f_AA.Get(hname_high)
-        h_AA_high.SetDirectory(0)
-        h_AA_low = f_AA.Get(hname_low)
-        h_AA_low.SetDirectory(0)
-        f_AA.Close()
-        
-        # Delta recoil
-        n_trig_high_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(30.))
-        n_trig_low_pp = h_pp_ntrigger.GetBinContent(h_pp_ntrigger.FindBin(8.5))
-        n_trig_high_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(30.))
-        n_trig_low_AA = h_AA_ntrigger.GetBinContent(h_AA_ntrigger.FindBin(8.5))
-        print(f'n_trig_high_pp: {n_trig_high_pp}')
-        print(f'n_trig_low_pp: {n_trig_low_pp}')
-        print(f'n_trig_high_AA: {n_trig_high_AA}')
-        print(f'n_trig_low_AA: {n_trig_low_AA}')
-
-        h_pp_high.Scale(1./n_trig_high_pp, 'width')
-        h_pp_low.Scale(1./n_trig_low_pp, 'width')
-        h_AA_high.Scale(1./n_trig_high_AA, 'width')
-        h_AA_low.Scale(1./n_trig_low_AA, 'width')
-        
-        h_delta_Phi_pp = h_pp_high.Clone('h_delta_Phi_pp')
-        h_delta_Phi_pp.Add(h_pp_low, -1)
-        
-        h_delta_Phi_AA = h_AA_high.Clone('h_delta_Phi_AA')
-        h_delta_Phi_AA.Add(h_AA_low, -1*c_ref)
- 
-        # Plot
-        xtitle="#Delta #it{#varphi}"
-        self.plot_raa_ratio(raa_type='hjet_dphi',
-                            h_pp=h_delta_Phi_pp,
-                            h_AA=h_delta_Phi_AA,
-                            h_data_list=h_data_list,
-                            eta_cut=np.round(self.inclusive_chjet_observables['eta_cut_alice_R']-R, decimals=1),
-                            data_centralities=['0-10'],
-                            mc_centralities=[f'{self.min_cent}-{self.max_cent}'],
-                            xtitle=xtitle,
-                            ytitle = '#Phi(#Delta#it{#varphi})',
-                            ymax=0.1,
-                            outputfilename=f'h_semi_inclusive_chjet_dphi_alice_R{R}_{self.sqrts}_{self.min_cent}-{self.max_cent}{self.file_format}',
-                            R=R,
-                            do_chi2=True)
-     
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
     #-------------------------------------------------------------------------------------------
-    def plot_distribution_and_ratio(self, observable_type, observable, logy = False):
+    def plot_distribution_and_ratio(self, observable_type, observable, centrality, pt_suffix='', logy = False):
     
         if not self.observable_settings['jetscape_distribution']:
             return
@@ -720,27 +467,43 @@ class PlotResults(common_base.CommonBase):
         
         x = 0.25
         text_latex.SetTextSize(0.065)
-        #text = f'#bf{{{self.observable}}} #sqrt{{#it{{s_{{#it{{NN}}}}}}}} = {self.sqrts/1000.} TeV'
         text = f'#bf{{{observable_type}_{observable}}} #sqrt{{#it{{s}}}} = {self.sqrts/1000.} TeV'
         text_latex.DrawLatex(x, 0.83, text)
+        text = f'{centrality} {self.suffix} {pt_suffix}'
+        text_latex.DrawLatex(x, 0.73, text)
 
-        #text = 'Charged-particle jets'
-        #text_latex.DrawLatex(x, 0.75, text)
-        
-        #text = f'#it{{R}} = {self.jetR}, anti-#it{{k}}_{{T}}, |#it{{#eta}}_{{jet}}| < {0.9-self.jetR}'
-        #text_latex.DrawLatex(x, 0.67, text)
-        
-        #pt_label = None
-        #if self.observable in ['girth', 'mass', 'zg', 'theta_g']:
-        #    pt_label = f'{self.pt[0]} < #it{{p}}_{{T, ch jet}} < {self.pt[1]} GeV/#it{{c}}'
-        #    text_latex.DrawLatex(x, 0.57, pt_label)
-            
-        #if self.observable in ['zg', 'theta_g']:
-        #    grooming_label = f'Soft Drop #it{{z}}_{{cut}}={self.zcut}, #it{{#beta}}=0'
-        #    text_latex.DrawLatex(x, 0.47, grooming_label)
-        
-        c.SaveAs(os.path.join(self.output_dir, f'{self.hname}.pdf'))
+        c.SaveAs(os.path.join(self.output_dir, f'{self.hname}{self.file_format}'))
         c.Close()
+
+    #-------------------------------------------------------------------------------------------
+    # Generate pptx of one plot per slide, for convenience
+    #-------------------------------------------------------------------------------------------
+    def generate_pptx(self):
+    
+        # Create a blank presentation
+        p = pptx.Presentation()
+        
+        # Set slide layouts
+        title_slide_layout = p.slide_layouts[0]
+        blank_slide_layout = p.slide_layouts[6]
+        
+        # Make a title slide
+        slide = p.slides.add_slide(title_slide_layout)
+        title = slide.shapes.title
+        title.text = f'QA for {self.sqrts/1000.} TeV'
+        author = slide.placeholders[1]
+        author.text = 'STAT WG'
+        
+        # Loop through all output files and plot
+        files = [f for f in os.listdir(self.output_dir) if f.endswith(self.file_format)]
+        for file in sorted(files):
+            img = os.path.join(self.output_dir, file)
+            slide = p.slides.add_slide(blank_slide_layout)
+            slide.shapes.add_picture(img, left=pptx.util.Inches(2.),
+                                          top=pptx.util.Inches(1.),
+                                          width=pptx.util.Inches(5.))
+            
+        p.save(os.path.join(self.output_dir, 'results.pptx'))
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
