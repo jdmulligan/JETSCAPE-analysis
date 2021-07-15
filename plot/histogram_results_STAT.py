@@ -208,8 +208,8 @@ class HistogramResults(common_base.CommonBase):
                                                             centrality, centrality_index, self.suffix)
                     if not bins.any():
                         continue
-
-                    if self.sqrts == '2760':
+                        
+                    if self.sqrts == 2760:
                         
                         column_name = f'{observable_type}_{observable}_R{jet_R}_lowTrigger'
                         self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
@@ -217,21 +217,25 @@ class HistogramResults(common_base.CommonBase):
                         column_name = f'{observable_type}_{observable}_R{jet_R}_highTrigger'
                         self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
                         
-                        column_name = f'{observable_type}_alice_trigger_pt'
-                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        if np.isclose(jet_R, block['jet_R'][0]):
+                            column_name = f'{observable_type}_alice_trigger_pt'
+                            bins = np.array(block['low_trigger_range'] + block['high_trigger_range']).astype(np.float)
+                            self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, observable=observable)
                         
-                    elif self.sqrts == '200':
+                    elif self.sqrts == 200:
                     
                         column_name = f'{observable_type}_{observable}_R{jet_R}'
                         self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
                     
-                        column_name = f'{observable_type}_star_trigger_pt'
-                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        if np.isclose(jet_R, block['jet_R'][0]):
+                            column_name = f'{observable_type}_star_trigger_pt'
+                            bins = np.array(block['trigger_range'])
+                            self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', pt_bin=None, block=None):
+    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', pt_bin=None, block=None, observable=''):
 
         # Get column
         col = self.observables_df[column_name]
@@ -242,10 +246,10 @@ class HistogramResults(common_base.CommonBase):
             if len(col[i]) > 0:
                 dim_observable = col[i][0].size
                 break
-        
+                
         # Construct histogram
         if dim_observable == 1:
-            self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
+            self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, observable=observable)
         elif dim_observable == 2:
             self.histogram_2d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, block=block)
         else:
@@ -261,9 +265,9 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_1d_observable(self, col, column_name=None, bins=None, centrality=None, pt_suffix=''):
+    def histogram_1d_observable(self, col, column_name=None, bins=None, centrality=None, pt_suffix='', observable=''):
 
-        hname = f'h_{column_name}_{centrality}{pt_suffix}'
+        hname = f'h_{column_name}{observable}_{centrality}{pt_suffix}'
         h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
         h.Sumw2()
         

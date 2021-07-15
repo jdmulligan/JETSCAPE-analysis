@@ -169,6 +169,7 @@ inclusive_jet:
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
     
+    # Note that pp hepdata has different binning than PbPb hepdata
     hepdata: 'HEPData-ins1343112-v1-root.root'
     hepdata_pp_dir_R0.2: 'Table 2'
     hepdata_pp_gname: 'Graph1D_y1'
@@ -195,7 +196,7 @@ inclusive_jet:
     hepdata: 'HEPData-ins1326911-v1-root.root'
     hepdata_pp_dir_R0.4: 'Table 2'
     hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-6
     y_max_pp: 1e4
     
@@ -228,7 +229,7 @@ inclusive_jet:
     hepdata_pp_gname_R0.2: 'Graph1D_y1'
     hepdata_pp_gname_R0.3: 'Graph1D_y2'
     hepdata_pp_gname_R0.4: 'Graph1D_y3'
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-10
     y_max_pp: 1e10
     skip_pp_ratio: True
@@ -355,6 +356,11 @@ inclusive_chjet:
     centrality: [[0,10]]
     leading_track_min_pt: 5.
     xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+    
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-14
+    y_max_pp: 1e-2
     
     hepdata: 'HEPData-ins1263194-v1-root.root'
     hepdata_AA_dir: 'Table 30'
@@ -451,10 +457,11 @@ semi_inclusive_chjet:
     high_trigger_range: [20, 50]
     c_ref: [0.99, 0.96, 0.93]
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
     
     ytitle_pp: '#Delta_{recoil}'
-    y_min_pp: 0.
-    y_max_pp: 1.
+    y_min_pp: 2e-8
+    y_max_pp: 2.
 
     hepdata: 'HEPData-ins1376027-v1-root.root'
     hepdata_AA_dir_R0.2: 'Table 32'
@@ -504,9 +511,9 @@ semi_inclusive_chjet:
     high_trigger_range: [15, 45]
     xtitle: '#frac{#tau_{2}}{#tau_{1}}'
     
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 0.
-    y_max_pp: 10.
+    ytitle_pp: '#frac{1}{#sigma} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 1e-3
+    y_max_pp: 2.
 
     hepdata: 'HEPData-1623946228-v1-frac{tau_{2}}{tau_{1}}_with_CA_reclustering_in_Pb-Pb.root'
     hepdata_AA_dir: 'frac{tau_{2}}{tau_{1}} with CA reclustering in Pb-Pb'

@@ -201,9 +201,15 @@ class PlotResults(common_base.CommonBase):
                     self.suffix = f'_R{self.jet_R}'
                     if 'hepdata' not in block:
                         continue
+                        
+                    # Set normalization
+                    self_normalize = False
+                    for x in ['nsubjettiness']:
+                        if x in observable:
+                            self_normalize = True
 
                     # Initialize observable configuration
-                    self.init_observable(observable_type, observable, block, centrality)
+                    self.init_observable(observable_type, observable, block, centrality, self_normalize=self_normalize)
               
                     # Plot observable
                     self.plot_distribution_and_ratio(observable_type, observable, centrality)
@@ -282,21 +288,22 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['jetscape_distribution'] = h_jetscape
         else:
             if self.sqrts == 2760: # Delta recoil
-                hname_low_trigger = f'{observable_type}_{observable}_R{self.jet_R}_lowTrigger'
-                hname_high_trigger = f'{observable_type}_{observable}_R{self.jet_R}_highTrigger'
-                hname_ntrigger = f'{observable_type}_alice_trigger_pt'
+                hname_low_trigger = f'h_{observable_type}_{observable}_R{self.jet_R}_lowTrigger_{centrality}'
+                hname_high_trigger = f'h_{observable_type}_{observable}_R{self.jet_R}_highTrigger_{centrality}'
+                hname_ntrigger = f'h_{observable_type}_alice_trigger_pt{observable}_{centrality}'
+                self.hname = f'h_{observable_type}_{observable}_R{self.jet_R}_{centrality}'
                 if hname_low_trigger in keys and hname_high_trigger in keys and hname_ntrigger in keys:
-                    h_jetscape_low = self.input_file.Get(hname_low)
+                    h_jetscape_low = self.input_file.Get(hname_low_trigger)
                     h_jetscape_low.SetDirectory(0)
-                    h_jetscape_high = self.input_file.Get(hname_high)
+                    h_jetscape_high = self.input_file.Get(hname_high_trigger)
                     h_jetscape_high.SetDirectory(0)
-                    h_jetscape_ntrigger = self.input_file.Get(hname_n_trigger)
+                    h_jetscape_ntrigger = self.input_file.Get(hname_ntrigger)
                     h_jetscape_ntrigger.SetDirectory(0)
                     
                     low_trigger = (low_trigger_range[0]+low_trigger_range[1])/2
                     high_trigger = (high_trigger_range[0]+high_trigger_range[1])/2
                     n_trig_high = h_jetscape_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(high_trigger))
-                    n_trig_low = h_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(low_trigger))
+                    n_trig_low = h_jetscape_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(low_trigger))
                     h_jetscape_high.Scale(1./n_trig_high)
                     h_jetscape_low.Scale(1./n_trig_low)
                     self.observable_settings['jetscape_distribution'] = h_jetscape_high.Clone('h_delta_recoil')
@@ -335,7 +342,6 @@ class PlotResults(common_base.CommonBase):
         if self.observable_settings['jetscape_distribution']:
             n_events = self.input_file.Get('h_n_events').GetBinContent(1)
             self.observable_settings['jetscape_distribution'].Scale(1./n_events)
-            print(f'{observable_type} -- {observable}')
             if self.sqrts == 2760:
                 if observable_type == 'hadron':
                     if observable == 'pt_ch_alice':
@@ -349,8 +355,9 @@ class PlotResults(common_base.CommonBase):
                     elif observable == 'pt_ch_atlas':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                        self.observable_settings['jetscape_distribution'].Scale(1.e3) # convert to mb
                     elif observable == 'pt_ch_cms':
-                        L_int = 230.e-9
+                        L_int = 230. # (in nb)
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
                         self.observable_settings['jetscape_distribution'].Scale(L_int)
@@ -361,8 +368,10 @@ class PlotResults(common_base.CommonBase):
                         self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
                     if observable == 'pt_atlas':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1.e9) # convert to nb
                     if observable == 'pt_cms':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1.e9) # convert to nb
                     if observable in ['Dz_atlas', 'Dpt_atlas']:
                         hname = f'h_{observable_type}_{observable}{self.suffix}_Njets_{centrality}{pt_suffix}'
                         h_njets = self.input_file.Get(self.hname)
@@ -372,6 +381,12 @@ class PlotResults(common_base.CommonBase):
                             self.observable_settings['jetscape_distribution'].Scale(1.*n_events/n_jets)
                         else:
                             print('WARNING: N_jets = 0')
+                elif observable_type == 'inclusive_chjet':
+                    if observable == 'pt_alice':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                elif observable_type == 'semi_inclusive_chjet':
+                    if observable in ['IAA_alice', 'dphi_alice']:
+                        self.observable_settings['jetscape_distribution'].Scale(n_events)
 
             # Scale by bin-dependent factor (approximation for pp QA)
             if self.scale_by:
@@ -400,7 +415,10 @@ class PlotResults(common_base.CommonBase):
                     self.observable_settings['jetscape_distribution'].Scale(1./integral)
                 else:
                     print('WARNING: integral for self-normalization is 0')
-            
+                    
+            if observable == 'nsubjettiness_alice':
+                print(self.observable_settings['jetscape_distribution'].Integral())
+                
         # Form ratio of JETSCAPE to data
         if self.observable_settings['data_distribution'] and self.observable_settings['jetscape_distribution'] and not self.observable_settings['jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()) and not self.skip_pp_ratio:
             self.observable_settings['ratio'] = self.plot_utils.divide_histogram_by_tgraph(self.observable_settings['jetscape_distribution'],
