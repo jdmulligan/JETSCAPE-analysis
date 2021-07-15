@@ -50,7 +50,7 @@ class PlotResults(common_base.CommonBase):
         self.marker_size = 1.5
         self.line_width = 2
         self.line_style = 1
-        self.file_format = '.png'
+        self.file_format = '.pdf'
 
         # Read config file
         with open(config_file, 'r') as stream:
@@ -255,10 +255,18 @@ class PlotResults(common_base.CommonBase):
         else:
             self.y_ratio_min = 0.
             self.y_ratio_max = 1.99
+        if 'skip_pp_ratio' in block:
+            self.skip_pp_ratio = block['skip_pp_ratio']
+        else:
+            self.skip_pp_ratio = False
+        if 'scale_by' in block:
+            self.scale_by = block['scale_by']
+        else:
+            self.scale_by = None
         
         # Initialize data
         if f'hepdata' in block:
-            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, suffix=self.suffix)
+            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, suffix=self.suffix, pt_suffix=pt_suffix)
         else:
             self.observable_settings['data_distribution'] = None
 
@@ -323,17 +331,64 @@ class PlotResults(common_base.CommonBase):
         #    f_jetscape_AA.Close()
         
         # Normalization
-        n_events = self.input_file.Get('h_n_events').GetBinContent(1)
+        # Note: If we divide by n_events, then JETSCAPE distribution gives cross-section (in b)
         if self.observable_settings['jetscape_distribution']:
-            if observable_type == 'hadron':
-                self.observable_settings['jetscape_distribution'].Scale(1./n_events)
-                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                sigma_inel = 0.0676
-                self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-            elif observable_type == 'inclusive_jet' and 'pt' in observable:
-                self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+            n_events = self.input_file.Get('h_n_events').GetBinContent(1)
+            self.observable_settings['jetscape_distribution'].Scale(1./n_events)
+            print(f'{observable_type} -- {observable}')
+            if self.sqrts == 2760:
+                if observable_type == 'hadron':
+                    if observable == 'pt_ch_alice':
+                        sigma_inel = 0.0618
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
+                    elif observable == 'pt_pi_alice':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                    elif observable == 'pt_pi0_alice':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                    elif observable == 'pt_ch_atlas':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                    elif observable == 'pt_ch_cms':
+                        L_int = 230.e-9
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                        self.observable_settings['jetscape_distribution'].Scale(L_int)
+                elif observable_type == 'inclusive_jet':
+                    if observable == 'pt_alice':
+                        sigma_inel = 0.0621
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
+                    if observable == 'pt_atlas':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                    if observable == 'pt_cms':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                    if observable in ['Dz_atlas', 'Dpt_atlas']:
+                        hname = f'h_{observable_type}_{observable}{self.suffix}_Njets_{centrality}{pt_suffix}'
+                        h_njets = self.input_file.Get(self.hname)
+                        h_njets.SetDirectory(0)
+                        n_jets = h_njets.GetBinContent(1)
+                        if n_jets > 0.:
+                            self.observable_settings['jetscape_distribution'].Scale(1.*n_events/n_jets)
+                        else:
+                            print('WARNING: N_jets = 0')
 
+            # Scale by bin-dependent factor (approximation for pp QA)
+            if self.scale_by:
+                nBins = self.observable_settings['jetscape_distribution'].GetNbinsX()
+                for bin in range(1, nBins+1):
+                    h_x = self.observable_settings['jetscape_distribution'].GetBinCenter(bin)
+                    h_y = self.observable_settings['jetscape_distribution'].GetBinContent(bin)
+                    h_error = self.observable_settings['jetscape_distribution'].GetBinError(bin)
+                    if self.scale_by == '1/pt':
+                        scale_factor = 1./h_x
+                    self.observable_settings['jetscape_distribution'].SetBinContent(bin, h_y*scale_factor)
+                    self.observable_settings['jetscape_distribution'].SetBinError(bin, h_error*scale_factor)
+
+            # Bin width
             self.observable_settings['jetscape_distribution'].Scale(1., 'width')
+            
+            # Self-normalization
             if self_normalize:
                 if observable in ['zg', 'theta_g']:
                     min_bin = 0
@@ -341,12 +396,16 @@ class PlotResults(common_base.CommonBase):
                     min_bin = 1
                 nbins = self.observable_settings['jetscape_distribution'].GetNbinsX()
                 integral = self.observable_settings['jetscape_distribution'].Integral(min_bin, nbins, 'width')
-                self.observable_settings['jetscape_distribution'].Scale(1./integral)
+                if integral > 0.:
+                    self.observable_settings['jetscape_distribution'].Scale(1./integral)
+                else:
+                    print('WARNING: integral for self-normalization is 0')
             
         # Form ratio of JETSCAPE to data
-        if self.observable_settings['data_distribution'] and self.observable_settings['jetscape_distribution'] and not self.observable_settings['jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()):
-            self.observable_settings['ratio'] = self.plot_utils.divide_tgraph(self.observable_settings['jetscape_distribution'],
+        if self.observable_settings['data_distribution'] and self.observable_settings['jetscape_distribution'] and not self.observable_settings['jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()) and not self.skip_pp_ratio:
+            self.observable_settings['ratio'] = self.plot_utils.divide_histogram_by_tgraph(self.observable_settings['jetscape_distribution'],
                                                                               self.observable_settings['data_distribution'])
+                                                                              
         else:
             self.observable_settings['ratio'] = None
 
@@ -439,7 +498,7 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['data_distribution'].SetLineStyle(self.line_style)
             self.observable_settings['data_distribution'].SetLineWidth(self.line_width)
             self.observable_settings['data_distribution'].SetLineColor(self.data_color)
-            self.observable_settings['data_distribution'].Draw('PE Z X0 same')
+            self.observable_settings['data_distribution'].Draw('PE Z same')
             legend.AddEntry(self.observable_settings['data_distribution'], 'Data', 'PE')
         
         legend.Draw()
@@ -454,6 +513,12 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['ratio'].SetMarkerStyle(0)
             self.observable_settings['ratio'].SetLineWidth(0)
             self.observable_settings['ratio'].Draw('E3 same')
+        
+        # Draw data uncertainties
+        if self.observable_settings['data_distribution']:
+            data_ratio = self.plot_utils.divide_tgraph_by_tgraph(self.observable_settings['data_distribution'],
+                                                                 self.observable_settings['data_distribution'])
+            data_ratio.Draw('PE Z same')
 
         line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
         line.SetLineColor(920+2)

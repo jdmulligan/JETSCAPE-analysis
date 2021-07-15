@@ -176,7 +176,7 @@ class HistogramResults(common_base.CommonBase):
                                             continue
                                         
                                         column_name = f'{observable_type}_{observable}{self.suffix}'
-                                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, block=block)
+                                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
                                         
                             else:
                             
@@ -188,8 +188,8 @@ class HistogramResults(common_base.CommonBase):
                                     continue
                             
                                 self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}',
-                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, block=block)
-
+                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+                                                          
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
     #-------------------------------------------------------------------------------------------
@@ -231,7 +231,7 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', block=None):
+    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', pt_bin=None, block=None):
 
         # Get column
         col = self.observables_df[column_name]
@@ -250,6 +250,13 @@ class HistogramResults(common_base.CommonBase):
             self.histogram_2d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, block=block)
         else:
             return
+        
+        # Also store N_jets for D(z) observables
+        if 'Dz' in column_name:
+            column_name = f'{column_name}_Njets'
+            col = self.observables_df[column_name]
+            bins = np.array([block['pt'][pt_bin], block['pt'][pt_bin+1]])
+            self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
@@ -287,7 +294,7 @@ class HistogramResults(common_base.CommonBase):
         for i,_ in enumerate(col):
             if len(col[i]) > 0:
                 for value in col[i]:
-                    if value[0] > pt_min and value[0] < pt_max:
+                    if pt_min < value[0] < pt_max:
                         h.Fill(value[1], self.weights[i])
                     
         # Save histogram to output list

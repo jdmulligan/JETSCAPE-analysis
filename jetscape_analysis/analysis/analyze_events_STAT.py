@@ -186,6 +186,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_jet_{key}_R{jetR}_k{kappa}'] = []
                         else:
                             self.observable_dict_event[f'inclusive_jet_{key}_R{jetR}'] = []
+                            if 'Dz' in key:
+                                self.observable_dict_event[f'inclusive_jet_{key}_R{jetR}_Njets'] = []
         
         for key,dict in self.inclusive_chjet_observables.items():
             for jetR in dict['jet_R']:
@@ -264,6 +266,16 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             if abs(eta) < self.hadron_observables['pt_pi0_alice']['eta_cut']:
                                 if abs(pid) == 111:
                                     self.observable_dict_event[f'hadron_pt_pi0_alice{suffix}'].append(pt)
+                                    
+                # ATLAS
+                # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+                if self.centrality_accepted(self.hadron_observables['pt_ch_atlas']['centrality']):
+                    pt_min = self.hadron_observables['pt_ch_atlas']['pt'][0]
+                    pt_max = self.hadron_observables['pt_ch_atlas']['pt'][1]
+                    if pt > pt_min and pt < pt_max:
+                        if abs(eta) < self.hadron_observables['pt_ch_atlas']['eta_cut']:
+                            if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                self.observable_dict_event[f'hadron_pt_ch_atlas{suffix}'].append(pt)
 
                 # CMS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
@@ -394,7 +406,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 pt_max = self.inclusive_jet_observables['Dz_atlas']['pt'][-1]
                 if jetR in self.inclusive_jet_observables['Dz_atlas']['jet_R']:
                     if abs(jet.rap()) < self.inclusive_jet_observables['Dz_atlas']['y_cut']:
-                        if jet_pt > pt_min and jet_pt < pt_max:
+                        if pt_min < jet_pt < pt_max:
+                            self.observable_dict_event[f'inclusive_jet_Dz_atlas_R{jetR}_Njets'].append(jet_pt)
                             for hadron in fj_hadrons_positive:
                                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                                 pid = hadron.user_index()
@@ -412,7 +425,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     eta_range = self.inclusive_jet_observables['Dz_cms']['eta_cut']
                     if jetR in self.inclusive_jet_observables['Dz_cms']['jet_R']:
                         if eta_range[0] < abs(jet.eta()) < eta_range[1]:
-                            if jet_pt > pt_min and jet_pt < pt_max:
+                            if pt_min < jet_pt < pt_max:
+                                self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}_Njets'].append(jet_pt)
                                 for hadron in fj_hadrons_positive:
                                     # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                                     pid = hadron.user_index()

@@ -108,7 +108,7 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get tgraph from hepdata file specified in config block
     # ---------------------------------------------------------------
-    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, suffix=''):
+    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, suffix='', pt_suffix=''):
 
         # Open the HEPData file
         hepdata_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
@@ -122,6 +122,8 @@ class PlotUtils(common_base.CommonBase):
         # First, check for dir/hist names in config
         if f'hepdata_pp_dir{suffix}' in block:
             dir_key = f'hepdata_pp_dir{suffix}'
+        elif f'hepdata_pp_dir{suffix}{pt_suffix}' in block:
+            dir_key = f'hepdata_pp_dir{suffix}{pt_suffix}'
         elif f'hepdata_pp_dir' in block:
             dir_key = f'hepdata_pp_dir'
         else:
@@ -149,7 +151,7 @@ class PlotUtils(common_base.CommonBase):
     #---------------------------------------------------------------
     # Divide a histogram by a tgraph, point-by-point
     #---------------------------------------------------------------
-    def divide_tgraph(self, h, g):
+    def divide_histogram_by_tgraph(self, h, g):
     
         # Clone tgraph, in order to return a new one
         g_new = g.Clone(f'{g.GetName()}_divided')
@@ -163,8 +165,6 @@ class PlotUtils(common_base.CommonBase):
             h_error = h.GetBinError(bin)
 
             # Get TGraph (x,y) and errors
-            #g_x = ROOT.Double(0)
-            #g_y = ROOT.Double(0)
             g_x = ctypes.c_double(0)
             g_y = ctypes.c_double(0)
             g.GetPoint(bin-1, g_x, g_y)
@@ -193,6 +193,46 @@ class PlotUtils(common_base.CommonBase):
 
             g_new.SetPoint(bin-1, h_x, new_content)
             g_new.SetPointError(bin-1, 0, 0, new_error_low, new_error_up)
+        return g_new
+
+    #---------------------------------------------------------------
+    # Divide a tgraph by a tgraph, point-by-point: g1/g2
+    # NOTE: Ignore uncertainties on denominator
+    #---------------------------------------------------------------
+    def divide_tgraph_by_tgraph(self, g1, g2):
+    
+        # Clone tgraph, in order to return a new one
+        g_new = g1.Clone(f'{g1.GetName()}_divided')
+        
+        if g1.GetN() != g2.GetN():
+            sys.exit(f'ERROR: TGraph {g1.GetName()} has {g1.GetN()} points, but {g2.GetName()} has {g2.GetN()} points')
+        
+        for i in range(0, g1.GetN()):
+
+            # Get TGraph (x,y) and errors
+            g1_x = ctypes.c_double(0)
+            g1_y = ctypes.c_double(0)
+            g1.GetPoint(i, g1_x, g1_y)
+            y1ErrLow = g1.GetErrorYlow(i)
+            y1ErrUp  = g1.GetErrorYhigh(i)
+            g1x = g1_x.value
+            g1y = g1_y.value
+            
+            g2_x = ctypes.c_double(0)
+            g2_y = ctypes.c_double(0)
+            g2.GetPoint(i, g2_x, g2_y)
+            g2x = g2_x.value
+            g2y = g2_y.value
+            
+            if not np.isclose(g1x, g2x):
+                sys.exit(f'ERROR: TGraph {g1.GetName()} point {i} at {g1x}, but {g2.GetName()} at {g2x}')
+
+            new_content = g1y / g2y
+            new_error_low = y1ErrLow/g1y * new_content
+            new_error_up = y1ErrUp/g1y * new_content
+            
+            g_new.SetPoint(i, g1x, new_content)
+            g_new.SetPointError(i, 0, 0, new_error_low, new_error_up)
         return g_new
 
     #-------------------------------------------------------------------------------------------
