@@ -93,6 +93,12 @@ class HistogramResults(common_base.CommonBase):
         h = ROOT.TH1F('h_n_events', 'h_n_events', 1, 0, 1)
         h.SetBinContent(1, self.n_events)
         self.output_list.append(h)
+        
+        bins = np.logspace(-6, 0., 100)
+        h = ROOT.TH1F('h_weights', 'h_weights', bins.size-1, bins)
+        for weight in self.weights:
+            h.Fill(weight)
+        self.output_list.append(h)
 
         self.write_output_objects()
 
