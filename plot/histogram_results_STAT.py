@@ -227,7 +227,7 @@ class HistogramResults(common_base.CommonBase):
                         column_name = f'{observable_type}_{observable}_R{jet_R}'
                         self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
                     
-                        if np.isclose(jet_R, block['jet_R'][0]):
+                        if observable == 'IAA_star' and np.isclose(jet_R, block['jet_R'][0]):
                             column_name = f'{observable_type}_star_trigger_pt'
                             bins = np.array(block['trigger_range'])
                             self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
@@ -246,7 +246,7 @@ class HistogramResults(common_base.CommonBase):
             if len(col[i]) > 0:
                 dim_observable = col[i][0].size
                 break
-                
+                                
         # Construct histogram
         if dim_observable == 1:
             self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, observable=observable)

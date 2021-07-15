@@ -385,7 +385,7 @@ inclusive_chjet:
     hepdata_pp_dir_R0.4_pt1: 'Table 2'
     hepdata_pp_dir_R0.4_pt2: 'Table 3'
     hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{1}{#sigma} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{m}} #left[GeV^{-2}#right]'
     y_min_pp: 1e-3
     y_max_pp: 0.3
     
@@ -408,7 +408,7 @@ inclusive_chjet:
     hepdata: 'HEPData-ins1682990-v1-root.root'
     hepdata_pp_dir_R0.2: 'Table 10'
     hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{1}{#sigma} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{g}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 0.
     y_max_pp: 30.
     
@@ -427,7 +427,7 @@ inclusive_chjet:
     hepdata: 'HEPData-ins1682990-v1-root.root'
     hepdata_pp_dir_R0.2: 'Table 13'
     hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{1}{#sigma} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{p}_{T}d} #left[(GeV/c)^{-2}#right]'
     y_min_pp: 0.
     y_max_pp: 5.
     

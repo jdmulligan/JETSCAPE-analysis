@@ -226,6 +226,8 @@ class PlotResults(common_base.CommonBase):
         self.xtitle = block['xtitle']
         if 'eta_cut' in block:
             self.eta_cut = block['eta_cut']
+        if 'y_cut' in block:
+            self.y_cut = block['y_cut']
         if 'pt' in block:
             self.pt = block['pt']
         if 'eta_R' in block:
@@ -311,8 +313,8 @@ class PlotResults(common_base.CommonBase):
                 else:
                     self.observable_settings['jetscape_distribution'] = None
             elif self.sqrts == 200:
-                hname = f'{observable_type}_{observable}_R{jet_R}'
-                hname_ntrigger = f'{observable_type}_star_trigger_pt'
+                hname = f'{observable_type}_{observable}_R{self.jet_R}_{centrality}'
+                hname_ntrigger = f'{observable_type}_star_trigger_pt_{centrality}'
                 if hname in keys and hname_trigger in keys:
                     self.observable_settings['jetscape_distribution'] = self.input_file.Get(hname)
                     self.observable_settings['jetscape_distribution'].SetDirectory(0)
@@ -342,6 +344,19 @@ class PlotResults(common_base.CommonBase):
         if self.observable_settings['jetscape_distribution']:
             n_events = self.input_file.Get('h_n_events').GetBinContent(1)
             self.observable_settings['jetscape_distribution'].Scale(1./n_events)
+            
+            if self.sqrts == 200:
+                if observable_type == 'hadron':
+                    if observable == 'pt_ch_star':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                elif observable_type == 'inclusive_chjet':
+                    if observable == 'pt_star':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                elif observable_type == 'semi_inclusive_chjet':
+                    if observable in ['IAA_star', 'dphi_star']:
+                        self.observable_settings['jetscape_distribution'].Scale(n_events)
+            
             if self.sqrts == 2760:
                 if observable_type == 'hadron':
                     if observable == 'pt_ch_alice':
@@ -387,6 +402,37 @@ class PlotResults(common_base.CommonBase):
                 elif observable_type == 'semi_inclusive_chjet':
                     if observable in ['IAA_alice', 'dphi_alice']:
                         self.observable_settings['jetscape_distribution'].Scale(n_events)
+                        
+            if self.sqrts == 5020:
+                if observable_type == 'hadron':
+                    if observable in ['pt_ch_alice', 'pt_pi_alice']:
+                        sigma_inel = 0.0618 # Need to update number fro 5.02 TeV
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
+                    elif observable == 'pt_ch_cms':
+                        sigma = 0.07
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                        self.observable_settings['jetscape_distribution'].Scale(1./sigma)
+                elif observable_type == 'inclusive_jet':
+                    if observable == 'pt_alice':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1.e3) # convert to mb
+                    if observable == 'pt_atlas':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.y_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1.e9) # convert to nb
+                    if observable == 'pt_cms':
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1.e9) # convert to nb
+                    if observable in ['Dz_atlas', 'Dpt_atlas']:
+                        hname = f'h_{observable_type}_{observable}{self.suffix}_Njets_{centrality}{pt_suffix}'
+                        h_njets = self.input_file.Get(self.hname)
+                        h_njets.SetDirectory(0)
+                        n_jets = h_njets.GetBinContent(1)
+                        if n_jets > 0.:
+                            self.observable_settings['jetscape_distribution'].Scale(1.*n_events/n_jets)
+                        else:
+                            print('WARNING: N_jets = 0')
 
             # Scale by bin-dependent factor (approximation for pp QA)
             if self.scale_by:
