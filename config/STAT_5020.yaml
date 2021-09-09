@@ -108,7 +108,7 @@ hadron_correlations:
   v2_atlas:
     eta_cut: 2.5
     pt: [5., 60.]
-    centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], 40,50]]
+    centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     
     hepdata: 'HEPData-ins1686834-v1-root.root'
@@ -129,7 +129,7 @@ hadron_correlations:
     eta_cut: 1.
     pt: [5., 100.]
     pt_min: 1.
-    centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], 40,50]]
+    centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     
     hepdata: 'HEPData-ins1511868-v1-root.root'
