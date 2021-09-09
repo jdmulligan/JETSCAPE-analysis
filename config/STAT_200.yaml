@@ -135,6 +135,7 @@ semi_inclusive_chjet:
     
   # HEPData does not contain histogram bins -- appears to be 25 bins from [pi/2,3pi/2]
   # TODO: Confirm binning
+  # The bin width is constant at 0.1256.  For the most left two data points, there are really missing in HEP
   dphi_star:
     jet_R: [0.3]
     eta_cut_R: 1.

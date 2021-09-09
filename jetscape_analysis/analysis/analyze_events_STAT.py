@@ -118,9 +118,12 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                                      select_charged=True)
         
         
-        # Fill hadron histograms for jet shower particles
-        self.fill_hadron_histograms(fj_hadrons_positive, status='+')
-        self.fill_hadron_histograms(fj_hadrons_negative, status='-')        
+        # Fill hadron observables for jet shower particles
+        self.fill_hadron_observables(fj_hadrons_positive, status='+')
+        self.fill_hadron_observables(fj_hadrons_negative, status='-')
+        
+        # Fill hadron correlation observables
+        self.fill_hadron_correlation_observables(fj_hadrons_positive)
 
         # Loop through specified jet R
         for jetR in self.jet_R:
@@ -135,7 +138,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             jets = fj.sorted_by_pt(cs.inclusive_jets())
             jets_selected = jet_selector(jets)
 
-            # Fill inclusive full jet histograms
+            # Fill inclusive full jet observables
             [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, jetR, full_jet=True) for jet in jets_selected]
             
             # Charged jets
@@ -144,7 +147,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             jets_charged = fj.sorted_by_pt(cs_charged.inclusive_jets())
             jets_selected_charged = jet_selector(jets_charged)
 
-            # Fill inclusive charged jet histograms
+            # Fill inclusive charged jet observables
             [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, full_jet=False) for jet in jets_selected_charged]
             
             # Fill semi-inclusive jet correlations
@@ -154,11 +157,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 elif self.sqrts == 200:
                     jetR_list = self.semi_inclusive_chjet_observables['IAA_star']['jet_R']
                 if jetR in jetR_list:
-                    self.fill_semi_inclusive_chjet_histograms(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR)
+                    self.fill_semi_inclusive_chjet_observables(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR)
             
-            # Fill dijet histograms
+            # Fill dijet observables
             if self.dijet_observables:
-                self.fill_dijet_histograms(jets_selected, fj_hadrons_negative, jetR)
+                self.fill_dijet_observables(jets_selected, fj_hadrons_negative, jetR)
         
     # ---------------------------------------------------------------
     # Initialize empty list for each output observable
@@ -218,10 +221,10 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     self.observable_dict_event[f'dijet_{key}_R{jetR}'] = []
                                     
     # ---------------------------------------------------------------
-    # Fill hadron histograms
+    # Fill hadron observables
     # (assuming weak strange decays are off, but charm decays are on)
     # ---------------------------------------------------------------
-    def fill_hadron_histograms(self, fj_particles, status='+'):
+    def fill_hadron_observables(self, fj_particles, status='+'):
     
         # Note that for identified particles, we store holes of the identified species
         suffix = ''
@@ -311,7 +314,13 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'hadron_pt_ch_star{suffix}'].append(pt)
 
     # ---------------------------------------------------------------
-    # Fill inclusive jet histograms
+    # Fill hadron correlation observables
+    # ---------------------------------------------------------------
+    def fill_hadron_correlation_observables(self, fj_particles):
+        return None
+
+    # ---------------------------------------------------------------
+    # Fill inclusive jet observables
     #
     # To correct jet pt: sum up the hole pt within R of jet axis
     # To correct substructure:
@@ -332,31 +341,31 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         jet_pt_uncorrected = jet.pt()               # uncorrected pt: shower+recoil
         jet_pt = jet_pt_uncorrected - negative_pt   # corrected pt: shower+recoil-holes
         
-        # Fill histograms
+        # Fill observables
         if full_jet:
         
             # Ungroomed
-            self.fill_full_jet_ungroomed_histograms(jet, fj_hadrons_positive, holes_in_jet, jet_pt, jetR)
+            self.fill_full_jet_ungroomed_observables(jet, fj_hadrons_positive, holes_in_jet, jet_pt, jetR)
             
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
-                    self.fill_full_jet_groomed_histograms(grooming_setting, jet, holes_in_jet, jet_pt, jetR)
+                    self.fill_full_jet_groomed_observables(grooming_setting, jet, holes_in_jet, jet_pt, jetR)
 
         else:
                   
             # Ungroomed
-            self.fill_charged_jet_ungroomed_histograms(jet, holes_in_jet, jet_pt, jetR)
+            self.fill_charged_jet_ungroomed_observables(jet, holes_in_jet, jet_pt, jetR)
         
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
-                    self.fill_charged_jet_groomed_histograms(grooming_setting, jet, holes_in_jet, jet_pt, jetR)
+                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, holes_in_jet, jet_pt, jetR)
 
     # ---------------------------------------------------------------
-    # Fill inclusive full jet histograms
+    # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_full_jet_ungroomed_histograms(self, jet, fj_hadrons_positive, holes_in_jet, jet_pt, jetR):
+    def fill_full_jet_ungroomed_observables(self, jet, fj_hadrons_positive, holes_in_jet, jet_pt, jetR):
     
         if self.sqrts in [2760, 5020]:
 
@@ -457,9 +466,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     self.observable_dict_event[f'inclusive_jet_charge_cms_R{jetR}_k{kappa}'].append(charge)
 
     # ---------------------------------------------------------------
-    # Fill inclusive full jet histograms
+    # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_full_jet_groomed_histograms(self, grooming_setting, jet, holes_in_jet, jet_pt, jetR):
+    def fill_full_jet_groomed_observables(self, grooming_setting, jet, holes_in_jet, jet_pt, jetR):
     
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
@@ -498,9 +507,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     self.observable_dict_event[f'inclusive_jet_zg_cms_R{jetR}_zcut{zcut}_beta{beta}'].append([jet_pt, zg])
             
     # ---------------------------------------------------------------
-    # Fill inclusive charged jet histograms
+    # Fill inclusive charged jet observables
     # ---------------------------------------------------------------
-    def fill_charged_jet_ungroomed_histograms(self, jet, holes_in_jet, jet_pt, jetR):
+    def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, jet_pt, jetR):
     
         if self.sqrts == 2760:
         
@@ -595,9 +604,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_chjet_pt_star_R{jetR}'].append(jet_pt)
 
     # ---------------------------------------------------------------
-    # Fill inclusive full jet histograms
+    # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_charged_jet_groomed_histograms(self, grooming_setting, jet, holes_in_jet, jet_pt, jetR):
+    def fill_charged_jet_groomed_observables(self, grooming_setting, jet, holes_in_jet, jet_pt, jetR):
     
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
@@ -624,9 +633,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_chjet_tg_alice_R{jetR}_zcut{zcut}_beta{beta}'].append(theta_g)
                 
     # ---------------------------------------------------------------
-    # Fill semi-inclusive charged jet histograms
+    # Fill semi-inclusive charged jet observables
     # ---------------------------------------------------------------
-    def fill_semi_inclusive_chjet_histograms(self, jets_selected, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR):
+    def fill_semi_inclusive_chjet_observables(self, jets_selected, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR):
 
         if self.sqrts == 2760:
         
@@ -767,9 +776,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                 self.observable_dict_event[f'semi_inclusive_chjet_dphi_star_R{jetR}'].append(np.abs(hadron.delta_phi_to(jet)))
 
     # ---------------------------------------------------------------
-    # Fill dijet histograms
+    # Fill dijet observables
     # ---------------------------------------------------------------
-    def fill_dijet_histograms(self, jets_selected, fj_hadrons_negative, jetR):
+    def fill_dijet_observables(self, jets_selected, fj_hadrons_negative, jetR):
 
         if self.sqrts == 2760:
         

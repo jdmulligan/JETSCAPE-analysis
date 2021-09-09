@@ -179,7 +179,8 @@ class PlotUtils(common_base.CommonBase):
                 continue
                 
             if not np.isclose(h_x, gx):
-                print(f'ERROR: hist x: {h_x}, graph x: {gx}')
+                print(f'ERROR: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
+                return None
           
             new_content = h_y / gy
             

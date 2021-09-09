@@ -20,7 +20,7 @@ def main():
 
     final_state_hadron_dirs = {}
     for sqrts in sqrts_list:
-        final_state_hadron_dirs[sqrts] = f'/Users/jamesmulligan/JETSCAPE/jetscape-docker/JETSCAPE-output/STAT/pp_{sqrts}_final_state_hadrons'
+        final_state_hadron_dirs[sqrts] = f'/Users/jamesmulligan/JETSCAPE/jetscape-docker/JETSCAPE-output/STAT_v2/pp_{sqrts}_final_state_hadrons'
     
     for sqrts,dir in final_state_hadron_dirs.items():
     
@@ -34,9 +34,10 @@ def main():
                 shutil.rmtree(outputdir)
 
             for file in os.listdir(dir):
-                cmd = f'python jetscape_analysis/analysis/analyze_events_STAT.py -c config/STAT_{sqrts}.yaml -i {dir}/{file} -o {outputdir}'
-                print(cmd)
-                subprocess.run(cmd, check=True, shell=True)
+                if 'final_state_hadrons' in file:
+                    cmd = f'python jetscape_analysis/analysis/analyze_events_STAT.py -c config/STAT_{sqrts}.yaml -i {dir}/{file} -o {outputdir}'
+                    print(cmd)
+                    subprocess.run(cmd, check=True, shell=True)
           
         #-----------------------------------------------------------------
         # Loop through observable files, and construct histograms

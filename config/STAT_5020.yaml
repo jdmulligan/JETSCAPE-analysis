@@ -104,15 +104,45 @@ hadron:
 hadron_correlations:
 
   # https://www.hepdata.net/record/ins1686834
+  # Fig 5 (scalar product method)
   v2_atlas:
     eta_cut: 2.5
     pt: [5., 60.]
-    centrality: [[0,10]]
+    centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], 40,50]]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    
+    hepdata: 'HEPData-ins1686834-v1-root.root'
+    hepdata_pp_dir: 'Table 11'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#it{v}_{2}(SP)'
+    y_min_pp: 0.3
+    y_max_pp: 0.
+    
+    hepdata_AA_dir: ['Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{v}_{2}(SP)'
   
   # https://www.hepdata.net/record/ins1511868
+  # Fig 1 (scalar product method)
   v2_cms:
+    eta_cut: 1.
     pt: [5., 100.]
-    centrality: [[0,10]]
+    pt_min: 1.
+    centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], 40,50]]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    
+    hepdata: 'HEPData-ins1511868-v1-root.root'
+    hepdata_pp_dir: 'Table 11'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#it{v}_{2}(SP)'
+    y_min_pp: 0.3
+    y_max_pp: 0.
+    
+    hepdata_AA_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle: '#it{v}_{2}(SP)'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
@@ -149,6 +179,7 @@ inclusive_jet:
   # Note: Two charged tracks with pt>4 GeV are required in Pb-Pb
   #       (they argue this is small...unclear if they correct for it...we will ignore it here)
   # Note: The paper also performs rapidity dependence for 0-10%, which we omit for now
+  # Note the PbPb binning in hepdata is different than the pp hepdata cross-section binning
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.8
