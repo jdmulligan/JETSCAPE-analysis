@@ -77,6 +77,7 @@ class PlotUtils(common_base.CommonBase):
             h_key = f'hepdata_AA_hname'
         else:
             print(f'hepdata_AA_hname{suffix} not found!')
+            return np.array([])
             
         # Get the appropriate centrality entry in the dir/hist list
         if type(block[dir_key]) is list:

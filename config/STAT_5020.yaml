@@ -125,6 +125,7 @@ hadron_correlations:
   
   # https://www.hepdata.net/record/ins1511868
   # Fig 1 (scalar product method)
+  # Note: histogram binnings are not provided
   v2_cms:
     eta_cut: 1.
     pt: [5., 100.]
@@ -133,7 +134,7 @@ hadron_correlations:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     
     hepdata: 'HEPData-ins1511868-v1-root.root'
-    hepdata_pp_dir: 'Table 11'
+    hepdata_pp_dir: 'Table 7'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#it{v}_{2}(SP)'
     y_min_pp: 0.3
@@ -141,7 +142,6 @@ hadron_correlations:
     
     hepdata_AA_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6']
     hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
     ytitle: '#it{v}_{2}(SP)'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
