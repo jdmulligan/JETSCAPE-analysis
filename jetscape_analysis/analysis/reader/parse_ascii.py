@@ -46,6 +46,7 @@ class HeaderInfo:
     event_plane_angle: float = attr.ib()
     n_particles: int = attr.ib()
     event_weight: float = attr.ib(default=-1)
+    pt_hat: float = attr.ib(default=-1)
 
 
 def _retrieve_last_line_of_file(f: typing.TextIO, read_chunk_size: int = 100) -> str:
@@ -233,21 +234,26 @@ def _parse_header_line_format_v2(line: str) -> HeaderInfo:
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
     info: Union[HeaderInfo, CrossSection]
-    if len(values) == 9 and values[1] == "Event":
+    if (len(values) == 9 or len(values) == 11) and values[1] == "Event":
         ##########################
         # Header v2 specification:
         ##########################
         # As of 22 June 2021, the formatting of the header is as follows:
         # This function was developed to parse it.
         # The header is defined as follows, with each entry separated by a `\t` character:
-        # `# Event 1 weight 0.129547 EPangle 0.0116446 N_hadrons 236`
+        # `# Event 1 weight 0.129547 EPangle 0.0116446 N_hadrons 236 (pt_hat 47)`
         #  0 1     2 3      4        5       6         7         8
+        # NOTE: pt_hat is optional
         #
+        pt_hat = -1.
+        if values[-2] == "pt_hat":
+            pt_hat = float(values[-1])
         info = HeaderInfo(
             event_number=int(values[2]),            # Event number
             event_plane_angle=float(values[6]),     # EP angle
             n_particles=int(values[8]),             # Number of particles
             event_weight=float(values[4]),          # Event weight
+            pt_hat=pt_hat                           # pt hat
         )
     elif len(values) == 5 and values[1] == "sigmaGen":
         # If we've hit the cross section, and we're not doing the initial extraction of the cross
@@ -628,6 +634,8 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
         }
         if chunk_generator.headers[0].event_weight > -1:
             header_level_info["event_weight"] = np.array([header.event_weight for header in chunk_generator.headers], np.float32)
+        if chunk_generator.headers[0].pt_hat > -1:
+            header_level_info["pt_hat"] = np.array([header.pt_hat for header in chunk_generator.headers], np.float32)
 
         # Cross section info
         if chunk_generator.cross_section:
@@ -693,7 +701,7 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
     # Setup the base output directory
     base_output_filename.parent.mkdir(parents=True, exist_ok=True)
     # We will check which fields actually exist when writing.
-    possible_fields_containing_floats = ["event_plane_angle", "event_weight", "cross_section", "cross_section_error", "px", "py", "pz", "E"]
+    possible_fields_containing_floats = ["event_plane_angle", "event_weight", "pt_hat", "cross_section", "cross_section_error", "px", "py", "pz", "E"]
 
     for i, arrays in enumerate(read(filename=input_filename, events_per_chunk=events_per_chunk, parser=parser)):
         # Reduce to the minimum required data.
