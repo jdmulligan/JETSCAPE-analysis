@@ -54,6 +54,7 @@ class HistogramResults(common_base.CommonBase):
         self.observables_df = pd.read_parquet(self.input_file)
         #self.observables_df = ak.Array(self.input_file)
         self.weights = self.observables_df['event_weight']
+        self.sum_weights = self.weights.sum()
         
         #------------------------------------------------------
         # Read cross-section file
@@ -61,7 +62,10 @@ class HistogramResults(common_base.CommonBase):
         cross_section_df = pd.read_parquet(cross_section_file)
         self.cross_section = cross_section_df['cross_section'][0]
         self.cross_section_error = cross_section_df['cross_section_error'][0]
-        self.n_events = cross_section_df['n_events'][0]
+        self.n_events_generated = cross_section_df['n_events'][0]
+        self.n_events_physical = self.sum_weights
+        print(f'xsec: {self.cross_section}')
+        print(f'weights: {self.sum_weights}')
         
         #------------------------------------------------------
         # Create output list to store histograms
@@ -90,8 +94,16 @@ class HistogramResults(common_base.CommonBase):
         if 'dijet' in self.config:
             self.histogram_jet_observables(observable_type='dijet')
             
-        h = ROOT.TH1F('h_n_events', 'h_n_events', 1, 0, 1)
-        h.SetBinContent(1, self.n_events)
+        h = ROOT.TH1F('h_n_events_generated', 'h_n_events_generated', 1, 0, 1)
+        h.SetBinContent(1, self.n_events_generated)
+        self.output_list.append(h)
+
+        h = ROOT.TH1F('h_n_events_physical', 'h_n_events_physical', 1, 0, 1)
+        h.SetBinContent(1, self.n_events_physical)
+        self.output_list.append(h)
+
+        h = ROOT.TH1F('h_xsec', 'h_xsec', 1, 0, 1)
+        h.SetBinContent(1, self.cross_section)
         self.output_list.append(h)
         
         bins = np.logspace(-6, 0., 100)
