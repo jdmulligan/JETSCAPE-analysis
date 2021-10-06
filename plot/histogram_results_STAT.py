@@ -48,6 +48,8 @@ class HistogramResults(common_base.CommonBase):
             self.config = yaml.safe_load(stream)
             
         self.sqrts = self.config['sqrt_s']
+        self.power = 4.
+        self.pt_ref = 10.
                     
         #------------------------------------------------------
         # Read input file
@@ -55,6 +57,7 @@ class HistogramResults(common_base.CommonBase):
         #self.observables_df = ak.Array(self.input_file)
         self.weights = self.observables_df['event_weight']
         self.sum_weights = self.weights.sum()
+        self.pt_hat = self.observables_df['pt_hat']
         
         #------------------------------------------------------
         # Read cross-section file
@@ -63,7 +66,6 @@ class HistogramResults(common_base.CommonBase):
         self.cross_section = cross_section_df['cross_section'][0]
         self.cross_section_error = cross_section_df['cross_section_error'][0]
         self.n_events_generated = cross_section_df['n_events'][0]
-        self.n_events_physical = self.sum_weights
         print(f'xsec: {self.cross_section}')
         print(f'weights: {self.sum_weights}')
         
@@ -78,6 +80,8 @@ class HistogramResults(common_base.CommonBase):
     # Main function
     #-------------------------------------------------------------------------------------------
     def histogram_results(self):
+
+        self.histogram_event_qa()
         
         self.histogram_hadron_observables(observable_type='hadron')
         
@@ -93,26 +97,52 @@ class HistogramResults(common_base.CommonBase):
             
         if 'dijet' in self.config:
             self.histogram_jet_observables(observable_type='dijet')
-            
+
+        self.write_output_objects()
+
+    #-------------------------------------------------------------------------------------------
+    # Create event-level histograms
+    #-------------------------------------------------------------------------------------------
+    def histogram_event_qa(self):
+
         h = ROOT.TH1F('h_n_events_generated', 'h_n_events_generated', 1, 0, 1)
         h.SetBinContent(1, self.n_events_generated)
-        self.output_list.append(h)
-
-        h = ROOT.TH1F('h_n_events_physical', 'h_n_events_physical', 1, 0, 1)
-        h.SetBinContent(1, self.n_events_physical)
         self.output_list.append(h)
 
         h = ROOT.TH1F('h_xsec', 'h_xsec', 1, 0, 1)
         h.SetBinContent(1, self.cross_section)
         self.output_list.append(h)
+
+        h = ROOT.TH1F('h_xsec_error', 'h_xsec_error', 1, 0, 1)
+        h.SetBinContent(1, self.cross_section_error)
+        self.output_list.append(h)
         
-        bins = np.logspace(-6, 0., 100)
+        # Save event weights
+        bins = np.logspace(np.log10( np.power(self.pt_ref/(self.sqrts/2),self.power) ), np.log10( np.power(self.pt_ref/2,self.power)  ), 10000)
         h = ROOT.TH1F('h_weights', 'h_weights', bins.size-1, bins)
         for weight in self.weights:
             h.Fill(weight)
         self.output_list.append(h)
 
-        self.write_output_objects()
+        # Save sum of weights (effective number of events), in order to keep track of normalization uncertainty
+        h = ROOT.TH1F('h_weight_sum', 'h_weight_sum', 1, 0, 1)
+        h.SetBinContent(1, self.sum_weights)
+        self.output_list.append(h)
+
+        # Save unweighted pt-hat
+        bins = np.logspace(np.log10(1.), np.log10(self.sqrts/2), 100)
+        h = ROOT.TH1F('h_pt_hat', 'h_pt_hat', bins.size-1, bins)
+        h.Sumw2()
+        for pt_hat in self.pt_hat:
+            h.Fill(pt_hat)
+        self.output_list.append(h)
+
+        # Save weighted pt-hat
+        h = ROOT.TH1F('h_pt_hat_weighted', 'h_pt_hat_weighted', bins.size-1, bins)
+        h.Sumw2()
+        for i,pt_hat in enumerate(self.pt_hat):
+            h.Fill(pt_hat, self.weights[i])
+        self.output_list.append(h)
 
     #-------------------------------------------------------------------------------------------
     # Histogram hadron observables
