@@ -99,8 +99,8 @@ class PlotResults(common_base.CommonBase):
         h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
 
         # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
-        h_pt_hat.Scale(1./sum_weights)
-        h_pt_hat_weighted.Scale(1./sum_weights)
+        h_pt_hat.Scale(1./sum_weights, 'width')
+        h_pt_hat_weighted.Scale(1./sum_weights, 'width')
 
         # Compute normalization uncertainty (binned approximation)
         h_weights = self.input_file.Get('h_weights')
@@ -139,7 +139,7 @@ class PlotResults(common_base.CommonBase):
         myBlankHisto.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
         myBlankHisto.SetYTitle('#frac{1}{#sigma_{#hat{p}_{T}}} #frac{d#sigma}{d#hat{p}_{T}}')
         myBlankHisto.SetMaximum(np.power(10,5+(self.power-3)))
-        myBlankHisto.SetMinimum(2e-12) # Don't draw 0 on top panel
+        myBlankHisto.SetMinimum(2e-15) # Don't draw 0 on top panel
         myBlankHisto.GetYaxis().SetTitleSize(0.08)
         myBlankHisto.GetYaxis().SetTitleOffset(1.1)
         myBlankHisto.GetYaxis().SetLabelSize(0.06)
@@ -209,7 +209,7 @@ class PlotResults(common_base.CommonBase):
         h_pt_hat_weighted_ideal.SetLineColorAlpha(ROOT.kGreen-8, self.alpha)
         h_pt_hat_weighted_ideal.SetLineWidth(3)
         h_pt_hat_weighted_ideal.Draw('L same')
-        legend.AddEntry(h_pt_hat_weighted_ideal, f'#alpha={self.power}, ideal', 'L')
+        legend.AddEntry(h_pt_hat_weighted_ideal, f'#alpha={self.power}, ideal weight', 'L')
 
         legend.Draw()
         
@@ -235,6 +235,11 @@ class PlotResults(common_base.CommonBase):
         pad1.cd()
         text_latex = ROOT.TLatex()
         text_latex.SetNDC()
+
+        x = 0.25
+        text_latex.SetTextSize(0.06)
+        text = '#sigma_{{n_{{event}}}} = {:.2f}%'.format(100*normalization_uncertainty/sum_weights_integral)
+        text_latex.DrawLatex(x, 0.83, text)
 
         c.SaveAs(os.path.join(self.output_dir, f'pt_hat{self.file_format}'))
         c.Close()
