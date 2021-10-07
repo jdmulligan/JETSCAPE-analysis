@@ -113,6 +113,11 @@ class PlotResults(common_base.CommonBase):
         print(f'sum_weights_integral: {sum_weights_integral}')
         print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
 
+        # Also compute overall pt-hat cross-section uncertainty
+        xsec = self.input_file.Get('h_xsec').GetBinContent(1)
+        xsec_error = self.input_file.Get('h_xsec_error').GetBinContent(1)
+        print(f'xsec_uncertainty: {100*xsec_error/xsec}')
+
         c = ROOT.TCanvas('c', 'c', 600, 650)
         c.Draw()
         c.cd()
@@ -240,6 +245,8 @@ class PlotResults(common_base.CommonBase):
         text_latex.SetTextSize(0.06)
         text = '#sigma_{{n_{{event}}}} = {:.2f}%'.format(100*normalization_uncertainty/sum_weights_integral)
         text_latex.DrawLatex(x, 0.83, text)
+        text = '#sigma_{{xsec}} = {:.2f}%'.format(100*xsec_error/xsec)
+        text_latex.DrawLatex(x, 0.76, text)
 
         c.SaveAs(os.path.join(self.output_dir, f'pt_hat{self.file_format}'))
         c.Close()
