@@ -48,8 +48,8 @@ class HistogramResults(common_base.CommonBase):
             self.config = yaml.safe_load(stream)
             
         self.sqrts = self.config['sqrt_s']
-        self.power = 4.
-        self.pt_ref = 10.
+        self.power = self.config['power']
+        self.pt_ref = self.config['pt_ref']
                     
         #------------------------------------------------------
         # Read input file

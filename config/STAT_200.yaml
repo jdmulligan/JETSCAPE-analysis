@@ -20,6 +20,8 @@
 # the pp hepdata tgraphs are included only for QA.
 #------------------------------------------------------------------
 sqrt_s: 200
+power: 4.
+pt_ref: 10.
 
 # General jet finding parameters
 jet_R: [0.2, 0.4, 0.5]

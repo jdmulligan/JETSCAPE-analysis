@@ -240,7 +240,7 @@ class PlotUtils(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Set legend parameters
     #-------------------------------------------------------------------------------------------
-    def setup_legend(self, leg, textSize, sep):
+    def setup_legend(self, leg, textSize, sep, title=''):
 
         leg.SetTextFont(42)
         leg.SetBorderSize(0)
@@ -249,6 +249,7 @@ class PlotUtils(common_base.CommonBase):
         leg.SetMargin(0.25)
         leg.SetTextSize(textSize)
         leg.SetEntrySeparation(sep)
+        leg.SetHeader(title)
 
     #-------------------------------------------------------------------------------------------
     def setOptions(self):

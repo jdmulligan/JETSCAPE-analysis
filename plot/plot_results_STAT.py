@@ -56,6 +56,8 @@ class PlotResults(common_base.CommonBase):
         with open(config_file, 'r') as stream:
             self.config = yaml.safe_load(stream)
         self.sqrts = self.config['sqrt_s']
+        self.power = self.config['power']
+        self.pt_ref = self.config['pt_ref']
       
         print(self)
 
@@ -63,6 +65,8 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------------------
     def plot_results(self):
+
+        self.plot_event_qa()
     
         self.plot_hadron_observables(observable_type='hadron')
         
@@ -82,6 +86,158 @@ class PlotResults(common_base.CommonBase):
         # Generate pptx for convenience
         if self.file_format == '.png':
             self.generate_pptx()
+
+    #-------------------------------------------------------------------------------------------
+    # Plot event QA
+    #-------------------------------------------------------------------------------------------
+    def plot_event_qa(self):
+
+        # Crosscheck that pt-hat weighting is satisfactory  
+        # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
+        sum_weights = self.input_file.Get('h_weight_sum').GetBinContent(1)
+        h_pt_hat = self.input_file.Get('h_pt_hat')
+        h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
+
+        # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
+        h_pt_hat.Scale(1./sum_weights)
+        h_pt_hat_weighted.Scale(1./sum_weights)
+
+        # Compute normalization uncertainty (binned approximation)
+        h_weights = self.input_file.Get('h_weights')
+        sum_weights_integral = 0
+        normalization_uncertainty = 0
+        for i in range(1, h_weights.GetNbinsX()+1):
+            sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
+            normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
+        print(f'sum_weights: {sum_weights}')
+        print(f'sum_weights_integral: {sum_weights_integral}')
+        print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
+
+        c = ROOT.TCanvas('c', 'c', 600, 650)
+        c.Draw()
+        c.cd()
+        
+        # Distribution
+        pad2_dy = 0.45
+        pad1 = ROOT.TPad('myPad', 'The pad',0,pad2_dy,1,1)
+        pad1.SetLeftMargin(0.2)
+        pad1.SetTopMargin(0.08)
+        pad1.SetRightMargin(0.04)
+        pad1.SetBottomMargin(0.)
+        pad1.SetTicks(0,1)
+        pad1.Draw()
+        pad1.SetLogy()
+        pad1.SetLogx()
+        pad1.cd()
+        
+        legend = ROOT.TLegend(0.58,0.65,0.75,0.9)
+        self.plot_utils.setup_legend(legend, 0.055, sep=-0.1, title=f'#sqrt{{s_{{NN}}}} = {self.sqrts} GeV')
+            
+        self.bins = np.array(h_pt_hat.GetXaxis().GetXbins())
+        myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
+        myBlankHisto.SetNdivisions(505)
+        myBlankHisto.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
+        myBlankHisto.SetYTitle('#frac{1}{#sigma_{#hat{p}_{T}}} #frac{d#sigma}{d#hat{p}_{T}}')
+        myBlankHisto.SetMaximum(np.power(10,5+(self.power-3)))
+        myBlankHisto.SetMinimum(2e-12) # Don't draw 0 on top panel
+        myBlankHisto.GetYaxis().SetTitleSize(0.08)
+        myBlankHisto.GetYaxis().SetTitleOffset(1.1)
+        myBlankHisto.GetYaxis().SetLabelSize(0.06)
+        myBlankHisto.Draw('E')
+
+        # Ratio
+        c.cd()
+        pad2 = ROOT.TPad('pad2', 'pad2', 0, 0.02, 1, pad2_dy)
+        pad2.SetTopMargin(0)
+        pad2.SetBottomMargin(0.21)
+        pad2.SetLeftMargin(0.2)
+        pad2.SetRightMargin(0.04)
+        pad2.SetTicks(0,1)
+        pad2.SetLogx()
+        pad2.Draw()
+        pad2.cd()
+              
+        myBlankHisto2 = myBlankHisto.Clone('myBlankHisto_C')
+        myBlankHisto2.SetYTitle('#frac{weighted}{ideal}')
+        myBlankHisto2.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
+        myBlankHisto2.GetXaxis().SetTitleSize(26)
+        myBlankHisto2.GetXaxis().SetTitleFont(43)
+        myBlankHisto2.GetXaxis().SetTitleOffset(2.3)
+        myBlankHisto2.GetXaxis().SetLabelFont(43)
+        myBlankHisto2.GetXaxis().SetLabelSize(22)
+        myBlankHisto2.GetYaxis().SetTitleSize(28)
+        myBlankHisto2.GetYaxis().SetTitleFont(43)
+        myBlankHisto2.GetYaxis().SetTitleOffset(2.)
+        myBlankHisto2.GetYaxis().SetLabelFont(43)
+        myBlankHisto2.GetYaxis().SetLabelSize(20)
+        myBlankHisto2.GetYaxis().SetNdivisions(505)
+        myBlankHisto2.GetYaxis().SetRangeUser(0., 1.99)
+        myBlankHisto2.Draw('')
+
+        # Draw generated pt-hat
+        pad1.cd()
+        h_pt_hat.SetMarkerSize(self.marker_size)
+        h_pt_hat.SetMarkerStyle(self.data_marker)
+        h_pt_hat.SetMarkerColor(self.data_color)
+        h_pt_hat.SetLineStyle(self.line_style)
+        h_pt_hat.SetLineWidth(self.line_width)
+        h_pt_hat.SetLineColor(self.data_color)
+        h_pt_hat.Draw('PE Z same')
+        legend.AddEntry(h_pt_hat, f'#alpha={self.power}, generated', 'PE')
+
+        # Draw weighted pt-hat
+        h_pt_hat_weighted.SetMarkerSize(self.marker_size)
+        h_pt_hat_weighted.SetMarkerStyle(self.data_marker)
+        h_pt_hat_weighted.SetMarkerColor(self.jetscape_color)
+        h_pt_hat_weighted.SetLineStyle(self.line_style)
+        h_pt_hat_weighted.SetLineWidth(self.line_width)
+        h_pt_hat_weighted.SetLineColor(self.jetscape_color)
+        h_pt_hat_weighted.Draw('PE Z same')
+        legend.AddEntry(h_pt_hat_weighted, f'#alpha={self.power}, weighted', 'PE')
+
+        # Draw generated pt-hat weighted by inverse of ideal weight (pthat/ptref)^alpha
+        h_pt_hat_weighted_ideal = h_pt_hat.Clone()
+        h_pt_hat_weighted_ideal.SetName('h_pt_hat_weighted_ideal')
+        for i in range(1, h_pt_hat_weighted_ideal.GetNbinsX()+1):
+            content = h_pt_hat_weighted_ideal.GetBinContent(i)
+            low_edge = h_pt_hat_weighted_ideal.GetXaxis().GetBinLowEdge(i)
+            up_edge = h_pt_hat_weighted_ideal.GetXaxis().GetBinUpEdge(i)
+            ideal_weight = ( np.power(up_edge, self.power+1)-np.power(low_edge, self.power+1) ) / ( (up_edge-low_edge)*np.power(self.pt_ref, self.power)*(self.power+1) )
+            #ideal_weight = np.power( h_pt_hat_weighted_ideal.GetXaxis().GetBinCenter(i) / self.pt_ref, self.power)
+            h_pt_hat_weighted_ideal.SetBinContent(i, content / ideal_weight)
+            h_pt_hat_weighted_ideal.SetBinError(i, 0.)
+        h_pt_hat_weighted_ideal.SetLineColorAlpha(ROOT.kGreen-8, self.alpha)
+        h_pt_hat_weighted_ideal.SetLineWidth(3)
+        h_pt_hat_weighted_ideal.Draw('L same')
+        legend.AddEntry(h_pt_hat_weighted_ideal, f'#alpha={self.power}, ideal', 'L')
+
+        legend.Draw()
+        
+        # Plot ratio of weighted to ideal weighted
+        pad2.cd()
+        h_pt_hat_weighted_ratio = h_pt_hat_weighted.Clone()
+        h_pt_hat_weighted_ratio.SetName('h_pt_hat_weighted_ratio')
+        h_pt_hat_weighted_ratio.Divide(h_pt_hat_weighted_ideal)
+        h_pt_hat_weighted_ratio.SetMarkerSize(self.marker_size)
+        h_pt_hat_weighted_ratio.SetMarkerStyle(self.data_marker)
+        h_pt_hat_weighted_ratio.SetMarkerColor(self.jetscape_color)
+        h_pt_hat_weighted_ratio.SetLineStyle(self.line_style)
+        h_pt_hat_weighted_ratio.SetLineWidth(self.line_width)
+        h_pt_hat_weighted_ratio.SetLineColor(self.jetscape_color)
+        h_pt_hat_weighted_ratio.Draw('PE Z same')
+
+        line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
+        line.SetLineColor(920+2)
+        line.SetLineStyle(2)
+        line.SetLineWidth(2)
+        line.Draw()
+        
+        pad1.cd()
+        text_latex = ROOT.TLatex()
+        text_latex.SetNDC()
+
+        c.SaveAs(os.path.join(self.output_dir, f'pt_hat{self.file_format}'))
+        c.Close()
 
     #-------------------------------------------------------------------------------------------
     # Plot hadron observables
@@ -340,10 +496,12 @@ class PlotResults(common_base.CommonBase):
         #    f_jetscape_AA.Close()
         
         # Normalization
-        # Note: If we divide by n_events, then JETSCAPE distribution gives cross-section (in b)
+        # Note: If we divide by n_events and multiply by the pt-hat cross-section,
+        #       then JETSCAPE distribution gives cross-section (in b)
         if self.observable_settings['jetscape_distribution']:
-            n_events = self.input_file.Get('h_n_events').GetBinContent(1)
-            self.observable_settings['jetscape_distribution'].Scale(1./n_events)
+            xsec = self.input_file.Get('h_xsec').GetBinContent(1)
+            n_events = self.input_file.Get('h_weight_sum').GetBinContent(1)
+            self.observable_settings['jetscape_distribution'].Scale(xsec/n_events)
             
             if self.sqrts == 200:
                 if observable_type == 'hadron':
@@ -406,7 +564,7 @@ class PlotResults(common_base.CommonBase):
             if self.sqrts == 5020:
                 if observable_type == 'hadron':
                     if observable in ['pt_ch_alice', 'pt_pi_alice']:
-                        sigma_inel = 0.0618 # Need to update number fro 5.02 TeV
+                        sigma_inel = 0.0618 # Need to update number for 5.02 TeV
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
                     elif observable == 'pt_ch_cms':
