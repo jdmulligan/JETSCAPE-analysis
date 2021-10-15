@@ -1,0 +1,10 @@
+# xyscan Version 4.5.0
+# Date: Tue Oct 20 21:54:29 2020
+# Scanned by: re239
+# Source: /Users/re239/code/alice/jetscape/js-an/inputData/cms/JetRAA.pdf
+# Comment: CMS Jet RAA R=0.2 0-10%, dy_stat, then dy_sys, TAA=0.01996%, Lumi=0.02495%
+# Format: x, y, -dx, +dx, -dy, +dy, -dy, +dy
+349.986	0.644711	49.946	49.946	0	0	0.0289421	0.0289421	
+450.12	0.670659	50.22	50.22	0.0439122	0.0439122	0.0299401	0.0299401	
+750.146	0.795409	250.116	250.116	0.0898204	0.0898204	0.0319361	0.0319361	
+# EoF

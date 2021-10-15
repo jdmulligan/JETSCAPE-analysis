@@ -4,7 +4,7 @@ JETSCAPE="/home/jetscape-user/JETSCAPE"
 JETSCAPE_ANALYSIS="/home/jetscape-user/JETSCAPE-analysis"
 ANALYSIS_CONFIG="${JETSCAPE_ANALYSIS}/test/pp/config/jetscapeTestConfig.yaml"
 OUTPUT_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/new"
-REFERENCE_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/20200221"
+REFERENCE_DIR="${JETSCAPE_ANALYSIS}/test/pp/output/latest"
 
 #  Parse command line options
 POSITIONAL=()
@@ -68,6 +68,8 @@ for dir in */ ; do
   if [ $? -ne 0 ]
   then
     echo "Error: Check whether you have used the same YAML config for the Test and the Reference"
+    echo "New file: $OUTPUT_DIR/$dir/test_out.hepmc"
+    echo "Reference file: $REFERENCE_DIR/${dir}test_out.hepmc"
     exit 1
   fi
   
@@ -75,6 +77,8 @@ for dir in */ ; do
   if [ $? -ne 0 ]
   then
     echo "Error: Check whether you have used the same YAML config for the Test and the Reference"
+    echo "New file: $OUTPUT_DIR/$dir/test_out.hepmc"
+    echo "Reference file: $REFERENCE_DIR/${dir}test_out.hepmc"
     exit 1
   fi
 

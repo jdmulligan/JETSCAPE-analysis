@@ -1,0 +1,33 @@
+# Common parameters
+debug_level: 0
+
+# Scan over all combinations of specified parameter values
+parameter_scan:
+
+  # pthat bins are required, and should come first
+  pt_hat_bins:
+    label: 'pt_hat_bins'
+    values: [1, 2]
+
+  # additional parameters are optional
+  parameter1:
+    label: 'parID'
+    values: [1, 21]
+
+# Generation
+xml_user_file: '/home/jetscape-user/JETSCAPE/config/jetscape_user_pgun.xml'
+xml_master_file: '/home/jetscape-user/JETSCAPE/config/jetscape_master.xml'
+
+# Analysis parameters -- required
+n_event_max: 10000
+reader: hepmc
+progress_bar: True
+scale_histograms: False
+merge_histograms: False
+
+# Analysis parameters -- user-defined
+min_track_pt: 0.01       # Used for both hadron/parton and jet histograms
+abs_track_eta_max: 1.0   # Used only for hadron/parton histograms -- jet finding uses all hadrons as constituents
+jetR: [0.2, 0.4]
+min_jet_pt: 20.
+abs_jet_eta_max: [0.3, 2.0, 2.8]

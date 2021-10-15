@@ -12,10 +12,10 @@ from __future__ import print_function
 from jetscape_analysis.base import common_base
 
 ################################################################
-class event_base(common_base.common_base):
+class EventBase(common_base.CommonBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, **kwargs):
-        super(event_base, self).__init__(**kwargs)
+        super(EventBase, self).__init__(**kwargs)

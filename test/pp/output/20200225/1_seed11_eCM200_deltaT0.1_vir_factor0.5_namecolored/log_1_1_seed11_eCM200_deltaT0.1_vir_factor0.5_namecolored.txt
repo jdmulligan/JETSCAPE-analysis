@@ -35,25 +35,25 @@
 [Info] 154MB  nEvents = 10[0m
 [Info] 154MB  Reuse Hydro:  true [0m
 [Info] 154MB  nReuseHydro: 10[0m
-[Info] 154MB  JetScapeTaskSupport found seed 10, using individual engines with seeds created from 10[0m
+[Info] 154MB  JetScapeTaskSupport found seed 11, using individual engines with seeds created from 11[0m
 [Info] 157MB  JetScape::DetermineTaskList() -- Hard Process: Added PythiaGun to task list.[0m
 [Info] 157MB  JetScape::DetermineTaskList() -- Eloss: Added Matter to Eloss list.[0m
-[Info] 157MB  JetScape::DetermineTaskList() -- JetHadronization: Added ColorlessHadronization to task list.[0m
+[Info] 157MB  JetScape::DetermineTaskList() -- JetHadronization: Added ColoredHadronization to task list.[0m
 [Info] 157MB  JetScape::DetermineTaskList() -- JetScapeWriterAscii (test_out.dat) added to task list.[0m
-[Info] 157MB  JetScape::DetermineTaskList() -- JetScapeWriterHepMC (test_out.hepmc) added to task list.[0m
-[Info] 157MB  ================================================================[0m
-[Info] 157MB  Found 5 Modules Initialize them ... [0m
-[Info] 157MB  Set Hydro,JetEnergylossManager and IS Pointers for SignalManager to create Signal/Slots[0m
-[Info] 157MB  Created JetScapeSignalManager Instance[0m
-[Info] 157MB  Calling JetScape InitTasks()...[0m
-[Info] 157MB  Intialize HardProcess : UninitializedPythiaGun ...[0m
-[Info] 157MB  [35mPythia Gun with FSR_on: 0[0m
-[Info] 157MB  [35mPythia Gun with 235 < pTHat < 1000[0m
-[Info] 157MB  [35mUse hybrid hadronization? 0[0m
+[Info] 158MB  JetScape::DetermineTaskList() -- JetScapeWriterHepMC (test_out.hepmc) added to task list.[0m
+[Info] 158MB  ================================================================[0m
+[Info] 158MB  Found 5 Modules Initialize them ... [0m
+[Info] 158MB  Set Hydro,JetEnergylossManager and IS Pointers for SignalManager to create Signal/Slots[0m
+[Info] 158MB  Created JetScapeSignalManager Instance[0m
+[Info] 158MB  Calling JetScape InitTasks()...[0m
+[Info] 158MB  Intialize HardProcess : UninitializedPythiaGun ...[0m
+[Info] 158MB  [35mPythia Gun with FSR_on: 0[0m
+[Info] 158MB  [35mPythia Gun with 7 < pTHat < 9[0m
+[Info] 158MB  [35mUse hybrid hadronization? 0[0m
 
  *-------  PYTHIA Process Initialization  --------------------------*
  |                                                                  |
- | We collide p+ with p+ at a CM energy of 2.760e+03 GeV            |
+ | We collide p+ with p+ at a CM energy of 2.000e+02 GeV            |
  |                                                                  |
  |------------------------------------------------------------------|
  |                                                    |             |
@@ -62,29 +62,29 @@
  |                                                    |             |
  |------------------------------------------------------------------|
  |                                                    |             |
- | g g -> g g                                     111 |   2.458e-07 |
- | g g -> q qbar (uds)                            112 |   6.920e-09 |
- | q g -> q g                                     113 |   9.771e-07 |
- | q q(bar)' -> q q(bar)'                         114 |   6.254e-07 |
- | q qbar -> g g                                  115 |   4.762e-09 |
- | q qbar -> q' qbar' (uds)                       116 |   3.704e-09 |
- | g g -> c cbar                                  121 |   2.306e-09 |
- | q qbar -> c cbar                               122 |   1.235e-09 |
- | g g -> b bbar                                  123 |   2.304e-09 |
- | q qbar -> b bbar                               124 |   1.234e-09 |
- | q g -> q gamma (udscb)                         201 |   1.308e-09 |
- | q qbar -> g gamma                              202 |   2.558e-10 |
- | g g -> g gamma                                 203 |   5.830e-14 |
- | f fbar -> gamma gamma                          204 |   2.659e-12 |
- | g g -> gamma gamma                             205 |   6.562e-14 |
+ | g g -> g g                                     111 |   6.508e-02 |
+ | g g -> q qbar (uds)                            112 |   1.658e-03 |
+ | q g -> q g                                     113 |   1.077e-01 |
+ | q q(bar)' -> q q(bar)'                         114 |   2.234e-02 |
+ | q qbar -> g g                                  115 |   2.636e-04 |
+ | q qbar -> q' qbar' (uds)                       116 |   1.766e-04 |
+ | g g -> c cbar                                  121 |   4.971e-04 |
+ | q qbar -> c cbar                               122 |   5.530e-05 |
+ | g g -> b bbar                                  123 |   1.786e-04 |
+ | q qbar -> b bbar                               124 |   3.263e-05 |
+ | q g -> q gamma (udscb)                         201 |   4.621e-05 |
+ | q qbar -> g gamma                              202 |   5.907e-06 |
+ | g g -> g gamma                                 203 |   2.112e-08 |
+ | f fbar -> gamma gamma                          204 |   3.208e-08 |
+ | g g -> gamma gamma                             205 |   1.191e-08 |
  |                                                                  |
  *-------  End PYTHIA Process Initialization -----------------------*
 
  *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
  |                                                                  | 
- |                   sigmaNonDiffractive =    43.04 mb              | 
+ |                   sigmaNonDiffractive =    28.49 mb              | 
  |                                                                  | 
- |    pT0 =  1.87 gives sigmaInteraction =   163.17 mb: accepted    | 
+ |    pT0 =  1.06 gives sigmaInteraction =    85.23 mb: accepted    | 
  |                                                                  | 
  *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
 
@@ -92,7 +92,7 @@
  |                                                                                                                 | 
  | Name                                          |                      Now |      Default         Min         Max | 
  |                                               |                          |                                      | 
- | Beams:eCM                                     |                 2760.000 |    14000.000    10.00000             | 
+ | Beams:eCM                                     |                200.00000 |    14000.000    10.00000             | 
  | HadronLevel:all                               |                      off |           on                         | 
  | HadronLevel:Decay                             |                      off |           on                         | 
  | HardQCD:all                                   |                       on |          off                         | 
@@ -100,10 +100,10 @@
  | Next:numberShowInfo                           |                        0 |            1           0             | 
  | Next:numberShowProcess                        |                        0 |            1           0             | 
  | PartonLevel:FSR                               |                      off |           on                         | 
- | PhaseSpace:pTHatMax                           |                 1000.000 |     -1.00000                         | 
- | PhaseSpace:pTHatMin                           |                235.00000 |          0.0         0.0             | 
+ | PhaseSpace:pTHatMax                           |                  9.00000 |     -1.00000                         | 
+ | PhaseSpace:pTHatMin                           |                  7.00000 |          0.0         0.0             | 
  | PromptPhoton:all                              |                       on |          off                         | 
- | Random:seed                                   |                       10 |           -1               900000000 | 
+ | Random:seed                                   |                       11 |           -1               900000000 | 
  | Random:setSeed                                |                       on |          off                         | 
  |                                                                                                                 | 
  *-------  End PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings  -----------------------------* 
@@ -132,37 +132,15 @@
 [Info] 162MB  Intialize Hadronization Manager ...[0m
 [Info] 162MB  Found 1 Hadronization Manager Tasks/Modules Initialize them ... [0m
 [Info] 162MB  Found 1 Hadronization Tasks/Modules Initialize them ... [0m
-
- *-------  PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings (changes only)  ------------------* 
- |                                                                                                                 | 
- | Name                                          |                      Now |      Default         Min         Max | 
- |                                               |                          |                                      | 
- | Next:numberShowEvent                          |                        0 |            1           0             | 
- | Next:numberShowInfo                           |                        0 |            1           0             | 
- | Next:numberShowProcess                        |                        0 |            1           0             | 
- | ParticleDecays:limitTau0                      |                       on |          off                         | 
- | PartonLevel:FSR                               |                      off |           on                         | 
- | ProcessLevel:all                              |                      off |           on                         | 
- |                                                                                                                 | 
- *-------  End PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings  -----------------------------* 
-
- --------  PYTHIA Particle Data Table (changed only)  ------------------------------------------------------------------------------
- 
-      id   name            antiName         spn chg col      m0        mWidth      mMin       mMax       tau0    res dec ext vis wid
-             no onMode   bRatio   meMode     products 
-
- no particle data has been changed from its default value 
-
- --------  End PYTHIA Particle Data Table  -----------------------------------------------------------------------------------------
-
+[Info] 162MB  Weak decays are turned on[0m
 [Info] 162MB  Connect HadronizationManager Signal to Energy Loss ...[0m
 [Info] 162MB  JetScape Stream Writer initialized with output file = test_out.dat[0m
 [Info] 162MB  JetScape HepMC Writer initialized with output file = test_out.hepmc[0m
 [Info] 162MB  [1m[31mRun JetScape ...[0m
 [Info] 162MB  [1m[31mNumber of Events = 10[0m
 [Info] 162MB  [1m[31mRun Event # = 0[0m
-[Info] 167MB  [1m[30mJetScape finished after 10 events![0m
+[Info] 164MB  [1m[30mJetScape finished after 10 events![0m
 [Info] Finished![0m
 
-CPU time: 1.857048 seconds.
-Real time: 4.000000 seconds.
+CPU time: 1.178786 seconds.
+Real time: 3.000000 seconds.

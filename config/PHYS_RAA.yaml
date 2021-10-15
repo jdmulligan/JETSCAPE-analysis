@@ -1,0 +1,95 @@
+#------------------------------------------------------------------
+# Common parameters used in both generation and analysis
+debug_level: 0
+
+pt_hat_bins:  [1, 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 350, 400, 450, 500, 550, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2200, 2400, 2510]
+
+#------------------------------------------------------------------
+# Analysis parameters -- nothing below affects the generation stage
+
+# Required parameters
+n_event_max: 120000
+events_per_chunk: 1000
+reader: ascii            # [hepmc, ascii]
+progress_bar: False
+dry_run: False
+scale_histograms: True
+debug_level: 0
+
+# Charged particle data
+# In all cases: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+#
+# (1) CMS, JHEP 04, 039 (2017)
+#     hepdata: https://www.hepdata.net/record/ins1496050
+#     Centrality: 0-5, 5-10, 30-50
+#     Cuts:
+#       - |eta|<1
+#
+# (2) ATLAS, ATLAS-CONF-2017-012
+#     hepdata: None
+#     Centrality: 0-5, 30-40
+#     Cuts:
+#       - |eta|<2.5
+#       - leptons removed
+#
+# (3) ALICE, JHEP 11, 013 (2018)
+#     hepdata: https://www.hepdata.net/record/ins1657384
+#     Centrality: 0-5, 5-10, 30-40, 40-50
+#     Cuts:
+#       - |eta|<0.8
+
+# User-defined parameters
+charged_particle_eta_cut: [1.0, 2.5, 0.8] # CMS, ATLAS, ALICE
+min_hadron_pt: 1.
+subtract_hadron_recoil: True
+
+# Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
+CMS_hadron_0_5: 'data/PHYS_RAA/data_hadron/CMS/0_5/HEPData-ins1496050-v2-Table_8.root'
+CMS_hadron_5_10: 'data/PHYS_RAA/data_hadron/CMS/5_10/HEPData-ins1496050-v2-Table_9.root'
+CMS_hadron_30_50: 'data/PHYS_RAA/data_hadron/CMS/30_50/HEPData-ins1496050-v2-Table_11.root'
+ATLAS_hadron_0_5: 'data/PHYS_RAA/data_hadron/ATLAS/0_5/hadronRaa0-5.txt'
+ATLAS_hadron_30_40: 'data/PHYS_RAA/data_hadron/ATLAS/30_40/hadronRaa30-40.txt'
+ALICE_hadron: 'data/PHYS_RAA/data_hadron/ALICE/HEPData-ins1657384-v1-Table_8.root'
+
+# Inclusive jet data, R=0.4 AKT
+#
+# (1) CMS, CMS-PAS-HIN-18-014
+#     hepdata: None
+#     Centrality: 0-10, 30-50
+#     Cuts:
+#       - |eta_jet|<2.0
+#
+# (2) ATLAS, Phys. Lett. B 790, 108-128 (2019)
+#     hepdata: https://www.hepdata.net/record/ins1673184
+#     Centrality: 0-10, 30-40, 40-50
+#     Cuts:
+#       - |y_jet|<2.8
+#       - Two charged tracks with pt>4 GeV are required in Pb-Pb
+#         (they argue this is small...unclear if they correct for it...we will ignore it here)
+#
+# (3) ALICE, Phys. Rev. C 101, no.3, 034911 (2020)
+#     hepdata: https://www.hepdata.net/record/ins1755387
+#     Centrality: 0-10
+#     Cuts:
+#       - pT^{ch lead} > 5,7 GeV (for R=0.2,0.4)
+#       - |eta_jet|<0.3,0.5
+#     Note that resulst are reported both with and without the pT,lead cut on the pp jet cross-section
+#     Here, we use the result where the cut is applied on both PbPb and pp
+
+jetR: [0.2, 0.4]
+min_track_pt: 0.                    # Used for both hadron/parton and jet histograms
+min_jet_pt: 20.
+jet_eta_cut_04: [2.0, 2.8, 0.3]     # CMS, ATLAS, ALICE
+jet_eta_cut_02: [2.0, None, 0.5]    # CMS, ATLAS, ALICE
+
+# Location of HepData ROOT files (relative to JETSCAPE-analysis directory)
+CMS_jet_0_10_R02: 'data/PHYS_RAA/data_jet/CMS/0_10_R02/CMS_JetRAA_R02_0-10_Rescanned.txt'
+CMS_jet_0_10_R04: 'data/PHYS_RAA/data_jet/CMS/0_10_R04/CMS_JetRAA_R04_0-10_Rescanned.txt'
+CMS_jet_30_50_R02: 'data/PHYS_RAA/data_jet/CMS/30_50_R02/CMS_JetRAA_R02_30-50_Rescanned.txt'
+CMS_jet_30_50_R04: 'data/PHYS_RAA/data_jet/CMS/30_50_R04/CMS_JetRAA_R04_30-50_Rescanned.txt'
+ATLAS_jet_0_10: 'data/PHYS_RAA/data_jet/ATLAS/0_10/HEPData-ins1673184-v1-Table_19.root'
+ATLAS_jet_30_40: 'data/PHYS_RAA/data_jet/ATLAS/30_40/HEPData-ins1673184-v1-Table_22.root'
+ATLAS_jet_40_50: 'data/PHYS_RAA/data_jet/ATLAS/40_50/HEPData-ins1673184-v1-Table_23.root'
+ALICE_jet_0_10_R02: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_30.root'
+ALICE_jet_0_10_R04: 'data/PHYS_RAA/data_jet/ALICE/0_10_R04/HEPData-ins1755387-v1-Table_31.root'
+ALICE_jet_0_10_R02_biasratio: 'data/PHYS_RAA/data_jet/ALICE/0_10_R02/HEPData-ins1755387-v1-Table_26.root'

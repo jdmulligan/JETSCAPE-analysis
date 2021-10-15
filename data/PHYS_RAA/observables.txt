@@ -1,0 +1,70 @@
+1 Charged Particle RAA
+-CMS [published]
+Reference
+published article: JHEP 04, 039 (2017)
+DOI: http://dx.doi.org/10.1007/JHEP04(2017)039
+preprint: https://arxiv.org/abs/1611.01664
+inspire: https://inspirehep.net/literature/1496050, \cite{Khachatryan:2016odn}
+hepdata: https://www.hepdata.net/record/ins1496050
+Settings
+particle species: Charged particle 
+rapidity cut: |eta(pseudorapidity)|<1
+
+-ATLAS [unpublished]
+Reference
+Report number: ATLAS-CONF-2017-012
+preprint: https://cds.cern.ch/record/2244824
+inspire: https://inspirehep.net/literature/1512661, \cite{ATLAS:2017rmz}
+hepdata: N/A
+Settings
+particle species: Charged particle 
+rapidity cut: |eta(pseudorapidity)|<2.5
+
+-ALICE [published]
+Reference
+published article: JHEP 11, 013 (2018)
+DOI: https://doi.org/10.1007/JHEP11(2018)013
+preprint: https://arxiv.org/abs/1802.09145
+inspire: https://inspirehep.net/literature/1657384, \cite{Acharya:2018qsh}
+hepdata: https://www.hepdata.net/record/ins1657384
+Settings
+particle species: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+rapidity cut: |eta(pseudorapidity)|<0.8
+
+2 Jet RAA (R=0.4)
+
+-CMS [unpublished]
+Reference
+Report number: CMS-PAS-HIN-18-014
+preprint: https://inspirehep.net/files/f21dfc33e80bc26b9a11645abd31529a
+inspire: https://inspirehep.net/literature/1762954, \cite{CMS:2019btm}
+hepdata: N/A
+Settings
+jet: Inclusive
+reconstruction: anti-kt R=0.4
+rapidity cut: |eta(pseudorapidity)|<2.0
+
+-ATLAS [published]
+Reference
+published article: Phys. Lett. B 790, 108-128 (2019)
+DOI: https://doi.org/10.1016/j.physletb.2018.10.076
+preprint: https://arxiv.org/abs/1805.05635
+inspire: https://inspirehep.net/literature/1673184, \cite{Aaboud:2018twu}
+hepdata: https://www.hepdata.net/record/ins1673184
+Settings
+jet: Inclusive
+reconstruction: anti-kt R=0.4
+rapidity cut: |y(rapidity)|<2.8
+
+-ALICE [published]
+Reference
+published article: Phys. Rev. C 101, no.3, 034911 (2020)
+DOI: https://doi.org/10.1103/PhysRevC.101.034911
+preprint: https://arxiv.org/abs/1909.09718
+inspire: https://inspirehep.net/literature/1755387, \cite{Acharya:2019jyg}
+hepdata: https://www.hepdata.net/record/ins1755387
+Settings
+jet: Inclusive
+reconstruction: anti-kt R=0.4
+leading (largest pT in jet) charged particle requirement: pT^{ch lead} > 7 GeV
+rapidity cut: |eta(pseudorapidity)|<0.3

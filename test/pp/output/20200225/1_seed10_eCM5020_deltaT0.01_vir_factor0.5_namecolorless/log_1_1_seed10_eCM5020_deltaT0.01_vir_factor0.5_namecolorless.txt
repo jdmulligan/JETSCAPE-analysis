@@ -48,12 +48,12 @@
 [Info] 156MB  Calling JetScape InitTasks()...[0m
 [Info] 156MB  Intialize HardProcess : UninitializedPythiaGun ...[0m
 [Info] 156MB  [35mPythia Gun with FSR_on: 0[0m
-[Info] 156MB  [35mPythia Gun with 235 < pTHat < 1000[0m
+[Info] 156MB  [35mPythia Gun with 7 < pTHat < 9[0m
 [Info] 156MB  [35mUse hybrid hadronization? 0[0m
 
  *-------  PYTHIA Process Initialization  --------------------------*
  |                                                                  |
- | We collide p+ with p+ at a CM energy of 2.760e+03 GeV            |
+ | We collide p+ with p+ at a CM energy of 5.020e+03 GeV            |
  |                                                                  |
  |------------------------------------------------------------------|
  |                                                    |             |
@@ -62,29 +62,29 @@
  |                                                    |             |
  |------------------------------------------------------------------|
  |                                                    |             |
- | g g -> g g                                     111 |   2.458e-07 |
- | g g -> q qbar (uds)                            112 |   6.920e-09 |
- | q g -> q g                                     113 |   9.771e-07 |
- | q q(bar)' -> q q(bar)'                         114 |   6.254e-07 |
- | q qbar -> g g                                  115 |   4.762e-09 |
- | q qbar -> q' qbar' (uds)                       116 |   3.704e-09 |
- | g g -> c cbar                                  121 |   2.306e-09 |
- | q qbar -> c cbar                               122 |   1.235e-09 |
- | g g -> b bbar                                  123 |   2.304e-09 |
- | q qbar -> b bbar                               124 |   1.234e-09 |
- | q g -> q gamma (udscb)                         201 |   1.308e-09 |
- | q qbar -> g gamma                              202 |   2.558e-10 |
- | g g -> g gamma                                 203 |   5.830e-14 |
- | f fbar -> gamma gamma                          204 |   2.659e-12 |
- | g g -> gamma gamma                             205 |   6.562e-14 |
+ | g g -> g g                                     111 |   1.043e+01 |
+ | g g -> q qbar (uds)                            112 |   2.597e-01 |
+ | q g -> q g                                     113 |   8.939e+00 |
+ | q q(bar)' -> q q(bar)'                         114 |   8.386e-01 |
+ | q qbar -> g g                                  115 |   6.404e-03 |
+ | q qbar -> q' qbar' (uds)                       116 |   5.298e-03 |
+ | g g -> c cbar                                  121 |   8.079e-02 |
+ | q qbar -> c cbar                               122 |   1.684e-03 |
+ | g g -> b bbar                                  123 |   4.086e-02 |
+ | q qbar -> b bbar                               124 |   1.133e-03 |
+ | q g -> q gamma (udscb)                         201 |   2.987e-03 |
+ | q qbar -> g gamma                              202 |   1.532e-04 |
+ | g g -> g gamma                                 203 |   3.661e-06 |
+ | f fbar -> gamma gamma                          204 |   7.971e-07 |
+ | g g -> gamma gamma                             205 |   2.178e-06 |
  |                                                                  |
  *-------  End PYTHIA Process Initialization -----------------------*
 
  *-------  PYTHIA Multiparton Interactions Initialization  ---------* 
  |                                                                  | 
- |                   sigmaNonDiffractive =    43.04 mb              | 
+ |                   sigmaNonDiffractive =    47.72 mb              | 
  |                                                                  | 
- |    pT0 =  1.87 gives sigmaInteraction =   163.17 mb: accepted    | 
+ |    pT0 =  2.12 gives sigmaInteraction =   211.39 mb: accepted    | 
  |                                                                  | 
  *-------  End PYTHIA Multiparton Interactions Initialization  -----* 
 
@@ -92,7 +92,7 @@
  |                                                                                                                 | 
  | Name                                          |                      Now |      Default         Min         Max | 
  |                                               |                          |                                      | 
- | Beams:eCM                                     |                 2760.000 |    14000.000    10.00000             | 
+ | Beams:eCM                                     |                 5020.000 |    14000.000    10.00000             | 
  | HadronLevel:all                               |                      off |           on                         | 
  | HadronLevel:Decay                             |                      off |           on                         | 
  | HardQCD:all                                   |                       on |          off                         | 
@@ -100,8 +100,8 @@
  | Next:numberShowInfo                           |                        0 |            1           0             | 
  | Next:numberShowProcess                        |                        0 |            1           0             | 
  | PartonLevel:FSR                               |                      off |           on                         | 
- | PhaseSpace:pTHatMax                           |                 1000.000 |     -1.00000                         | 
- | PhaseSpace:pTHatMin                           |                235.00000 |          0.0         0.0             | 
+ | PhaseSpace:pTHatMax                           |                  9.00000 |     -1.00000                         | 
+ | PhaseSpace:pTHatMin                           |                  7.00000 |          0.0         0.0             | 
  | PromptPhoton:all                              |                       on |          off                         | 
  | Random:seed                                   |                       10 |           -1               900000000 | 
  | Random:setSeed                                |                       on |          off                         | 
@@ -132,6 +132,7 @@
 [Info] 161MB  Intialize Hadronization Manager ...[0m
 [Info] 161MB  Found 1 Hadronization Manager Tasks/Modules Initialize them ... [0m
 [Info] 161MB  Found 1 Hadronization Tasks/Modules Initialize them ... [0m
+[Info] 161MB  Weak decays are turned on[0m
 
  *-------  PYTHIA Flag + Mode + Parm + Word + FVec + MVec + PVec + WVec Settings (changes only)  ------------------* 
  |                                                                                                                 | 
@@ -161,8 +162,8 @@
 [Info] 161MB  [1m[31mRun JetScape ...[0m
 [Info] 161MB  [1m[31mNumber of Events = 10[0m
 [Info] 161MB  [1m[31mRun Event # = 0[0m
-[Info] 166MB  [1m[30mJetScape finished after 10 events![0m
+[Info] 168MB  [1m[30mJetScape finished after 10 events![0m
 [Info] Finished![0m
 
-CPU time: 1.978775 seconds.
-Real time: 5.000000 seconds.
+CPU time: 1.371514 seconds.
+Real time: 3.000000 seconds.

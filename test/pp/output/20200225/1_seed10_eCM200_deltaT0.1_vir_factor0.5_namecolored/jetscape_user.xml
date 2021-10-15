@@ -14,9 +14,9 @@
   <!-- Hard Process -->
   <Hard>
     <PythiaGun>
-      <pTHatMin>235</pTHatMin>
-      <pTHatMax>1000</pTHatMax>
-      <eCM>2760</eCM>
+      <pTHatMin>7</pTHatMin>
+      <pTHatMax>9</pTHatMax>
+      <eCM>200</eCM>
     </PythiaGun>
   </Hard>
   
@@ -35,7 +35,7 @@
   
   <!-- Jet Hadronization Module -->
   <JetHadronization>
-    <name>colorless</name>
+    <name>colored</name>
   </JetHadronization>
   
 </jetscape>

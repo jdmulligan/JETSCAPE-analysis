@@ -29,13 +29,13 @@ sys.path.append('../..')
 from jetscape_analysis.base import common_base
 
 ################################################################
-class generate_jetscape_events(common_base.common_base):
+class GenerateJetscapeEvents(common_base.CommonBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file="", output_dir="", jetscape_dir="", **kwargs):
-        super(generate_jetscape_events, self).__init__(**kwargs)
+        super(GenerateJetscapeEvents, self).__init__(**kwargs)
         self.config_file = config_file
         self.output_dir = output_dir
         self.jetscape_dir = jetscape_dir
@@ -134,9 +134,9 @@ class generate_jetscape_events(common_base.common_base):
                     for line in fileinput.input(xml_user_file_copy, inplace=True):
                 
                         if 'pTHatMin' in line:
-                            print(re.sub(r'{0}*{0}'.format('pTHatMin', 'pTHatMin'), '{0}>{1}<{0}'.format('pTHatMin', pt_hat_min), line), end='')
+                            print(re.sub(r'{0}>\w*</{0}'.format('pTHatMin'), '{0}>{1}</{0}'.format('pTHatMin', pt_hat_min), line), end='')
                         elif 'pTHatMax' in line:
-                            print(re.sub(r'{0}*{0}'.format('pTHatMax', 'pTHatMax'), '{0}>{1}<{0}'.format('pTHatMax', pt_hat_max), line), end='')
+                            print(re.sub(r'{0}>\w*</{0}'.format('pTHatMax'), '{0}>{1}</{0}'.format('pTHatMax', pt_hat_max), line), end='')
                         else:
                             print(line, end='')
                       
@@ -146,7 +146,7 @@ class generate_jetscape_events(common_base.common_base):
                     for line in fileinput.input(xml_user_file_copy, inplace=True):
                     
                         if parameter_label in line:
-                            print(re.sub(r'{0}*{0}'.format(parameter_label), '{0}>{1}<{0}'.format(parameter_label, value), line), end='')
+                            print(re.sub(r'{0}>\w*</{0}'.format(parameter_label), '{0}>{1}</{0}'.format(parameter_label, value), line), end='')
                         else:
                             print(line, end='')
 
@@ -154,10 +154,19 @@ class generate_jetscape_events(common_base.common_base):
             os.chdir(output_dir_bin)
 
             # Run Jetscape executable
-            logfile_name = os.path.join(output_dir_bin, "log_{}_{}.txt".format(pt_hat_bin, dir_label))
+            logfile_name = os.path.join(output_dir_bin, "log_{}.txt".format(dir_label))
             with open(logfile_name, "w") as logfile:
                 cmd = '{}/build/runJetscape jetscape_user.xml jetscape_master.xml'.format(self.jetscape_dir)
                 subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+                
+                # If ascii format, generate FinalStateHadrons and FinalStatePartons
+                if os.path.exists('test_out.dat'):
+                    cmd = '{}/build/FinalStateHadrons test_out.dat FinalStateHadrons.txt'.format(self.jetscape_dir)
+                    subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+                    
+                    cmd = '{}/build/FinalStatePartons test_out.dat FinalStatePartons.txt'.format(self.jetscape_dir)
+                    subprocess.run(cmd, check=True, shell=True, stdout=logfile)
+                
             os.chdir(self.output_dir)
 
 ##################################################################
@@ -200,5 +209,5 @@ if __name__ == "__main__":
         print('File "{0}" does not exist! Exiting!'.format(args.configFile))
         sys.exit(0)
 
-    analysis = generate_jetscape_events(config_file=args.configFile, output_dir=args.outputDir, jetscape_dir=args.jetscapeDir)
+    analysis = GenerateJetscapeEvents(config_file=args.configFile, output_dir=args.outputDir, jetscape_dir=args.jetscapeDir)
     analysis.generate_jetscape_events()

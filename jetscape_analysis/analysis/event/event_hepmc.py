@@ -12,13 +12,13 @@ from __future__ import print_function
 from jetscape_analysis.analysis.event import event_base
 
 ################################################################
-class event_hepmc(event_base.event_base):
+class EventHepMC(event_base.EventBase):
 
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, event="", **kwargs):
-        super(event_hepmc, self).__init__(**kwargs)
+        super(EventHepMC, self).__init__(**kwargs)
 
         self.event = event
 
@@ -26,7 +26,7 @@ class event_hepmc(event_base.event_base):
     # Get list of hadrons.
     # Final state hadrons (from jet + bulk) are stored as outgoing particles in a disjoint vertex with t = 100
     # ---------------------------------------------------------------
-    def hadrons(self):
+    def hadrons(self, min_track_pt=0.):
 
         for vertex in self.event.vertices:
 
@@ -34,13 +34,15 @@ class event_hepmc(event_base.event_base):
             if abs(vertex_time - 100) < 1e-3:
                 final_state_particles = vertex.particles_out
 
-        # Remove neutrinos
         hadrons = []
         for particle in final_state_particles:
 
             pid = particle.pid
-            if pid != 12 and pid != 14 and pid != 16:
-                hadrons.append(particle)
+            pt = particle.momentum.pt()
+            
+            if pid != 12 and pid != 14 and pid != 16: # Remove neutrinos
+                if pt > min_track_pt:
+                    hadrons.append(particle)
 
         return hadrons
 

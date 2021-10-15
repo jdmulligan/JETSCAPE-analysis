@@ -33,7 +33,7 @@
   <!--  Note: Both 0 and non-zero values require careful treatment in case of multi-threading -->
   <!--           An example implementation is in JetEnergyLossManager.cc -->
   <Random>
-    <seed>1</seed>
+    <seed>0</seed>
   </Random>
 
   <!-- Inital State Module  -->
@@ -83,6 +83,7 @@
     <PGun>
       <name>PGun</name>
       <pT>100</pT>
+      <parID>21</parID>
       <useHybridHad>0</useHybridHad>
     </PGun>
 
@@ -264,6 +265,7 @@
        <thermreco_distmax>5.0</thermreco_distmax>
        <shower_recofactor>0.3333333</shower_recofactor>
        <thermal_recofactor>0.3333333</thermal_recofactor>
+       <weak_decays>on</weak_decays>
    </JetHadronization>
 
   <!-- Particlization Module  -->
