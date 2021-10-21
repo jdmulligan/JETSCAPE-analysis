@@ -86,13 +86,14 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
 
         # Loop through events
         start = time.time()
+        weight_sum = 0.
         for i,event in df_event_chunk.iterrows():
 
             if i % 1000 == 0:
                 print(f'event: {i}    (time elapsed: {time.time() - start} s)')
                 
             if i > self.n_event_max:
-                return
+                break
                 
             # Store dictionary of all observables for the event
             self.observable_dict_event = {}
@@ -101,19 +102,21 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             self.analyze_event(event)
             
             # Fill the observables dict to a new entry in the event list
+            event_weight = event['event_weight']
+            weight_sum += event_weight
             if self.event_has_entries(self.observable_dict_event):
             
                 # Fill event cross-section weight
-                self.observable_dict_event['event_weight'] = event['event_weight']
+                self.observable_dict_event['event_weight'] = event_weight
                 self.observable_dict_event['pt_hat'] = event['pt_hat']
                 
                 self.output_event_list.append(self.observable_dict_event)
                 
-            # Get total cross-section (same for all events at this point)
-            if i == 0:
-                self.cross_section_dict['cross_section'] = event['cross_section']
-                self.cross_section_dict['cross_section_error'] = event['cross_section_error']
-                self.cross_section_dict['n_events'] = self.n_event_max
+        # Get total cross-section (same for all events at this point) and weight sum
+        self.cross_section_dict['cross_section'] = event['cross_section']
+        self.cross_section_dict['cross_section_error'] = event['cross_section_error']
+        self.cross_section_dict['n_events'] = self.n_event_max
+        self.cross_section_dict['weight_sum'] = weight_sum
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -178,7 +181,6 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             use_dictionary=other_columns,
             use_byte_stream_split=float_columns,
         )
-        print(self.output_dataframe)
 
         # Write cross-section to separate file
         cross_section_dataframe = pd.DataFrame(self.cross_section_dict, index=[0])

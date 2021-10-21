@@ -56,7 +56,6 @@ class HistogramResults(common_base.CommonBase):
         self.observables_df = pd.read_parquet(self.input_file)
         #self.observables_df = ak.Array(self.input_file)
         self.weights = self.observables_df['event_weight']
-        self.sum_weights = self.weights.sum()
         self.pt_hat = self.observables_df['pt_hat']
         
         #------------------------------------------------------
@@ -66,6 +65,7 @@ class HistogramResults(common_base.CommonBase):
         self.cross_section = cross_section_df['cross_section'][0]
         self.cross_section_error = cross_section_df['cross_section_error'][0]
         self.n_events_generated = cross_section_df['n_events'][0]
+        self.sum_weights = cross_section_df['weight_sum'][0]
         print(f'xsec: {self.cross_section}')
         print(f'weights: {self.sum_weights}')
         
