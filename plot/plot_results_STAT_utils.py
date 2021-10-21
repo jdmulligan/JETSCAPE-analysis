@@ -158,6 +158,7 @@ class PlotUtils(common_base.CommonBase):
         g_new = g.Clone(f'{g.GetName()}_divided')
     
         nBins = h.GetNbinsX()
+        h_offset = 0
         for bin in range(1, nBins+1):
 
             # Get histogram (x,y)
@@ -166,25 +167,39 @@ class PlotUtils(common_base.CommonBase):
             h_error = h.GetBinError(bin)
 
             # Get TGraph (x,y) and errors
-            g_x = ctypes.c_double(0)
-            g_y = ctypes.c_double(0)
-            g.GetPoint(bin-1, g_x, g_y)
-            yErrLow = g.GetErrorYlow(bin-1)
-            yErrUp  = g.GetErrorYhigh(bin-1)
-            
-            gx = g_x.value
-            gy = g_y.value
+            gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1)
 
-            # Skip if tgraph starts below hist (since hist has min cut)
-            if gx < h_x:
-                continue
-                
+            #print(f'h_x: {h_x}')
+            #print(f'gx: {gx}')
+            #print(f'h_y: {h_y}')
+            #print(f'gy: {gy}')
+
+            # If tgraph starts below hist (e.g. when hist has min cut), try to get next tgraph point
+            g_offset = 0
+            while gx < h_x and g_offset < g.GetN()+1:
+                g_offset += 1
+                gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1+g_offset)
+
+            # If tgraph started above hist (see below) and we exhausted the tgraph points, skip
+            if h_offset > 0 and np.isclose(gx, 0):
+                continue  
+
+            # If tgraph starts above hist, try to get next hist bin
+            h_offset = 0
+            while gx > h_x and h_offset < nBins+1:
+                h_offset += 1
+                h_x = h.GetBinCenter(bin+h_offset)
+                h_y = h.GetBinContent(bin+h_offset)
+                h_error = h.GetBinError(bin+h_offset)
+                #print(f'h_x: {h_x}')
+                #print(f'gx: {gx}')
+
             if not np.isclose(h_x, gx):
                 print(f'ERROR: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
                 return None
           
             new_content = h_y / gy
-            
+
             # Combine tgraph and histogram relative uncertainties in quadrature
             if gy > 0. and h_y > 0.:
                 new_error_low = np.sqrt( pow(yErrLow/gy,2) + pow(h_error/h_y,2) ) * new_content
@@ -193,9 +208,25 @@ class PlotUtils(common_base.CommonBase):
                 new_error_low = (yErrLow/gy) * new_content
                 new_error_up = (yErrUp/gy) * new_content
 
-            g_new.SetPoint(bin-1, h_x, new_content)
-            g_new.SetPointError(bin-1, 0, 0, new_error_low, new_error_up)
+            g_new.SetPoint(bin-1+g_offset, h_x, new_content)
+            g_new.SetPointError(bin-1+g_offset, 0, 0, new_error_low, new_error_up)
         return g_new
+
+    #---------------------------------------------------------------
+    # Get points from tgraph by index
+    #---------------------------------------------------------------
+    def get_gx_gy(self, g, index):
+
+        g_x = ctypes.c_double(0)
+        g_y = ctypes.c_double(0)
+        g.GetPoint(index, g_x, g_y)
+        yErrLow = g.GetErrorYlow(index)
+        yErrUp  = g.GetErrorYhigh(index)
+        
+        gx = g_x.value
+        gy = g_y.value
+
+        return gx, gy, yErrLow, yErrUp
 
     #---------------------------------------------------------------
     # Divide a tgraph by a tgraph, point-by-point: g1/g2

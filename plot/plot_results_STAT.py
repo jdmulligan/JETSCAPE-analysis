@@ -400,9 +400,9 @@ class PlotResults(common_base.CommonBase):
             self.y_cut = block['y_cut']
         if 'pt' in block:
             self.pt = block['pt']
-        if 'eta_R' in block:
-            self.eta_R = block['eta_R']
-            self.eta_cut = np.round(self.eta_R - self.jetR, decimals=1)
+        if 'eta_cut_R' in block:
+            self.eta_R = block['eta_cut_R']
+            self.eta_cut = np.round(self.eta_R - self.jet_R, decimals=1)
         if 'c_ref' in block:
             index = block['jet_R'].index(self.jet_R)
             self.c_ref = block['c_ref'][index]
@@ -578,7 +578,7 @@ class PlotResults(common_base.CommonBase):
             if self.sqrts == 5020:
                 if observable_type == 'hadron':
                     if observable in ['pt_ch_alice', 'pt_pi_alice']:
-                        sigma_inel = 61.8 # Need to update number for 5.02 TeV
+                        sigma_inel = 67.6
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
                     elif observable == 'pt_ch_cms':
@@ -640,7 +640,6 @@ class PlotResults(common_base.CommonBase):
         if self.observable_settings['data_distribution'] and self.observable_settings['jetscape_distribution'] and not self.observable_settings['jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()) and not self.skip_pp_ratio:
             self.observable_settings['ratio'] = self.plot_utils.divide_histogram_by_tgraph(self.observable_settings['jetscape_distribution'],
                                                                               self.observable_settings['data_distribution'])
-                                                                              
         else:
             self.observable_settings['ratio'] = None
 
@@ -673,6 +672,9 @@ class PlotResults(common_base.CommonBase):
         
         legend = ROOT.TLegend(0.58,0.65,0.75,0.8)
         self.plot_utils.setup_legend(legend, 0.055, sep=-0.1)
+
+        legend_ratio = ROOT.TLegend(0.25,0.8,0.45,1.07)
+        self.plot_utils.setup_legend(legend_ratio, 0.07, sep=-0.1)
             
         self.bins = np.array(self.observable_settings['jetscape_distribution'].GetXaxis().GetXbins())
         myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
@@ -698,7 +700,7 @@ class PlotResults(common_base.CommonBase):
         pad2.cd()
               
         myBlankHisto2 = myBlankHisto.Clone('myBlankHisto_C')
-        myBlankHisto2.SetYTitle('#frac{JETSCAPE}{Data}')
+        myBlankHisto2.SetYTitle('Ratio')
         myBlankHisto2.SetXTitle(self.xtitle)
         myBlankHisto2.GetXaxis().SetTitleSize(26)
         myBlankHisto2.GetXaxis().SetTitleFont(43)
@@ -714,18 +716,8 @@ class PlotResults(common_base.CommonBase):
         myBlankHisto2.GetYaxis().SetRangeUser(self.y_ratio_min, self.y_ratio_max)
         myBlankHisto2.Draw('')
                 
-        # Draw JETSCAPE
-        pad1.cd()
-        self.observable_settings['jetscape_distribution'].SetFillColor(self.jetscape_color)
-        self.observable_settings['jetscape_distribution'].SetFillColorAlpha(self.jetscape_color, self.alpha)
-        self.observable_settings['jetscape_distribution'].SetFillStyle(1001)
-        self.observable_settings['jetscape_distribution'].SetMarkerSize(0.)
-        self.observable_settings['jetscape_distribution'].SetMarkerStyle(0)
-        self.observable_settings['jetscape_distribution'].SetLineWidth(0)
-        self.observable_settings['jetscape_distribution'].DrawCopy('E3 same')
-        legend.AddEntry(self.observable_settings['jetscape_distribution'], 'JETSCAPE', 'f')
-
         # Draw distribution
+        pad1.cd()
         if self.observable_settings['data_distribution']:
             self.observable_settings['data_distribution'].SetMarkerSize(self.marker_size)
             self.observable_settings['data_distribution'].SetMarkerStyle(self.data_marker)
@@ -736,25 +728,57 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['data_distribution'].Draw('PE Z same')
             legend.AddEntry(self.observable_settings['data_distribution'], 'Data', 'PE')
         
+        # Draw JETSCAPE
+        if self.observable_settings['jetscape_distribution'].GetNbinsX() > 1:
+            self.observable_settings['jetscape_distribution'].SetFillColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution'].SetFillColorAlpha(self.jetscape_color, self.alpha)
+            self.observable_settings['jetscape_distribution'].SetFillStyle(1001)
+            self.observable_settings['jetscape_distribution'].SetMarkerSize(0.)
+            self.observable_settings['jetscape_distribution'].SetMarkerStyle(0)
+            self.observable_settings['jetscape_distribution'].SetLineWidth(0)
+            self.observable_settings['jetscape_distribution'].DrawCopy('E3 same')
+        elif self.observable_settings['jetscape_distribution'].GetNbinsX() == 1:
+            self.observable_settings['jetscape_distribution'].SetMarkerSize(self.marker_size)
+            self.observable_settings['jetscape_distribution'].SetMarkerStyle(self.data_marker+1)
+            self.observable_settings['jetscape_distribution'].SetMarkerColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution'].SetLineStyle(self.line_style)
+            self.observable_settings['jetscape_distribution'].SetLineWidth(self.line_width)
+            self.observable_settings['jetscape_distribution'].SetLineColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution'].DrawCopy('PE same')
+        legend.AddEntry(self.observable_settings['jetscape_distribution'], 'JETSCAPE', 'f')
+
         legend.Draw()
         
         # Draw ratio
         pad2.cd()
-        if self.observable_settings['ratio']:
-            self.observable_settings['ratio'].SetFillColor(self.jetscape_color)
-            self.observable_settings['ratio'].SetFillColorAlpha(self.jetscape_color, self.alpha)
-            self.observable_settings['ratio'].SetFillStyle(1001)
-            self.observable_settings['ratio'].SetMarkerSize(0.)
-            self.observable_settings['ratio'].SetMarkerStyle(0)
-            self.observable_settings['ratio'].SetLineWidth(0)
-            self.observable_settings['ratio'].Draw('E3 same')
-        
-        # Draw data uncertainties
         if self.observable_settings['data_distribution']:
             data_ratio = self.plot_utils.divide_tgraph_by_tgraph(self.observable_settings['data_distribution'],
                                                                  self.observable_settings['data_distribution'])
             data_ratio.Draw('PE Z same')
-
+        if self.observable_settings['ratio']:
+            if self.observable_settings['ratio'].GetN() > 1:
+                self.observable_settings['ratio'].SetFillColor(self.jetscape_color)
+                self.observable_settings['ratio'].SetFillColorAlpha(self.jetscape_color, self.alpha)
+                self.observable_settings['ratio'].SetFillStyle(1001)
+                self.observable_settings['ratio'].SetMarkerSize(0.)
+                self.observable_settings['ratio'].SetMarkerStyle(0)
+                self.observable_settings['ratio'].SetLineWidth(0)
+                self.observable_settings['ratio'].Draw('E3 same')
+            elif self.observable_settings['ratio'].GetN() == 1:
+                self.observable_settings['ratio'].SetMarkerSize(self.marker_size)
+                self.observable_settings['ratio'].SetMarkerStyle(self.data_marker+1)
+                self.observable_settings['ratio'].SetMarkerColor(self.jetscape_color)
+                self.observable_settings['ratio'].SetLineStyle(self.line_style)
+                self.observable_settings['ratio'].SetLineWidth(self.line_width)
+                self.observable_settings['ratio'].SetLineColor(self.jetscape_color)
+                self.observable_settings['ratio'].Draw('PE same')
+        
+        if self.observable_settings['ratio']:
+            legend_ratio.AddEntry(self.observable_settings['ratio'], 'JETSCAPE/Data', 'f')
+        if self.observable_settings['data_distribution']:
+            legend_ratio.AddEntry(data_ratio, 'Data uncertainties', 'PE')
+        legend_ratio.Draw()
+        
         line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
         line.SetLineColor(920+2)
         line.SetLineStyle(2)
@@ -771,6 +795,11 @@ class PlotResults(common_base.CommonBase):
         text_latex.DrawLatex(x, 0.83, text)
         text = f'{centrality} {self.suffix} {pt_suffix}'
         text_latex.DrawLatex(x, 0.73, text)
+
+        pad2.cd()
+        if self.skip_pp_ratio:
+            text = 'skip ratio plot -- binning mismatch'
+            text_latex.DrawLatex(x, 0.93, text)
 
         c.SaveAs(os.path.join(self.output_dir, f'{self.hname}{self.file_format}'))
         c.Close()

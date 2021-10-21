@@ -168,8 +168,8 @@ inclusive_jet:
     hepdata_pp_dir_R0.4: 'Table 4'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-8
-    y_max_pp: 1e-1
+    y_min_pp: 2e-7
+    y_max_pp: 1e-3
     
     hepdata_AA_dir_R0.2: ['Table 30']
     hepdata_AA_dir_R0.4: ['Table 31']
@@ -194,8 +194,9 @@ inclusive_jet:
     hepdata_pp_dir_R0.4: 'Table 4'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-8
+    y_min_pp: 2e-7
     y_max_pp: 1e4
+    skip_pp_ratio: True
     
     hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
     hepdata_AA_gname: 'Graph1D_y1'
