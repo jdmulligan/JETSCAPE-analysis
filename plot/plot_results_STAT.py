@@ -114,8 +114,10 @@ class PlotResults(common_base.CommonBase):
         print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
 
         # Also compute overall pt-hat cross-section uncertainty
-        xsec = self.input_file.Get('h_xsec').GetBinContent(1)
+        h_xsec = self.input_file.Get('h_xsec')
+        xsec = h_xsec.GetBinContent(1)
         xsec_error = self.input_file.Get('h_xsec_error').GetBinContent(1)
+        print(f'xsec: {xsec/h_xsec.GetEntries()}')
         print(f'xsec_uncertainty: {100*xsec_error/xsec}')
 
         c = ROOT.TCanvas('c', 'c', 600, 650)
