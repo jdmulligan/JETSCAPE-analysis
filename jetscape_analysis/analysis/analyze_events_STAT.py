@@ -489,7 +489,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(jet.eta()) < (self.inclusive_jet_observables['mg_cms']['eta_cut']):
                             if jet_pt > pt_min and jet_pt < pt_max:
                                 if jet_groomed_lund.Delta() > self.inclusive_jet_observables['mg_cms']['dR']:
-                                    mg = jet_groomed_lund.pair().m()
+                                    mg = jet_groomed_lund.pair().m() / jet_pt
                                     # Note: untagged jets will return negative value
                                     self.observable_dict_event[f'inclusive_jet_mg_cms_R{jetR}_zcut{zcut}_beta{beta}'].append([jet_pt, mg])
                 

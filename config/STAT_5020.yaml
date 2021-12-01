@@ -50,7 +50,7 @@ hadron:
     
     hepdata: 'HEPData-ins1657384-v1-root.root'
     hepdata_pp_dir: 'Table 4'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1']
     ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e4
@@ -70,7 +70,7 @@ hadron:
     
     hepdata: 'HEPData-ins1759506-v1-root.root'
     hepdata_pp_dir: 'Table 2'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1']
     ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e4
@@ -89,7 +89,7 @@ hadron:
     logy: True
     
     hepdata: 'HEPData-ins1496050-v2-root.root'
-    hepdata_pp_dir: 'Table 7'
+    hepdata_pp_dir: ['Table 7']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: 'E #frac{d^{3}#it{N}_{ch}}{d^{3}#it{p}} #left[GeV^{-2}c^{3}#right]'
     y_min_pp: 2e-18
@@ -114,7 +114,7 @@ hadron_correlations:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     
     hepdata: 'HEPData-ins1686834-v1-root.root'
-    hepdata_pp_dir: 'Table 11'
+    hepdata_pp_dir: ['Table 11']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#it{v}_{2}(SP)'
     y_min_pp: 0.3
@@ -136,7 +136,7 @@ hadron_correlations:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     
     hepdata: 'HEPData-ins1511868-v1-root.root'
-    hepdata_pp_dir: 'Table 7'
+    hepdata_pp_dir: ['Table 7']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#it{v}_{2}(SP)'
     y_min_pp: 0.3
@@ -164,8 +164,8 @@ inclusive_jet:
     logy: True
     
     hepdata: 'HEPData-ins1755387-v1-root.root'
-    hepdata_pp_dir_R0.2: 'Table 2'
-    hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_dir_R0.2: ['Table 2']
+    hepdata_pp_dir_R0.4: ['Table 4']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-7
@@ -191,7 +191,7 @@ inclusive_jet:
     logy: True
 
     hepdata: 'HEPData-ins1673184-v1-root.root'
-    hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_dir_R0.4: ['Table 4']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-7
@@ -219,7 +219,7 @@ inclusive_jet:
     hepdata_pp_dir_R0.6: 'Figure 5-4'
     hepdata_pp_dir_R0.8: 'Figure 5-5'
     hepdata_pp_dir_R1.0: 'Figure 5-6'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e2
@@ -240,7 +240,7 @@ inclusive_jet:
     y_cut: 2.1
     pt: [126., 158.49, 199.53, 251.19, 316.22, 398.1]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    xtitle: '#it{z}'
     logy: True
     
     hepdata: 'HEPData-ins1673177-v2-root.root'
@@ -249,7 +249,7 @@ inclusive_jet:
     hepdata_pp_dir_R0.4_pt2: 'Table 8'
     hepdata_pp_dir_R0.4_pt3: 'Table 12'
     hepdata_pp_dir_R0.4_pt4: 'Table 16'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1']
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{z}}'
     y_min_pp: 2e-3
     y_max_pp: 1e6
@@ -268,7 +268,7 @@ inclusive_jet:
     y_cut: 2.1
     pt: [126., 158.49, 199.53, 251.19, 316.22, 398.1]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
     
     hepdata: 'HEPData-ins1673177-v2-root.root'
@@ -277,7 +277,7 @@ inclusive_jet:
     hepdata_pp_dir_R0.4_pt2: 'Table 9'
     hepdata_pp_dir_R0.4_pt3: 'Table 13'
     hepdata_pp_dir_R0.4_pt4: 'Table 17'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1']
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-4
     y_max_pp: 1e4
@@ -306,7 +306,7 @@ inclusive_jet:
     hepdata_pp_dir_R0.4_k0.3: 'Table 8'
     hepdata_pp_dir_R0.4_k0.5: 'Table 1'
     hepdata_pp_dir_R0.4_k0.7: 'Table 9'
-    hepdata_pp_gname: 'Graph1D_y5'
+    hepdata_pp_gname: ['Graph1D_y5']
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{Q}} #left[1/e#right]'
     y_min_pp: 0.
     y_max_pp: 2.5
@@ -333,10 +333,11 @@ inclusive_jet:
     hepdata: 'HEPData-ins1672962-v1-root.root'
     hepdata_pp_dir_R0.4_zcut0.1_beta0: 'Figure 2a'
     hepdata_pp_dir_R0.4_zcut0.5_beta1.5: 'Figure 2b'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1']
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{m}_{g}} #left[GeV^{-2}#right]'
     y_min_pp: 0.
     y_max_pp: 25
+    skip_pp_ratio: True
     
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt0: 'Figure 5b'
     hepdata_AA_gname_R0.4_zcut0.1_beta0_pt0: ['Graph1D_y1']
@@ -383,7 +384,7 @@ inclusive_jet:
     xtitle: '#it{z}_{g}'
 
     hepdata: 'HEPData-ins1620905-v1-root.root'
-    hepdata_pp_dir_R0.4_zcut0.1_beta0_pt1: 'Table 2'
+    hepdata_pp_dir_R0.4_zcut0.1_beta0_pt1: ['Table 2']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
     y_min_pp: 0.

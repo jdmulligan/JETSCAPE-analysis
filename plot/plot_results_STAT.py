@@ -268,7 +268,7 @@ class PlotResults(common_base.CommonBase):
             
                 # Initialize observable configuration
                 self.suffix = ''
-                self.init_observable(observable_type, observable, block, centrality)
+                self.init_observable(observable_type, observable, block, centrality, centrality_index)
                     
                 # Plot observable
                 self.plot_distribution_and_ratio(observable_type, observable, centrality)
@@ -288,7 +288,7 @@ class PlotResults(common_base.CommonBase):
 
                 # Initialize observable configuration
                 self.suffix = ''
-                self.init_observable(observable_type, observable, block, centrality)
+                self.init_observable(observable_type, observable, block, centrality, centrality_index)
                   
                 # Histogram observable
                 self.plot_distribution_and_ratio(observable_type, observable, centrality)
@@ -339,7 +339,7 @@ class PlotResults(common_base.CommonBase):
                                             continue
                             
                                         # Initialize observable configuration
-                                        self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
+                                        self.init_observable(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
                                   
                                         # Plot observable
                                         self.plot_distribution_and_ratio(observable_type, observable, centrality, pt_suffix)
@@ -351,7 +351,7 @@ class PlotResults(common_base.CommonBase):
                                     continue
 
                                 # Initialize observable configuration
-                                self.init_observable(observable_type, observable, block, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
+                                self.init_observable(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
                           
                                 # Plot observable
                                 self.plot_distribution_and_ratio(observable_type, observable, centrality, pt_suffix)
@@ -379,7 +379,7 @@ class PlotResults(common_base.CommonBase):
                             self_normalize = True
 
                     # Initialize observable configuration
-                    self.init_observable(observable_type, observable, block, centrality, self_normalize=self_normalize)
+                    self.init_observable(observable_type, observable, block, centrality, centrality_index, self_normalize=self_normalize)
               
                     # Plot observable
                     self.plot_distribution_and_ratio(observable_type, observable, centrality)
@@ -387,7 +387,7 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Initialize a single observable's config
     #-------------------------------------------------------------------------------------------
-    def init_observable(self, observable_type, observable, block, centrality, pt_suffix='', self_normalize=False):
+    def init_observable(self, observable_type, observable, block, centrality, centrality_index, pt_suffix='', self_normalize=False):
     
         # Initialize an empty dict containing relevant info
         self.observable_settings = {}
@@ -444,7 +444,7 @@ class PlotResults(common_base.CommonBase):
         
         # Initialize data
         if f'hepdata' in block:
-            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, suffix=self.suffix, pt_suffix=pt_suffix)
+            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
         else:
             self.observable_settings['data_distribution'] = None
 
@@ -650,9 +650,7 @@ class PlotResults(common_base.CommonBase):
     
         if not self.observable_settings['jetscape_distribution']:
             return
-            
-        self.observable_settings['jetscape_distribution']
-    
+                
         c = ROOT.TCanvas('c', 'c', 600, 650)
         c.Draw()
         c.cd()
@@ -798,7 +796,7 @@ class PlotResults(common_base.CommonBase):
 
         pad2.cd()
         if self.skip_pp_ratio:
-            text = 'skip ratio plot -- binning mismatch'
+            text = 'skip ratio plot -- pp/AA binning mismatch'
             text_latex.DrawLatex(x, 0.93, text)
 
         c.SaveAs(os.path.join(self.output_dir, f'{self.hname}{self.file_format}'))

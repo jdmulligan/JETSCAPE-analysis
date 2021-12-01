@@ -58,12 +58,12 @@ class PlotUtils(common_base.CommonBase):
         
         # Find the relevant directory:
         # - We require that the centrality index is specified -- but
-        #   the directory name may be found either in the config either
+        #   the directory name may be found in the config either
         #   as a list of dirs, or a single dir with a list of histogram names
         # - The list of dir/hist names may also contain a suffix,
         #   which specifies e.g. the pt bin, jetR, or other parameters
-        
-        # First, check for dir/hist names in config
+
+        # First, check for dir names in config
         if f'hepdata_AA_dir{suffix}' in block:
             dir_key = f'hepdata_AA_dir{suffix}'
         elif f'hepdata_AA_dir' in block:
@@ -71,6 +71,7 @@ class PlotUtils(common_base.CommonBase):
         else:
             print(f'hepdata_AA_dir{suffix} not found!')
             
+        # Check for hist names in config
         if f'hepdata_AA_hname{suffix}' in block:
             h_key = f'hepdata_AA_hname{suffix}'
         elif f'hepdata_AA_hname' in block:
@@ -109,7 +110,7 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get tgraph from hepdata file specified in config block
     # ---------------------------------------------------------------
-    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, suffix='', pt_suffix=''):
+    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, centrality_index, suffix='', pt_suffix=''):
 
         # Open the HEPData file
         hepdata_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
@@ -119,8 +120,8 @@ class PlotUtils(common_base.CommonBase):
         # Find the relevant directory:
         # - The list of dir/hist names may contain a suffix,
         #   which specifies e.g. the pt bin, jetR, or other parameters
-        
-        # First, check for dir/hist names in config
+
+        # First, check for dir names in config
         if f'hepdata_pp_dir{suffix}' in block:
             dir_key = f'hepdata_pp_dir{suffix}'
         elif f'hepdata_pp_dir{suffix}{pt_suffix}' in block:
@@ -131,6 +132,7 @@ class PlotUtils(common_base.CommonBase):
             #print(f'hepdata_pp_dir{suffix} not found!')
             return None
             
+        # Check for hist names in config
         if f'hepdata_pp_gname{suffix}' in block:
             g_key = f'hepdata_pp_gname{suffix}'
         elif f'hepdata_pp_gname' in block:
@@ -138,9 +140,25 @@ class PlotUtils(common_base.CommonBase):
         else:
             #print(f'hepdata_pp_gname{suffix} not found!')
             return None
-
-        dir_name = block[dir_key]
-        g_name = block[g_key]
+            
+        # Get the appropriate centrality entry in the dir/hist list
+        if type(block[dir_key]) is list:
+            
+            # If fewer entries than the observable's centrality, skip
+            if centrality_index > len(block[dir_key])-1:
+                return np.array([])
+        
+            dir_name = block[dir_key][centrality_index]
+            g_name = block[g_key]
+            
+        else:
+        
+            # If fewer entries than the observable's centrality, skip
+            if centrality_index > len(block[g_key])-1:
+                return np.array([])
+        
+            dir_name = block[dir_key]
+            g_name = block[g_key][centrality_index]
         
         # Get the tgraph, and return the bins
         dir = f.Get(dir_name)

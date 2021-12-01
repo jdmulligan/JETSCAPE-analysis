@@ -12,73 +12,69 @@ import shutil
 # ---------------------------------------------------------------
 def main():
 
-    sqrts_list = ['200', '2760', '5020']
+    sqrts = 5020
+    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/stampede/Run0001'
+
     construct_observables = False
     construct_histograms = False
     merge_histograms = False
     plot_histograms = True
-
-    final_state_hadron_dirs = {}
-    for sqrts in sqrts_list:
-        final_state_hadron_dirs[sqrts] = f'/Users/jamesmulligan/JETSCAPE/jetscape-docker/JETSCAPE-output/STAT_v2/pp_{sqrts}_final_state_hadrons'
     
-    for sqrts,dir in final_state_hadron_dirs.items():
+    #-----------------------------------------------------------------
+    # Loop through final_state_hadron files, and construct observables
+    if construct_observables:
+
+        # Clear output directory
+        observables_dir = os.path.join(final_state_hadron_dir, 'observables')
+        if os.path.exists(observables_dir):
+            shutil.rmtree(observables_dir)
+
+        for file in os.listdir(final_state_hadron_dir):
+            if 'final_state_hadrons' in file:
+                cmd = f'python jetscape_analysis/analysis/analyze_events_STAT.py -c config/STAT_{sqrts}.yaml -i {final_state_hadron_dir}/{file} -o {observables_dir}'
+                print(cmd)
+                subprocess.run(cmd, check=True, shell=True)
+        
+    #-----------------------------------------------------------------
+    # Loop through observable files, and construct histograms
+    if construct_histograms:
     
-        #-----------------------------------------------------------------
-        # Loop through final_state_hadron files, and construct observables
-        if construct_observables:
+        inputdir = os.path.join(final_state_hadron_dir, 'observables')
+        outputdir = os.path.join(final_state_hadron_dir, 'histograms')
 
-            # Clear output directory
-            outputdir = dir.replace('final_state_hadrons', 'observables')
-            if os.path.exists(outputdir):
-                shutil.rmtree(outputdir)
+        for file in os.listdir(inputdir):
+            if 'observables' in file:
+                cmd = f'python plot/histogram_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{file} -o {outputdir}'
+                print(cmd)
+                subprocess.run(cmd, check=True, shell=True)
 
-            for file in os.listdir(dir):
-                if 'final_state_hadrons' in file:
-                    cmd = f'python jetscape_analysis/analysis/analyze_events_STAT.py -c config/STAT_{sqrts}.yaml -i {dir}/{file} -o {outputdir}'
-                    print(cmd)
-                    subprocess.run(cmd, check=True, shell=True)
-          
-        #-----------------------------------------------------------------
-        # Loop through observable files, and construct histograms
-        if construct_histograms:
-        
-            inputdir = dir.replace('final_state_hadrons', 'observables')
-            outputdir = dir.replace('final_state_hadrons', 'histograms')
-
-            for file in os.listdir(inputdir):
-                if 'observables' in file:
-                    cmd = f'python plot/histogram_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{file} -o {outputdir}'
-                    print(cmd)
-                    subprocess.run(cmd, check=True, shell=True)
+    #-----------------------------------------------------------------
+    # Merge histograms
+    if merge_histograms:
     
-        #-----------------------------------------------------------------
-        # Merge histograms
-        if merge_histograms:
+        # Merge
+        inputdir = os.path.join(final_state_hadron_dir, 'histograms')
+        outputdir = os.path.join(final_state_hadron_dir, 'plot')
+        if not os.path.exists(outputdir):
+            os.makedirs(outputdir)
         
-            # Merge
-            inputdir = dir.replace('final_state_hadrons', 'histograms')
-            outputdir = dir.replace('final_state_hadrons', 'plot')
-            if not os.path.exists(outputdir):
-                os.makedirs(outputdir)
-            
-            ROOT_files = os.listdir(inputdir)
-            fname = f'histograms_{sqrts}_merged.root'
-            cmd = f'hadd -f {os.path.join(outputdir, fname)}'
-            for file in ROOT_files:
-                if '.root' in file:
-                    cmd += f' {os.path.join(inputdir, file)}'
-            subprocess.run(cmd, check=True, shell=True)
-         
-        #-----------------------------------------------------------------
-        # Plot histograms
-        if plot_histograms:
+        ROOT_files = os.listdir(inputdir)
+        fname = f'histograms_{sqrts}_merged.root'
+        cmd = f'hadd -f {os.path.join(outputdir, fname)}'
+        for file in ROOT_files:
+            if '.root' in file:
+                cmd += f' {os.path.join(inputdir, file)}'
+        subprocess.run(cmd, check=True, shell=True)
         
-            inputdir = dir.replace('final_state_hadrons', 'plot')
-            fname = f'histograms_{sqrts}_merged.root'
-            cmd = f'python plot/plot_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{fname}'
-            print(cmd)
-            subprocess.run(cmd, check=True, shell=True)
+    #-----------------------------------------------------------------
+    # Plot histograms
+    if plot_histograms:
+    
+        inputdir = os.path.join(final_state_hadron_dir, 'plot')
+        fname = f'histograms_{sqrts}_merged.root'
+        cmd = f'python plot/plot_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{fname}'
+        print(cmd)
+        subprocess.run(cmd, check=True, shell=True)
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
