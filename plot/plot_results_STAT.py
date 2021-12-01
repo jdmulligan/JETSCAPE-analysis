@@ -58,6 +58,9 @@ class PlotResults(common_base.CommonBase):
         self.sqrts = self.config['sqrt_s']
         self.power = self.config['power']
         self.pt_ref = self.config['pt_ref']
+
+        # We will write final results after all scalings, along with data, to file
+        self.output_dict = {}
       
         print(self)
 
@@ -82,6 +85,8 @@ class PlotResults(common_base.CommonBase):
             
         if 'dijet' in self.config:
             self.plot_jet_observables(observable_type='dijet')
+
+        self.write_output_objects()
         
         # Generate pptx for convenience
         if self.file_format == '.png':
@@ -650,6 +655,8 @@ class PlotResults(common_base.CommonBase):
     
         if not self.observable_settings['jetscape_distribution']:
             return
+
+        label = f'{observable_type}_{observable}_{self.sqrts}_{centrality}_{self.suffix}_{pt_suffix}'
                 
         c = ROOT.TCanvas('c', 'c', 600, 650)
         c.Draw()
@@ -717,6 +724,8 @@ class PlotResults(common_base.CommonBase):
         # Draw distribution
         pad1.cd()
         if self.observable_settings['data_distribution']:
+            self.output_dict[f'data_distribution_{label}'] = self.observable_settings['data_distribution']
+            self.observable_settings['data_distribution'].SetName(f'data_distribution_{label}')
             self.observable_settings['data_distribution'].SetMarkerSize(self.marker_size)
             self.observable_settings['data_distribution'].SetMarkerStyle(self.data_marker)
             self.observable_settings['data_distribution'].SetMarkerColor(self.data_color)
@@ -727,6 +736,7 @@ class PlotResults(common_base.CommonBase):
             legend.AddEntry(self.observable_settings['data_distribution'], 'Data', 'PE')
         
         # Draw JETSCAPE
+        self.output_dict[f'jetscape_distribution_{label}'] =  self.observable_settings['jetscape_distribution']
         if self.observable_settings['jetscape_distribution'].GetNbinsX() > 1:
             self.observable_settings['jetscape_distribution'].SetFillColor(self.jetscape_color)
             self.observable_settings['jetscape_distribution'].SetFillColorAlpha(self.jetscape_color, self.alpha)
@@ -753,7 +763,9 @@ class PlotResults(common_base.CommonBase):
             data_ratio = self.plot_utils.divide_tgraph_by_tgraph(self.observable_settings['data_distribution'],
                                                                  self.observable_settings['data_distribution'])
             data_ratio.Draw('PE Z same')
+            self.output_dict[f'data_ratio_{label}'] = data_ratio
         if self.observable_settings['ratio']:
+            self.output_dict[f'ratio_{label}'] = self.observable_settings['ratio']
             if self.observable_settings['ratio'].GetN() > 1:
                 self.observable_settings['ratio'].SetFillColor(self.jetscape_color)
                 self.observable_settings['ratio'].SetFillColorAlpha(self.jetscape_color, self.alpha)
@@ -801,6 +813,23 @@ class PlotResults(common_base.CommonBase):
 
         c.SaveAs(os.path.join(self.output_dir, f'{self.hname}{self.file_format}'))
         c.Close()
+
+    # ---------------------------------------------------------------
+    # Save all ROOT histograms to file
+    # ---------------------------------------------------------------
+    def write_output_objects(self):
+
+        # Save output objects
+        self.output_filename = os.path.join(self.output_dir, 'final_results.root')
+        fout = ROOT.TFile(self.output_filename, 'recreate')
+        fout.cd()
+        for key,val in self.output_dict.items():
+            val.SetName(key)
+            val.Write()
+            if isinstance(val, (ROOT.TH1)):
+                val.SetDirectory(0)
+                del val
+        fout.Close()
 
     #-------------------------------------------------------------------------------------------
     # Generate pptx of one plot per slide, for convenience
