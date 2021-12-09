@@ -151,7 +151,7 @@ class PlotUtils(common_base.CommonBase):
             dir_name = block[dir_key][centrality_index]
             g_name = block[g_key]
             
-        else:
+        elif type(block[g_key]) is list:
         
             # If fewer entries than the observable's centrality, skip
             if centrality_index > len(block[g_key])-1:
@@ -159,6 +159,11 @@ class PlotUtils(common_base.CommonBase):
         
             dir_name = block[dir_key]
             g_name = block[g_key][centrality_index]
+
+        else:
+
+            dir_name = block[dir_key]
+            g_name = block[g_key]
         
         # Get the tgraph, and return the bins
         dir = f.Get(dir_name)
