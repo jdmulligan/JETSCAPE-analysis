@@ -604,9 +604,9 @@ class PlotResults(common_base.CommonBase):
                         hname = f'h_{observable_type}_{observable}{self.suffix}_Njets_{centrality}{pt_suffix}'
                         h_njets = self.input_file.Get(self.hname)
                         h_njets.SetDirectory(0)
-                        n_jets = h_njets.GetBinContent(1)
+                        n_jets = h_njets.GetBinContent(1) # Note that Njets histogram should also be scaled by xsec/n_events
                         if n_jets > 0.:
-                            self.observable_settings['jetscape_distribution'].Scale(1.*n_events/n_jets)
+                            self.observable_settings['jetscape_distribution'].Scale(1./(n_jets * (xsec/n_events)))
                         else:
                             print('WARNING: N_jets = 0')
 

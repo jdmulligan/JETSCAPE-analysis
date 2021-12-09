@@ -373,6 +373,8 @@ inclusive_jet:
     ytitle: 'PbPb / smeared pp'
     
   # https://www.hepdata.net/record/ins1620905
+  # Note that pp distributions are not reported except for 160-180 GeV 
+  # (the other pt bins have only "pp smeared" reported)
   zg_cms:
     jet_R: [0.4]
     eta_cut: 1.3
