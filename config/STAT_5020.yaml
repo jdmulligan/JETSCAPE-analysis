@@ -280,7 +280,7 @@ inclusive_jet:
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-4
-    y_max_pp: 1e4
+    y_max_pp: 1e2
     
     hepdata_AA_dir_R0.4_pt0: 'Table 3'
     hepdata_AA_dir_R0.4_pt1: 'Table 7'
@@ -390,7 +390,8 @@ inclusive_jet:
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
     y_min_pp: 0.
-    y_max_pp: 25
+    y_max_pp: 15
+    skip_pp: True
     
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt0: ['Table 11']
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt1: ['Table 10', 'Table 9', 'Table 8']

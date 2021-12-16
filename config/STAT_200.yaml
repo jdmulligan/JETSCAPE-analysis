@@ -95,8 +95,9 @@ inclusive_chjet:
     logy: True
     
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[b/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-14
-    y_max_pp: 1e-2
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    skip_pp: True
        
     hepdata: 'HEPData-ins1798665-v1-root.root'
     hepdata_AA_dir: 'Table 10'
@@ -125,8 +126,9 @@ semi_inclusive_chjet:
     logy: True
     
     ytitle_pp: 'I_{AA}'
-    y_min_pp: 2e-8
+    y_min_pp: 2e-5
     y_max_pp: 2.
+    skip_pp: True
        
     hepdata: 'HEPData-ins1512115-v1-root.root'
     hepdata_AA_dir: 'Table 38'

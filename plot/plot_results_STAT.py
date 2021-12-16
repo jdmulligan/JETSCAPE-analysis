@@ -486,6 +486,10 @@ class PlotResults(common_base.CommonBase):
         else:
             self.y_ratio_min = 0.
             self.y_ratio_max = 1.99
+        if 'skip_pp' in block:
+            self.skip_pp = block['skip_pp']
+        else:
+            self.skip_pp = False
         if 'skip_pp_ratio' in block:
             self.skip_pp_ratio = block['skip_pp_ratio']
         else:
@@ -510,6 +514,7 @@ class PlotResults(common_base.CommonBase):
             if centrality not in self.observable_centrality_list:
                 self.observable_centrality_list.append(centrality)
 
+        # Get histogram, or in the case of semi-inclusive measurements construct difference of histograms
         keys = [key.ReadObj().GetTitle() for key in self.input_file.GetListOfKeys()]
         if 'semi_inclusive' not in observable_type:
             self.hname = f'h_{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}'
@@ -538,14 +543,15 @@ class PlotResults(common_base.CommonBase):
                     n_trig_high = h_jetscape_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(high_trigger))
                     n_trig_low = h_jetscape_ntrigger.GetBinContent(h_jetscape_ntrigger.FindBin(low_trigger))
                     h_jetscape_high.Scale(1./n_trig_high)
-                    h_jetscape_low.Scale(1./n_trig_low)
+                    h_jetscape_low.Scale(1./n_trig_low) 
                     self.observable_settings['jetscape_distribution'] = h_jetscape_high.Clone('h_delta_recoil')
                     self.observable_settings['jetscape_distribution'].Add(h_jetscape_low, -1)
                 else:
                     self.observable_settings['jetscape_distribution'] = None
             elif self.sqrts == 200:
-                hname = f'{observable_type}_{observable}_R{self.jet_R}_{centrality}'
-                hname_ntrigger = f'{observable_type}_star_trigger_pt_{centrality}'
+                hname = f'h_{observable_type}_{observable}_R{self.jet_R}_{centrality}'
+                hname_ntrigger = f'h_{observable_type}_star_trigger_pt_{centrality}'
+                self.hname = f'h_{observable_type}_{observable}_R{self.jet_R}_{centrality}'
                 if hname in keys and hname_ntrigger in keys:
                     self.observable_settings['jetscape_distribution'] = self.input_file.Get(hname)
                     self.observable_settings['jetscape_distribution'].SetDirectory(0)
@@ -587,14 +593,17 @@ class PlotResults(common_base.CommonBase):
             if self.sqrts == 200:
                 if observable_type == 'hadron':
                     if observable == 'pt_ch_star':
+                        sigma_inel = 42.
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                        self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
                 elif observable_type == 'inclusive_chjet':
                     if observable == 'pt_star':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                 elif observable_type == 'semi_inclusive_chjet':
+                    # Note that n_trig histograms should also be scaled by xsec/n_events
                     if observable in ['IAA_star', 'dphi_star']:
-                        self.observable_settings['jetscape_distribution'].Scale(n_events)
+                        self.observable_settings['jetscape_distribution'].Scale(1./(xsec/n_events))
             
             if self.sqrts == 2760:
                 if observable_type == 'hadron':
@@ -634,9 +643,10 @@ class PlotResults(common_base.CommonBase):
                     if observable == 'pt_alice':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                 elif observable_type == 'semi_inclusive_chjet':
+                    # Note that n_trig histograms should also be scaled by xsec/n_events
                     if observable in ['IAA_alice', 'dphi_alice']:
-                        self.observable_settings['jetscape_distribution'].Scale(n_events)
-                        
+                        self.observable_settings['jetscape_distribution'].Scale(1./(xsec/n_events))
+                            
             if self.sqrts == 5020:
                 if observable_type == 'hadron':
                     if observable in ['pt_ch_alice', 'pt_pi_alice']:
@@ -732,7 +742,7 @@ class PlotResults(common_base.CommonBase):
             pad1.SetLogy()
         pad1.cd()
         
-        legend = ROOT.TLegend(0.58,0.65,0.75,0.8)
+        legend = ROOT.TLegend(0.58,0.6,0.75,0.75)
         self.plot_utils.setup_legend(legend, 0.055, sep=-0.1)
 
         legend_ratio = ROOT.TLegend(0.25,0.8,0.45,1.07)
@@ -862,6 +872,10 @@ class PlotResults(common_base.CommonBase):
         text_latex.DrawLatex(x, 0.83, text)
         text = f'{centrality} {self.suffix} {pt_suffix}'
         text_latex.DrawLatex(x, 0.73, text)
+
+        if self.skip_pp and not self.observable_settings['data_distribution']:
+            text = 'skip data plot -- no pp data in HEPData'
+            text_latex.DrawLatex(x, 0.53, text)
 
         pad2.cd()
         if self.skip_pp_ratio:

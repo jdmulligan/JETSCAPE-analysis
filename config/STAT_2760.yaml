@@ -66,6 +66,7 @@ hadron:
     ytitle_pp: '#frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1} b#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-2
+    skip_pp: True
     
     hepdata: 'HEPData-ins1377750-v1-root.root'
     hepdata_AA_dir: ['Table 7', 'Table 8', 'Table 9', 'Table 10']
@@ -85,6 +86,7 @@ hadron:
     ytitle_pp: '#frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1} b#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e-2
+    skip_pp: True
     
     hepdata: 'HEPData-ins1662651-v1-root.root'
     hepdata_AA_dir: ['Table 5', 'Table 6']
@@ -178,6 +180,7 @@ inclusive_jet:
     ytitle_pp: '#frac{1}{N_{event}} #frac{d^{2}N}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-10
     y_max_pp: 1e-3
+    skip_pp_ratio: True
     
     hepdata_AA_dir_R0.2: ['Table 6', 'Table 7']
     hepdata_AA_gname: 'Graph1D_y1'
@@ -263,7 +266,7 @@ inclusive_jet:
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{z}}'
     y_min_pp: 2e-3
-    y_max_pp: 1e6
+    y_max_pp: 1e4
     
     hepdata_AA_dir_R0.4_pt0: ['Table 61', 'Table 62', 'Table 63']
     hepdata_AA_dir_R0.4_pt1: ['Table 65', 'Table 66', 'Table 67']
@@ -286,7 +289,7 @@ inclusive_jet:
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-4
-    y_max_pp: 1e4
+    y_max_pp: 1e2
     
     hepdata_AA_dir_R0.4_pt0: ['Table 45', 'Table 46', 'Table 47']
     hepdata_AA_dir_R0.4_pt1: ['Table 49', 'Table 50', 'Table 51']
@@ -361,9 +364,10 @@ inclusive_chjet:
     logy: True
     
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-14
+    y_min_pp: 2e-8
     y_max_pp: 1e-2
-    
+    skip_pp: True
+
     hepdata: 'HEPData-ins1263194-v1-root.root'
     hepdata_AA_dir: 'Table 30'
     hepdata_AA_gname: ['Graph1D_y1']
@@ -462,8 +466,9 @@ semi_inclusive_chjet:
     logy: True
     
     ytitle_pp: '#Delta_{recoil}'
-    y_min_pp: 2e-8
-    y_max_pp: 2.
+    y_min_pp: 2e-5
+    y_max_pp: 2e-1
+    skip_pp: True
 
     hepdata: 'HEPData-ins1376027-v1-root.root'
     hepdata_AA_dir_R0.2: 'Table 32'
@@ -490,7 +495,8 @@ semi_inclusive_chjet:
     
     ytitle_pp: '#Phi(#Delta#it{#varphi})'
     y_min_pp: 0.
-    y_max_pp: 1.
+    y_max_pp: 0.1
+    skip_pp: True
     
     hepdata: 'HEPData-ins1376027-v1-root.root'
     hepdata_AA_dir_R0.4: 'Table 37'
@@ -515,7 +521,8 @@ semi_inclusive_chjet:
     
     ytitle_pp: '#frac{1}{#sigma} #frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 1e-3
-    y_max_pp: 2.
+    y_max_pp: 5.
+    skip_pp: True
 
     hepdata: 'HEPData-1623946228-v1-frac{tau_{2}}{tau_{1}}_with_CA_reclustering_in_Pb-Pb.root'
     hepdata_AA_dir: 'frac{tau_{2}}{tau_{1}} with CA reclustering in Pb-Pb'
