@@ -52,6 +52,13 @@ class PlotResults(common_base.CommonBase):
         self.line_style = 1
         self.file_format = '.pdf'
 
+        # Check whether pp or AA
+        if 'PbPb' in input_file or 'AuAu' in input_file:
+            self.is_AA = True
+            self.observable_centrality_list = []
+        else:
+            self.is_AA = False
+
         # Read config file
         with open(config_file, 'r') as stream:
             self.config = yaml.safe_load(stream)
@@ -68,8 +75,6 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------------------
     def plot_results(self):
-
-        self.plot_event_qa()
     
         self.plot_hadron_observables(observable_type='hadron')
         
@@ -86,6 +91,8 @@ class PlotResults(common_base.CommonBase):
         if 'dijet' in self.config:
             self.plot_jet_observables(observable_type='dijet')
 
+        self.plot_event_qa()
+
         self.write_output_objects()
         
         # Generate pptx for convenience
@@ -97,33 +104,73 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def plot_event_qa(self):
 
-        # Crosscheck that pt-hat weighting is satisfactory  
-        # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
-        sum_weights = self.input_file.Get('h_weight_sum').GetBinContent(1)
-        h_pt_hat = self.input_file.Get('h_pt_hat')
-        h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
+        if self.is_AA:
 
-        # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
-        h_pt_hat.Scale(1./sum_weights, 'width')
-        h_pt_hat_weighted.Scale(1./sum_weights, 'width')
+            for centrality in self.observable_centrality_list:
 
-        # Compute normalization uncertainty (binned approximation)
-        h_weights = self.input_file.Get('h_weights')
-        sum_weights_integral = 0
-        normalization_uncertainty = 0
-        for i in range(1, h_weights.GetNbinsX()+1):
-            sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
-            normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
-        print(f'sum_weights: {sum_weights}')
-        print(f'sum_weights_integral: {sum_weights_integral}')
-        print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
+                # Only plot those centralities that exist 
+                if np.isclose(self.input_file.Get(f'h_centrality_generated').Integral(centrality[0]+1, centrality[1]), 0):
+                    continue
+                print(centrality)
 
-        # Also compute overall pt-hat cross-section uncertainty
-        h_xsec = self.input_file.Get('h_xsec')
-        xsec = h_xsec.GetBinContent(1)
-        xsec_error = self.input_file.Get('h_xsec_error').GetBinContent(1)
-        print(f'xsec: {xsec/h_xsec.GetEntries()}')
-        print(f'xsec_uncertainty: {100*xsec_error/xsec}')
+                # Crosscheck that pt-hat weighting is satisfactory  
+                # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
+                sum_weights = self.input_file.Get(f'h_weight_sum_{centrality}').GetBinContent(1)
+                h_pt_hat = self.input_file.Get('h_pt_hat')
+                h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
+
+                # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
+                h_pt_hat.Scale(1./sum_weights, 'width')
+                h_pt_hat_weighted.Scale(1./sum_weights, 'width')
+
+                # Compute normalization uncertainty (binned approximation)
+                h_weights = self.input_file.Get(f'h_weights_{centrality}')
+                sum_weights_integral = 0
+                normalization_uncertainty = 0
+                for i in range(1, h_weights.GetNbinsX()+1):
+                    sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
+                    normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
+                print(f'sum_weights {centrality}: {sum_weights}')
+                print(f'sum_weights_integral {centrality}: {sum_weights_integral}')
+                print(f'normalization_uncertainty {centrality}: {100*normalization_uncertainty/sum_weights_integral} %')
+
+                # Also compute overall pt-hat cross-section uncertainty
+                h_xsec = self.input_file.Get(f'h_xsec_{centrality}')
+                xsec = h_xsec.GetBinContent(1)
+                xsec_error = self.input_file.Get(f'h_xsec_error_{centrality}').GetBinContent(1)
+                print(f'xsec {centrality}: {xsec/h_xsec.GetEntries()}')
+                print(f'xsec_uncertainty {centrality}: {100*xsec_error/xsec}')
+                print()
+
+        else:
+
+            # Crosscheck that pt-hat weighting is satisfactory  
+            # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
+            sum_weights = self.input_file.Get('h_weight_sum').GetBinContent(1)
+            h_pt_hat = self.input_file.Get('h_pt_hat')
+            h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
+
+            # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
+            h_pt_hat.Scale(1./sum_weights, 'width')
+            h_pt_hat_weighted.Scale(1./sum_weights, 'width')
+
+            # Compute normalization uncertainty (binned approximation)
+            h_weights = self.input_file.Get('h_weights')
+            sum_weights_integral = 0
+            normalization_uncertainty = 0
+            for i in range(1, h_weights.GetNbinsX()+1):
+                sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
+                normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
+            print(f'sum_weights: {sum_weights}')
+            print(f'sum_weights_integral: {sum_weights_integral}')
+            print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
+
+            # Also compute overall pt-hat cross-section uncertainty
+            h_xsec = self.input_file.Get('h_xsec')
+            xsec = h_xsec.GetBinContent(1)
+            xsec_error = self.input_file.Get('h_xsec_error').GetBinContent(1)
+            print(f'xsec: {xsec/h_xsec.GetEntries()}')
+            print(f'xsec_uncertainty: {100*xsec_error/xsec}')
 
         c = ROOT.TCanvas('c', 'c', 600, 650)
         c.Draw()
@@ -396,7 +443,8 @@ class PlotResults(common_base.CommonBase):
     
         # Initialize an empty dict containing relevant info
         self.observable_settings = {}
-                            
+
+        #---------------------------------------             
         # Common settings
         self.xtitle = block['xtitle']
         if 'eta_cut' in block:
@@ -447,13 +495,21 @@ class PlotResults(common_base.CommonBase):
         else:
             self.scale_by = None
         
+        #---------------------------------------
         # Initialize data
         if f'hepdata' in block:
             self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
         else:
             self.observable_settings['data_distribution'] = None
 
+        #---------------------------------------
         # Initialize JETSCAPE
+                
+        # Add centrality bin to list, if needed
+        if self.is_AA:
+            if centrality not in self.observable_centrality_list:
+                self.observable_centrality_list.append(centrality)
+
         keys = [key.ReadObj().GetTitle() for key in self.input_file.GetListOfKeys()]
         if 'semi_inclusive' not in observable_type:
             self.hname = f'h_{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}'
@@ -490,10 +546,10 @@ class PlotResults(common_base.CommonBase):
             elif self.sqrts == 200:
                 hname = f'{observable_type}_{observable}_R{self.jet_R}_{centrality}'
                 hname_ntrigger = f'{observable_type}_star_trigger_pt_{centrality}'
-                if hname in keys and hname_trigger in keys:
+                if hname in keys and hname_ntrigger in keys:
                     self.observable_settings['jetscape_distribution'] = self.input_file.Get(hname)
                     self.observable_settings['jetscape_distribution'].SetDirectory(0)
-                    h_jetscape_ntrigger = self.input_file.Get(hname_n_trigger)
+                    h_jetscape_ntrigger = self.input_file.Get(hname_ntrigger)
                     h_jetscape_ntrigger.SetDirectory(0)
                     
                     trigger = (trigger_range[0]+trigger_range[1])/2
@@ -518,9 +574,14 @@ class PlotResults(common_base.CommonBase):
         # Note: If we divide by the sum of weights (corresponding to n_events) and multiply by the
         #       pt-hat cross-section, then JETSCAPE distribution gives cross-section: dsigma/dx (in mb)
         if self.observable_settings['jetscape_distribution']:
-            h_xsec = self.input_file.Get('h_xsec')
+
+            if self.is_AA:
+                h_xsec = self.input_file.Get(f'h_xsec_{centrality}')
+                n_events = self.input_file.Get(f'h_weight_sum_{centrality}').GetBinContent(1)
+            else:
+                h_xsec = self.input_file.Get('h_xsec')
+                n_events = self.input_file.Get('h_weight_sum').GetBinContent(1)
             xsec = h_xsec.GetBinContent(1) / h_xsec.GetEntries()
-            n_events = self.input_file.Get('h_weight_sum').GetBinContent(1)
             self.observable_settings['jetscape_distribution'].Scale(xsec/n_events)
             
             if self.sqrts == 200:

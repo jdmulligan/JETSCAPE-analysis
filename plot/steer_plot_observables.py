@@ -24,7 +24,7 @@
 
    (3) Merge all histograms together from Step 2.
 
-       We determine the set of histogram files to merge based on 
+       TODO: We determine the set of histogram files to merge based on 
        the analysis name (e.g. 'Analysis0'), which contains a set of runs (e.g. 'Run0001', 'Run0002', ...),
        specified at https://github.com/JETSCAPE/STAT-XSEDE-2021/tree/main/docs/DataManagement.
        We loop over all runs from all facilities in the Analysis, including all sqrt{s}. 
@@ -44,11 +44,12 @@ def main():
 
     sqrts = 5020
     final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_expanse/Run0011'
+    system = os.listdir(final_state_hadron_dir)[0].split('_')[1]
 
     construct_observables = False
-    construct_histograms = True
+    construct_histograms = False
     merge_histograms = False
-    plot_histograms = False
+    plot_histograms = True
     
     #-----------------------------------------------------------------
     # Loop through final_state_hadron files, and construct observables
@@ -89,7 +90,7 @@ def main():
             os.makedirs(outputdir)
         
         ROOT_files = os.listdir(inputdir)
-        fname = f'histograms_{sqrts}_merged.root'
+        fname = f'histograms_{system}_{sqrts}_merged.root'
         cmd = f'hadd -f {os.path.join(outputdir, fname)}'
         for file in ROOT_files:
             if '.root' in file:
@@ -101,7 +102,7 @@ def main():
     if plot_histograms:
     
         inputdir = os.path.join(final_state_hadron_dir, 'plot')
-        fname = f'histograms_{sqrts}_merged.root'
+        fname = f'histograms_{system}_{sqrts}_merged.root'
         cmd = f'python plot/plot_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{fname}'
         print(cmd)
         subprocess.run(cmd, check=True, shell=True)

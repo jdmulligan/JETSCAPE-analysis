@@ -71,6 +71,7 @@ class HistogramResults(common_base.CommonBase):
         self.n_events_generated = cross_section_df['n_events'][0]
         self.sum_weights = cross_section_df['weight_sum'][0]
         self.centrality = [ int(cross_section_df['centrality_min'][0]), int(cross_section_df['centrality_max'][0]) ]
+        self.observable_centrality_list = []
 
         print(f'xsec: {self.cross_section}')
         print(f'weights: {self.sum_weights}')
@@ -86,8 +87,6 @@ class HistogramResults(common_base.CommonBase):
     # Main function
     #-------------------------------------------------------------------------------------------
     def histogram_results(self):
-
-        self.histogram_event_qa()
         
         self.histogram_hadron_observables(observable_type='hadron')
         
@@ -104,6 +103,8 @@ class HistogramResults(common_base.CommonBase):
         if 'dijet' in self.config:
             self.histogram_jet_observables(observable_type='dijet')
 
+        self.histogram_event_qa()
+
         self.write_output_objects()
 
     #-------------------------------------------------------------------------------------------
@@ -111,34 +112,70 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def histogram_event_qa(self):
 
-        h = ROOT.TH1F('h_n_events_generated', 'h_n_events_generated', 1, 0, 1)
-        h.SetBinContent(1, self.n_events_generated)
-        self.output_list.append(h)
+        #---------------------------------
+        # Save xsec and sum_weights for normalization and uncertainty
 
-        h = ROOT.TH1F('h_xsec', 'h_xsec', 1, 0, 1)
-        h.SetBinContent(1, self.cross_section)
-        self.output_list.append(h)
+        # For AA, we need to loop through all centrality bins and save the xsec and weight_sum for each.
+        # This is needed so that when we merge histograms of different centralities, we retain access to 
+        #   the normalization factors for each observable's centrality bin
+        if self.is_AA:
+            for centrality in self.observable_centrality_list:
+                if self.centrality_accepted(centrality):
 
-        h = ROOT.TH1F('h_xsec_error', 'h_xsec_error', 1, 0, 1)
-        h.SetBinContent(1, self.cross_section_error)
-        self.output_list.append(h)
+                    h = ROOT.TH1F(f'h_xsec_{centrality}', f'h_xsec_{centrality}', 1, 0, 1)
+                    h.SetBinContent(1, self.cross_section)
+                    self.output_list.append(h)
+
+                    h = ROOT.TH1F(f'h_xsec_error_{centrality}', f'h_xsec_error_{centrality}', 1, 0, 1)
+                    h.SetBinContent(1, self.cross_section_error)
+                    self.output_list.append(h)
+
+                    # Save sum of weights (effective number of events), in order to keep track of normalization uncertainty
+                    h = ROOT.TH1F(f'h_weight_sum_{centrality}', f'h_weight_sum_{centrality}', 1, 0, 1)
+                    h.SetBinContent(1, self.sum_weights)
+                    self.output_list.append(h)
+
+                    # Save event weights
+                    bins = np.logspace(np.log10( np.power(self.pt_ref/(self.sqrts/2),self.power) ), np.log10( np.power(self.pt_ref/2,self.power)  ), 10000)
+                    h = ROOT.TH1F(f'h_weights_{centrality}', f'h_weights_{centrality}', bins.size-1, bins)
+                    for weight in self.weights:
+                        h.Fill(weight)
+                    self.output_list.append(h)
+
+        # For pp, we can just save a single histogram for each
+        else:
+
+            h = ROOT.TH1F('h_xsec', 'h_xsec', 1, 0, 1)
+            h.SetBinContent(1, self.cross_section)
+            self.output_list.append(h)
+
+            h = ROOT.TH1F('h_xsec_error', 'h_xsec_error', 1, 0, 1)
+            h.SetBinContent(1, self.cross_section_error)
+            self.output_list.append(h)
+
+            # Save sum of weights (effective number of events), in order to keep track of normalization uncertainty
+            h = ROOT.TH1F('h_weight_sum', 'h_weight_sum', 1, 0, 1)
+            h.SetBinContent(1, self.sum_weights)
+            self.output_list.append(h)
+
+            # Save event weights
+            bins = np.logspace(np.log10( np.power(self.pt_ref/(self.sqrts/2),self.power) ), np.log10( np.power(self.pt_ref/2,self.power)  ), 10000)
+            h = ROOT.TH1F('h_weights', 'h_weights', bins.size-1, bins)
+            for weight in self.weights:
+                h.Fill(weight)
+            self.output_list.append(h)
+
+        #---------------------------------
+        # Save additional histograms for QA
 
         if self.is_AA:
             h = ROOT.TH1F('h_centrality_generated', 'h_centrality_generated', 100, 0, 100)
             h.SetBinContent(self.centrality[1], self.n_events_generated)
             self.output_list.append(h)
-        
-        # Save event weights
-        bins = np.logspace(np.log10( np.power(self.pt_ref/(self.sqrts/2),self.power) ), np.log10( np.power(self.pt_ref/2,self.power)  ), 10000)
-        h = ROOT.TH1F('h_weights', 'h_weights', bins.size-1, bins)
-        for weight in self.weights:
-            h.Fill(weight)
-        self.output_list.append(h)
-
-        # Save sum of weights (effective number of events), in order to keep track of normalization uncertainty
-        h = ROOT.TH1F('h_weight_sum', 'h_weight_sum', 1, 0, 1)
-        h.SetBinContent(1, self.sum_weights)
-        self.output_list.append(h)
+        else:
+            h = ROOT.TH1F('h_n_events_generated', 'h_n_events_generated', 1, 0, 1)
+            h.SetBinContent(1, self.n_events_generated)
+            self.output_list.append(h)
 
         # Save unweighted pt-hat
         bins = np.logspace(np.log10(1.), np.log10(self.sqrts/2), 100)
@@ -164,6 +201,10 @@ class HistogramResults(common_base.CommonBase):
                 
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
+
+                # Add centrality bin to list, if needed
+                if centrality not in self.observable_centrality_list:
+                    self.observable_centrality_list.append(centrality)
         
                 # Construct appropriate binning
                 bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable, centrality, centrality_index)
@@ -184,6 +225,10 @@ class HistogramResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
 
+                # Add centrality bin to list, if needed
+                if centrality not in self.observable_centrality_list:
+                    self.observable_centrality_list.append(centrality)
+
                 # Construct appropriate binning
                 bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type,
                                                         observable, centrality, centrality_index)
@@ -202,6 +247,10 @@ class HistogramResults(common_base.CommonBase):
 
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
+
+                # Add centrality bin to list, if needed
+                if centrality not in self.observable_centrality_list:
+                    self.observable_centrality_list.append(centrality)
                 
                 for jet_R in block['jet_R']:
                 
@@ -258,6 +307,10 @@ class HistogramResults(common_base.CommonBase):
         
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
+
+                # Add centrality bin to list, if needed
+                if centrality not in self.observable_centrality_list:
+                    self.observable_centrality_list.append(centrality)
                     
                 for jet_R in block['jet_R']:
                     self.suffix = f'_R{jet_R}'
