@@ -11,15 +11,12 @@ import os
 import sys
 import yaml
 import argparse
-import operator
 
 # Data analysis and plotting
 import ROOT
-import ctypes
 from array import *
 import numpy as np
 import pandas as pd
-import awkward as ak
 
 # Base class
 sys.path.append('.')
@@ -41,6 +38,13 @@ class HistogramResults(common_base.CommonBase):
         self.output_dir = output_dir
         
         self.plot_utils = plot_results_STAT_utils.PlotUtils()
+
+        #------------------------------------------------------
+        # Check whether pp or AA
+        if 'PbPb' in self.input_file or 'AuAu' in self.input_file:
+            self.is_AA = True
+        else:
+            self.is_AA = False
 
         #------------------------------------------------------
         # Read config file
@@ -66,6 +70,8 @@ class HistogramResults(common_base.CommonBase):
         self.cross_section_error = cross_section_df['cross_section_error'][0]
         self.n_events_generated = cross_section_df['n_events'][0]
         self.sum_weights = cross_section_df['weight_sum'][0]
+        self.centrality = [ int(cross_section_df['centrality_min'][0]), int(cross_section_df['centrality_max'][0]) ]
+
         print(f'xsec: {self.cross_section}')
         print(f'weights: {self.sum_weights}')
         
@@ -116,6 +122,11 @@ class HistogramResults(common_base.CommonBase):
         h = ROOT.TH1F('h_xsec_error', 'h_xsec_error', 1, 0, 1)
         h.SetBinContent(1, self.cross_section_error)
         self.output_list.append(h)
+
+        if self.is_AA:
+            h = ROOT.TH1F('h_centrality_generated', 'h_centrality_generated', 100, 0, 100)
+            h.SetBinContent(self.centrality[1], self.n_events_generated)
+            self.output_list.append(h)
         
         # Save event weights
         bins = np.logspace(np.log10( np.power(self.pt_ref/(self.sqrts/2),self.power) ), np.log10( np.power(self.pt_ref/2,self.power)  ), 10000)
@@ -285,6 +296,10 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', pt_bin=None, block=None, observable=''):
 
+        # Check if event centrality is within observable centrality bin
+        if not self.centrality_accepted(centrality):
+            return
+
         # Get column
         col = self.observables_df[column_name]
         
@@ -351,6 +366,23 @@ class HistogramResults(common_base.CommonBase):
                     
         # Save histogram to output list
         self.output_list.append(h)
+
+    # ---------------------------------------------------------------
+    # Check if event centrality is within observable's centrality
+    # ---------------------------------------------------------------
+    def centrality_accepted(self, observable_centrality):
+    
+        # AA
+        if self.is_AA:
+
+            if self.centrality[0] >= observable_centrality[0] or np.isclose(observable_centrality[0],self.centrality[0]):
+                if self.centrality[1] <= observable_centrality[1] or np.isclose(observable_centrality[1],self.centrality[1]):
+                    return True
+            return False
+            
+        # pp
+        else:
+            return True
 
     # ---------------------------------------------------------------
     # Save all ROOT histograms to file

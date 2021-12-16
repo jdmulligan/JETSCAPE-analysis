@@ -24,9 +24,7 @@ import itertools
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import awkward as ak
 import numpy as np
-import ROOT
 from pathlib import Path
 
 # Fastjet via python (from external library heppy)
@@ -56,6 +54,21 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 self.n_event_max = config['n_event_max']
             else:
                 self.n_event_max = -1
+
+        # Check whether pp or AA
+        if 'PbPb' in self.input_file_hadrons or 'AuAu' in self.input_file_hadrons:
+            self.is_AA = True
+        else:
+            self.is_AA = False
+
+        # If AA, get centrality bin
+        if self.is_AA:
+            hydro_index_file = os.path.join(os.path.dirname(self.input_file_hadrons), 'index_to_hydro_event.yaml')
+            file_index = int(self.input_file_hadrons.split('/')[-1].split('_')[3])
+            with open(hydro_index_file, 'r') as f:
+                config = yaml.safe_load(f)
+                centrality_string = config[file_index].split('/')[0].split('_')
+                self.centrality = [int(centrality_string[1]), int(centrality_string[2])]
             
     # ---------------------------------------------------------------
     # Main processing function
@@ -112,11 +125,14 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 
                 self.output_event_list.append(self.observable_dict_event)
                 
-        # Get total cross-section (same for all events at this point) and weight sum
+        # Get total cross-section (same for all events at this point), weight sum, and centrality
         self.cross_section_dict['cross_section'] = event['cross_section']
         self.cross_section_dict['cross_section_error'] = event['cross_section_error']
         self.cross_section_dict['n_events'] = self.n_event_max
         self.cross_section_dict['weight_sum'] = weight_sum
+        if self.is_AA:
+            self.cross_section_dict['centrality_min'] = self.centrality[0]
+            self.cross_section_dict['centrality_max'] = self.centrality[1]
 
     # ---------------------------------------------------------------
     # Initialize output objects
@@ -143,11 +159,11 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     def centrality_accepted(self, observable_centrality_list):
     
         # AA
-        if self.event_centrality:
+        if self.is_AA:
         
             for observable_centrality in observable_centrality_list:
-                if observable_centrality[0] >= self.event_centrality[0] or np.isclose(observable_centrality[0],self.event_centrality[0]):
-                    if observable_centrality[1] <= self.event_centrality[1] or np.isclose(observable_centrality[1],self.event_centrality[1]):
+                if self.centrality[0] >= observable_centrality[0] or np.isclose(observable_centrality[0],self.centrality[0]):
+                    if self.centrality[1] <= observable_centrality[1] or np.isclose(observable_centrality[1],self.centrality[1]):
                         return True
             return False
             

@@ -11,19 +11,16 @@
 from __future__ import print_function
 
 # General
-import itertools
 import sys
 import os
 import argparse
 import yaml
 import numpy as np
-import pandas as pd
 from pathlib import Path
 
 # Fastjet via python (from external library heppy)
 import fastjet as fj
 import fjcontrib
-import fjext
 
 sys.path.append('.')
 from jetscape_analysis.analysis import analyze_events_base_STAT
@@ -63,12 +60,6 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # that the original name was "observables"
             self.output_file = _input_filename.replace("final_state_hadrons", self.output_file)
             #print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
-            
-        # Get centrality
-        if 'cent' in self.output_file:
-            self.event_centrality = [0., 10.]
-        else:
-            self.event_centrality = None
 
         # Load observable blocks
         self.hadron_observables = config['hadron']

@@ -1,5 +1,35 @@
 """
-  macro to steer calculation and plotting of observables from final_state_hadrons
+  Macro to steer calculation of observables from final_state_hadrons
+
+  The workflow is as follows:
+   (1) For each final_state_hadrons parquet file, compute observables with analyze_events_STAT.py.
+       This will produce an "observables" parquet file for each final_state_hadrons file.
+
+       In the AA case, the centrality is retrieved for each file, and the observables filled only for relevant centralities.
+         (the centrality for each file is recorded in index_to_hydro_event.yaml, e.g. '3: cent_00_01/08' for file 3 0-1%)
+
+       Usually this step should be done on XSEDE in the same job as the event generation.
+       In case we need to compute observables manually, we provide an option to loop over all final_state_hadron
+       files within a specified directory.
+
+   (2) For each observable parquet file, fill histograms with histogram_results_STAT.py.
+       This will produce a "histograms" ROOT file for each observable parquet file.
+
+       In the AA case, the centrality is retrieved from the cross-section parquet file, and the observables filled into the appropriate centrality-binned histogram.
+       In the pp case, all centrality-binned histograms are filled with the same observables.
+
+       Usually this step should be done on XSEDE in the same job as the event generation.
+       In case we need to histogram observables manually, we provide an option to loop over all observable
+       files within a specified directory.
+
+   (3) Merge all histograms together from Step 2.
+
+       We determine the set of histogram files to merge based on 
+       the analysis name (e.g. 'Analysis0'), which contains a set of runs (e.g. 'Run0001', 'Run0002', ...),
+       specified at https://github.com/JETSCAPE/STAT-XSEDE-2021/tree/main/docs/DataManagement.
+       We loop over all runs from all facilities in the Analysis, including all sqrt{s}. 
+
+   (4) Plot final observables and write table for input to Bayesian analysis.
   
   Author: James Mulligan (james.mulligan@berkeley.edu)
 """
@@ -13,12 +43,12 @@ import shutil
 def main():
 
     sqrts = 5020
-    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/stampede/Run0001'
+    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_expanse/Run0011'
 
     construct_observables = False
-    construct_histograms = False
+    construct_histograms = True
     merge_histograms = False
-    plot_histograms = True
+    plot_histograms = False
     
     #-----------------------------------------------------------------
     # Loop through final_state_hadron files, and construct observables
