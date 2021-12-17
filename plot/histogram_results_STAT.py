@@ -70,8 +70,9 @@ class HistogramResults(common_base.CommonBase):
         self.cross_section_error = cross_section_df['cross_section_error'][0]
         self.n_events_generated = cross_section_df['n_events'][0]
         self.sum_weights = cross_section_df['weight_sum'][0]
-        self.centrality = [ int(cross_section_df['centrality_min'][0]), int(cross_section_df['centrality_max'][0]) ]
-        self.observable_centrality_list = []
+        if self.is_AA:
+            self.centrality = [ int(cross_section_df['centrality_min'][0]), int(cross_section_df['centrality_max'][0]) ]
+            self.observable_centrality_list = []
 
         print(f'xsec: {self.cross_section}')
         print(f'weights: {self.sum_weights}')
@@ -203,7 +204,7 @@ class HistogramResults(common_base.CommonBase):
             for centrality_index,centrality in enumerate(block['centrality']):
 
                 # Add centrality bin to list, if needed
-                if centrality not in self.observable_centrality_list:
+                if self.is_AA and centrality not in self.observable_centrality_list:
                     self.observable_centrality_list.append(centrality)
         
                 # Construct appropriate binning
@@ -226,7 +227,7 @@ class HistogramResults(common_base.CommonBase):
             for centrality_index,centrality in enumerate(block['centrality']):
 
                 # Add centrality bin to list, if needed
-                if centrality not in self.observable_centrality_list:
+                if self.is_AA and centrality not in self.observable_centrality_list:
                     self.observable_centrality_list.append(centrality)
 
                 # Construct appropriate binning
@@ -249,7 +250,7 @@ class HistogramResults(common_base.CommonBase):
             for centrality_index,centrality in enumerate(block['centrality']):
 
                 # Add centrality bin to list, if needed
-                if centrality not in self.observable_centrality_list:
+                if self.is_AA and centrality not in self.observable_centrality_list:
                     self.observable_centrality_list.append(centrality)
                 
                 for jet_R in block['jet_R']:
@@ -283,9 +284,10 @@ class HistogramResults(common_base.CommonBase):
                                         if not bins.any():
                                             continue
                                         
-                                        column_name = f'{observable_type}_{observable}{self.suffix}'
-                                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
-                                        
+                                        self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}', 
+                                                                  bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+                                        self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}_unsubtracted',
+                                                                  bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
                             else:
                             
                                 self.suffix = f'_R{jet_R}{subobservable_label}'
@@ -297,7 +299,8 @@ class HistogramResults(common_base.CommonBase):
                             
                                 self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}',
                                                           bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
-                                                          
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}_unsubtracted',
+                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)                          
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
     #-------------------------------------------------------------------------------------------
@@ -309,7 +312,7 @@ class HistogramResults(common_base.CommonBase):
             for centrality_index,centrality in enumerate(block['centrality']):
 
                 # Add centrality bin to list, if needed
-                if centrality not in self.observable_centrality_list:
+                if self.is_AA and centrality not in self.observable_centrality_list:
                     self.observable_centrality_list.append(centrality)
                     
                 for jet_R in block['jet_R']:
@@ -323,11 +326,15 @@ class HistogramResults(common_base.CommonBase):
                         
                     if self.sqrts == 2760:
                         
-                        column_name = f'{observable_type}_{observable}_R{jet_R}_lowTrigger'
-                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
-                        
-                        column_name = f'{observable_type}_{observable}_R{jet_R}_highTrigger'
-                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger', 
+                                                  bins=bins, centrality=centrality)
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger', 
+                                                  bins=bins, centrality=centrality)
+
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger_unsubtracted', 
+                                                  bins=bins, centrality=centrality)
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger_unsubtracted', 
+                                                  bins=bins, centrality=centrality)
                         
                         if np.isclose(jet_R, block['jet_R'][0]):
                             column_name = f'{observable_type}_alice_trigger_pt'
@@ -336,8 +343,10 @@ class HistogramResults(common_base.CommonBase):
                         
                     elif self.sqrts == 200:
                     
-                        column_name = f'{observable_type}_{observable}_R{jet_R}'
-                        self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}', 
+                                                  bins=bins, centrality=centrality)
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_unsubtracted', 
+                                                  bins=bins, centrality=centrality)
                     
                         if observable == 'IAA_star' and np.isclose(jet_R, block['jet_R'][0]):
                             column_name = f'{observable_type}_star_trigger_pt'
@@ -354,7 +363,10 @@ class HistogramResults(common_base.CommonBase):
             return
 
         # Get column
-        col = self.observables_df[column_name]
+        if column_name in self.observables_df.keys():
+            col = self.observables_df[column_name]
+        else:
+            return
         
         # Find dimension of observable
         dim_observable = 0
