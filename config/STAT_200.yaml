@@ -8,16 +8,29 @@
 # labeled as: {type}_{observable}_{experiment}_{suffix}
 # For example: hadron_pt_cms
 #              jet_mass_alice_R0.2
-# where the optional suffix is only present when needed.
+# where the optional suffix is only present when needed. 
 #
 # We compute each observable only if it lies in the specified centrality range.
 # We include all available centralities up to 50% centrality, at present.
 #
 # We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
 # to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
-# Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
-# Note that we bin pp observables according to the binning in each AA centrality;
-# the pp hepdata tgraphs are included only for QA.
+#   - Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+#   - Note that we bin pp observables according to the binning in each AA centrality;
+#     the pp hepdata tgraphs are included only for QA.
+#
+# The histogram binnings are determined from: plot_results_STAT_utils.bins_from_config()
+#   - The hepdata_AA dir/hname fields need to have either:
+#     (i) list of dirs, with single hname
+#     (ii) list of hnames, with single dir
+#     where the list corresponds to the centrality list in the config block.
+#   - The AA binnings are always used, since we ultimately want to form PbPb/pp ratios
+#
+# The data TGraphs are determined from: plot_results_STAT_utils.tgraph_from_hepdata()
+#   - For pp: The hepdata_pp dir/gname should have only a single entry for dir/gname -- not a list.
+#             Unless on rare occasion the pp data with different binnings for each centrality 
+#             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
+#   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
 #------------------------------------------------------------------
 sqrt_s: 200
 power: 4.
@@ -64,7 +77,7 @@ hadron:
     hepdata_AA_dir: 'Table 3'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -107,7 +120,9 @@ inclusive_chjet:
     hepdata_AA_hname_R0.3: ['Hist1D_y1']
     hepdata_AA_gname_R0.4: ['Graph1D_y1']
     hepdata_AA_hname_R0.4: ['Hist1D_y1']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 2.
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Jet correlation observables
@@ -135,7 +150,7 @@ semi_inclusive_chjet:
     hepdata_AA_dir_R02_R05: 'Table 38'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
     
   # HEPData does not contain histogram bins -- appears to be 25 bins from [pi/2,3pi/2]
   # TODO: Confirm binning
@@ -166,5 +181,7 @@ semi_inclusive_chjet:
     hepdata_AA_dir: 'Table 39'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 2.
 #------------------------------------------------------------------

@@ -15,9 +15,22 @@
 #
 # We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
 # to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
-# Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
-# Note that we bin pp observables according to the binning in each AA centrality;
-# the pp hepdata tgraphs are included only for QA.
+#   - Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+#   - Note that we bin pp observables according to the binning in each AA centrality;
+#     the pp hepdata tgraphs are included only for QA.
+#
+# The histogram binnings are determined from: plot_results_STAT_utils.bins_from_config()
+#   - The hepdata_AA dir/hname fields need to have either:
+#     (i) list of dirs, with single hname
+#     (ii) list of hnames, with single dir
+#     where the list corresponds to the centrality list in the config block.
+#   - The AA binnings are always used, since we ultimately want to form PbPb/pp ratios
+#
+# The data TGraphs are determined from: plot_results_STAT_utils.tgraph_from_hepdata()
+#   - For pp: The hepdata_pp dir/gname should have only a single entry for dir/gname -- not a list.
+#             Unless on rare occasion the pp data with different binnings for each centrality 
+#             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
+#   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
 #------------------------------------------------------------------
 sqrt_s: 5020
 power: 4.
@@ -58,7 +71,7 @@ hadron:
     hepdata_AA_dir: 'Table 8'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
   
   # https://www.hepdata.net/record/ins1759506 -- charged pions
   pt_pi_alice:
@@ -78,7 +91,7 @@ hadron:
     hepdata_AA_dir: 'Table 15'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y7', 'Graph1D_y8', 'Graph1D_y9']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y7', 'Hist1D_y8', 'Hist1D_y9']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
 
   # https://www.hepdata.net/record/ins1496050
   pt_ch_cms:
@@ -99,7 +112,9 @@ hadron:
     hepdata_AA_dir: ['Table 8', 'Table 9', 'Table 10', 'Table 11']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0
+    y_max_AA: 2.
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations
@@ -123,7 +138,7 @@ hadron_correlations:
     hepdata_AA_dir: ['Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{v}_{2}(SP)'
+    ytitle_AA: '#it{v}_{2}(SP)'
   
   # https://www.hepdata.net/record/ins1511868
   # Fig 1 (scalar product method)
@@ -144,7 +159,7 @@ hadron_correlations:
     
     hepdata_AA_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6']
     hepdata_AA_gname: 'Graph1D_y1'
-    ytitle: '#it{v}_{2}(SP)'
+    ytitle_AA: '#it{v}_{2}(SP)'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
@@ -175,7 +190,9 @@ inclusive_jet:
     hepdata_AA_dir_R0.4: ['Table 31']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1673184
   # Note: Two charged tracks with pt>4 GeV are required in Pb-Pb
@@ -201,7 +218,9 @@ inclusive_jet:
     hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
     
   # https://www.hepdata.net/record/ins1848440
   pt_cms:
@@ -232,7 +251,9 @@ inclusive_jet:
     hepdata_AA_dir_R1.0: 'Figure 7-6'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1673177
   Dz_atlas:
@@ -261,7 +282,9 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_pt4: 'Table 18'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
-    ytitle: '#it{R}_{D(z)}'
+    ytitle_AA: '#it{R}_{D(z)}'
+    y_min_AA: 0
+    y_max_AA: 2.5
     
   Dpt_atlas:
     jet_R: [0.4]
@@ -289,9 +312,14 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_pt4: 'Table 19'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
-    ytitle: '#it{R}_{D(pt)}'
+    ytitle_AA: '#it{R}_{D(pt)}'
+    y_min_AA: 0
+    y_max_AA: 2.5
   
   # https://www.hepdata.net/record/ins1789224
+  # Note that the paper does not construct the PbPb/pp ratio directly, 
+  # but only contains the distributions (and q/g templates).
+  # We therefore skip constructing the PbPb/pp ratio for now.
   charge_cms:
     jet_R: [0.4]
     eta_cut: 1.5
@@ -316,7 +344,10 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_k0.7: 'Table 9'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#frac{1}{#sigma} #frac{d#sigma}{d#it{Q}} #left[1/e#right]'
+    y_min_AA: 0
+    y_max_AA: 2.5
+    skip_AA_ratio: True
     
   # https://www.hepdata.net/record/ins1672962
   mg_cms:
@@ -370,7 +401,9 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_zcut0.5_beta1.5_pt3: 'Figure 6b'
     hepdata_AA_gname_R0.4_zcut0.5_beta1.5_pt3: ['Graph1D_y4']
     hepdata_AA_hname_R0.4_zcut0.5_beta1.5_pt3: ['Hist1D_y4']
-    ytitle: 'PbPb / smeared pp'
+    ytitle_AA: 'PbPb / smeared pp'
+    y_min_AA: 0.
+    y_max_AA: 7.
     
   # https://www.hepdata.net/record/ins1620905
   # Note that pp distributions are not reported except for 160-180 GeV 
@@ -401,6 +434,9 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt5: ['Table 16']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / smeared pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
     
 #------------------------------------------------------------------
 #------------------------------------------------------------------

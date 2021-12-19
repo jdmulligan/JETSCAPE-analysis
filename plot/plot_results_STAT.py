@@ -32,7 +32,7 @@ class PlotResults(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
-    def __init__(self, config_file='', input_file='', **kwargs):
+    def __init__(self, config_file='', input_file='', pp_ref_file='', **kwargs):
         super(PlotResults, self).__init__(**kwargs)
         self.output_dir = os.path.dirname(input_file)
                
@@ -58,6 +58,10 @@ class PlotResults(common_base.CommonBase):
             self.observable_centrality_list = []
         else:
             self.is_AA = False
+
+        # If AA, load the pp reference results so that we can construct RAA
+        if self.is_AA:
+            self.pp_ref_file = ROOT.TFile(pp_ref_file, 'READ')
 
         # Read config file
         with open(config_file, 'r') as stream:
@@ -100,212 +104,6 @@ class PlotResults(common_base.CommonBase):
             self.generate_pptx()
 
     #-------------------------------------------------------------------------------------------
-    # Plot event QA
-    #-------------------------------------------------------------------------------------------
-    def plot_event_qa(self):
-
-        if self.is_AA:
-
-            for centrality in self.observable_centrality_list:
-
-                # Only plot those centralities that exist 
-                if np.isclose(self.input_file.Get(f'h_centrality_generated').Integral(centrality[0]+1, centrality[1]), 0):
-                    continue
-                print(centrality)
-
-                # Crosscheck that pt-hat weighting is satisfactory  
-                # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
-                sum_weights = self.input_file.Get(f'h_weight_sum_{centrality}').GetBinContent(1)
-                h_pt_hat = self.input_file.Get('h_pt_hat')
-                h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
-
-                # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
-                h_pt_hat.Scale(1./sum_weights, 'width')
-                h_pt_hat_weighted.Scale(1./sum_weights, 'width')
-
-                # Compute normalization uncertainty (binned approximation)
-                h_weights = self.input_file.Get(f'h_weights_{centrality}')
-                sum_weights_integral = 0
-                normalization_uncertainty = 0
-                for i in range(1, h_weights.GetNbinsX()+1):
-                    sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
-                    normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
-                print(f'sum_weights {centrality}: {sum_weights}')
-                print(f'sum_weights_integral {centrality}: {sum_weights_integral}')
-                print(f'normalization_uncertainty {centrality}: {100*normalization_uncertainty/sum_weights_integral} %')
-
-                # Also compute overall pt-hat cross-section uncertainty
-                h_xsec = self.input_file.Get(f'h_xsec_{centrality}')
-                xsec = h_xsec.GetBinContent(1)
-                xsec_error = self.input_file.Get(f'h_xsec_error_{centrality}').GetBinContent(1)
-                print(f'xsec {centrality}: {xsec/h_xsec.GetEntries()}')
-                print(f'xsec_uncertainty {centrality}: {100*xsec_error/xsec}')
-                print()
-
-        else:
-
-            # Crosscheck that pt-hat weighting is satisfactory  
-            # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
-            sum_weights = self.input_file.Get('h_weight_sum').GetBinContent(1)
-            h_pt_hat = self.input_file.Get('h_pt_hat')
-            h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
-
-            # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
-            h_pt_hat.Scale(1./sum_weights, 'width')
-            h_pt_hat_weighted.Scale(1./sum_weights, 'width')
-
-            # Compute normalization uncertainty (binned approximation)
-            h_weights = self.input_file.Get('h_weights')
-            sum_weights_integral = 0
-            normalization_uncertainty = 0
-            for i in range(1, h_weights.GetNbinsX()+1):
-                sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
-                normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
-            print(f'sum_weights: {sum_weights}')
-            print(f'sum_weights_integral: {sum_weights_integral}')
-            print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
-
-            # Also compute overall pt-hat cross-section uncertainty
-            h_xsec = self.input_file.Get('h_xsec')
-            xsec = h_xsec.GetBinContent(1)
-            xsec_error = self.input_file.Get('h_xsec_error').GetBinContent(1)
-            print(f'xsec: {xsec/h_xsec.GetEntries()}')
-            print(f'xsec_uncertainty: {100*xsec_error/xsec}')
-
-        c = ROOT.TCanvas('c', 'c', 600, 650)
-        c.Draw()
-        c.cd()
-        
-        # Distribution
-        pad2_dy = 0.45
-        pad1 = ROOT.TPad('myPad', 'The pad',0,pad2_dy,1,1)
-        pad1.SetLeftMargin(0.2)
-        pad1.SetTopMargin(0.08)
-        pad1.SetRightMargin(0.04)
-        pad1.SetBottomMargin(0.)
-        pad1.SetTicks(0,1)
-        pad1.Draw()
-        pad1.SetLogy()
-        pad1.SetLogx()
-        pad1.cd()
-        
-        legend = ROOT.TLegend(0.58,0.65,0.75,0.9)
-        self.plot_utils.setup_legend(legend, 0.055, sep=-0.1, title=f'#sqrt{{s_{{NN}}}} = {self.sqrts} GeV')
-            
-        self.bins = np.array(h_pt_hat.GetXaxis().GetXbins())
-        myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
-        myBlankHisto.SetNdivisions(505)
-        myBlankHisto.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
-        myBlankHisto.SetYTitle('#frac{1}{#sigma_{#hat{p}_{T}}} #frac{d#sigma}{d#hat{p}_{T}}')
-        myBlankHisto.SetMaximum(np.power(10,5+(self.power-3)))
-        myBlankHisto.SetMinimum(2e-15) # Don't draw 0 on top panel
-        myBlankHisto.GetYaxis().SetTitleSize(0.08)
-        myBlankHisto.GetYaxis().SetTitleOffset(1.1)
-        myBlankHisto.GetYaxis().SetLabelSize(0.06)
-        myBlankHisto.Draw('E')
-
-        # Ratio
-        c.cd()
-        pad2 = ROOT.TPad('pad2', 'pad2', 0, 0.02, 1, pad2_dy)
-        pad2.SetTopMargin(0)
-        pad2.SetBottomMargin(0.21)
-        pad2.SetLeftMargin(0.2)
-        pad2.SetRightMargin(0.04)
-        pad2.SetTicks(0,1)
-        pad2.SetLogx()
-        pad2.Draw()
-        pad2.cd()
-              
-        myBlankHisto2 = myBlankHisto.Clone('myBlankHisto_C')
-        myBlankHisto2.SetYTitle('#frac{weighted}{ideal}')
-        myBlankHisto2.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
-        myBlankHisto2.GetXaxis().SetTitleSize(26)
-        myBlankHisto2.GetXaxis().SetTitleFont(43)
-        myBlankHisto2.GetXaxis().SetTitleOffset(2.3)
-        myBlankHisto2.GetXaxis().SetLabelFont(43)
-        myBlankHisto2.GetXaxis().SetLabelSize(22)
-        myBlankHisto2.GetYaxis().SetTitleSize(28)
-        myBlankHisto2.GetYaxis().SetTitleFont(43)
-        myBlankHisto2.GetYaxis().SetTitleOffset(2.)
-        myBlankHisto2.GetYaxis().SetLabelFont(43)
-        myBlankHisto2.GetYaxis().SetLabelSize(20)
-        myBlankHisto2.GetYaxis().SetNdivisions(505)
-        myBlankHisto2.GetYaxis().SetRangeUser(0., 1.99)
-        myBlankHisto2.Draw('')
-
-        # Draw generated pt-hat
-        pad1.cd()
-        h_pt_hat.SetMarkerSize(self.marker_size)
-        h_pt_hat.SetMarkerStyle(self.data_marker)
-        h_pt_hat.SetMarkerColor(self.data_color)
-        h_pt_hat.SetLineStyle(self.line_style)
-        h_pt_hat.SetLineWidth(self.line_width)
-        h_pt_hat.SetLineColor(self.data_color)
-        h_pt_hat.Draw('PE Z same')
-        legend.AddEntry(h_pt_hat, f'#alpha={self.power}, generated', 'PE')
-
-        # Draw weighted pt-hat
-        h_pt_hat_weighted.SetMarkerSize(self.marker_size)
-        h_pt_hat_weighted.SetMarkerStyle(self.data_marker)
-        h_pt_hat_weighted.SetMarkerColor(self.jetscape_color)
-        h_pt_hat_weighted.SetLineStyle(self.line_style)
-        h_pt_hat_weighted.SetLineWidth(self.line_width)
-        h_pt_hat_weighted.SetLineColor(self.jetscape_color)
-        h_pt_hat_weighted.Draw('PE Z same')
-        legend.AddEntry(h_pt_hat_weighted, f'#alpha={self.power}, weighted', 'PE')
-
-        # Draw generated pt-hat weighted by inverse of ideal weight (pthat/ptref)^alpha
-        h_pt_hat_weighted_ideal = h_pt_hat.Clone()
-        h_pt_hat_weighted_ideal.SetName('h_pt_hat_weighted_ideal')
-        for i in range(1, h_pt_hat_weighted_ideal.GetNbinsX()+1):
-            content = h_pt_hat_weighted_ideal.GetBinContent(i)
-            low_edge = h_pt_hat_weighted_ideal.GetXaxis().GetBinLowEdge(i)
-            up_edge = h_pt_hat_weighted_ideal.GetXaxis().GetBinUpEdge(i)
-            ideal_weight = ( np.power(up_edge, self.power+1)-np.power(low_edge, self.power+1) ) / ( (up_edge-low_edge)*np.power(self.pt_ref, self.power)*(self.power+1) )
-            #ideal_weight = np.power( h_pt_hat_weighted_ideal.GetXaxis().GetBinCenter(i) / self.pt_ref, self.power)
-            h_pt_hat_weighted_ideal.SetBinContent(i, content / ideal_weight)
-            h_pt_hat_weighted_ideal.SetBinError(i, 0.)
-        h_pt_hat_weighted_ideal.SetLineColorAlpha(ROOT.kGreen-8, self.alpha)
-        h_pt_hat_weighted_ideal.SetLineWidth(3)
-        h_pt_hat_weighted_ideal.Draw('L same')
-        legend.AddEntry(h_pt_hat_weighted_ideal, f'#alpha={self.power}, ideal weight', 'L')
-
-        legend.Draw()
-        
-        # Plot ratio of weighted to ideal weighted
-        pad2.cd()
-        h_pt_hat_weighted_ratio = h_pt_hat_weighted.Clone()
-        h_pt_hat_weighted_ratio.SetName('h_pt_hat_weighted_ratio')
-        h_pt_hat_weighted_ratio.Divide(h_pt_hat_weighted_ideal)
-        h_pt_hat_weighted_ratio.SetMarkerSize(self.marker_size)
-        h_pt_hat_weighted_ratio.SetMarkerStyle(self.data_marker)
-        h_pt_hat_weighted_ratio.SetMarkerColor(self.jetscape_color)
-        h_pt_hat_weighted_ratio.SetLineStyle(self.line_style)
-        h_pt_hat_weighted_ratio.SetLineWidth(self.line_width)
-        h_pt_hat_weighted_ratio.SetLineColor(self.jetscape_color)
-        h_pt_hat_weighted_ratio.Draw('PE Z same')
-
-        line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
-        line.SetLineColor(920+2)
-        line.SetLineStyle(2)
-        line.SetLineWidth(2)
-        line.Draw()
-        
-        pad1.cd()
-        text_latex = ROOT.TLatex()
-        text_latex.SetNDC()
-
-        x = 0.25
-        text_latex.SetTextSize(0.06)
-        text = '#sigma_{{n_{{event}}}} = {:.2f}%'.format(100*normalization_uncertainty/sum_weights_integral)
-        text_latex.DrawLatex(x, 0.83, text)
-        text = '#sigma_{{xsec}} = {:.2f}%'.format(100*xsec_error/xsec)
-        text_latex.DrawLatex(x, 0.76, text)
-
-        c.SaveAs(os.path.join(self.output_dir, f'pt_hat{self.file_format}'))
-        c.Close()
-
-    #-------------------------------------------------------------------------------------------
     # Plot hadron observables
     #-------------------------------------------------------------------------------------------
     def plot_hadron_observables(self, observable_type=''):
@@ -323,7 +121,7 @@ class PlotResults(common_base.CommonBase):
                 self.init_observable(observable_type, observable, block, centrality, centrality_index)
                     
                 # Plot observable
-                self.plot_distribution_and_ratio(observable_type, observable, centrality)
+                self.plot_observable(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Plot hadron correlation observables
@@ -343,7 +141,7 @@ class PlotResults(common_base.CommonBase):
                 self.init_observable(observable_type, observable, block, centrality, centrality_index)
                   
                 # Histogram observable
-                self.plot_distribution_and_ratio(observable_type, observable, centrality)
+                self.plot_observable(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -394,7 +192,7 @@ class PlotResults(common_base.CommonBase):
                                         self.init_observable(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
                                   
                                         # Plot observable
-                                        self.plot_distribution_and_ratio(observable_type, observable, centrality, pt_suffix)
+                                        self.plot_observable(observable_type, observable, centrality, pt_suffix)
                                 
                             else:
 
@@ -406,7 +204,7 @@ class PlotResults(common_base.CommonBase):
                                 self.init_observable(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
                           
                                 # Plot observable
-                                self.plot_distribution_and_ratio(observable_type, observable, centrality, pt_suffix)
+                                self.plot_observable(observable_type, observable, centrality, pt_suffix)
 
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
@@ -434,7 +232,7 @@ class PlotResults(common_base.CommonBase):
                     self.init_observable(observable_type, observable, block, centrality, centrality_index, self_normalize=self_normalize)
               
                     # Plot observable
-                    self.plot_distribution_and_ratio(observable_type, observable, centrality)
+                    self.plot_observable(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Initialize a single observable's config
@@ -470,22 +268,28 @@ class PlotResults(common_base.CommonBase):
         else:
             self.logy = False
         
-        if 'ytitle_pp' in block:
-            self.ytitle = block['ytitle_pp']
-        else:
-            self.ytitle = ''
-        if 'y_min_pp' in block:
-            self.y_min = float(block['y_min_pp'])
-            self.y_max = float(block['y_max_pp'])
-        else:
-            self.y_min = 0.
-            self.y_max = 1.
-        if 'y_ratio_min' in block:
-            self.y_ratio_min = block['y_ratio_min']
-            self.y_ratio_max = block['y_ratio_max']
-        else:
-            self.y_ratio_min = 0.
-            self.y_ratio_max = 1.99
+        if self.is_AA:
+            if 'ytitle_AA' in block:
+                self.ytitle = block['ytitle_AA']
+            if 'y_min_AA' in block:
+                self.y_min = float(block['y_min_AA'])
+                self.y_max = float(block['y_max_AA'])
+            else:
+                self.y_min = 0.
+                self.y_max = 1.
+        else:            
+            if 'ytitle_pp' in block:
+                self.ytitle = block['ytitle_pp']
+            if 'y_min_pp' in block:
+                self.y_min = float(block['y_min_pp'])
+                self.y_max = float(block['y_max_pp'])
+            if 'y_ratio_min' in block:
+                self.y_ratio_min = block['y_ratio_min']
+                self.y_ratio_max = block['y_ratio_max']
+            else:
+                self.y_ratio_min = 0.
+                self.y_ratio_max = 1.99
+
         if 'skip_pp' in block:
             self.skip_pp = block['skip_pp']
         else:
@@ -494,6 +298,10 @@ class PlotResults(common_base.CommonBase):
             self.skip_pp_ratio = block['skip_pp_ratio']
         else:
             self.skip_pp_ratio = False
+        if 'skip_AA_ratio' in block:
+            self.skip_AA_ratio = block['skip_AA_ratio']
+        else:
+            self.skip_AA_ratio = False
         if 'scale_by' in block:
             self.scale_by = block['scale_by']
         else:
@@ -502,7 +310,7 @@ class PlotResults(common_base.CommonBase):
         #---------------------------------------
         # Initialize data
         if f'hepdata' in block:
-            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
+            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.is_AA, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
         else:
             self.observable_settings['data_distribution'] = None
 
@@ -718,13 +526,113 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
     #-------------------------------------------------------------------------------------------
-    def plot_distribution_and_ratio(self, observable_type, observable, centrality, pt_suffix='', logy = False):
+    def plot_observable(self, observable_type, observable, centrality, pt_suffix='', logy = False):
     
         if not self.observable_settings['jetscape_distribution']:
             return
-
+        
         label = f'{observable_type}_{observable}_{self.sqrts}_{centrality}_{self.suffix}_{pt_suffix}'
+
+        # If AA: Plot PbPb/pp ratio, and comparison to data
+        # If pp: Plot distribution, and ratio to data
+        if self.is_AA:
+            self.plot_RAA(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)
+        else:
+            self.plot_distribution_and_ratio(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)
+
+    #-------------------------------------------------------------------------------------------
+    # Plot distributions in upper panel, and ratio in lower panel
+    #-------------------------------------------------------------------------------------------
+    def plot_RAA(self, observable_type, observable, centrality, label, pt_suffix='', logy = False):
+
+        # First, get the pp reference histogram and form the RAA ratio
+        if not self.skip_AA_ratio:
+            h_pp = self.pp_ref_file.Get(f'jetscape_distribution_{label}')
+            self.observable_settings['jetscape_distribution'].Divide(h_pp)
+
+        c = ROOT.TCanvas('c', 'c', 600, 450)
+        c.SetRightMargin(0.05);
+        c.SetLeftMargin(0.15);
+        c.SetTopMargin(0.05);
+        c.SetBottomMargin(0.17);
+        c.cd()
+
+        legend = ROOT.TLegend(0.55,0.65,0.75,0.82)
+        self.plot_utils.setup_legend(legend, 0.055, sep=-0.1)
+        
+        self.bins = np.array(self.observable_settings['jetscape_distribution'].GetXaxis().GetXbins())
+        myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
+        myBlankHisto.SetNdivisions(505)
+        myBlankHisto.SetXTitle(self.xtitle)
+        myBlankHisto.SetYTitle(self.ytitle)
+        myBlankHisto.SetMaximum(self.y_max)
+        myBlankHisto.SetMinimum(self.y_min)
+        myBlankHisto.GetXaxis().SetTitleSize(0.07)
+        myBlankHisto.GetYaxis().SetTitleSize(0.07)
+        myBlankHisto.GetXaxis().SetTitleOffset(1.)
+        myBlankHisto.GetYaxis().SetTitleOffset(1.)
+        myBlankHisto.Draw('E')
                 
+        # Draw distribution
+        if self.observable_settings['data_distribution']:
+            self.output_dict[f'data_distribution_{label}'] = self.observable_settings['data_distribution']
+            self.observable_settings['data_distribution'].SetName(f'data_distribution_{label}')
+            self.observable_settings['data_distribution'].SetMarkerSize(self.marker_size)
+            self.observable_settings['data_distribution'].SetMarkerStyle(self.data_marker)
+            self.observable_settings['data_distribution'].SetMarkerColor(self.data_color)
+            self.observable_settings['data_distribution'].SetLineStyle(self.line_style)
+            self.observable_settings['data_distribution'].SetLineWidth(self.line_width)
+            self.observable_settings['data_distribution'].SetLineColor(self.data_color)
+            self.observable_settings['data_distribution'].Draw('PE Z same')
+            legend.AddEntry(self.observable_settings['data_distribution'], 'Data', 'PE')
+        
+        # Draw JETSCAPE
+        self.output_dict[f'jetscape_distribution_{label}'] =  self.observable_settings['jetscape_distribution']
+        if self.observable_settings['jetscape_distribution'].GetNbinsX() > 1:
+            self.observable_settings['jetscape_distribution'].SetFillColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution'].SetFillColorAlpha(self.jetscape_color, self.alpha)
+            self.observable_settings['jetscape_distribution'].SetFillStyle(1001)
+            self.observable_settings['jetscape_distribution'].SetMarkerSize(0.)
+            self.observable_settings['jetscape_distribution'].SetMarkerStyle(0)
+            self.observable_settings['jetscape_distribution'].SetLineWidth(0)
+            self.observable_settings['jetscape_distribution'].DrawCopy('E3 same')
+        elif self.observable_settings['jetscape_distribution'].GetNbinsX() == 1:
+            self.observable_settings['jetscape_distribution'].SetMarkerSize(self.marker_size)
+            self.observable_settings['jetscape_distribution'].SetMarkerStyle(self.data_marker+1)
+            self.observable_settings['jetscape_distribution'].SetMarkerColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution'].SetLineStyle(self.line_style)
+            self.observable_settings['jetscape_distribution'].SetLineWidth(self.line_width)
+            self.observable_settings['jetscape_distribution'].SetLineColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution'].DrawCopy('PE same')
+        legend.AddEntry(self.observable_settings['jetscape_distribution'], 'JETSCAPE', 'f')
+
+        legend.Draw()
+        
+        if self.y_max > 1 and not self.skip_AA_ratio:
+            line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
+            line.SetLineColor(920+2)
+            line.SetLineStyle(2)
+            line.SetLineWidth(2)
+            line.Draw()
+        
+        text_latex = ROOT.TLatex()
+        text_latex.SetNDC()
+        
+        x = 0.18
+        text_latex.SetTextSize(0.065)
+        text = f'#bf{{{observable_type}_{observable}}} #sqrt{{#it{{s}}}} = {self.sqrts/1000.} TeV'
+        text_latex.DrawLatex(x, 0.88, text)
+        text = f'{centrality} {self.suffix} {pt_suffix}'
+        text_latex.DrawLatex(x, 0.8, text)
+
+        c.SaveAs(os.path.join(self.output_dir, f'{self.hname}{self.file_format}'))
+        c.Close()
+
+    #-------------------------------------------------------------------------------------------
+    # Plot distributions in upper panel, and ratio in lower panel
+    #-------------------------------------------------------------------------------------------
+    def plot_distribution_and_ratio(self, observable_type, observable, centrality, label, pt_suffix='', logy = False):
+            
         c = ROOT.TCanvas('c', 'c', 600, 650)
         c.Draw()
         c.cd()
@@ -885,6 +793,212 @@ class PlotResults(common_base.CommonBase):
         c.SaveAs(os.path.join(self.output_dir, f'{self.hname}{self.file_format}'))
         c.Close()
 
+    #-------------------------------------------------------------------------------------------
+    # Plot event QA
+    #-------------------------------------------------------------------------------------------
+    def plot_event_qa(self):
+
+        if self.is_AA:
+
+            for centrality in self.observable_centrality_list:
+
+                # Only plot those centralities that exist 
+                if np.isclose(self.input_file.Get(f'h_centrality_generated').Integral(centrality[0]+1, centrality[1]), 0):
+                    continue
+                print(centrality)
+
+                # Crosscheck that pt-hat weighting is satisfactory  
+                # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
+                sum_weights = self.input_file.Get(f'h_weight_sum_{centrality}').GetBinContent(1)
+                h_pt_hat = self.input_file.Get('h_pt_hat')
+                h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
+
+                # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
+                h_pt_hat.Scale(1./sum_weights, 'width')
+                h_pt_hat_weighted.Scale(1./sum_weights, 'width')
+
+                # Compute normalization uncertainty (binned approximation)
+                h_weights = self.input_file.Get(f'h_weights_{centrality}')
+                sum_weights_integral = 0
+                normalization_uncertainty = 0
+                for i in range(1, h_weights.GetNbinsX()+1):
+                    sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
+                    normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
+                print(f'sum_weights {centrality}: {sum_weights}')
+                print(f'sum_weights_integral {centrality}: {sum_weights_integral}')
+                print(f'normalization_uncertainty {centrality}: {100*normalization_uncertainty/sum_weights_integral} %')
+
+                # Also compute overall pt-hat cross-section uncertainty
+                h_xsec = self.input_file.Get(f'h_xsec_{centrality}')
+                xsec = h_xsec.GetBinContent(1)
+                xsec_error = self.input_file.Get(f'h_xsec_error_{centrality}').GetBinContent(1)
+                print(f'xsec {centrality}: {xsec/h_xsec.GetEntries()}')
+                print(f'xsec_uncertainty {centrality}: {100*xsec_error/xsec}')
+                print()
+
+        else:
+
+            # Crosscheck that pt-hat weighting is satisfactory  
+            # Make sure that the large-weight, low-pt-hat range has sufficient statistics to avoid normalization fluctuations
+            sum_weights = self.input_file.Get('h_weight_sum').GetBinContent(1)
+            h_pt_hat = self.input_file.Get('h_pt_hat')
+            h_pt_hat_weighted = self.input_file.Get('h_pt_hat_weighted')
+
+            # Normalize by sum of weights, i.e. 1/sigma_pt_hat * dsigma/dpt_hat
+            h_pt_hat.Scale(1./sum_weights, 'width')
+            h_pt_hat_weighted.Scale(1./sum_weights, 'width')
+
+            # Compute normalization uncertainty (binned approximation)
+            h_weights = self.input_file.Get('h_weights')
+            sum_weights_integral = 0
+            normalization_uncertainty = 0
+            for i in range(1, h_weights.GetNbinsX()+1):
+                sum_weights_integral += h_weights.GetBinCenter(i)*h_weights.GetBinContent(i)
+                normalization_uncertainty = np.sqrt( np.square(normalization_uncertainty) + h_weights.GetBinContent(i)*np.square(h_weights.GetBinCenter(i)) )
+            print(f'sum_weights: {sum_weights}')
+            print(f'sum_weights_integral: {sum_weights_integral}')
+            print(f'normalization_uncertainty: {100*normalization_uncertainty/sum_weights_integral} %')
+
+            # Also compute overall pt-hat cross-section uncertainty
+            h_xsec = self.input_file.Get('h_xsec')
+            xsec = h_xsec.GetBinContent(1)
+            xsec_error = self.input_file.Get('h_xsec_error').GetBinContent(1)
+            print(f'xsec: {xsec/h_xsec.GetEntries()}')
+            print(f'xsec_uncertainty: {100*xsec_error/xsec}')
+
+        c = ROOT.TCanvas('c', 'c', 600, 650)
+        c.Draw()
+        c.cd()
+        
+        # Distribution
+        pad2_dy = 0.45
+        pad1 = ROOT.TPad('myPad', 'The pad',0,pad2_dy,1,1)
+        pad1.SetLeftMargin(0.2)
+        pad1.SetTopMargin(0.08)
+        pad1.SetRightMargin(0.04)
+        pad1.SetBottomMargin(0.)
+        pad1.SetTicks(0,1)
+        pad1.Draw()
+        pad1.SetLogy()
+        pad1.SetLogx()
+        pad1.cd()
+        
+        legend = ROOT.TLegend(0.58,0.65,0.75,0.9)
+        self.plot_utils.setup_legend(legend, 0.055, sep=-0.1, title=f'#sqrt{{s_{{NN}}}} = {self.sqrts} GeV')
+            
+        self.bins = np.array(h_pt_hat.GetXaxis().GetXbins())
+        myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
+        myBlankHisto.SetNdivisions(505)
+        myBlankHisto.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
+        myBlankHisto.SetYTitle('#frac{1}{#sigma_{#hat{p}_{T}}} #frac{d#sigma}{d#hat{p}_{T}}')
+        myBlankHisto.SetMaximum(np.power(10,5+(self.power-3)))
+        myBlankHisto.SetMinimum(2e-15) # Don't draw 0 on top panel
+        myBlankHisto.GetYaxis().SetTitleSize(0.08)
+        myBlankHisto.GetYaxis().SetTitleOffset(1.1)
+        myBlankHisto.GetYaxis().SetLabelSize(0.06)
+        myBlankHisto.Draw('E')
+
+        # Ratio
+        c.cd()
+        pad2 = ROOT.TPad('pad2', 'pad2', 0, 0.02, 1, pad2_dy)
+        pad2.SetTopMargin(0)
+        pad2.SetBottomMargin(0.21)
+        pad2.SetLeftMargin(0.2)
+        pad2.SetRightMargin(0.04)
+        pad2.SetTicks(0,1)
+        pad2.SetLogx()
+        pad2.Draw()
+        pad2.cd()
+              
+        myBlankHisto2 = myBlankHisto.Clone('myBlankHisto_C')
+        myBlankHisto2.SetYTitle('#frac{weighted}{ideal}')
+        myBlankHisto2.SetXTitle('#hat{p}_{T} (GeV/#it{c})')
+        myBlankHisto2.GetXaxis().SetTitleSize(26)
+        myBlankHisto2.GetXaxis().SetTitleFont(43)
+        myBlankHisto2.GetXaxis().SetTitleOffset(2.3)
+        myBlankHisto2.GetXaxis().SetLabelFont(43)
+        myBlankHisto2.GetXaxis().SetLabelSize(22)
+        myBlankHisto2.GetYaxis().SetTitleSize(28)
+        myBlankHisto2.GetYaxis().SetTitleFont(43)
+        myBlankHisto2.GetYaxis().SetTitleOffset(2.)
+        myBlankHisto2.GetYaxis().SetLabelFont(43)
+        myBlankHisto2.GetYaxis().SetLabelSize(20)
+        myBlankHisto2.GetYaxis().SetNdivisions(505)
+        myBlankHisto2.GetYaxis().SetRangeUser(0., 1.99)
+        myBlankHisto2.Draw('')
+
+        # Draw generated pt-hat
+        pad1.cd()
+        h_pt_hat.SetMarkerSize(self.marker_size)
+        h_pt_hat.SetMarkerStyle(self.data_marker)
+        h_pt_hat.SetMarkerColor(self.data_color)
+        h_pt_hat.SetLineStyle(self.line_style)
+        h_pt_hat.SetLineWidth(self.line_width)
+        h_pt_hat.SetLineColor(self.data_color)
+        h_pt_hat.Draw('PE Z same')
+        legend.AddEntry(h_pt_hat, f'#alpha={self.power}, generated', 'PE')
+
+        # Draw weighted pt-hat
+        h_pt_hat_weighted.SetMarkerSize(self.marker_size)
+        h_pt_hat_weighted.SetMarkerStyle(self.data_marker)
+        h_pt_hat_weighted.SetMarkerColor(self.jetscape_color)
+        h_pt_hat_weighted.SetLineStyle(self.line_style)
+        h_pt_hat_weighted.SetLineWidth(self.line_width)
+        h_pt_hat_weighted.SetLineColor(self.jetscape_color)
+        h_pt_hat_weighted.Draw('PE Z same')
+        legend.AddEntry(h_pt_hat_weighted, f'#alpha={self.power}, weighted', 'PE')
+
+        # Draw generated pt-hat weighted by inverse of ideal weight (pthat/ptref)^alpha
+        h_pt_hat_weighted_ideal = h_pt_hat.Clone()
+        h_pt_hat_weighted_ideal.SetName('h_pt_hat_weighted_ideal')
+        for i in range(1, h_pt_hat_weighted_ideal.GetNbinsX()+1):
+            content = h_pt_hat_weighted_ideal.GetBinContent(i)
+            low_edge = h_pt_hat_weighted_ideal.GetXaxis().GetBinLowEdge(i)
+            up_edge = h_pt_hat_weighted_ideal.GetXaxis().GetBinUpEdge(i)
+            ideal_weight = ( np.power(up_edge, self.power+1)-np.power(low_edge, self.power+1) ) / ( (up_edge-low_edge)*np.power(self.pt_ref, self.power)*(self.power+1) )
+            #ideal_weight = np.power( h_pt_hat_weighted_ideal.GetXaxis().GetBinCenter(i) / self.pt_ref, self.power)
+            h_pt_hat_weighted_ideal.SetBinContent(i, content / ideal_weight)
+            h_pt_hat_weighted_ideal.SetBinError(i, 0.)
+        h_pt_hat_weighted_ideal.SetLineColorAlpha(ROOT.kGreen-8, self.alpha)
+        h_pt_hat_weighted_ideal.SetLineWidth(3)
+        h_pt_hat_weighted_ideal.Draw('L same')
+        legend.AddEntry(h_pt_hat_weighted_ideal, f'#alpha={self.power}, ideal weight', 'L')
+
+        legend.Draw()
+        
+        # Plot ratio of weighted to ideal weighted
+        pad2.cd()
+        h_pt_hat_weighted_ratio = h_pt_hat_weighted.Clone()
+        h_pt_hat_weighted_ratio.SetName('h_pt_hat_weighted_ratio')
+        h_pt_hat_weighted_ratio.Divide(h_pt_hat_weighted_ideal)
+        h_pt_hat_weighted_ratio.SetMarkerSize(self.marker_size)
+        h_pt_hat_weighted_ratio.SetMarkerStyle(self.data_marker)
+        h_pt_hat_weighted_ratio.SetMarkerColor(self.jetscape_color)
+        h_pt_hat_weighted_ratio.SetLineStyle(self.line_style)
+        h_pt_hat_weighted_ratio.SetLineWidth(self.line_width)
+        h_pt_hat_weighted_ratio.SetLineColor(self.jetscape_color)
+        h_pt_hat_weighted_ratio.Draw('PE Z same')
+
+        line = ROOT.TLine(self.bins[0], 1, self.bins[-1], 1)
+        line.SetLineColor(920+2)
+        line.SetLineStyle(2)
+        line.SetLineWidth(2)
+        line.Draw()
+        
+        pad1.cd()
+        text_latex = ROOT.TLatex()
+        text_latex.SetNDC()
+
+        x = 0.25
+        text_latex.SetTextSize(0.06)
+        text = '#sigma_{{n_{{event}}}} = {:.2f}%'.format(100*normalization_uncertainty/sum_weights_integral)
+        text_latex.DrawLatex(x, 0.83, text)
+        text = '#sigma_{{xsec}} = {:.2f}%'.format(100*xsec_error/xsec)
+        text_latex.DrawLatex(x, 0.76, text)
+
+        c.SaveAs(os.path.join(self.output_dir, f'pt_hat{self.file_format}'))
+        c.Close()
+
     # ---------------------------------------------------------------
     # Save all ROOT histograms to file
     # ---------------------------------------------------------------
@@ -959,6 +1073,15 @@ if __name__ == '__main__':
         default='pp_5020_plot/histograms_5020_merged.root',
         help='Input file'
     )
+    parser.add_argument(
+        '-r',
+        '--refFile',
+        action='store',
+        type=str,
+        metavar='refFile',
+        default='final_results.root',
+        help='pp reference file'
+    )
 
     # Parse the arguments
     args = parser.parse_args()
@@ -973,5 +1096,5 @@ if __name__ == '__main__':
         print('File "{0}" does not exist! Exiting!'.format(args.inputFile))
         sys.exit(0)
 
-    analysis = PlotResults(config_file=args.configFile, input_file=args.inputFile)
+    analysis = PlotResults(config_file=args.configFile, input_file=args.inputFile, pp_ref_file=args.refFile)
     analysis.plot_results()

@@ -110,7 +110,7 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get tgraph from hepdata file specified in config block
     # ---------------------------------------------------------------
-    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, centrality_index, suffix='', pt_suffix=''):
+    def tgraph_from_hepdata(self, block, is_AA, sqrts, observable_type, observable, centrality_index, suffix='', pt_suffix=''):
 
         # Open the HEPData file
         hepdata_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
@@ -121,24 +121,31 @@ class PlotUtils(common_base.CommonBase):
         # - The list of dir/hist names may contain a suffix,
         #   which specifies e.g. the pt bin, jetR, or other parameters
 
+        if is_AA:
+            system = 'AA'
+        else:
+            system = 'pp'
+
         # First, check for dir names in config
-        if f'hepdata_pp_dir{suffix}' in block:
-            dir_key = f'hepdata_pp_dir{suffix}'
-        elif f'hepdata_pp_dir{suffix}{pt_suffix}' in block:
-            dir_key = f'hepdata_pp_dir{suffix}{pt_suffix}'
-        elif f'hepdata_pp_dir' in block:
-            dir_key = f'hepdata_pp_dir'
+        if f'hepdata_{system}_dir{suffix}' in block:
+            dir_key = f'hepdata_{system}_dir{suffix}'
+        elif f'hepdata_{system}_dir{suffix}{pt_suffix}' in block:
+            dir_key = f'hepdata_{system}_dir{suffix}{pt_suffix}'
+        elif f'hepdata_{system}_dir' in block:
+            dir_key = f'hepdata_{system}_dir'
         else:
             #print(f'hepdata_pp_dir{suffix} not found!')
             return None
             
         # Check for hist names in config
-        if f'hepdata_pp_gname{suffix}' in block:
-            g_key = f'hepdata_pp_gname{suffix}'
-        elif f'hepdata_pp_gname' in block:
-            g_key = f'hepdata_pp_gname'
+        if f'hepdata_{system}_gname{suffix}' in block:
+            g_key = f'hepdata_{system}_gname{suffix}'
+        elif f'hepdata_{system}_gname{suffix}{pt_suffix}' in block:
+            g_key = f'hepdata_{system}_gname{suffix}{pt_suffix}'
+        elif f'hepdata_{system}_gname' in block:
+            g_key = f'hepdata_{system}_gname'
         else:
-            #print(f'hepdata_pp_gname{suffix} not found!')
+            #print(f'hepdata_{system}_gname{suffix} not found!')
             return None
             
         # Get the appropriate centrality entry in the dir/hist list

@@ -2,6 +2,7 @@
   Macro to steer calculation of observables from final_state_hadrons
 
   The workflow is as follows:
+
    (1) For each final_state_hadrons parquet file, compute observables with analyze_events_STAT.py.
        This will produce an "observables" parquet file for each final_state_hadrons file.
 
@@ -18,6 +19,14 @@
        In the AA case, the centrality is retrieved from the cross-section parquet file, and the observables filled into the appropriate centrality-binned histogram.
        In the pp case, all centrality-binned histograms are filled with the same observables.
 
+       The histogram binnings are retrieved from experimental data. We support:
+         - HEPData (preferred)
+             - We support two different HEPData file structures:
+               (1) Centralities in same dir, different hname/gname
+               (2) Centralities in different dir, same hname/gname
+               See the STAT_{sqrts}.yaml files for documentation on how to specify the centralities to be looped over.
+         - Custom format (TODO)
+
        Usually this step should be done on XSEDE in the same job as the event generation.
        In case we need to histogram observables manually, we provide an option to loop over all observable
        files within a specified directory.
@@ -30,7 +39,13 @@
        We loop over all runs from all facilities in the Analysis, including all sqrt{s}. 
 
    (4) Plot final observables and write table for input to Bayesian analysis.
-  
+
+       In the AA case, we plot the AA/pp ratios
+       In the pp case, we plot the pp distributions
+
+       We support the same specifications for retrieval of experimental as described for histogram binning.
+       See the STAT_{sqrts}.yaml files for documentation on how to specify the centralities to be looped over.
+
   Author: James Mulligan (james.mulligan@berkeley.edu)
 """
 
@@ -42,10 +57,16 @@ import shutil
 # ---------------------------------------------------------------
 def main():
 
+    # Specify input directory containing final_state_hadrons files
     sqrts = 5020
     final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_expanse/Run0011'
     system = os.listdir(final_state_hadron_dir)[0].split('_')[1]
 
+    # If AA, supply pp reference results in order to construct RAA
+    pp_reference_filename = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_stampede/Run0001/plot/final_results.root'
+
+    # Note: the construction of observables and histograms is usually done on XSEDE, 
+    #       and only the merging/plotting step is needed to be run locally
     construct_observables = False
     construct_histograms = False
     merge_histograms = False
@@ -103,7 +124,10 @@ def main():
     
         inputdir = os.path.join(final_state_hadron_dir, 'plot')
         fname = f'histograms_{system}_{sqrts}_merged.root'
-        cmd = f'python plot/plot_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{fname}'
+        if system == 'pp':
+            cmd = f'python plot/plot_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{fname}'
+        else:
+            cmd = f'python plot/plot_results_STAT.py -c config/STAT_{sqrts}.yaml -i {inputdir}/{fname} -r {pp_reference_filename}'
         print(cmd)
         subprocess.run(cmd, check=True, shell=True)
 
