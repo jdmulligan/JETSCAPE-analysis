@@ -32,6 +32,7 @@ from pathlib import Path
 # Fastjet via python (from external library heppy)
 import fastjet as fj
 import fjcontrib
+import fjext
 
 sys.path.append('.')
 from jetscape_analysis.analysis import analyze_events_base_STAT
@@ -214,13 +215,31 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         beta = grooming_setting['beta']
                         if key == 'tg_alice' and jetR == 0.2 and zcut == 0.4:
                             continue
-                        self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}'] = []
-                        if self.is_AA:
-                            self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}_unsubtracted'] = []
+                        if 'angularity_alice' in key:
+                            for alpha in dict['alpha']:
+                                self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_alpha{alpha}'] = []
+                                self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_alpha{alpha}_zcut{zcut}_beta{beta}'] = []
+                                if self.is_AA:
+                                    self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_alpha{alpha}_unsubtracted'] = []
+                                    self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_alpha{alpha}_zcut{zcut}_beta{beta}_unsubtracted'] = []
+                        elif 'kt_alice' in key:
+                            self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}'] = []
+                            for a in dict['dynamical_grooming_a']:
+                                self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_a{a}_zcut{zcut}_beta{beta}'] = []
+                        else:
+                            self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}'] = []
+                            if self.is_AA:
+                                self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}_unsubtracted'] = []
                 else:
-                    self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}'] = []
-                    if self.is_AA:
-                        self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_unsubtracted'] = []
+                    if 'zr_alice' in key:
+                        for r in dict['r']:
+                            self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_r{r}'] = []
+                            if self.is_AA:
+                                self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_r{r}_unsubtracted'] = []
+                    else:
+                        self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}'] = []
+                        if self.is_AA:
+                            self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_unsubtracted'] = []
                     
         if self.semi_inclusive_chjet_observables:
             for key,dict in self.semi_inclusive_chjet_observables.items():
@@ -384,7 +403,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
-                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, jet_pt, jetR)
+                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, holes_in_jet, jet_pt, jetR)
 
     # ---------------------------------------------------------------
     # Fill inclusive full jet observables
@@ -570,6 +589,61 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR):
     
+        if self.sqrts == 5020:
+
+            # ALICE subjet z_R
+            if self.centrality_accepted(self.inclusive_chjet_observables['zr_alice']['centrality']):
+                pt_min = self.inclusive_chjet_observables['zr_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['zr_alice']['pt'][-1]
+                if abs(jet.eta()) < (self.inclusive_chjet_observables['zr_alice']['eta_cut_R'] - jetR):
+                    if jetR in self.inclusive_chjet_observables['zr_alice']['jet_R']:
+                        if jet_pt > pt_min and jet_pt < pt_max:
+                            for r in self.inclusive_chjet_observables['zr_alice']['r']:
+                                
+                                cs_subjet = fj.ClusterSequence(jet.constituents(), fj.JetDefinition(fj.antikt_algorithm, r))
+                                subjets = fj.sorted_by_pt(cs_subjet.inclusive_jets())
+                                _, leading_subjet_pt, _ = self.leading_jet(subjets, holes_in_jet, r)
+                                z_leading = leading_subjet_pt / jet_pt
+                                if np.isclose(z_leading, 1.): # If z=1, it will be default be placed in overflow bin -- prevent this
+                                    z_leading = 0.999
+                                    
+                                self.observable_dict_event[f'inclusive_chjet_zr_alice_R{jetR}_r{r}'].append([jet_pt, z_leading])
+
+            # ALICE jet axis Standard-WTA
+            if self.centrality_accepted(self.inclusive_chjet_observables['axis_alice']['centrality']):
+                pt_min = self.inclusive_chjet_observables['axis_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['axis_alice']['pt'][-1]
+                if abs(jet.eta()) < (self.inclusive_chjet_observables['axis_alice']['eta_cut_R'] - jetR):
+                    if jetR in self.inclusive_chjet_observables['axis_alice']['jet_R']:
+                        if jet_pt > pt_min and jet_pt < pt_max:
+                                
+                            jet_def_wta = fj.JetDefinition(fj.cambridge_algorithm, 2*jetR)
+                            jet_def_wta.set_recombination_scheme(fj.WTA_pt_scheme)
+                            reclusterer_wta = fjcontrib.Recluster(jet_def_wta)
+                            jet_wta = reclusterer_wta.result(jet)
+                            deltaR = jet.delta_R(jet_wta)
+
+                            self.observable_dict_event[f'inclusive_chjet_axis_alice_R{jetR}'].append([jet_pt, deltaR])
+
+            # ALICE ungroomed angularity
+            if self.centrality_accepted(self.inclusive_chjet_observables['angularity_alice']['centrality']):
+                pt_min = self.inclusive_chjet_observables['angularity_alice']['pt'][0]
+                pt_max = self.inclusive_chjet_observables['angularity_alice']['pt'][-1]
+                if abs(jet.eta()) < (self.inclusive_chjet_observables['angularity_alice']['eta_cut_R'] - jetR):
+                    if jetR in self.inclusive_chjet_observables['angularity_alice']['jet_R']:
+                        if jet_pt > pt_min and jet_pt < pt_max:
+                            for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
+                                kappa=1
+                                lambda_alpha = fjext.lambda_beta_kappa(jet, alpha, kappa, jetR)
+                                if self.is_AA:
+                                    lambda_alpha_holes = 0
+                                    for hadron in holes_in_jet:
+                                        lambda_alpha_holes += hadron.pt() / jet_pt * hadron.delta_R(jet)
+                                    self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}_unsubtracted'].append([jet_pt, lambda_alpha])
+                                    lambda_alpha -= lambda_alpha_holes
+
+                                self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}'].append([jet_pt, lambda_alpha])
+
         if self.sqrts == 2760:
         
             # ALICE charged jet RAA
@@ -678,7 +752,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_charged_jet_groomed_observables(self, grooming_setting, jet, jet_pt, jetR):
+    def fill_charged_jet_groomed_observables(self, grooming_setting, jet, holes_in_jet, jet_pt, jetR):
     
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
@@ -690,7 +764,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         
         if self.sqrts == 5020:
 
-            # Soft Drop
+            # Soft Drop zg and theta_g
             if self.centrality_accepted(self.inclusive_chjet_observables['zg_alice']['centrality']):
                 if grooming_setting in self.inclusive_chjet_observables['zg_alice']['SoftDrop']:
                     pt_min = self.inclusive_chjet_observables['zg_alice']['pt'][0]
@@ -703,6 +777,35 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 # Note: untagged jets will return negative value
                                 self.observable_dict_event[f'inclusive_chjet_zg_alice_R{jetR}_zcut{zcut}_beta{beta}'].append(zg)
                                 self.observable_dict_event[f'inclusive_chjet_tg_alice_R{jetR}_zcut{zcut}_beta{beta}'].append(theta_g)
+
+            # ALICE groomed angularity
+            if self.centrality_accepted(self.inclusive_chjet_observables['angularity_alice']['centrality']):
+                if grooming_setting in self.inclusive_chjet_observables['angularity_alice']['SoftDrop']:
+                    pt_min = self.inclusive_chjet_observables['angularity_alice']['pt'][0]
+                    pt_max = self.inclusive_chjet_observables['angularity_alice']['pt'][-1]
+                    if abs(jet.eta()) < (self.inclusive_chjet_observables['angularity_alice']['eta_cut_R'] - jetR):
+                        if jetR in self.inclusive_chjet_observables['angularity_alice']['jet_R']:
+                            if jet_pt > pt_min and jet_pt < pt_max:
+                                for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
+                                    kappa=1
+                                    lambda_alpha = fjext.lambda_beta_kappa(jet_groomed_lund.pair(), alpha, kappa, jetR)
+                                    self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}_zcut{zcut}_beta{beta}'].append([jet_pt, lambda_alpha])
+
+            # ALICE hardest kt
+            if self.centrality_accepted(self.inclusive_chjet_observables['kt_alice']['centrality']):
+                if grooming_setting in self.inclusive_chjet_observables['kt_alice']['SoftDrop']:
+                    pt_min = self.inclusive_chjet_observables['kt_alice']['pt'][0]
+                    pt_max = self.inclusive_chjet_observables['kt_alice']['pt'][-1]
+                    if abs(jet.eta()) < (self.inclusive_chjet_observables['kt_alice']['eta_cut_R'] - jetR):
+                        if jetR in self.inclusive_chjet_observables['kt_alice']['jet_R']:
+                            if jet_pt > pt_min and jet_pt < pt_max:
+                                for a in self.inclusive_chjet_observables['kt_alice']['dynamical_grooming_a']:
+                                    jet_dyg_lund = gshop.dynamical(a)
+                                    ktg = jet_dyg_lund.kt()
+                                    self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_a{a}_zcut{zcut}_beta{beta}'].append([jet_pt, ktg])
+
+                                ktg = jet_groomed_lund.kt()
+                                self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_zcut{zcut}_beta{beta}'].append([jet_pt, ktg])
                 
     # ---------------------------------------------------------------
     # Fill semi-inclusive charged jet observables
