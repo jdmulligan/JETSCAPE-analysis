@@ -113,7 +113,7 @@ class PlotResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
         
-                if 'hepdata' not in block:
+                if 'hepdata' not in block and 'custom_data' not in block:
                     continue
             
                 # Initialize observable configuration
@@ -133,7 +133,7 @@ class PlotResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
 
-                if 'hepdata' not in block:
+                if 'hepdata' not in block and 'custom_data' not in block:
                     continue
 
                 # Initialize observable configuration
@@ -185,7 +185,7 @@ class PlotResults(common_base.CommonBase):
                                         beta = grooming_setting['beta']
                                         
                                         self.suffix = f'_R{self.jet_R}_zcut{zcut}_beta{beta}{subobservable_label}'
-                                        if 'hepdata' not in block:
+                                        if 'hepdata' not in block and 'custom_data' not in block:
                                             continue
                             
                                         # Initialize observable configuration
@@ -197,7 +197,7 @@ class PlotResults(common_base.CommonBase):
                             else:
 
                                 self.suffix = f'_R{self.jet_R}{subobservable_label}'
-                                if 'hepdata' not in block:
+                                if 'hepdata' not in block and 'custom_data' not in block:
                                     continue
 
                                 # Initialize observable configuration
@@ -219,7 +219,7 @@ class PlotResults(common_base.CommonBase):
                 for self.jet_R in block['jet_R']:
                     
                     self.suffix = f'_R{self.jet_R}'
-                    if 'hepdata' not in block:
+                    if 'hepdata' not in block and 'custom_data' not in block:
                         continue
                         
                     # Set normalization
@@ -280,9 +280,14 @@ class PlotResults(common_base.CommonBase):
         else:            
             if 'ytitle_pp' in block:
                 self.ytitle = block['ytitle_pp']
+            else:
+                self.ytitle = ''
             if 'y_min_pp' in block:
                 self.y_min = float(block['y_min_pp'])
                 self.y_max = float(block['y_max_pp'])
+            else:
+                self.y_min = 0.
+                self.y_max = 1.99
             if 'y_ratio_min' in block:
                 self.y_ratio_min = block['y_ratio_min']
                 self.y_ratio_max = block['y_ratio_max']
@@ -309,8 +314,10 @@ class PlotResults(common_base.CommonBase):
         
         #---------------------------------------
         # Initialize data
-        if f'hepdata' in block:
+        if 'hepdata' in block:
             self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_hepdata(block, self.is_AA, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
+        elif 'custom_data' in block:
+            self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_yaml(block, self.is_AA, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
         else:
             self.observable_settings['data_distribution'] = None
 
@@ -405,6 +412,11 @@ class PlotResults(common_base.CommonBase):
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
                         self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
+                    if observable == 'pt_pi0_phenix':
+                        sigma_inel = 42. # Update
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
+                        self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
+                        self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
                 elif observable_type == 'inclusive_chjet':
                     if observable == 'pt_star':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
@@ -438,7 +450,7 @@ class PlotResults(common_base.CommonBase):
                     if observable == 'pt_cms':
                         self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
                         self.observable_settings['jetscape_distribution'].Scale(1.e6) # convert to nb
-                    if observable in ['Dz_atlas', 'Dpt_atlas']:
+                    if observable in ['Dz_atlas', 'Dpt_atlas', 'Dz_cms', 'Dpt_cms']:
                         hname = f'h_{observable_type}_{observable}{self.suffix}_Njets_{centrality}{pt_suffix}'
                         h_njets = self.input_file.Get(self.hname)
                         h_njets.SetDirectory(0)

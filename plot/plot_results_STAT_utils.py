@@ -179,6 +179,54 @@ class PlotUtils(common_base.CommonBase):
         
         return g
         
+    # ---------------------------------------------------------------
+    # Get tgraph from data points specified in config block
+    # ---------------------------------------------------------------
+    def tgraph_from_yaml(self, block, is_AA, sqrts, observable_type, observable, centrality_index, suffix='', pt_suffix=''):
+
+        # Load yaml file containing the data
+        data_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
+        data_filename = os.path.join(data_dir, block['custom_data'])
+        with open(data_filename, 'r') as stream:
+            data = yaml.safe_load(stream)
+
+        # Find the relevant config block:
+        # - The list of dir/hist names may contain a suffix,
+        #   which specifies e.g. the pt bin, jetR, or other parameters
+
+        if is_AA:
+            system = 'AA'
+        else:
+            system = 'pp'
+
+        # First, check for dir names in config
+        if f'data_{system}_{suffix}' in data:
+            key = f'data_{system}{suffix}'
+        elif f'data_{system}{suffix}{pt_suffix}' in data:
+            key = f'data_{system}{suffix}{pt_suffix}'
+        elif f'data_{system}' in data:
+            key = f'data_{system}'
+        else:
+            #print(f'data_pp_dir{suffix} not found!')
+            return None
+
+        # Get the appropriate centrality entry in the list
+        y = np.array(data[key]['y'][centrality_index])
+        if 'y_err' in data[key]:
+            y_err = np.array(data[key]['y_err'][centrality_index])
+
+        if 'x' in data[key]:
+            x = np.array(data[key]['x'][centrality_index])
+        else:
+            bins = np.array(block['bins'])
+            x = (bins[1:] + bins[:-1]) / 2
+        n = len(x)
+        
+        # Construct TGraph
+        g = ROOT.TGraphAsymmErrors(n, x, y, np.zeros(n), np.zeros(n), y_err, y_err)
+        
+        return g
+
     #---------------------------------------------------------------
     # Divide a histogram by a tgraph, point-by-point
     #---------------------------------------------------------------

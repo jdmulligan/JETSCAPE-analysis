@@ -273,6 +273,7 @@ inclusive_jet:
 
   # https://www.hepdata.net/record/ins1511869
   # Note: the paper also considers the rapidity dependence, which we omit here for now (Figs 4,5)
+  # Note that the pp reference data in hepdata is only provided for the inclusive pt range
   # Figs 3,7
   Dz_atlas:
     jet_R: [0.4]
@@ -288,6 +289,7 @@ inclusive_jet:
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{z}}'
     y_min_pp: 2e-3
     y_max_pp: 1e4
+    skip_pp_ratio: True
     
     hepdata_AA_dir_R0.4_pt0: ['Table 61', 'Table 62', 'Table 63']
     hepdata_AA_dir_R0.4_pt1: ['Table 65', 'Table 66', 'Table 67']
@@ -313,6 +315,7 @@ inclusive_jet:
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-4
     y_max_pp: 1e2
+    skip_pp_ratio: True
     
     hepdata_AA_dir_R0.4_pt0: ['Table 45', 'Table 46', 'Table 47']
     hepdata_AA_dir_R0.4_pt1: ['Table 49', 'Table 50', 'Table 51']
@@ -326,25 +329,22 @@ inclusive_jet:
   # https://inspirehep.net/literature/1299142 (no hepdata)
   # https://twiki.cern.ch/CMSPublic/HIN12013DataTables
   # Figs 2,3,4
+  # Note that there is a breakdown of statistical and systematic uncertainties that we do not yet include
   Dz_cms:
     jet_R: [0.3]
     eta_cut: [0.3, 2.]
     pt: [100., 120., 150., 300.]
     centrality: [[0,10], [10,30], [30,50]]
+    bins: [0., 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
     track_pt_min: 1.
     xtitle: '#it{#xi} = ln(1/#it{z})'
     logy: True
     
-    data_pp_R0.3_pt0: 'hin_12_013_data_2.txt'
-    data_pp_R0.3_pt1: 'hin_12_013_data_3.txt'
-    data_pp_R0.3_pt2: 'hin_12_013_data_4.txt'
+    custom_data: 'custom_data.yaml'
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{track}}{d#it{#xi}}'
-    y_min_pp: 2e-3
-    y_max_pp: 1e2
+    y_min_pp: 2e-2
+    y_max_pp: 1e3
     
-    data_AA_R0.3_pt0: 'hin_12_013_data_2.txt'
-    data_AA_R0.3_pt1: 'hin_12_013_data_3.txt'
-    data_AA_R0.3_pt2: 'hin_12_013_data_4.txt'
     data_AA_gname: 'Graph1D_y1'
     data_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{R}_{D(z)}'
@@ -357,23 +357,19 @@ inclusive_jet:
     eta_cut: [0.3, 2.]
     pt: [100., 120., 150., 300.]
     centrality: [[0,10], [10,30], [30,50]]
+    bins: [1.0, 1.4, 2.1, 3.0, 4.4, 6.4, 9.3, 13.4, 19.5, 28.2, 40.9, 59.3]
     track_pt_min: 1.
     xtitle: '#it{p}_{T,track} (GeV/#it{c})'
     logy: True
     
-    data_pp_R0.3_pt0: 'hin_12_013_data_6.txt'
-    data_pp_R0.3_pt1: 'hin_12_013_data_7.txt'
-    data_pp_R0.3_pt2: 'hin_12_013_data_8.txt'
+    custom_data: 'custom_data.yaml'
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{track}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-3
-    y_max_pp: 1e2
+    y_max_pp: 2e1
     
-    data_AA_R0.3_pt0: 'hin_12_013_data_6.txt'
-    data_AA_R0.3_pt1: 'hin_12_013_data_7.txt'
-    data_AA_R0.3_pt2: 'hin_12_013_data_8.txt'
     data_AA_gname: 'Graph1D_y1'
     data_AA_hname: 'Hist1D_y1'
-    ytitle_AA: '#it{R}_{D(z)}'
+    ytitle_AA: '#it{#Delta}_{D(z)}'
     y_min_AA: 0.
     y_max_AA: 2.
 #------------------------------------------------------------------
@@ -587,7 +583,8 @@ dijet:
     pt: [45., 160.]
     centrality: [[0,10]]
   
-  # https://inspirehep.net/literature/1607896 (no hepdata...requested to Dennis/Laura)
+  # https://inspirehep.net/literature/1607896 
+  # (no hepdata...requested to Dennis/Laura in June 2021 - no reply yet)
   xj_atlas:
     jet_R: [0.3, 0.4]
     centrality: [[0,10], [10,20], [20,30], [30,40]]

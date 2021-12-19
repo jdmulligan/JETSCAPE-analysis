@@ -52,10 +52,20 @@ hadron:
     eta_cut: 0.35
     pt: [5., 20.]
     centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
+    bins: [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10., 12., 14., 16., 18., 20.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
     
-    data_AA: ['Data_PHENIX_AuAu200_RAACharged_0to10_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_10to20_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_20to30_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_30to40_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_40to50_2013.dat']
-    ytitle: '#it{R}_{AA}'
+    custom_data: 'custom_data.yaml'
+    ytitle_pp: '#frac{1}{2#pip_{T}} #frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[mb GeV^{2}#right]'
+    y_min_pp: 2e-12
+    y_max_pp: 1e-4
+    scale_by: '1/pt'
+    skip_pp: True
+
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 2.
 
   # https://www.hepdata.net/record/ins619063
   # Summed yields of pi+-, K+-, p, anti-p

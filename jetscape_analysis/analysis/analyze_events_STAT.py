@@ -501,7 +501,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                         if jet.delta_R(hadron) < jetR:
                                             z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
-                                            self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}'].append([jet_pt, z])
+                                            xi = np.log(1/z)
+                                            self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}'].append([jet_pt, xi])
                                             self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}'].append([jet_pt, hadron.pt()])
                                 if self.is_AA:
                                     for hadron in holes_in_jet:
@@ -510,7 +511,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                         if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                             if jet.delta_R(hadron) < jetR:
                                                 z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
-                                                self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}_holes'].append([jet_pt, z])
+                                                xi = np.log(1/z)
+                                                self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}_holes'].append([jet_pt, xi])
                                                 self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}_holes'].append([jet_pt, hadron.pt()])
 
             # CMS jet charge
