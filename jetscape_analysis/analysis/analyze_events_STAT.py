@@ -403,7 +403,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
-                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, holes_in_jet, jet_pt, jetR)
+                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, jet_pt, jetR)
 
     # ---------------------------------------------------------------
     # Fill inclusive full jet observables
@@ -609,7 +609,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 if np.isclose(z_leading, 1.): # If z=1, it will be default be placed in overflow bin -- prevent this
                                     z_leading = 0.999
                                     
-                                self.observable_dict_event[f'inclusive_chjet_zr_alice_R{jetR}_r{r}'].append([jet_pt, z_leading])
+                                self.observable_dict_event[f'inclusive_chjet_zr_alice_R{jetR}_r{r}'].append([z_leading])
 
             # ALICE jet axis Standard-WTA
             if self.centrality_accepted(self.inclusive_chjet_observables['axis_alice']['centrality']):
@@ -754,7 +754,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_charged_jet_groomed_observables(self, grooming_setting, jet, holes_in_jet, jet_pt, jetR):
+    def fill_charged_jet_groomed_observables(self, grooming_setting, jet, jet_pt, jetR):
     
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
@@ -1007,10 +1007,10 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         subleading_jet, subleading_jet_pt, _ = self.leading_jet(jet_candidates, fj_hadrons_negative, jetR)
                         if subleading_jet:
                             if np.abs(leading_jet.delta_phi_to(subleading_jet)) > 7*np.pi/8:
-                                pt_min = self.dijet_observables['xj_atlas']['pt_leading_min']
+                                pt_min = self.dijet_observables['xj_atlas']['pt'][0]
                                 if leading_jet_pt > pt_min:
                                     xj = subleading_jet_pt / leading_jet_pt
-                                    self.observable_dict_event[f'dijet_xj_atlas_R{jetR}'].append(xj)
+                                    self.observable_dict_event[f'dijet_xj_atlas_R{jetR}'].append([leading_jet_pt, xj])
 
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
@@ -1019,7 +1019,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
         leading_jet = None
         leading_jet_pt = 0.
-        i = 0
+        i_leading = 0
         for i,jet in enumerate(jets):
                          
             # Get the corrected jet pt by subtracting the negative recoils within R
@@ -1031,12 +1031,14 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             if not leading_jet:
                 leading_jet = jet
                 leading_jet_pt = jet_pt
+                i_leading = i
             
             if jet_pt > leading_jet_pt:
                 leading_jet = jet
                 leading_jet_pt = jet_pt
+                i_leading = i
 
-        return leading_jet, leading_jet_pt, i
+        return leading_jet, leading_jet_pt, i_leading
 
     # ---------------------------------------------------------------
     # Compute electric charge from pid

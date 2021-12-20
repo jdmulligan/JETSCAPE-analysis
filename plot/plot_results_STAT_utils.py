@@ -103,6 +103,11 @@ class PlotUtils(common_base.CommonBase):
         dir = f.Get(dir_name)
         h = dir.Get(h_name)
         bins = np.array(h.GetXaxis().GetXbins())
+
+        # For certain Soft Drop observables, we need to exclude the "untagged" bin so that it will become underflow
+        if observable == 'zg_alice' or observable == 'tg_alice':
+            bins = bins[1:]
+
         f.Close()
         
         return bins
@@ -257,6 +262,8 @@ class PlotUtils(common_base.CommonBase):
             while gx < h_x and g_offset < g.GetN()+1:
                 g_offset += 1
                 gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1+g_offset)
+            #print(f'new gx: {gx}')
+
 
             # If tgraph started above hist (see below) and we exhausted the tgraph points, skip
             if h_offset > 0 and np.isclose(gx, 0):

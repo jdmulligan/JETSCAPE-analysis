@@ -177,22 +177,25 @@ class PlotResults(common_base.CommonBase):
                         
                             if 'SoftDrop' in block:
                                 for grooming_setting in block['SoftDrop']:
-                                    if observable == 'tg_alice' and self.jet_R == 0.2 and grooming_setting['zcut'] == 0.4:
-                                        continue
-                                    else:
-                                        print(f'      grooming_setting = {grooming_setting}')
-                                        zcut = grooming_setting['zcut']
-                                        beta = grooming_setting['beta']
-                                        
-                                        self.suffix = f'_R{self.jet_R}_zcut{zcut}_beta{beta}{subobservable_label}'
-                                        if 'hepdata' not in block and 'custom_data' not in block:
+                                    if observable == 'zg_alice' or observable == 'tg_alice':
+                                        if np.isclose(self.jet_R, 0.4) and centrality_index == 0:
                                             continue
-                            
-                                        # Initialize observable configuration
-                                        self.init_observable(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
-                                  
-                                        # Plot observable
-                                        self.plot_observable(observable_type, observable, centrality, pt_suffix)
+                                        if np.isclose(self.jet_R, 0.2) and centrality_index == 1:
+                                            continue
+
+                                    print(f'      grooming_setting = {grooming_setting}')
+                                    zcut = grooming_setting['zcut']
+                                    beta = grooming_setting['beta']
+                                    
+                                    self.suffix = f'_R{self.jet_R}_zcut{zcut}_beta{beta}{subobservable_label}'
+                                    if 'hepdata' not in block and 'custom_data' not in block:
+                                        continue
+                        
+                                    # Initialize observable configuration
+                                    self.init_observable(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
+                                
+                                    # Plot observable
+                                    self.plot_observable(observable_type, observable, centrality, pt_suffix)
                                 
                             else:
 
@@ -514,7 +517,7 @@ class PlotResults(common_base.CommonBase):
             
             # Self-normalization
             if self_normalize:
-                if observable in ['zg', 'theta_g']:
+                if observable in ['zg_alice', 'tg_alice']:
                     min_bin = 0
                 else:
                     min_bin = 1

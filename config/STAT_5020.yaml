@@ -443,43 +443,74 @@ inclusive_jet:
 # Inclusive jet observables -- charged jets
 inclusive_chjet:
   
-  # ALICE-PUBLIC-2020-006 (no hepdata yet)
-  # TODO: Update binnings
+  # https://inspirehep.net/literature/1893479 (no hepdata yet)
+  # TODO: update hepdata
   zg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
     pt: [60., 80.]
     centrality: [[0,10], [30,50]]
-    bins: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
+    xtitle: '#it{z}_{g}'
+
+    hepdata: 'HEPData-1627454721-v1-root.root'
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 2', '']
+    hepdata_pp_dir_R0.4_zcut0.2_beta0: ['', 'Table 4']
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
+    y_min_pp: 0.
+    y_max_pp: 7.
+    
+    hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 3', '']
+    hepdata_AA_dir_R0.4_zcut0.2_beta0: ['', 'Table 6']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
+
   tg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
     pt: [60., 80.]
     centrality: [[0,10], [30,50]]
-    bins: [0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0]
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
-      - {'zcut': 0.4, 'beta': 0}
+    xtitle: '#it{#theta}_{g}'
+
+    hepdata: 'HEPData-1627454721-v1-root.root'
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 7', '']
+    hepdata_pp_dir_R0.4_zcut0.2_beta0: ['', 'Table 10']
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{#theta}_{g}}'
+    y_min_pp: 0.
+    y_max_pp: 5.
+    
+    hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 9', '']
+    hepdata_AA_dir_R0.4_zcut0.2_beta0: ['', 'Table 12']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
 
   # ALICE, (no hepdata)
   # TODO: Update binnings
   zr_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
-    pt: [80., 100., 120., 150.]
+    pt: [100., 150.]
     centrality: [[0,10]]
     r: [0.1, 0.2]
-    bins_r0: [0.6, 0.7, 0.77, 0.83, 0.89, 0.95, 1.0]
-    bins_r1: [0.7, 0.8, 0.86, 0.9, 0.94, 0.98, 1.0]
+    bins: [0.6, 0.65, 0.7, 0.75, 0.77, 0.8, 0.83, 0.86, 0.89, 0.92, 0.95, 0.98, 1.0]
   
   # ALICE, (no hepdata)
   # TODO: Update binnings
   axis_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
-    pt: [40., 60., 80., 100., 120., 150.]
+    pt: [40., 60., 80., 100., 150.]
     centrality: [[0,10]]
 
   # ALICE, (no hepdata)
@@ -487,7 +518,7 @@ inclusive_chjet:
   angularity_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
-    pt: [40., 60., 80., 100., 120., 150.]
+    pt: [40., 60., 80., 100., 150.]
     centrality: [[0,10]]
     alpha: [1, 1.5, 2, 3]
     SoftDrop:
