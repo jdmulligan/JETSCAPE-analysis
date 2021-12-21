@@ -171,7 +171,7 @@ class PlotResults(common_base.CommonBase):
                         
                             # Set normalization
                             self_normalize = False
-                            for x in ['mass', 'g', 'ptd', 'charge', 'mg', 'zg', 'tg']:
+                            for x in ['mass', 'g', 'ptd', 'charge', 'mg', 'zg', 'tg', 'xj']:
                                 if x in observable:
                                     self_normalize = True
                         
@@ -342,6 +342,24 @@ class PlotResults(common_base.CommonBase):
             else:
                 h_jetscape = None
             self.observable_settings['jetscape_distribution'] = h_jetscape
+
+            # For hadrons, subtract the holes
+            #if h_jetscape and observable in ['pt_ch_alice', 'pt_pi_alice', 'pt_pi0_alice', 'pt_ch_cms', 'pt_ch_atlas', 'pt_pi0_phenix', 'pt_ch_star']:
+
+            #    hname_holes = f'{self.hname}_holes'
+            #    h_holes = self.input_file.Get(hname_holes)
+            #    h_holes.SetDirectory(0)
+            #    self.observable_settings['jetscape_distribution_holes'] = h_holes
+            #    self.observable_settings['jetscape_distribution'].Add(h_holes, -1)
+
+            ## Get unsubtracted observable in cases where we perform subtraction
+            #elif h_jetscape and observable in []:
+
+            #    hname_unsubtracted = f'{self.hname}_unsubtracted'
+            #    h_unsubtracted = self.input_file.Get(hname_unsubtracted)
+            #    h_unsubtracted.SetDirectory(0)
+            #    self.observable_settings['jetscape_distribution_unsubtracted'] = h_unsubtracted
+
         else:
             if self.sqrts == 2760: # Delta recoil
                 hname_low_trigger = f'h_{observable_type}_{observable}_R{self.jet_R}_lowTrigger_{centrality}'
@@ -381,18 +399,6 @@ class PlotResults(common_base.CommonBase):
                     self.observable_settings['jetscape_distribution'].Scale(1./n_trig)
                 else:
                     self.observable_settings['jetscape_distribution'] = None
-        
-        ## For hadrons, impose a 1 GeV minimum, and subtract the recoil hadrons
-        #if self.observable == 'hadron_raa':
-
-        #    # Subtract holes
-        #    f_jetscape_AA = ROOT.TFile(block['file_jetscape_AA'], 'READ')
-        #    h_recoil_name = 'h_hadron_pt_alice_holesScaled'
-        #    h_recoil = f_jetscape_AA.Get(h_recoil_name)
-        #    h_recoil.SetDirectory(0)
-        #    h_recoil_rebinned = h_recoil.Rebin(h_jetscape_AA_xbins.size-1, f'{h_recoil_name}_AA', h_jetscape_AA_xbins)
-        #    h_jetscape_AA.Add(h_recoil_rebinned, -1)
-        #    f_jetscape_AA.Close()
         
         # Normalization
         # Note: If we divide by the sum of weights (corresponding to n_events) and multiply by the

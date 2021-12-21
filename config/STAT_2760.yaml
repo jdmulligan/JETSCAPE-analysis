@@ -31,6 +31,15 @@
 #             Unless on rare occasion the pp data with different binnings for each centrality 
 #             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
 #   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
+#
+# Note that for the inputs to the likelihood calculation, we use the Pb-Pb/pp ratios, rather
+# than the Pb-Pb and pp distributions themselves. This choice is intended to minimize dependence
+# on the pp baseline, although may be susceptible to shape effects from the distributions themselves;
+# one could consider to investigate the magnitude of these effects in the future.
+#
+# Note that when using these experimental data for the Bayesian calibration, we need to 
+# revisit the treatment/breakdown of uncertainties and construct a covariance matrix 
+# for each measurement (close attention was not paid during the event generation QA stage).
 #------------------------------------------------------------------
 sqrt_s: 2760
 power: 4.
@@ -345,8 +354,6 @@ inclusive_jet:
     y_min_pp: 2e-2
     y_max_pp: 1e3
     
-    data_AA_gname: 'Graph1D_y1'
-    data_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{R}_{D(z)}'
     y_min_AA: 0.
     y_max_AA: 2.
@@ -367,8 +374,6 @@ inclusive_jet:
     y_min_pp: 2e-3
     y_max_pp: 2e1
     
-    data_AA_gname: 'Graph1D_y1'
-    data_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{#Delta}_{D(z)}'
     y_min_AA: 0.
     y_max_AA: 2.
@@ -583,13 +588,25 @@ dijet:
     pt: [45., 160.]
     centrality: [[0,10]]
   
-  # https://inspirehep.net/literature/1607896 
-  # (no hepdata...requested to Dennis/Laura in June 2021 - no reply yet)
+  # https://inspirehep.net/literature/1607896 (no hepdata)
+  # TGraphs for R=0.4 supplied by Laura/Dennis
+  # Fig 8 -- centrality dependence for pt1=[100,126]
+  # Fig 9 -- pt1-dependence for 0-10%
   xj_atlas:
-    jet_R: [0.3, 0.4]
+    jet_R: [0.4]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
-    pt: [79., 100., 126., 158., 200.]  # pt_leading_min
+    bins: [0.31622776601683816, 0.35481338923357564, 0.39810717055349754, 0.4466835921509634, 0.5011872336272726, 0.5623413251903494, 0.6309573444801937, 0.7079457843841381, 0.7943282347242815, 0.8912509381337457, 1.0]
+    pt: [100., 126., 158., 200., 1380.]  # pt_leading_min
     pt_subleading_min: 25.
     eta_cut: 2.1
-    bins: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    xtitle: '#it{x}_{J}'
+
+    custom_data: 'custom_data.yaml'
+    ytitle_pp: '#frac{1}{N} #frac{dN}{d#it{x}_{J}}'
+    y_min_pp: 0.
+    y_max_pp: 5.
+    
+    ytitle_AA: 'Pb-Pb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
 #------------------------------------------------------------------

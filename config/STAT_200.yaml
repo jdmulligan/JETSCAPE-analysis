@@ -31,6 +31,15 @@
 #             Unless on rare occasion the pp data with different binnings for each centrality 
 #             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
 #   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
+#
+# Note that for the inputs to the likelihood calculation, we use the Pb-Pb/pp ratios, rather
+# than the Pb-Pb and pp distributions themselves. This choice is intended to minimize dependence
+# on the pp baseline, although may be susceptible to shape effects from the distributions themselves;
+# one could consider to investigate the magnitude of these effects in the future.
+#
+# Note that when using these experimental data for the Bayesian calibration, we need to 
+# revisit the treatment/breakdown of uncertainties and construct a covariance matrix 
+# for each measurement (close attention was not paid during the event generation QA stage).
 #------------------------------------------------------------------
 sqrt_s: 200
 power: 4.

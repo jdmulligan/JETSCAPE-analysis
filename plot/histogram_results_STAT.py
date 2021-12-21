@@ -264,6 +264,11 @@ class HistogramResults(common_base.CommonBase):
 
                     # Optional: Loop through pt bins
                     for pt_bin in range(len(block['pt'])-1):
+                    
+                        # Custom skip
+                        if observable == 'xj_atlas':
+                            if centrality_index > 0 and pt_bin !=0:
+                                continue
 
                         if len(block['pt']) > 2:
                             pt_suffix = f'_pt{pt_bin}'

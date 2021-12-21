@@ -204,7 +204,7 @@ class PlotUtils(common_base.CommonBase):
         else:
             system = 'pp'
 
-        # First, check for dir names in config
+        # First, check for key names in config
         if f'data_{system}_{suffix}' in data:
             key = f'data_{system}{suffix}'
         elif f'data_{system}{suffix}{pt_suffix}' in data:
@@ -216,9 +216,14 @@ class PlotUtils(common_base.CommonBase):
             return None
 
         # Get the appropriate centrality entry in the list
-        y = np.array(data[key]['y'][centrality_index])
-        if 'y_err' in data[key]:
-            y_err = np.array(data[key]['y_err'][centrality_index])
+        if type(data[key]['y'][0]) is list:
+            y = np.array(data[key]['y'][centrality_index])
+            if 'y_err' in data[key]:
+                y_err = np.array(data[key]['y_err'][centrality_index])
+        else:
+            y = np.array(data[key]['y'])
+            if 'y_err' in data[key]:
+                y_err = np.array(data[key]['y_err'])
 
         if 'x' in data[key]:
             x = np.array(data[key]['x'][centrality_index])
@@ -282,7 +287,7 @@ class PlotUtils(common_base.CommonBase):
             if not np.isclose(h_x, gx):
                 print(f'ERROR: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
                 return None
-          
+
             new_content = h_y / gy
 
             # Combine tgraph and histogram relative uncertainties in quadrature
