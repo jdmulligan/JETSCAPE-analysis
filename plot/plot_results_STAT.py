@@ -246,7 +246,7 @@ class PlotResults(common_base.CommonBase):
         self.observable_settings = {}
 
         # Initialize common settings into class members
-        self.init_common_settings(block)
+        self.init_common_settings(observable, block)
         
         #-----------------------------------------------------------
         # Initialize data distribution into self.observable_settings
@@ -270,177 +270,9 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['ratio'] = None
 
     #-------------------------------------------------------------------------------------------
-    # Initialize JETSCAPE distribution into self.observable_settings
-    #-------------------------------------------------------------------------------------------
-    def initialize_jetscape_distribution(self, observable_type, observable, centrality, pt_suffix='', self_normalize=False):
-
-        # Add centrality bin to list, if needed
-        if self.is_AA:
-            if centrality not in self.observable_centrality_list:
-                self.observable_centrality_list.append(centrality)
-
-        # Get histogram and add to self.observable_settings
-        #  - In AA case, also add hole histogram
-        #  - In the case of semi-inclusive measurements construct difference of histograms
-        self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix)
-
-        # Normalization
-        # Note: If we divide by the sum of weights (corresponding to n_events) and multiply by the
-        #       pt-hat cross-section, then JETSCAPE distribution gives cross-section: dsigma/dx (in mb)
-        if self.observable_settings['jetscape_distribution']:
-            self.scale_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
-
-    #-------------------------------------------------------------------------------------------
-    # Scale histogram for:
-    #  - xsec/weight_sum
-    #  - bin width
-    #  - observable-specific factors (eta, sigma_inel, n_jets, ...)
-    #  - self-normalization
-    #-------------------------------------------------------------------------------------------
-    def scale_histogram(self, observable_type, observable, centrality, pt_suffix='', self_normalize=False):
-
-        #--------------------------------------------------
-        # (1) Scale all histograms by the min-pt-hat cross-section and weight-sum
-        if self.is_AA:
-            h_xsec = self.input_file.Get(f'h_xsec_{centrality}')
-            weight_sum = self.input_file.Get(f'h_weight_sum_{centrality}').GetBinContent(1)
-        else:
-            h_xsec = self.input_file.Get('h_xsec')
-            weight_sum = self.input_file.Get('h_weight_sum').GetBinContent(1)
-        xsec = h_xsec.GetBinContent(1) / h_xsec.GetEntries()
-        self.observable_settings['jetscape_distribution'].Scale(xsec/weight_sum)
-        
-        #--------------------------------------------------
-        # (2) Scale all histograms by bin width
-        self.observable_settings['jetscape_distribution'].Scale(1., 'width')
-
-        #--------------------------------------------------
-        # (3) Scale for observable-specific factors
-        if self.sqrts == 200:
-            if observable_type == 'hadron':
-                if observable == 'pt_ch_star':
-                    sigma_inel = 42.
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-                if observable == 'pt_pi0_phenix':
-                    sigma_inel = 42. # Update
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-            elif observable_type == 'inclusive_chjet':
-                if observable == 'pt_star':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-            elif observable_type == 'semi_inclusive_chjet':
-                # Note that n_trig histograms should also be scaled by xsec/n_events
-                if observable in ['IAA_star', 'dphi_star']:
-                    self.observable_settings['jetscape_distribution'].Scale(1./(xsec/weight_sum))
-        
-        if self.sqrts == 2760:
-            if observable_type == 'hadron':
-                if observable in ['pt_ch_alice', 'pt_pi_alice', 'pt_pi0_alice']:
-                    sigma_inel = 61.8
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-                elif observable == 'pt_ch_atlas':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
-                elif observable == 'pt_ch_cms':
-                    sigma_inel = 64. 
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-            elif observable_type == 'inclusive_jet':
-                if observable == 'pt_alice':
-                    sigma_inel = 62.1
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-                if observable == 'pt_atlas':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.y_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1.e6) # convert to nb
-                if observable == 'pt_cms':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1.e6) # convert to nb
-                if observable in ['Dz_atlas', 'Dpt_atlas', 'Dz_cms', 'Dpt_cms']:
-                    if observable in ['Dz_atlas', 'Dpt_atlas']:
-                        hname = f'h_{observable_type}_Dz_atlas{self.suffix}_Njets_{centrality}{pt_suffix}'
-                    elif observable in ['Dz_cms', 'Dpt_cms']:
-                        hname = f'h_{observable_type}_Dz_cms{self.suffix}_Njets_{centrality}{pt_suffix}'
-                    h_njets = self.input_file.Get(hname)
-                    h_njets.SetDirectory(0)
-                    n_jets = h_njets.GetBinContent(1) # Note that Njets histogram should also be scaled by xsec/n_events
-                    if n_jets > 0.:
-                        self.observable_settings['jetscape_distribution'].Scale(1./(n_jets * (xsec/weight_sum)))
-                    else:
-                        print('WARNING: N_jets = 0')
-            elif observable_type == 'inclusive_chjet':
-                if observable == 'pt_alice':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-            elif observable_type == 'semi_inclusive_chjet':
-                # Note that n_trig histograms should also be scaled by xsec/n_events
-                if observable in ['IAA_alice', 'dphi_alice']:
-                    self.observable_settings['jetscape_distribution'].Scale(1./(xsec/weight_sum))
-                        
-        if self.sqrts == 5020:
-            if observable_type == 'hadron':
-                if observable in ['pt_ch_alice', 'pt_pi_alice']:
-                    sigma_inel = 67.6
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma_inel)
-                elif observable == 'pt_ch_cms':
-                    sigma = 70.
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*np.pi))
-                    self.observable_settings['jetscape_distribution'].Scale(1./sigma)
-            elif observable_type == 'inclusive_jet':
-                if observable == 'pt_alice':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                if observable == 'pt_atlas':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.y_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1.e6) # convert to nb
-                if observable == 'pt_cms':
-                    self.observable_settings['jetscape_distribution'].Scale(1./(2*self.eta_cut))
-                    self.observable_settings['jetscape_distribution'].Scale(1.e6) # convert to nb
-                if observable in ['Dz_atlas', 'Dpt_atlas']:
-                    hname = f'h_{observable_type}_Dz_atlas{self.suffix}_Njets_{centrality}{pt_suffix}'
-                    h_njets = self.input_file.Get(hname)
-                    h_njets.SetDirectory(0)
-                    n_jets = h_njets.GetBinContent(1) # Note that Njets histogram should also be scaled by xsec/n_events
-                    if n_jets > 0.:
-                        self.observable_settings['jetscape_distribution'].Scale(1./(n_jets * (xsec/weight_sum)))
-                    else:
-                        print('WARNING: N_jets = 0')
-
-        # Scale by bin-dependent factor (approximation for pp QA)
-        if self.scale_by:
-            nBins = self.observable_settings['jetscape_distribution'].GetNbinsX()
-            for bin in range(1, nBins+1):
-                h_x = self.observable_settings['jetscape_distribution'].GetBinCenter(bin)
-                h_y = self.observable_settings['jetscape_distribution'].GetBinContent(bin)
-                h_error = self.observable_settings['jetscape_distribution'].GetBinError(bin)
-                if self.scale_by == '1/pt':
-                    scale_factor = 1./h_x
-                self.observable_settings['jetscape_distribution'].SetBinContent(bin, h_y*scale_factor)
-                self.observable_settings['jetscape_distribution'].SetBinError(bin, h_error*scale_factor)
-
-        #--------------------------------------------------
-        # (4) Self-normalize histogram if appropriate
-        if self_normalize:
-            if observable in ['zg_alice', 'tg_alice']:
-                min_bin = 0
-            else:
-                min_bin = 1
-            nbins = self.observable_settings['jetscape_distribution'].GetNbinsX()
-            integral = self.observable_settings['jetscape_distribution'].Integral(min_bin, nbins, 'width')
-            if integral > 0.:
-                self.observable_settings['jetscape_distribution'].Scale(1./integral)
-            else:
-                print('WARNING: integral for self-normalization is 0')
-
-    #-------------------------------------------------------------------------------------------
     # Initialize from settings from config file into class members
     #-------------------------------------------------------------------------------------------
-    def init_common_settings(self, block):
+    def init_common_settings(self, observable, block):
 
         self.xtitle = block['xtitle']
         if 'eta_cut' in block:
@@ -510,6 +342,46 @@ class PlotResults(common_base.CommonBase):
         else:
             self.scale_by = None
 
+        # Flag to plot hole histogram (for hadron histograms only)
+        if self.is_AA:
+            self.plot_holes = observable in ['pt_ch_alice', 'pt_pi_alice', 'pt_pi0_alice', 'pt_ch_cms', 
+                                            'pt_ch_atlas', 'pt_pi0_phenix', 'pt_ch_star']
+
+            # Flag to plot unsubtracted histogram (for certain jet histograms)
+            self.plot_unsubtracted = observable in ['pt_alice', 'pt_atlas', 'pt_cms', 'charge_cms', 'angularity_alice', 
+                                                    'g_alice', 'ptd_alice', 'mass_alice', 'pt_star', 'IAA_alice', 'IAA_star']
+        else:
+            self.plot_holes = False
+            self.plot_unsubtracted = False
+
+    #-------------------------------------------------------------------------------------------
+    # Initialize JETSCAPE distribution into self.observable_settings
+    #-------------------------------------------------------------------------------------------
+    def initialize_jetscape_distribution(self, observable_type, observable, centrality, pt_suffix='', self_normalize=False):
+
+        # Add centrality bin to list, if needed
+        if self.is_AA:
+            if centrality not in self.observable_centrality_list:
+                self.observable_centrality_list.append(centrality)
+
+        # Get histogram and add to self.observable_settings
+        #  - In AA case, also add hole histogram
+        #  - In the case of semi-inclusive measurements construct difference of histograms
+        self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix)
+
+        # Normalization
+        # Note: If we divide by the sum of weights (corresponding to n_events) and multiply by the
+        #       pt-hat cross-section, then JETSCAPE distribution gives cross-section: dsigma/dx (in mb)
+        self.scale_histogram(self.observable_settings['jetscape_distribution'], observable_type, observable, 
+                             centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
+
+        # Also normalize the holes/unsubtracted histograms, if applicable
+        if self.is_AA and self.observable_settings['jetscape_distribution']:
+
+            if self.plot_holes or self.plot_unsubtracted:
+                self.scale_histogram(self.observable_settings['jetscape_distribution_unsubtracted'], observable_type, observable, 
+                                    centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
+    
     #-------------------------------------------------------------------------------------------
     # Get histogram and add to self.observable_settings
     #  - In AA case, also add hole histogram
@@ -536,22 +408,29 @@ class PlotResults(common_base.CommonBase):
                 h_jetscape = None
             self.observable_settings['jetscape_distribution'] = h_jetscape
 
-            # For hadrons, subtract the holes
-            #if h_jetscape and observable in ['pt_ch_alice', 'pt_pi_alice', 'pt_pi0_alice', 'pt_ch_cms', 'pt_ch_atlas', 'pt_pi0_phenix', 'pt_ch_star']:
+            # If AA, include hole/unsubtracted histograms
+            if self.is_AA:
 
-            #    hname_holes = f'{self.hname}_holes'
-            #    h_holes = self.input_file.Get(hname_holes)
-            #    h_holes.SetDirectory(0)
-            #    self.observable_settings['jetscape_distribution_holes'] = h_holes
-            #    self.observable_settings['jetscape_distribution'].Add(h_holes, -1)
+                # For hadrons, subtract the holes (and save unsubtracted histogram)
+                if h_jetscape and self.plot_holes:
 
-            ## For jet observables that we perform subtraction on, get the unsubtracted observable
-            #elif h_jetscape and observable in ['inclusive_jet_pt_alice', 'inclusive_jet_pt_atlas', 'inclusive_jet_pt_cms', 'inclusive_jet_charge_cms', 'inclusive_chjet_angularity_alice', 'inclusive_chjet_pt_alice', 'inclusive_chjet_g_alice', 'inclusive_chjet_ptd_alice', 'inclusive_chjet_mass_alice', 'inclusive_chjet_pt_star', 'semi_inclusive_chjet_IAA', 'semi_inclusive_chjet_IAA_star']:
+                    hname_holes = f'h_{observable_type}_{observable}{self.suffix}_holes_{centrality}{pt_suffix}'
+                    h_holes = self.input_file.Get(hname_holes)
+                    h_holes.SetDirectory(0)
 
-            #    hname_unsubtracted = f'{self.hname}_unsubtracted'
-            #    h_unsubtracted = self.input_file.Get(hname_unsubtracted)
-            #    h_unsubtracted.SetDirectory(0)
-            #    self.observable_settings['jetscape_distribution_unsubtracted'] = h_unsubtracted
+                    self.observable_settings['jetscape_distribution_unsubtracted'] = self.observable_settings['jetscape_distribution'].Clone()
+                    hname_unsubtracted = '{}_unsubtracted'.format(self.observable_settings['jetscape_distribution'])
+                    self.observable_settings['jetscape_distribution_unsubtracted'].SetName(hname_unsubtracted)
+
+                    self.observable_settings['jetscape_distribution'].Add(h_holes, -1)
+
+                # For jet observables that we perform subtraction on, get the unsubtracted observable
+                elif h_jetscape and self.plot_unsubtracted:
+
+                    hname_unsubtracted = f'h_{observable_type}_{observable}{self.suffix}_unsubtracted_{centrality}{pt_suffix}'
+                    h_unsubtracted = self.input_file.Get(hname_unsubtracted)
+                    h_unsubtracted.SetDirectory(0)
+                    self.observable_settings['jetscape_distribution_unsubtracted'] = h_unsubtracted
 
     #-------------------------------------------------------------------------------------------
     # Construct semi-inclusive observables from difference of histograms
@@ -601,6 +480,156 @@ class PlotResults(common_base.CommonBase):
                 self.observable_settings['jetscape_distribution'] = None
 
     #-------------------------------------------------------------------------------------------
+    # Scale histogram for:
+    #  - xsec/weight_sum
+    #  - bin width
+    #  - observable-specific factors (eta, sigma_inel, n_jets, ...)
+    #  - self-normalization
+    #-------------------------------------------------------------------------------------------
+    def scale_histogram(self, h, observable_type, observable, centrality, pt_suffix='', self_normalize=False):
+
+        if not h:
+            return
+
+        #--------------------------------------------------
+        # (1) Scale all histograms by the min-pt-hat cross-section and weight-sum
+        if self.is_AA:
+            h_xsec = self.input_file.Get(f'h_xsec_{centrality}')
+            weight_sum = self.input_file.Get(f'h_weight_sum_{centrality}').GetBinContent(1)
+        else:
+            h_xsec = self.input_file.Get('h_xsec')
+            weight_sum = self.input_file.Get('h_weight_sum').GetBinContent(1)
+        xsec = h_xsec.GetBinContent(1) / h_xsec.GetEntries()
+        h.Scale(xsec/weight_sum)
+        
+        #--------------------------------------------------
+        # (2) Scale all histograms by bin width
+        h.Scale(1., 'width')
+
+        #--------------------------------------------------
+        # (3) Scale for observable-specific factors
+        if self.sqrts == 200:
+            if observable_type == 'hadron':
+                if observable == 'pt_ch_star':
+                    sigma_inel = 42.
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./(2*np.pi))
+                    h.Scale(1./sigma_inel)
+                if observable == 'pt_pi0_phenix':
+                    sigma_inel = 42. # Update
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./(2*np.pi))
+                    h.Scale(1./sigma_inel)
+            elif observable_type == 'inclusive_chjet':
+                if observable == 'pt_star':
+                    h.Scale(1./(2*self.eta_cut))
+            elif observable_type == 'semi_inclusive_chjet':
+                # Note that n_trig histograms should also be scaled by xsec/n_events
+                if observable in ['IAA_star', 'dphi_star']:
+                    h.Scale(1./(xsec/weight_sum))
+        
+        if self.sqrts == 2760:
+            if observable_type == 'hadron':
+                if observable in ['pt_ch_alice', 'pt_pi_alice', 'pt_pi0_alice']:
+                    sigma_inel = 61.8
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./sigma_inel)
+                elif observable == 'pt_ch_atlas':
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./(2*np.pi))
+                elif observable == 'pt_ch_cms':
+                    sigma_inel = 64. 
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./(2*np.pi))
+                    h.Scale(1./sigma_inel)
+            elif observable_type == 'inclusive_jet':
+                if observable == 'pt_alice':
+                    sigma_inel = 62.1
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./sigma_inel)
+                if observable == 'pt_atlas':
+                    h.Scale(1./(2*self.y_cut))
+                    h.Scale(1.e6) # convert to nb
+                if observable == 'pt_cms':
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1.e6) # convert to nb
+                if observable in ['Dz_atlas', 'Dpt_atlas', 'Dz_cms', 'Dpt_cms']:
+                    if observable in ['Dz_atlas', 'Dpt_atlas']:
+                        hname = f'h_{observable_type}_Dz_atlas{self.suffix}_Njets_{centrality}{pt_suffix}'
+                    elif observable in ['Dz_cms', 'Dpt_cms']:
+                        hname = f'h_{observable_type}_Dz_cms{self.suffix}_Njets_{centrality}{pt_suffix}'
+                    h_njets = self.input_file.Get(hname)
+                    h_njets.SetDirectory(0)
+                    n_jets = h_njets.GetBinContent(1) # Note that Njets histogram should also be scaled by xsec/n_events
+                    if n_jets > 0.:
+                        h.Scale(1./(n_jets * (xsec/weight_sum)))
+                    else:
+                        print('WARNING: N_jets = 0')
+            elif observable_type == 'inclusive_chjet':
+                if observable == 'pt_alice':
+                    h.Scale(1./(2*self.eta_cut))
+            elif observable_type == 'semi_inclusive_chjet':
+                # Note that n_trig histograms should also be scaled by xsec/n_events
+                if observable in ['IAA_alice', 'dphi_alice']:
+                    h.Scale(1./(xsec/weight_sum))
+                        
+        if self.sqrts == 5020:
+            if observable_type == 'hadron':
+                if observable in ['pt_ch_alice', 'pt_pi_alice']:
+                    sigma_inel = 67.6
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./sigma_inel)
+                elif observable == 'pt_ch_cms':
+                    sigma = 70.
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1./(2*np.pi))
+                    h.Scale(1./sigma)
+            elif observable_type == 'inclusive_jet':
+                if observable == 'pt_alice':
+                    h.Scale(1./(2*self.eta_cut))
+                if observable == 'pt_atlas':
+                    h.Scale(1./(2*self.y_cut))
+                    h.Scale(1.e6) # convert to nb
+                if observable == 'pt_cms':
+                    h.Scale(1./(2*self.eta_cut))
+                    h.Scale(1.e6) # convert to nb
+                if observable in ['Dz_atlas', 'Dpt_atlas']:
+                    hname = f'h_{observable_type}_Dz_atlas{self.suffix}_Njets_{centrality}{pt_suffix}'
+                    h_njets = self.input_file.Get(hname)
+                    h_njets.SetDirectory(0)
+                    n_jets = h_njets.GetBinContent(1) # Note that Njets histogram should also be scaled by xsec/n_events
+                    if n_jets > 0.:
+                        h.Scale(1./(n_jets * (xsec/weight_sum)))
+                    else:
+                        print('WARNING: N_jets = 0')
+
+        # Scale by bin-dependent factor (approximation for pp QA)
+        if self.scale_by:
+            nBins = h.GetNbinsX()
+            for bin in range(1, nBins+1):
+                h_x = h.GetBinCenter(bin)
+                h_y = h.GetBinContent(bin)
+                h_error = h.GetBinError(bin)
+                if self.scale_by == '1/pt':
+                    scale_factor = 1./h_x
+                h.SetBinContent(bin, h_y*scale_factor)
+                h.SetBinError(bin, h_error*scale_factor)
+
+        #--------------------------------------------------
+        # (4) Self-normalize histogram if appropriate
+        if self_normalize:
+            if observable in ['zg_alice', 'tg_alice']:
+                min_bin = 0
+            else:
+                min_bin = 1
+            nbins = h.GetNbinsX()
+            integral = h.Integral(min_bin, nbins, 'width')
+            if integral > 0.:
+                h.Scale(1./integral)
+            else:
+                print('WARNING: integral for self-normalization is 0')
+
+    #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
     #-------------------------------------------------------------------------------------------
     def plot_observable(self, observable_type, observable, centrality, pt_suffix='', logy = False):
@@ -626,6 +655,8 @@ class PlotResults(common_base.CommonBase):
         if not self.skip_AA_ratio:
             h_pp = self.pp_ref_file.Get(f'jetscape_distribution_{label}')
             self.observable_settings['jetscape_distribution'].Divide(h_pp)
+            if self.plot_holes or self.plot_unsubtracted:
+                self.observable_settings['jetscape_distribution_unsubtracted'].Divide(h_pp)
 
         c = ROOT.TCanvas('c', 'c', 600, 450)
         c.SetRightMargin(0.05);
@@ -634,7 +665,7 @@ class PlotResults(common_base.CommonBase):
         c.SetBottomMargin(0.17);
         c.cd()
 
-        legend = ROOT.TLegend(0.55,0.65,0.75,0.82)
+        legend = ROOT.TLegend(0.55,0.63,0.75,0.83)
         self.plot_utils.setup_legend(legend, 0.055, sep=-0.1)
         
         self.bins = np.array(self.observable_settings['jetscape_distribution'].GetXaxis().GetXbins())
@@ -650,7 +681,7 @@ class PlotResults(common_base.CommonBase):
         myBlankHisto.GetYaxis().SetTitleOffset(1.)
         myBlankHisto.Draw('E')
                 
-        # Draw distribution
+        # Draw data
         if self.observable_settings['data_distribution']:
             self.output_dict[f'data_distribution_{label}'] = self.observable_settings['data_distribution']
             self.observable_settings['data_distribution'].SetName(f'data_distribution_{label}')
@@ -682,6 +713,17 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['jetscape_distribution'].SetLineColor(self.jetscape_color)
             self.observable_settings['jetscape_distribution'].DrawCopy('PE same')
         legend.AddEntry(self.observable_settings['jetscape_distribution'], 'JETSCAPE', 'f')
+
+        # Also draw JETSCAPE before hole subtraction, if applicable
+        if self.plot_holes or self.plot_unsubtracted:
+            self.observable_settings['jetscape_distribution_unsubtracted'].SetFillColor(self.jetscape_color)
+            self.observable_settings['jetscape_distribution_unsubtracted'].SetFillColorAlpha(self.jetscape_color, self.alpha/2)
+            self.observable_settings['jetscape_distribution_unsubtracted'].SetFillStyle(3144)
+            self.observable_settings['jetscape_distribution_unsubtracted'].SetMarkerSize(0.)
+            self.observable_settings['jetscape_distribution_unsubtracted'].SetMarkerStyle(0)
+            self.observable_settings['jetscape_distribution_unsubtracted'].SetLineWidth(0)
+            self.observable_settings['jetscape_distribution_unsubtracted'].DrawCopy('E3 same')
+            legend.AddEntry(self.observable_settings['jetscape_distribution_unsubtracted'], 'unsubtracted', 'f')
 
         legend.Draw()
         
