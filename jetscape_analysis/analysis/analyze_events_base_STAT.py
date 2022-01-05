@@ -92,6 +92,8 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         # Write analysis task output to ROOT file
         self.write_output_objects()
 
+        print('Done!')
+
     # ---------------------------------------------------------------
     # Analyze event chunk
     # ---------------------------------------------------------------
