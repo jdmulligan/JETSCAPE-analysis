@@ -63,6 +63,7 @@ SoftDrop:
 hadron:
 
   # https://www.hepdata.net/record/ins1657384
+  # Test edit from Peter: works
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
