@@ -63,7 +63,7 @@ SoftDrop:
 hadron:
 
   # https://www.hepdata.net/record/ins1657384
-  # Test edit from Peter: works
+  # pmj 1/12/22: QA OK 
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
@@ -84,6 +84,7 @@ hadron:
     ytitle_AA: '#it{R}_{AA}'
   
   # https://www.hepdata.net/record/ins1759506 -- charged pions
+  # pmj 1/12/22: QA OK  
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
@@ -104,6 +105,7 @@ hadron:
     ytitle_AA: '#it{R}_{AA}'
 
   # https://www.hepdata.net/record/ins1496050
+  # pmj 1/12/22: QA OK but Table 7 in hepdata has narrower vertical range, [1e-16,1e0]. e-18 seems to be the sys error
   pt_ch_cms:
     eta_cut: 1.0
     pt: [5.0, 400.]
