@@ -376,6 +376,7 @@ inclusive_jet:
     skip_AA_ratio: True
     
   # https://www.hepdata.net/record/ins1672962
+  # pmj 13/1/22: QA OK
   mg_cms:
     jet_R: [0.4]
     eta_cut: 1.3
@@ -434,6 +435,7 @@ inclusive_jet:
   # https://www.hepdata.net/record/ins1620905
   # Note that pp distributions are not reported except for 160-180 GeV 
   # (the other pt bins have only "pp smeared" reported)
+  # pmj 13/1/22 QA OK
   zg_cms:
     jet_R: [0.4]
     eta_cut: 1.3
@@ -471,6 +473,7 @@ inclusive_chjet:
   
   # https://inspirehep.net/literature/1893479 (no hepdata yet)
   # TODO: update hepdata
+  # pmj 13/1/22: QA OK
   zg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
