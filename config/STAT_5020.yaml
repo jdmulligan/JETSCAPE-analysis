@@ -244,6 +244,9 @@ inclusive_jet:
     y_max_AA: 1.9
     
   # https://www.hepdata.net/record/ins1848440
+  # pmj 1/12/22: For Fig 5, the actual figure in the paper only shows R=0.2 and R=0.1 vs centrality, but HEPDATA lists all the R values, as indicated below
+  # pmj 1/12/22: This is probably OK, and nothing we can do about, but it is odd to list data not shown and we have no means of cross-checking it
+  # pmj 1/12/22: otherwise looks OK
   pt_cms:
     jet_R: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0]
     eta_cut: 2.0
@@ -277,6 +280,7 @@ inclusive_jet:
     y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1673177
+  # pmj 1/12/22: QA OK
   Dz_atlas:
     jet_R: [0.4]
     y_cut: 2.1
