@@ -101,6 +101,7 @@ hadron:
     
   # https://www.hepdata.net/record/ins1662651 (no pp hepdata)
   # Note: By default, pi0 will be decayed by JETSCAPE...
+  # pmj 13/1/22: QA OK
   pt_pi0_alice:
     eta_cut: 0.7
     pt: [5.0, 20.]
@@ -123,6 +124,7 @@ hadron:
   # leptons from W/Z decays removed
   # Figs 10,13
   # Note: The paper also performs pseudorapidity dependence for 0-5%, which we omit for now (Fig 14)
+  # pmj 13/1/22 QA OK
   pt_ch_atlas:
     eta_cut: 2.
     pt: [5.0, 150.]
