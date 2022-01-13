@@ -134,6 +134,8 @@ hadron_correlations:
 
   # https://www.hepdata.net/record/ins1686834
   # Fig 5 (scalar product method)
+  # pmj 1/12/22: "Table 11" entry below is confusing - observable name is "hedata_pp_..." but Table 11 is for PbPb 70-80%. Is this intentional?
+  # pmj 1/12/22: Also, y_min_pp should be zero and y_max_pp should be 0.2 
   v2_atlas:
     eta_cut: 2.5
     pt: [5., 60.]
@@ -155,6 +157,9 @@ hadron_correlations:
   # https://www.hepdata.net/record/ins1511868
   # Fig 1 (scalar product method)
   # Note: histogram binnings are not provided
+  # pmj 1/12/22:Similar issues to previous entry
+  # pmj 1/12/11: "Table 7" observable name is "hedata_pp_..." but Table 7 is for PbPb 50-60%. 
+  # pmj 1/12/22: Also, y_min_pp should be zero and y_max_pp should be 0.25 
   v2_cms:
     eta_cut: 1.
     pt: [5., 100.]
