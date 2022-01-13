@@ -345,6 +345,7 @@ inclusive_jet:
   # Note that the paper does not construct the PbPb/pp ratio directly, 
   # but only contains the distributions (and q/g templates).
   # We therefore skip constructing the PbPb/pp ratio for now.
+  # pmj 1/13/22: QA OK
   charge_cms:
     jet_R: [0.4]
     eta_cut: 1.5
