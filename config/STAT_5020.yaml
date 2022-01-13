@@ -157,7 +157,7 @@ hadron_correlations:
   # https://www.hepdata.net/record/ins1511868
   # Fig 1 (scalar product method)
   # Note: histogram binnings are not provided
-  # pmj 1/12/22:Similar issues to previous entry
+  # pmj 1/12/22: Similar issues to previous entry
   # pmj 1/12/11: "Table 7" observable name is "hedata_pp_..." but Table 7 is for PbPb 50-60%. 
   # pmj 1/12/22: Also, y_min_pp should be zero and y_max_pp should be 0.25 
   v2_cms:
@@ -187,6 +187,7 @@ inclusive_jet:
   # Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
   # Here, we use the result where the cut is applied on PbPb and pp
   # Note: The pp HEPData file contains no leading track requirement (only used for QA)
+  # pmj 1/12/22: QA OK
   pt_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.7
@@ -216,6 +217,9 @@ inclusive_jet:
   #       (they argue this is small...unclear if they correct for it...we will ignore it here)
   # Note: The paper also performs rapidity dependence for 0-10%, which we omit for now
   # Note the PbPb binning in hepdata is different than the pp hepdata cross-section binning
+  # pmj 1/12/22: lower pT limit is centrality-dependent - e.g. for 0-10% the lower limit in data is 100 GeV; similarly up to 40%.
+  # pmj 1/12/22: Does the framework just put the values below the data limit for a given centrality to zero?
+  # pmj 1/12/22: Table 4 upper limit can be 1e3
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.8
