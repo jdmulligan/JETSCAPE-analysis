@@ -51,7 +51,6 @@ min_jet_pt: 20.
 max_jet_y: 3.
 #------------------------------------------------------------------
 #------------------------------------------------------------------
-# Peter test edit
 
 # Hadron spectra
 # Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
@@ -59,6 +58,7 @@ hadron:
 
   # https://www.hepdata.net/record/ins1657384
   # Figs 3,6
+  # pmj 13/1/22 QA OK
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
@@ -80,6 +80,7 @@ hadron:
     
   # https://www.hepdata.net/record/ins1377750 -- charged pions (no pp hepdata)
   # Figs 22,23
+  # pmj 13/1/22: QA OK
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
