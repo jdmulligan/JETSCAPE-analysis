@@ -147,6 +147,7 @@ hadron:
 
   # https://www.hepdata.net/record/ins1088823
   # Figs 3a,5
+  # pmj 13/1/22: QA OK; but why is lower pT bound 6 GeV and not 5 GeV? Data extend to 1 GeV, make uniform with other data?
   pt_ch_cms:
     eta_cut: 1.0
     pt: [6.0, 100.]
@@ -177,12 +178,17 @@ hadron_correlations:
 
   # https://www.hepdata.net/record/ins1483164
   # pi0-hadron correlations
+  # pmj 13/1/22: QA OK; but which hepdata tables will data be pulled from? This looks incomplete to me...
+  # pmj 13/1/22: And recoil hadrons are very soft (<6 GeV), almost all are below the lower bound of 5 GeV we are setting elsewhere for hadron pT
+  # pmj 13/1/22: Are we sure this is a useful dataset for this round of calculations?
   pi0_hadron_alice:
     pt_trig: [8., 16.]
     centrality: [[0,10]]
     
   # https://www.hepdata.net/record/ins1116150
   # v2
+  # pmj 13/1/22: why only [0,10] centrality? Paper also has [5,10], [10-20], [20,30], [30,40], [40,50]
+  # pmj 13/1/22: for v2, non-central is usually more relevent...
   v2_alice:
     eta_cut: 0.8
     pt: [5., 20.]
