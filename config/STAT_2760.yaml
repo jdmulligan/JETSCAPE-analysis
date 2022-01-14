@@ -200,6 +200,7 @@ inclusive_jet:
 
   # https://www.hepdata.net/record/ins1343112
   # pT^{ch lead} > 5 GeV
+  # pmj 13/1/22 QA OK
   pt_alice:
     jet_R: [0.2]
     eta_cut_R: 0.7
@@ -227,6 +228,7 @@ inclusive_jet:
   # https://www.hepdata.net/record/ins1326911
   # Figs 1,3
   # Note: the paper also considers the rapidity dependence, which we omit here for now
+  # pmj 13/1/22 QA OK
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.1
