@@ -459,6 +459,7 @@ inclusive_chjet:
 
   # https://www.hepdata.net/record/ins1682990
   # Note: reference is to PYTHIA
+  # pm 13/1/22: jeteta cut is 0.7; otherwise QA OK
   g_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
@@ -512,6 +513,7 @@ semi_inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   #       - Track pt > 0.15 (not corrected)
   # Fig 9,10
+  # pmj 13/1/22: QA very OK
   IAA_alice:
     jet_R: [0.2, 0.4, 0.5]
     eta_cut_R: 0.9
@@ -572,6 +574,7 @@ semi_inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   # There is no pp reference at 2.76 TeV -- we consider only the Pb-Pb distribution
   # We consider only tau2/tau1 w/CA reclustering for now
+  # pm 13/1/22: QA OK
   nsubjettiness_alice:
     jet_R: [0.4]
     pt: [40., 60.]
@@ -597,6 +600,7 @@ semi_inclusive_chjet:
 dijet:
 
   # https://www.hepdata.net/record/ins1394678
+  # pmj 13/1/22: incomplete
   v2_alice:
     jet_R: [0.2]
     eta_cut: 0.7
@@ -604,6 +608,7 @@ dijet:
     centrality: [[0,10]]
   
   # https://www.hepdata.net/record/ins1240088
+  # pmj 13/1/22: incomplete
   v2_atlas:
     jet_R: [0.2]
     pt: [45., 160.]
@@ -613,6 +618,7 @@ dijet:
   # TGraphs for R=0.4 supplied by Laura/Dennis
   # Fig 8 -- centrality dependence for pt1=[100,126]
   # Fig 9 -- pt1-dependence for 0-10%
+  # 13/1/22 pmj: QA OK
   xj_atlas:
     jet_R: [0.4]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
