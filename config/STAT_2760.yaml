@@ -260,6 +260,7 @@ inclusive_jet:
   
   # https://www.hepdata.net/record/ins1487278
   # Figs 4,8
+  # pm 13/1/22 QA OK
   pt_cms:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut: 2.0
@@ -297,6 +298,9 @@ inclusive_jet:
   # Note: the paper also considers the rapidity dependence, which we omit here for now (Figs 4,5)
   # Note that the pp reference data in hepdata is only provided for the inclusive pt range
   # Figs 3,7
+  # pmj 1/13/22:  missing [10,20] centrality
+  # pmj 1/13/22: why take Table 5 (|y|<2.1) rather than Table 6 (|y|<0.3)? 
+  # pmj 1/13/22: Answer maybe Fig 5 (differnetial in y, integrated in pT) vs Fig 7 (differnetial in pT, integrated in y); let's discuss
   Dz_atlas:
     jet_R: [0.4]
     y_cut: 2.1
