@@ -356,6 +356,7 @@ inclusive_jet:
   # https://twiki.cern.ch/CMSPublic/HIN12013DataTables
   # Figs 2,3,4
   # Note that there is a breakdown of statistical and systematic uncertainties that we do not yet include
+  # pmj 13/1/22 QA OK
   Dz_cms:
     jet_R: [0.3]
     eta_cut: [0.3, 2.]
@@ -401,6 +402,7 @@ inclusive_chjet:
 
   # https://www.hepdata.net/record/ins1263194
   # Mostly this paper is RCP (no pp), which we omit for now -- however it has R02/R03 ratio for 0-10%
+  # pmj 13/1/22 QA OK
   pt_alice:
     jet_R: [0.2, 0.3]
     eta_cut: 0.5
@@ -427,6 +429,8 @@ inclusive_chjet:
   # Fig 7
   # Note: reference is p-Pb, which we use as a proxy for pp
   # Note: PbPb/pPb ratio is missing from HEPData (Fig 8)
+  # pmj 13/1/22: eta_jet cut is 0.5
+  # pmj 13/1/22 QA OK
   mass_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
