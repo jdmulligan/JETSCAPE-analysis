@@ -415,7 +415,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             # Store a list of dphi of associated particles
                             # Since we need to keep track of the number of trigger particles, we store a list per trigger
                             # NOTE: Here we standardize the values to match with the measured correlation range
-                            self.observable_dict_event[f'dihadron_dphi_ch_star_{label}'].append([
+                            self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}'].append([
                                 analyze_events_base_STAT.dphi_in_range_for_hadron_correlations(phi) for phi in dphi_values
                             ])
 
