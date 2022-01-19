@@ -112,10 +112,12 @@ hadron_correlations:
   # pmj 13/1/22: incomplete. This is a key RHIC paper imho (based on the analysis of Xin-Nian et al., which formed the basis of a lot of developments)
   dihadron_star:
     eta_cut: 1.0
-    pt_trig: [8., 15.]
+    pt_trig: [[8., 15.]]
+    # TODO: Do we want to skip 4-6?
     pt_assoc: [[4, 6], [6, -1]]
-    # NOTE: Need to convert from N_part to centrality
-    centrality: [[0,5], [20, 40]]
+    # NOTE: Need to convert from N_part to centrality, which is available in Table 2 in https://inspirehep.net/literature/588808
+    # NOTE: They also report 40-60%, but that goes outside of our centrality range, so we skip it here
+    centrality: [[0,5], [5, 10], [10, 20], [20, 30], [30, 40]]
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
