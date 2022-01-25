@@ -17,6 +17,7 @@ from __future__ import print_function
 import os
 import yaml
 import time
+from pathlib import Path
 from numba import jit
 
 # Analysis
@@ -40,13 +41,13 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     # ---------------------------------------------------------------
     def __init__(self, config_file="", input_file="", output_dir="", **kwargs):
         super(AnalyzeJetscapeEvents_BaseSTAT, self).__init__(**kwargs)
-        
+
         self.config_file = config_file
         self.input_file_hadrons = input_file
         self.output_dir = Path(output_dir)
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
-            
+
         with open(self.config_file, 'r') as f:
             config = yaml.safe_load(f)
 
@@ -64,12 +65,15 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         # If AA, get centrality bin
         if self.is_AA:
             hydro_index_file = os.path.join(os.path.dirname(self.input_file_hadrons), 'index_to_hydro_event.yaml')
-            file_index = int(self.input_file_hadrons.split('/')[-1].split('_')[3])
+            # index of 4 based on an example filename of "jetscape_PbPb_Run0005_5020_0001_final_state_hadrons_00.parquet",
+            # which results in 1
+            file_index = int(Path(self.input_file_hadrons).name.split('_')[4])
             with open(hydro_index_file, 'r') as f:
                 config = yaml.safe_load(f)
                 centrality_string = config[file_index].split('/')[0].split('_')
+                # index of 1 and 2 based on an example entry of "cent_00_01"
                 self.centrality = [int(centrality_string[1]), int(centrality_string[2])]
-            
+
     # ---------------------------------------------------------------
     # Main processing function
     # ---------------------------------------------------------------
@@ -106,27 +110,27 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
 
             if i % 1000 == 0:
                 print(f'event: {i}    (time elapsed: {time.time() - start} s)')
-                
+
             if i > self.n_event_max:
                 break
-                
+
             # Store dictionary of all observables for the event
             self.observable_dict_event = {}
-            
+
             # Call user-defined function to analyze event
             self.analyze_event(event)
-            
+
             # Fill the observables dict to a new entry in the event list
             event_weight = event['event_weight']
             weight_sum += event_weight
             if self.event_has_entries(self.observable_dict_event):
-            
+
                 # Fill event cross-section weight
                 self.observable_dict_event['event_weight'] = event_weight
                 self.observable_dict_event['pt_hat'] = event['pt_hat']
-                
+
                 self.output_event_list.append(self.observable_dict_event)
-                
+
         # Get total cross-section (same for all events at this point), weight sum, and centrality
         self.cross_section_dict['cross_section'] = event['cross_section']
         self.cross_section_dict['cross_section_error'] = event['cross_section_error']
@@ -140,11 +144,11 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     # Initialize output objects
     # ---------------------------------------------------------------
     def initialize_output_objects(self):
-    
+
         # Initialize list to store observables
         # Each entry in the list stores a dict for a given event
         self.output_event_list = []
-        
+
         # Store also the total cross-section (one number per file)
         self.cross_section_dict = {}
 
@@ -152,27 +156,27 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     # Save output event list into a dataframe
     # ---------------------------------------------------------------
     def event_has_entries(self, event_dict):
-    
+
         return bool([obs for obs in event_dict.values() if obs != []])
 
     # ---------------------------------------------------------------
     # Check if event centrality is within observable's centrality
     # ---------------------------------------------------------------
     def centrality_accepted(self, observable_centrality_list):
-    
+
         # AA
         if self.is_AA:
-        
+
             for observable_centrality in observable_centrality_list:
                 if self.centrality[0] >= observable_centrality[0] or np.isclose(observable_centrality[0],self.centrality[0]):
                     if self.centrality[1] <= observable_centrality[1] or np.isclose(observable_centrality[1],self.centrality[1]):
                         return True
             return False
-            
+
         # pp
         else:
             return True
-        
+
     # ---------------------------------------------------------------
     # Save output event list into a dataframe
     # ---------------------------------------------------------------
@@ -214,7 +218,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     # If select_status='-', select only positive status particles
     # ---------------------------------------------------------------
     def fill_fastjet_constituents(self, event, select_status=None, select_charged=False):
-    
+
         # Construct indices according to particle status
         if select_status == '-':
             status_mask = (event['status'] < 0)
@@ -264,5 +268,5 @@ def get_charged_mask(pid, select_charged):
             # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             if np.abs(pid_value) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                 charged_mask[i] = True
-                
+
     return charged_mask
