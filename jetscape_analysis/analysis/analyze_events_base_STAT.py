@@ -64,10 +64,13 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
 
         # If AA, get centrality bin
         if self.is_AA:
-            hydro_index_file = os.path.join(os.path.dirname(self.input_file_hadrons), 'index_to_hydro_event.yaml')
-            # index of 4 based on an example filename of "jetscape_PbPb_Run0005_5020_0001_final_state_hadrons_00.parquet",
-            # which results in 1
-            file_index = int(Path(self.input_file_hadrons).name.split('_')[4])
+            _final_state_hadrons_path = Path(self.input_file_hadrons)
+            # For an example filename of "jetscape_PbPb_Run0005_5020_0001_final_state_hadrons_00.parquet",
+            # - the run number is index 2
+            _run_number = _final_state_hadrons_path.stem.split("_")[2]
+            # - the file index is at index 4 (in the example, it extracts `1` as an int)
+            file_index = int(_final_state_hadrons_path.name.split('_')[4])
+            hydro_index_file = _final_state_hadrons_path.parent / f"{_run_number}_index_to_hydro_event.yaml"
             with open(hydro_index_file, 'r') as f:
                 config = yaml.safe_load(f)
                 centrality_string = config[file_index].split('/')[0].split('_')
