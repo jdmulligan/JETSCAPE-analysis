@@ -69,11 +69,11 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             # - the run number is index 2
             _run_number = _final_state_hadrons_path.stem.split("_")[2]
             # - the file index is at index 4 (in the example, it extracts `1` as an int)
-            file_index = int(_final_state_hadrons_path.name.split('_')[4])
-            hydro_index_file = _final_state_hadrons_path.parent / f"{_run_number}_index_to_hydro_event.yaml"
-            with open(hydro_index_file, 'r') as f:
-                config = yaml.safe_load(f)
-                centrality_string = config[file_index].split('/')[0].split('_')
+            _file_index = int(_final_state_hadrons_path.name.split('_')[4])
+            run_info_path = _final_state_hadrons_path.parent / f"{_run_number}_info.yaml"
+            with open(run_info_path, 'r') as f:
+                _run_info = yaml.safe_load(f)
+                centrality_string = _run_info["index_to_hydro_event"][_file_index].split('/')[0].split('_')
                 # index of 1 and 2 based on an example entry of "cent_00_01"
                 self.centrality = [int(centrality_string[1]), int(centrality_string[2])]
 
