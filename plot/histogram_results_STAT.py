@@ -231,21 +231,19 @@ class HistogramResults(common_base.CommonBase):
                     self.observable_centrality_list.append(centrality)
 
                 # Construct appropriate binning
-                bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type,
-                                                        observable, centrality, centrality_index)
-                if not bins.any():
-                    continue
+                dphi_bins = np.array(block["dphi_bins"])
 
                 # Histogram observable
                 pt_trigger_ranges = block["pt_trig"]
                 pt_associated_ranges = block["pt_assoc"]
                 # Loop over trigger and associated ranges
-                for pt_trig_range in pt_trigger_ranges:
+                # NOTE: n_trig will be calculated within the histogram observable
+                for i_trig_bin, pt_trig_range in enumerate(pt_trigger_ranges):
                     for pt_trig_min, pt_trig_max in pt_trig_range:
                         for pt_assoc_range in pt_associated_ranges:
                             for pt_assoc_min, pt_assoc_max in pt_assoc_range:
                                 label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
-                                self.histogram_observable(column_name=f'{observable_type}_{observable}_{label}', bins=bins, centrality=centrality)
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}_{label}', bins=dphi_bins, centrality=centrality, pt_bin=i_trig_bin)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -409,6 +407,14 @@ class HistogramResults(common_base.CommonBase):
             col = self.observables_df[column_name]
             bins = np.array([block['pt'][pt_bin], block['pt'][pt_bin+1]])
             self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
+
+        # Also store N_trig for dihadron correlations
+        if "dihadron_" in column_name:
+            start_of_label = column_name.find("_pt_trig")
+            column_name = f'{column_name[:start_of_label]}_Ntrig'
+            bins = np.array([block["pt_trig"][pt_bin]])
+            self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
+
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
