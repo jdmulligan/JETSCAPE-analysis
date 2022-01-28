@@ -718,20 +718,20 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['mass_alice']['eta_cut_R'] - jetR):
                     if jetR in self.inclusive_chjet_observables['mass_alice']['jet_R']:
                         if jet_pt > pt_min and jet_pt < pt_max:
-                
+
                             jet_mass = jet.m()
 
                             if self.is_AA:
-                                # Add holes together as four vectors, and then calculate their mass, removing it from the jet mass.
-                                hole_four_vector = fj.PseudoJet()    # Avoid modifying the original hole.
+                                # Subtract hole four vectors from the original jet, and then take the mass
+                                jet_for_mass_calculation = fj.PseudoJet(jet)    # Avoid modifying the original jet.
                                 for hadron in holes_in_jet:
-                                    hole_four_vector += hadron
-                                jet_mass_holes = hole_four_vector.m()
+                                    jet_for_mass_calculation -= hadron
+                                # NOTE: Since we haven't assigned to `jet_mass` yet, it still contains the unsubtracted mass
                                 self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}_unsubtracted'].append([jet_pt, jet_mass])
-                                jet_mass -= jet_mass_holes
+                                jet_mass = jet_for_mass_calculation.m()
 
                             self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}'].append([jet_pt, jet_mass])
-                            
+
         elif self.sqrts == 200:
 
             # STAR RAA
