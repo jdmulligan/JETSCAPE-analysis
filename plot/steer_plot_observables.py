@@ -7,7 +7,8 @@
        This will produce an "observables" parquet file for each final_state_hadrons file.
 
        In the AA case, the centrality is retrieved for each file, and the observables filled only for relevant centralities.
-         (the centrality for each file is recorded in index_to_hydro_event.yaml, e.g. '3: cent_00_01/08' for file 3 0-1%)
+         (the centrality for each file is recorded in Run*_info.yaml in the index_to_hydro_event map,
+         e.g. '3: cent_00_01/08' for file 3 0-1%)
 
        Usually this step should be done on XSEDE in the same job as the event generation.
        In case we need to compute observables manually, we provide an option to loop over all final_state_hadron
@@ -33,10 +34,10 @@
 
    (3) Merge all histograms together from Step 2.
 
-       TODO: We determine the set of histogram files to merge based on 
+       TODO: We determine the set of histogram files to merge based on
        the analysis name (e.g. 'Analysis0'), which contains a set of runs (e.g. 'Run0001', 'Run0002', ...),
        specified at https://github.com/JETSCAPE/STAT-XSEDE-2021/tree/main/docs/DataManagement.
-       We loop over all runs from all facilities in the Analysis, including all sqrt{s}. 
+       We loop over all runs from all facilities in the Analysis, including all sqrt{s}.
 
    (4) Plot final observables and write table for input to Bayesian analysis.
 
@@ -65,13 +66,13 @@ def main():
     # If AA, supply pp reference results in order to construct RAA
     pp_reference_filename = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_stampede/Run0001/plot/final_results.root'
 
-    # Note: the construction of observables and histograms is usually done on XSEDE, 
+    # Note: the construction of observables and histograms is usually done on XSEDE,
     #       and only the merging/plotting step is needed to be run locally
     construct_observables = False
     construct_histograms = False
     merge_histograms = False
     plot_histograms = True
-    
+
     #-----------------------------------------------------------------
     # Loop through final_state_hadron files, and construct observables
     if construct_observables:
@@ -86,11 +87,11 @@ def main():
                 cmd = f'python jetscape_analysis/analysis/analyze_events_STAT.py -c config/STAT_{sqrts}.yaml -i {final_state_hadron_dir}/{file} -o {observables_dir}'
                 print(cmd)
                 subprocess.run(cmd, check=True, shell=True)
-        
+
     #-----------------------------------------------------------------
     # Loop through observable files, and construct histograms
     if construct_histograms:
-    
+
         inputdir = os.path.join(final_state_hadron_dir, 'observables')
         outputdir = os.path.join(final_state_hadron_dir, 'histograms')
 
@@ -103,13 +104,13 @@ def main():
     #-----------------------------------------------------------------
     # Merge histograms
     if merge_histograms:
-    
+
         # Merge
         inputdir = os.path.join(final_state_hadron_dir, 'histograms')
         outputdir = os.path.join(final_state_hadron_dir, 'plot')
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
-        
+
         ROOT_files = os.listdir(inputdir)
         fname = f'histograms_{system}_{sqrts}_merged.root'
         cmd = f'hadd -f {os.path.join(outputdir, fname)}'
@@ -117,11 +118,11 @@ def main():
             if '.root' in file:
                 cmd += f' {os.path.join(inputdir, file)}'
         subprocess.run(cmd, check=True, shell=True)
-        
+
     #-----------------------------------------------------------------
     # Plot histograms
     if plot_histograms:
-    
+
         inputdir = os.path.join(final_state_hadron_dir, 'plot')
         fname = f'histograms_{system}_{sqrts}_merged.root'
         if system == 'pp':

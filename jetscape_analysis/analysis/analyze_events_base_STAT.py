@@ -260,8 +260,23 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
 # Construct charged particle mask
 # ---------------------------------------------------------------
 @jit(nopython=True)
-def get_charged_mask(pid, select_charged):
+def get_charged_mask(pid, select_charged: bool):
+    """ Create mask for selected a set of charged particles based on PID.
 
+    Note:
+        This function assumes that the same set of charged particles are selected
+        for all charged-particle jets (ie. ALICE and STAR). Although the charged
+        particle selections for some of the hadron observables vary between experiments,
+        this seems like
+
+    Args:
+        pid: PID values associated with the charged particles in an event.
+        select_charged: If True, actually select charged particles. If False,
+            just return an all True mask (if for full jets).
+
+    Returns:
+        Mask selecting the particles.
+    """
     # Default to an all true mask
     charged_mask = np.ones(len(pid)) > 0
     if select_charged:
