@@ -864,17 +864,20 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     if nsubjettiness_high_trigger_range[0] < hadron.pt() < nsubjettiness_high_trigger_range[1]:
                         nsubjettiness_found_high = True
                     found_trigger =  hjet_found_low or hjet_found_high or nsubjettiness_found_low or nsubjettiness_found_high
-            
+
                     if found_trigger:
-                    
+
                         # Record hadron pt for trigger normalization
+                        # NOTE: This will record the hadron trigger even if it's not used in the IAA. However,
+                        #       this is fine because we account for the difference in low and high trigger ranges
+                        #       when we construct the histograms.
                         if jetR == min(self.semi_inclusive_chjet_observables['IAA_alice']['jet_R']):
                             self.observable_dict_event[f'semi_inclusive_chjet_alice_trigger_pt'].append(hadron.pt())
-                    
+
                         # Search for recoil jets
                         for jet in jets_selected:
                             if abs(jet.eta()) < (self.semi_inclusive_chjet_observables['IAA_alice']['eta_cut_R'] - jetR):
-                                            
+
                                 if self.is_AA:
                                     # Get the corrected jet pt: shower+recoil-holes
                                     jet_pt_unsubtracted = jet.pt()
@@ -899,7 +902,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                         if jetR in self.semi_inclusive_chjet_observables['dphi_alice']['jet_R']:
                                             if pt_dphi[0] < jet_pt < pt_dphi[1]:
                                                 self.observable_dict_event[f'semi_inclusive_chjet_dphi_alice_R{jetR}_lowTrigger'].append(np.abs(hadron.delta_phi_to(jet)))
-                                            
+
                                     if hjet_found_high:
                                         if jetR in self.semi_inclusive_chjet_observables['IAA_alice']['jet_R']:
                                             if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
@@ -918,14 +921,14 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                         if nsubjettiness_found_low:
                                             if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                                 if pt_nsubjettiness[0] < jet_pt < pt_nsubjettiness[1]:
-                                                    # We use the jet pt including recoils here, since the Nsubjettiness is calculated
-                                                    # including recoils (but without hole subtraction).
+                                                    # We use the unsubtracted jet pt here, since the Nsubjettiness is calculated
+                                                    # including recoils (but without hole subtraction) in the reclustering.
                                                     # Not ideal but not sure of an immediate better solution.
                                                     tau1 = n_subjettiness_calculator1.result(jet)/jet_pt_unsubtracted
                                                     tau2 = n_subjettiness_calculator2.result(jet)/jet_pt_unsubtracted
                                                     if tau1 > 1e-3:
                                                         self.observable_dict_event[f'semi_inclusive_chjet_nsubjettiness_alice_R{jetR}_lowTrigger'].append(tau2/tau1)
-                                                        
+
                                         if nsubjettiness_found_high:
                                             if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                                 if pt_nsubjettiness[0] < jet_pt < pt_nsubjettiness[1]:
