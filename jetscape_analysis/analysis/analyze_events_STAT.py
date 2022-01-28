@@ -486,36 +486,39 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                             z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
                                             self.observable_dict_event[f'inclusive_jet_Dz_atlas_R{jetR}_holes'].append([jet_pt, z])
                                             self.observable_dict_event[f'inclusive_jet_Dpt_atlas_R{jetR}_holes'].append([jet_pt, hadron.pt()])
-            
+
             # CMS D(z)
             if self.sqrts == 2760:
                 if self.centrality_accepted(self.inclusive_jet_observables['Dz_cms']['centrality']):
                     pt_min = self.inclusive_jet_observables['Dz_cms']['pt'][0]
                     pt_max = self.inclusive_jet_observables['Dz_cms']['pt'][-1]
                     eta_range = self.inclusive_jet_observables['Dz_cms']['eta_cut']
+                    track_pt_min = self.inclusive_jet_observables['Dz_cms']['track_pt_min']
                     if jetR in self.inclusive_jet_observables['Dz_cms']['jet_R']:
                         if eta_range[0] < abs(jet.eta()) < eta_range[1]:
                             if pt_min < jet_pt < pt_max:
                                 self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}_Njets'].append(jet_pt)
                                 for hadron in fj_hadrons_positive:
-                                    # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                    pid = hadron.user_index()
-                                    if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
-                                        if jet.delta_R(hadron) < jetR:
-                                            z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
-                                            xi = np.log(1/z)
-                                            self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}'].append([jet_pt, xi])
-                                            self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}'].append([jet_pt, hadron.pt()])
-                                if self.is_AA:
-                                    for hadron in holes_in_jet:
+                                    if hadron.pt() > track_pt_min:
                                         # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                                         pid = hadron.user_index()
                                         if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                             if jet.delta_R(hadron) < jetR:
                                                 z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
                                                 xi = np.log(1/z)
-                                                self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}_holes'].append([jet_pt, xi])
-                                                self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}_holes'].append([jet_pt, hadron.pt()])
+                                                self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}'].append([jet_pt, xi])
+                                                self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}'].append([jet_pt, hadron.pt()])
+                                if self.is_AA:
+                                    for hadron in holes_in_jet:
+                                        if hadron.pt() > track_pt_min:
+                                            # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+                                            pid = hadron.user_index()
+                                            if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                                if jet.delta_R(hadron) < jetR:
+                                                    z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
+                                                    xi = np.log(1/z)
+                                                    self.observable_dict_event[f'inclusive_jet_Dz_cms_R{jetR}_holes'].append([jet_pt, xi])
+                                                    self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}_holes'].append([jet_pt, hadron.pt()])
 
             # CMS jet charge
             if self.sqrts == 5020:
