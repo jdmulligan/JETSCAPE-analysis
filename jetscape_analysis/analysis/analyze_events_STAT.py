@@ -50,7 +50,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                          **kwargs)
         # Initialize config file
         self.initialize_user_config()
-        
+
         print(self)
 
     # ---------------------------------------------------------------
@@ -86,18 +86,18 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             self.semi_inclusive_chjet_observables = config['semi_inclusive_chjet']
         if 'dijet' in config:
             self.dijet_observables = config['dijet']
-        
+
         # General jet finding parameters
         self.jet_R = config['jet_R']
         self.min_jet_pt = config['min_jet_pt']
         self.max_jet_y = config['max_jet_y']
-        
+
         # General grooming parameters
         if 'SoftDrop' in config:
             self.grooming_settings = config['SoftDrop']
         else:
             self.grooming_settings = None
-                                
+
     # ---------------------------------------------------------------
     # Analyze a single event -- fill user-defined output objects
     #
@@ -106,32 +106,31 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # finding to perform corrections
     # ---------------------------------------------------------------
     def analyze_event(self, event):
-    
+
         # Initialize empty list for each output observable
         self.initialize_output_lists()
 
         # Create list of fastjet::PseudoJets (separately for jet shower particles and holes)
         fj_hadrons_positive = self.fill_fastjet_constituents(event, select_status='+')
         fj_hadrons_negative = self.fill_fastjet_constituents(event, select_status='-')
-        
+
         # Create list of charged particles
         fj_hadrons_positive_charged = self.fill_fastjet_constituents(event, select_status='+',
                                                                      select_charged=True)
         fj_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
                                                                      select_charged=True)
-        
-        
+
         # Fill hadron observables for jet shower particles
         self.fill_hadron_observables(fj_hadrons_positive, status='+')
         if self.is_AA:
             self.fill_hadron_observables(fj_hadrons_negative, status='-')
-        
+
         # Fill hadron correlation observables
         self.fill_hadron_correlation_observables(fj_hadrons_positive)
 
         # Loop through specified jet R
         for jetR in self.jet_R:
-        
+
             # Set jet definition and a jet selector
             jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
             jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.max_jet_y)
@@ -144,7 +143,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # Fill inclusive full jet observables
             [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, jetR, full_jet=True) for jet in jets_selected]
-            
+
             # Charged jets
             # -----------------
             cs_charged = fj.ClusterSequence(fj_hadrons_positive_charged, jet_def)
@@ -153,7 +152,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # Fill inclusive charged jet observables
             [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, full_jet=False) for jet in jets_selected_charged]
-            
+
             # Fill semi-inclusive jet correlations
             if self.semi_inclusive_chjet_observables:
                 if self.sqrts == 2760:
@@ -162,24 +161,24 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     jetR_list = self.semi_inclusive_chjet_observables['IAA_star']['jet_R']
                 if jetR in jetR_list:
                     self.fill_semi_inclusive_chjet_observables(jets_selected_charged, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR)
-            
+
             # Fill dijet observables
             if self.dijet_observables:
                 self.fill_dijet_observables(jets_selected, fj_hadrons_negative, jetR)
-        
+
     # ---------------------------------------------------------------
     # Initialize empty list for each output observable
     # ---------------------------------------------------------------
     def initialize_output_lists(self):
-    
+
         for observable in self.hadron_observables:
             self.observable_dict_event[f'hadron_{observable}'] = []
             if self.is_AA:
                 self.observable_dict_event[f'hadron_{observable}_holes'] = []
-            
+
         for observable in self.hadron_correlation_observables:
             self.observable_dict_event[f'hadron_correlations_{observable}'] = []
-        
+
         if self.inclusive_jet_observables:
             for key,dict in self.inclusive_jet_observables.items():
                 for jetR in dict['jet_R']:
@@ -206,7 +205,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             else:
                                 if self.is_AA:
                                     self.observable_dict_event[f'inclusive_jet_{key}_R{jetR}_unsubtracted'] = []
-        
+
         for key,dict in self.inclusive_chjet_observables.items():
             for jetR in dict['jet_R']:
                 if 'SoftDrop' in dict:
@@ -224,8 +223,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_alpha{alpha}_zcut{zcut}_beta{beta}_unsubtracted'] = []
                         elif 'kt_alice' in key:
                             self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}'] = []
-                            for a in dict['dynamical_grooming_a']:
-                                self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_a{a}_zcut{zcut}_beta{beta}'] = []
+                            # Only want to fill this once, so we only create the hists for one of the settings.
+                            # (If we created others, they would overwrite the existing list entry)
+                            if zcut == 0.2 and beta == 0:
+                                for a in dict['dynamical_grooming_a']:
+                                    self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_a{a}'] = []
                         else:
                             self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_zcut{zcut}_beta{beta}'] = []
                             if self.is_AA:
@@ -240,7 +242,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}'] = []
                         if self.is_AA:
                             self.observable_dict_event[f'inclusive_chjet_{key}_R{jetR}_unsubtracted'] = []
-                    
+
         if self.semi_inclusive_chjet_observables:
             for key,dict in self.semi_inclusive_chjet_observables.items():
                 for jetR in dict['jet_R']:
@@ -258,25 +260,25 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if self.is_AA:
                             self.observable_dict_event[f'semi_inclusive_chjet_{key}_R{jetR}_unsubtracted'] = []
                             self.observable_dict_event[f'semi_inclusive_chjet_star_trigger_pt_unsubtracted'] = []
-                                    
+
         if self.dijet_observables:
             for key,dict in self.dijet_observables.items():
                 for jetR in dict['jet_R']:
                     self.observable_dict_event[f'dijet_{key}_R{jetR}'] = []
                     if self.is_AA:
                         self.observable_dict_event[f'dijet_{key}_R{jetR}_unsubtracted'] = []
-                                    
+
     # ---------------------------------------------------------------
     # Fill hadron observables
     # (assuming weak strange decays are off, but charm decays are on)
     # ---------------------------------------------------------------
     def fill_hadron_observables(self, fj_particles, status='+'):
-    
+
         # Note that for identified particles, we store holes of the identified species
         suffix = ''
         if status == '-':
             suffix = '_holes'
-    
+
         # Loop through hadrons
         for i,particle in enumerate(fj_particles):
 
@@ -296,7 +298,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(eta) < self.hadron_observables['pt_ch_alice']['eta_cut']:
                             if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                 self.observable_dict_event[f'hadron_pt_ch_alice{suffix}'].append(pt)
-                        
+
                 # Charged pion
                 if self.centrality_accepted(self.hadron_observables['pt_pi_alice']['centrality']):
                     pt_min = self.hadron_observables['pt_pi_alice']['pt'][0]
@@ -305,7 +307,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(eta) < self.hadron_observables['pt_pi_alice']['eta_cut']:
                             if abs(pid) == 211:
                                 self.observable_dict_event[f'hadron_pt_pi_alice{suffix}'].append(pt)
-                          
+
                 # Neutral pions
                 if self.sqrts in [2760]:
                     if self.centrality_accepted(self.hadron_observables['pt_pi0_alice']['centrality']):
@@ -315,7 +317,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             if abs(eta) < self.hadron_observables['pt_pi0_alice']['eta_cut']:
                                 if abs(pid) == 111:
                                     self.observable_dict_event[f'hadron_pt_pi0_alice{suffix}'].append(pt)
-                                    
+
                 # ATLAS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                 if self.sqrts in [2760]:
@@ -336,9 +338,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(eta) < self.hadron_observables['pt_ch_cms']['eta_cut']:
                             if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                 self.observable_dict_event[f'hadron_pt_ch_cms{suffix}'].append(pt)
-                            
+
             elif self.sqrts in [200]:
-            
+
                 # PHENIX
                 # Neutral pions
                 if self.centrality_accepted(self.hadron_observables['pt_pi0_phenix']['centrality']):
@@ -348,7 +350,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(eta) < self.hadron_observables['pt_pi0_phenix']['eta_cut']:
                             if abs(pid) == 111:
                                 self.observable_dict_event[f'hadron_pt_pi0_phenix{suffix}'].append(pt)
-            
+
                 # STAR
                 # Charged hadrons (pi+, K+, p+)
                 if self.centrality_accepted(self.hadron_observables['pt_ch_star']['centrality']):
@@ -369,7 +371,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Fill inclusive jet observables
     # ---------------------------------------------------------------
     def analyze_inclusive_jet(self, jet, fj_hadrons_positive, fj_hadrons_negative, jetR, full_jet=True):
-        
+
         holes_in_jet = []
         if self.is_AA:
             # Get the corrected jet pt by subtracting the negative recoils within R
@@ -378,7 +380,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if jet.delta_R(hadron) < jetR:
                     negative_pt += hadron.pt()
                     holes_in_jet.append(hadron)
-            
+
             jet_pt_uncorrected = jet.pt()               # uncorrected pt: shower+recoil
             jet_pt = jet_pt_uncorrected - negative_pt   # corrected pt: shower+recoil-holes
         else:
@@ -386,20 +388,20 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
         # Fill observables
         if full_jet:
-        
+
             # Ungroomed
             self.fill_full_jet_ungroomed_observables(jet, fj_hadrons_positive, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR)
-            
+
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
                     self.fill_full_jet_groomed_observables(grooming_setting, jet, jet_pt, jetR)
 
         else:
-                  
+
             # Ungroomed
             self.fill_charged_jet_ungroomed_observables(jet, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR)
-        
+
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
@@ -409,7 +411,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
     def fill_full_jet_ungroomed_observables(self, jet, fj_hadrons_positive, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR):
-    
+
         if self.sqrts in [2760, 5020]:
 
             # ALICE RAA
@@ -551,7 +553,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
     def fill_full_jet_groomed_observables(self, grooming_setting, jet, jet_pt, jetR):
-    
+
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
         zcut = grooming_setting['zcut']
@@ -559,7 +561,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         jet_groomed_lund = gshop.soft_drop(beta, zcut, jetR)
         if not jet_groomed_lund:
             return
-        
+
         if self.sqrts == 5020:
 
             # CMS m_g
@@ -585,12 +587,12 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 if jet_groomed_lund.Delta() > self.inclusive_jet_observables['zg_cms']['dR']:
                                     zg = jet_groomed_lund.z()    # Note: untagged jets will return negative value
                                     self.observable_dict_event[f'inclusive_jet_zg_cms_R{jetR}_zcut{zcut}_beta{beta}'].append([jet_pt, zg])
-            
+
     # ---------------------------------------------------------------
     # Fill inclusive charged jet observables
     # ---------------------------------------------------------------
     def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR):
-    
+
         if self.sqrts == 5020:
 
             # ALICE subjet z_R
@@ -601,14 +603,14 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                     if jetR in self.inclusive_chjet_observables['zr_alice']['jet_R']:
                         if jet_pt > pt_min and jet_pt < pt_max:
                             for r in self.inclusive_chjet_observables['zr_alice']['r']:
-                                
+
                                 cs_subjet = fj.ClusterSequence(jet.constituents(), fj.JetDefinition(fj.antikt_algorithm, r))
                                 subjets = fj.sorted_by_pt(cs_subjet.inclusive_jets())
                                 _, leading_subjet_pt, _ = self.leading_jet(subjets, holes_in_jet, r)
                                 z_leading = leading_subjet_pt / jet_pt
                                 if np.isclose(z_leading, 1.): # If z=1, it will be default be placed in overflow bin -- prevent this
                                     z_leading = 0.999
-                                    
+
                                 self.observable_dict_event[f'inclusive_chjet_zr_alice_R{jetR}_r{r}'].append([z_leading])
 
             # ALICE jet axis Standard-WTA
@@ -618,7 +620,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['axis_alice']['eta_cut_R'] - jetR):
                     if jetR in self.inclusive_chjet_observables['axis_alice']['jet_R']:
                         if jet_pt > pt_min and jet_pt < pt_max:
-                                
+
                             jet_def_wta = fj.JetDefinition(fj.cambridge_algorithm, 2*jetR)
                             jet_def_wta.set_recombination_scheme(fj.WTA_pt_scheme)
                             reclusterer_wta = fjcontrib.Recluster(jet_def_wta)
@@ -647,7 +649,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}'].append([jet_pt, lambda_alpha])
 
         if self.sqrts == 2760:
-        
+
             # ALICE charged jet RAA
             if self.centrality_accepted(self.inclusive_chjet_observables['pt_alice']['centrality']):
                 pt_min = self.inclusive_chjet_observables['pt_alice']['pt'][0]
@@ -755,15 +757,39 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
     def fill_charged_jet_groomed_observables(self, grooming_setting, jet, jet_pt, jetR):
-    
+
         # Construct groomed jet
         gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
         zcut = grooming_setting['zcut']
         beta = grooming_setting['beta']
         jet_groomed_lund = gshop.soft_drop(beta, zcut, jetR)
+
+        # For DyG, we need to record regardless of whether it passes SD, so we look at that observable first,
+        # and then proceed with the rest afterwards.
+        if self.sqrts == 5020:
+            # ALICE hardest kt
+            if self.centrality_accepted(self.inclusive_chjet_observables['kt_alice']['centrality']):
+                # We put both DyG and SD after this setting to avoid filling DyG multiple times
+                # (since DyG isn't included in the set of grooming settings)
+                if grooming_setting in self.inclusive_chjet_observables['kt_alice']['SoftDrop']:
+                    pt_min = self.inclusive_chjet_observables['kt_alice']['pt'][0]
+                    pt_max = self.inclusive_chjet_observables['kt_alice']['pt'][-1]
+                    if abs(jet.eta()) < (self.inclusive_chjet_observables['kt_alice']['eta_cut_R'] - jetR):
+                        if jetR in self.inclusive_chjet_observables['kt_alice']['jet_R']:
+                            if jet_pt > pt_min and jet_pt < pt_max:
+                                for a in self.inclusive_chjet_observables['kt_alice']['dynamical_grooming_a']:
+                                    jet_dyg_lund = gshop.dynamical(a)
+                                    ktg = jet_dyg_lund.kt()
+                                    self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_a{a}'].append([jet_pt, ktg])
+
+                                # Only fill if SD identified a splitting
+                                if jet_groomed_lund:
+                                    ktg = jet_groomed_lund.kt()
+                                    self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_zcut{zcut}_beta{beta}'].append([jet_pt, ktg])
+
         if not jet_groomed_lund:
             return
-        
+
         if self.sqrts == 5020:
 
             # Soft Drop zg and theta_g
@@ -793,39 +819,23 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     lambda_alpha = fjext.lambda_beta_kappa(jet_groomed_lund.pair(), alpha, kappa, jetR)
                                     self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}_zcut{zcut}_beta{beta}'].append([jet_pt, lambda_alpha])
 
-            # ALICE hardest kt
-            if self.centrality_accepted(self.inclusive_chjet_observables['kt_alice']['centrality']):
-                if grooming_setting in self.inclusive_chjet_observables['kt_alice']['SoftDrop']:
-                    pt_min = self.inclusive_chjet_observables['kt_alice']['pt'][0]
-                    pt_max = self.inclusive_chjet_observables['kt_alice']['pt'][-1]
-                    if abs(jet.eta()) < (self.inclusive_chjet_observables['kt_alice']['eta_cut_R'] - jetR):
-                        if jetR in self.inclusive_chjet_observables['kt_alice']['jet_R']:
-                            if jet_pt > pt_min and jet_pt < pt_max:
-                                for a in self.inclusive_chjet_observables['kt_alice']['dynamical_grooming_a']:
-                                    jet_dyg_lund = gshop.dynamical(a)
-                                    ktg = jet_dyg_lund.kt()
-                                    self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_a{a}_zcut{zcut}_beta{beta}'].append([jet_pt, ktg])
-
-                                ktg = jet_groomed_lund.kt()
-                                self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_zcut{zcut}_beta{beta}'].append([jet_pt, ktg])
-                
     # ---------------------------------------------------------------
     # Fill semi-inclusive charged jet observables
     # ---------------------------------------------------------------
     def fill_semi_inclusive_chjet_observables(self, jets_selected, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR):
 
         if self.sqrts == 2760:
-        
+
             # Define trigger classes for both traditional h-jet analysis and Nsubjettiness analysis
             hjet_low_trigger_range = self.semi_inclusive_chjet_observables['IAA_alice']['low_trigger_range']
             hjet_high_trigger_range = self.semi_inclusive_chjet_observables['IAA_alice']['high_trigger_range']
             nsubjettiness_low_trigger_range = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['low_trigger_range']
             nsubjettiness_high_trigger_range = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['high_trigger_range']
-            
+
             pt_IAA = self.semi_inclusive_chjet_observables['IAA_alice']['pt']
             pt_dphi = self.semi_inclusive_chjet_observables['dphi_alice']['pt']
             pt_nsubjettiness = self.semi_inclusive_chjet_observables['nsubjettiness_alice']['pt']
-            
+
             # Define Nsubjettiness calculators
             axis_definition = fjcontrib.KT_Axes()
             measure_definition = fjcontrib.UnnormalizedMeasure(1)
@@ -833,7 +843,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             n_subjettiness_calculator2 = fjcontrib.Nsubjettiness(2, axis_definition, measure_definition)
 
             for hadron in fj_hadrons_positive_charged:
-            
+
                 if abs(hadron.eta()) < self.semi_inclusive_chjet_observables['IAA_alice']['hadron_eta_cut']:
 
                     # Search for hadron trigger
@@ -922,30 +932,30 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                         self.observable_dict_event[f'semi_inclusive_chjet_nsubjettiness_alice_R{jetR}_highTrigger'].append(tau2/tau1)
 
         if self.sqrts == 200:
-        
+
             hjet_trigger_range = self.semi_inclusive_chjet_observables['IAA_star']['trigger_range']
             pt_IAA = self.semi_inclusive_chjet_observables['IAA_star']['pt']
             pt_dphi = self.semi_inclusive_chjet_observables['dphi_star']['pt']
-            
+
             for hadron in fj_hadrons_positive_charged:
-            
+
                 if abs(hadron.eta()) < self.semi_inclusive_chjet_observables['IAA_star']['hadron_eta_cut']:
 
                     # Search for hadron trigger
                     found_trigger = False
                     if hjet_trigger_range[0] < hadron.pt() < hjet_trigger_range[1]:
                         found_trigger = True
-            
+
                     if found_trigger:
-                    
+
                         # Record hadron pt for trigger normalization
                         if jetR == min(self.semi_inclusive_chjet_observables['IAA_star']['jet_R']):
                             self.observable_dict_event[f'semi_inclusive_chjet_star_trigger_pt'].append(hadron.pt())
-                    
+
                         # Search for recoil jets
                         for jet in jets_selected:
                             if abs(jet.eta()) < (self.semi_inclusive_chjet_observables['IAA_star']['eta_cut_R'] - jetR):
-                                            
+
                                 if self.is_AA:
                                     # Get the corrected jet pt: shower+recoil-holes
                                     jet_pt_unsubtracted = jet.pt()
@@ -959,7 +969,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
                                 # Jet yield and Delta phi
                                 if self.centrality_accepted(self.semi_inclusive_chjet_observables['IAA_star']['centrality']):
-                                
+
                                     if jetR in self.semi_inclusive_chjet_observables['IAA_star']['jet_R']:
                                             if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
                                                 if pt_IAA[0] < jet_pt < pt_IAA[1]:
@@ -977,15 +987,15 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     def fill_dijet_observables(self, jets_selected, fj_hadrons_negative, jetR):
 
         if self.sqrts == 2760:
-        
+
             # ATLAS xj
             if self.centrality_accepted(self.dijet_observables['xj_atlas']['centrality']):
                 if jetR in self.dijet_observables['xj_atlas']['jet_R']:
-                
+
                     # First, find jets passing kinematic cuts
                     jet_candidates = []
                     for i,jet in enumerate(jets_selected):
-                    
+
                         if self.is_AA:
                             # Get the corrected jet pt by subtracting the negative recoils within R
                             jet_pt = jet.pt()
@@ -999,7 +1009,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if jet_pt > self.dijet_observables['xj_atlas']['pt_subleading_min']:
                             if np.abs(jet.eta()) < self.dijet_observables['xj_atlas']['eta_cut']:
                                 jet_candidates.append(jet)
-                                
+
                     # Find the leading two jets
                     leading_jet, leading_jet_pt, i_leading_jet = self.leading_jet(jet_candidates, fj_hadrons_negative, jetR)
                     if leading_jet:
@@ -1021,18 +1031,18 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         leading_jet_pt = 0.
         i_leading = 0
         for i,jet in enumerate(jets):
-                         
+
             # Get the corrected jet pt by subtracting the negative recoils within R
             jet_pt = jet.pt()
             for temp_hadron in fj_hadrons_negative:
                 if jet.delta_R(temp_hadron) < jetR:
                     jet_pt -= temp_hadron.pt()
-                    
+
             if not leading_jet:
                 leading_jet = jet
                 leading_jet_pt = jet_pt
                 i_leading = i
-            
+
             if jet_pt > leading_jet_pt:
                 leading_jet = jet
                 leading_jet_pt = jet_pt
@@ -1044,7 +1054,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Compute electric charge from pid
     # ---------------------------------------------------------------
     def charge(self, pid):
-    
+
         if pid in [11, 13, -211, -321, -2212, -3222, 3112, 3312, 3334]:
             return -1.
         elif pid in [-11, -13, 211, 321, 2212, 3222, -3112, -3312, -3334]:
