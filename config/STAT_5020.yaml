@@ -40,6 +40,9 @@
 # Note that when using these experimental data for the Bayesian calibration, we need to
 # revisit the treatment/breakdown of uncertainties and construct a covariance matrix
 # for each measurement (close attention was not paid during the event generation QA stage).
+#
+# Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
+#           noted otherwise with "TODO"
 #------------------------------------------------------------------
 sqrt_s: 5020
 power: 4.
@@ -63,7 +66,6 @@ SoftDrop:
 hadron:
 
   # https://www.hepdata.net/record/ins1657384
-  # pmj 1/12/22: QA OK
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
@@ -82,9 +84,8 @@ hadron:
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
     ytitle_AA: '#it{R}_{AA}'
-
-  # https://www.hepdata.net/record/ins1759506 -- charged pions
-  # pmj 1/12/22: QA OK
+  
+  # https://www.hepdata.net/record/ins1759506 -- charged pions 
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
@@ -105,7 +106,6 @@ hadron:
     ytitle_AA: '#it{R}_{AA}'
 
   # https://www.hepdata.net/record/ins1496050
-  # pmj 1/12/22: QA OK but Table 7 in hepdata has narrower vertical range, [1e-16,1e0]. e-18 seems to be the sys error
   pt_ch_cms:
     eta_cut: 1.0
     pt: [5.0, 400.]
@@ -134,8 +134,7 @@ hadron_correlations:
 
   # https://www.hepdata.net/record/ins1686834
   # Fig 5 (scalar product method)
-  # pmj 1/12/22: "Table 11" entry below is confusing - observable name is "hedata_pp_..." but Table 11 is for PbPb 70-80%. Is this intentional?
-  # pmj 1/12/22: Also, y_min_pp should be zero and y_max_pp should be 0.2
+  # TODO: Implement this observable
   v2_atlas:
     eta_cut: 2.5
     pt: [5., 60.]
@@ -157,9 +156,7 @@ hadron_correlations:
   # https://www.hepdata.net/record/ins1511868
   # Fig 1 (scalar product method)
   # Note: histogram binnings are not provided
-  # pmj 1/12/22: Similar issues to previous entry
-  # pmj 1/12/11: "Table 7" observable name is "hedata_pp_..." but Table 7 is for PbPb 50-60%.
-  # pmj 1/12/22: Also, y_min_pp should be zero and y_max_pp should be 0.25
+  # TODO: Implement this observable
   v2_cms:
     eta_cut: 1.
     pt: [5., 100.]
@@ -187,7 +184,6 @@ inclusive_jet:
   # Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
   # Here, we use the result where the cut is applied on PbPb and pp
   # Note: The pp HEPData file contains no leading track requirement (only used for QA)
-  # pmj 1/12/22: QA OK
   pt_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.7
@@ -219,9 +215,6 @@ inclusive_jet:
   #         so we shouldn't need it here.
   # Note: The paper also performs rapidity dependence for 0-10%, which we omit for now
   # Note the PbPb binning in hepdata is different than the pp hepdata cross-section binning
-  # pmj 1/12/22: lower pT limit is centrality-dependent - e.g. for 0-10% the lower limit in data is 100 GeV; similarly up to 40%.
-  # pmj 1/12/22: Does the framework just put the values below the data limit for a given centrality to zero?
-  # pmj 1/12/22: Table 4 upper limit can be 1e3
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.8
@@ -246,9 +239,6 @@ inclusive_jet:
     y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1848440
-  # pmj 1/12/22: For Fig 5, the actual figure in the paper only shows R=0.2 and R=0.1 vs centrality, but HEPDATA lists all the R values, as indicated below
-  # pmj 1/12/22: This is probably OK, and nothing we can do about, but it is odd to list data not shown and we have no means of cross-checking it
-  # pmj 1/12/22: otherwise looks OK
   pt_cms:
     jet_R: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0]
     eta_cut: 2.0
@@ -282,7 +272,6 @@ inclusive_jet:
     y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1673177
-  # pmj 1/12/22: QA OK
   Dz_atlas:
     jet_R: [0.4]
     y_cut: 2.1
@@ -347,7 +336,6 @@ inclusive_jet:
   # Note that the paper does not construct the PbPb/pp ratio directly,
   # but only contains the distributions (and q/g templates).
   # We therefore skip constructing the PbPb/pp ratio for now.
-  # pmj 1/13/22: QA OK
   charge_cms:
     jet_R: [0.4]
     eta_cut: 1.5
@@ -378,7 +366,6 @@ inclusive_jet:
     skip_AA_ratio: True
 
   # https://www.hepdata.net/record/ins1672962
-  # pmj 13/1/22: QA OK
   mg_cms:
     jet_R: [0.4]
     eta_cut: 1.3
@@ -437,7 +424,6 @@ inclusive_jet:
   # https://www.hepdata.net/record/ins1620905
   # Note that pp distributions are not reported except for 160-180 GeV
   # (the other pt bins have only "pp smeared" reported)
-  # pmj 13/1/22 QA OK
   zg_cms:
     jet_R: [0.4]
     eta_cut: 1.3
@@ -475,7 +461,6 @@ inclusive_chjet:
 
   # https://inspirehep.net/literature/1893479 (no hepdata yet)
   # TODO: update hepdata
-  # pmj 13/1/22: QA OK
   zg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9

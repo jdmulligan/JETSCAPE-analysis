@@ -40,6 +40,9 @@
 # Note that when using these experimental data for the Bayesian calibration, we need to 
 # revisit the treatment/breakdown of uncertainties and construct a covariance matrix 
 # for each measurement (close attention was not paid during the event generation QA stage).
+#
+# Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
+#           noted otherwise.
 #------------------------------------------------------------------
 sqrt_s: 2760
 power: 4.
@@ -58,7 +61,6 @@ hadron:
 
   # https://www.hepdata.net/record/ins1657384
   # Figs 3,6
-  # pmj 13/1/22 QA OK
   pt_ch_alice:
     eta_cut: 0.8
     pt: [5.0, 50.]
@@ -80,7 +82,6 @@ hadron:
     
   # https://www.hepdata.net/record/ins1377750 -- charged pions (no pp hepdata)
   # Figs 22,23
-  # pmj 13/1/22: QA OK
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
@@ -100,8 +101,7 @@ hadron:
     ytitle_AA: '#it{R}_{AA}'
     
   # https://www.hepdata.net/record/ins1662651 (no pp hepdata)
-  # Note: By default, pi0 will be decayed by JETSCAPE...
-  # pmj 13/1/22: QA OK
+  # Note: We turn off pi0 decays in JETSCAPE
   pt_pi0_alice:
     eta_cut: 0.7
     pt: [5.0, 20.]
@@ -124,7 +124,6 @@ hadron:
   # leptons from W/Z decays removed
   # Figs 10,13
   # Note: The paper also performs pseudorapidity dependence for 0-5%, which we omit for now (Fig 14)
-  # pmj 13/1/22 QA OK
   pt_ch_atlas:
     eta_cut: 2.
     pt: [5.0, 150.]
@@ -147,6 +146,7 @@ hadron:
 
   # https://www.hepdata.net/record/ins1088823
   # Figs 3a,5
+  # TODO
   # pmj 13/1/22: QA OK; but why is lower pT bound 6 GeV and not 5 GeV? Data extend to 1 GeV, make uniform with other data?
   pt_ch_cms:
     eta_cut: 1.0
@@ -178,7 +178,7 @@ hadron_correlations:
 
   # https://www.hepdata.net/record/ins1483164
   # pi0-hadron correlations
-  # pmj 13/1/22: QA OK; but which hepdata tables will data be pulled from? This looks incomplete to me...
+  # TODO: Implement this observable
   # pmj 13/1/22: And recoil hadrons are very soft (<6 GeV), almost all are below the lower bound of 5 GeV we are setting elsewhere for hadron pT
   # pmj 13/1/22: Are we sure this is a useful dataset for this round of calculations?
   pi0_hadron_alice:
@@ -187,8 +187,7 @@ hadron_correlations:
     
   # https://www.hepdata.net/record/ins1116150
   # v2
-  # pmj 13/1/22: why only [0,10] centrality? Paper also has [5,10], [10-20], [20,30], [30,40], [40,50]
-  # pmj 13/1/22: for v2, non-central is usually more relevent...
+  # TODO: Implement this observable
   v2_alice:
     eta_cut: 0.8
     pt: [5., 20.]
@@ -200,7 +199,6 @@ inclusive_jet:
 
   # https://www.hepdata.net/record/ins1343112
   # pT^{ch lead} > 5 GeV
-  # pmj 13/1/22 QA OK
   pt_alice:
     jet_R: [0.2]
     eta_cut_R: 0.7
@@ -228,7 +226,6 @@ inclusive_jet:
   # https://www.hepdata.net/record/ins1326911
   # Figs 1,3
   # Note: the paper also considers the rapidity dependence, which we omit here for now
-  # pmj 13/1/22 QA OK
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.1
@@ -260,7 +257,6 @@ inclusive_jet:
   
   # https://www.hepdata.net/record/ins1487278
   # Figs 4,8
-  # pm 13/1/22 QA OK
   pt_cms:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut: 2.0
@@ -298,6 +294,7 @@ inclusive_jet:
   # Note: the paper also considers the rapidity dependence, which we omit here for now (Figs 4,5)
   # Note that the pp reference data in hepdata is only provided for the inclusive pt range
   # Figs 3,7
+  # TODO: 
   # pmj 1/13/22:  missing [10,20] centrality
   # pmj 1/13/22: why take Table 5 (|y|<2.1) rather than Table 6 (|y|<0.3)? 
   # pmj 1/13/22: Answer maybe Fig 5 (differnetial in y, integrated in pT) vs Fig 7 (differnetial in pT, integrated in y); let's discuss
@@ -356,7 +353,6 @@ inclusive_jet:
   # https://twiki.cern.ch/CMSPublic/HIN12013DataTables
   # Figs 2,3,4
   # Note that there is a breakdown of statistical and systematic uncertainties that we do not yet include
-  # pmj 13/1/22 QA OK
   Dz_cms:
     jet_R: [0.3]
     eta_cut: [0.3, 2.]
@@ -402,7 +398,6 @@ inclusive_chjet:
 
   # https://www.hepdata.net/record/ins1263194
   # Mostly this paper is RCP (no pp), which we omit for now -- however it has R02/R03 ratio for 0-10%
-  # pmj 13/1/22 QA OK
   pt_alice:
     jet_R: [0.2, 0.3]
     eta_cut: 0.5
@@ -429,8 +424,6 @@ inclusive_chjet:
   # Fig 7
   # Note: reference is p-Pb, which we use as a proxy for pp
   # Note: PbPb/pPb ratio is missing from HEPData (Fig 8)
-  # pmj 13/1/22: eta_jet cut is 0.5
-  # pmj 13/1/22 QA OK
   mass_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
@@ -459,7 +452,6 @@ inclusive_chjet:
 
   # https://www.hepdata.net/record/ins1682990
   # Note: reference is to PYTHIA
-  # pm 13/1/22: jeteta cut is 0.7; otherwise QA OK
   g_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
@@ -513,7 +505,6 @@ semi_inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   #       - Track pt > 0.15 (not corrected)
   # Fig 9,10
-  # pmj 13/1/22: QA very OK
   IAA_alice:
     jet_R: [0.2, 0.4, 0.5]
     eta_cut_R: 0.9
@@ -574,7 +565,6 @@ semi_inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   # There is no pp reference at 2.76 TeV -- we consider only the Pb-Pb distribution
   # We consider only tau2/tau1 w/CA reclustering for now
-  # pm 13/1/22: QA OK
   nsubjettiness_alice:
     jet_R: [0.4]
     pt: [40., 60.]
@@ -600,7 +590,7 @@ semi_inclusive_chjet:
 dijet:
 
   # https://www.hepdata.net/record/ins1394678
-  # pmj 13/1/22: incomplete
+  # TODO: Implement this observable
   v2_alice:
     jet_R: [0.2]
     eta_cut: 0.7
@@ -608,7 +598,7 @@ dijet:
     centrality: [[0,10]]
   
   # https://www.hepdata.net/record/ins1240088
-  # pmj 13/1/22: incomplete
+  # TODO: Implement this observable
   v2_atlas:
     jet_R: [0.2]
     pt: [45., 160.]
@@ -618,7 +608,6 @@ dijet:
   # TGraphs for R=0.4 supplied by Laura/Dennis
   # Fig 8 -- centrality dependence for pt1=[100,126]
   # Fig 9 -- pt1-dependence for 0-10%
-  # 13/1/22 pmj: QA OK
   xj_atlas:
     jet_R: [0.4]
     centrality: [[0,10], [10,20], [20,30], [30,40]]

@@ -40,6 +40,9 @@
 # Note that when using these experimental data for the Bayesian calibration, we need to 
 # revisit the treatment/breakdown of uncertainties and construct a covariance matrix 
 # for each measurement (close attention was not paid during the event generation QA stage).
+#
+# Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
+#           noted otherwise.
 #------------------------------------------------------------------
 sqrt_s: 200
 power: 4.
@@ -56,7 +59,6 @@ max_jet_y: 3.
 hadron:
 
   # https://inspirehep.net/literature/1127262 (no hepdata)
-  # pmj 13/1/22: note that Fig 11 skips centralities [10,20] and [30,40]
   # Fig 11
   pt_pi0_phenix:
     eta_cut: 0.35
@@ -79,7 +81,6 @@ hadron:
 
   # https://www.hepdata.net/record/ins619063
   # Summed yields of pi+-, K+-, p, anti-p
-  # pmj 13/1/22:QA OK
   pt_ch_star:
     eta_cut: 0.5
     pt: [5., 12.]
@@ -121,7 +122,6 @@ inclusive_chjet:
   # Charged jet RAA and RCP
   # Cuts:
   #   - pT^{ch lead} > 5 GeV
-  # pmj 13/1/22: QA OK
   pt_star:
     jet_R: [0.2, 0.3, 0.4]
     eta_cut_R: 1.0
