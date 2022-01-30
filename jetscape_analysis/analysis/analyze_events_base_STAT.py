@@ -21,7 +21,6 @@ from pathlib import Path
 from numba import jit
 
 # Analysis
-import itertools
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -171,8 +170,8 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         if self.is_AA:
 
             for observable_centrality in observable_centrality_list:
-                if self.centrality[0] >= observable_centrality[0] or np.isclose(observable_centrality[0],self.centrality[0]):
-                    if self.centrality[1] <= observable_centrality[1] or np.isclose(observable_centrality[1],self.centrality[1]):
+                if self.centrality[0] >= observable_centrality[0]:
+                    if self.centrality[1] <= observable_centrality[1]:
                         return True
             return False
 
