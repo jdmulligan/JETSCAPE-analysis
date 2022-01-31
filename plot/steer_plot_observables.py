@@ -26,7 +26,7 @@
                (1) Centralities in same dir, different hname/gname
                (2) Centralities in different dir, same hname/gname
                See the STAT_{sqrts}.yaml files for documentation on how to specify the centralities to be looped over.
-         - Custom format (TODO)
+         - Custom format -- see STAT_{sqrts}.yaml files
 
        Usually this step should be done on XSEDE in the same job as the event generation.
        In case we need to histogram observables manually, we provide an option to loop over all observable
@@ -47,6 +47,8 @@
        We support the same specifications for retrieval of experimental as described for histogram binning.
        See the STAT_{sqrts}.yaml files for documentation on how to specify the centralities to be looped over.
 
+       TODO: Implement machinery to write and aggregate tables for Bayesian analysis 
+
   Author: James Mulligan (james.mulligan@berkeley.edu)
 """
 
@@ -60,8 +62,9 @@ def main():
 
     # Specify input directory containing final_state_hadrons files
     sqrts = 5020
-    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_expanse/Run0011'
-    system = os.listdir(final_state_hadron_dir)[0].split('_')[1]
+    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_stampede/Run0029'
+    final_state_hadron_files = [file for file in os.listdir(final_state_hadron_dir) if 'jetscape' in file]
+    system = final_state_hadron_files[0].split('_')[1]
 
     # If AA, supply pp reference results in order to construct RAA
     pp_reference_filename = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_stampede/Run0001/plot/final_results.root'

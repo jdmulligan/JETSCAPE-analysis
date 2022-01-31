@@ -213,8 +213,9 @@ inclusive_jet:
   #       (they argue this is small...unclear if they correct for it...we will ignore it here).
   #       RE 1/28/22: Laura confirmed that this should be accounted for in the reconstruction efficiency,
   #         so we shouldn't need it here.
-  # Note: The paper also performs rapidity dependence for 0-10%, which we omit for now
-  # Note the PbPb binning in hepdata is different than the pp hepdata cross-section binning
+  # Note: The paper also performs rapidity dependence for 0-10% -- we make a separate block for this
+  #       below, since the y-integrated RAA has different binning than the y-differential RAA
+  # Note: The PbPb binning in hepdata is different than the pp hepdata cross-section binning
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.8
@@ -234,6 +235,51 @@ inclusive_jet:
     hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
+
+  # https://www.hepdata.net/record/ins1673184
+  # Note: Same as above block, except we include rapidity dependence for 0-10%
+  # We save [pt,y] and bin according to the pt,y bins in Fig. 7
+  # The AA histograms are binned in abs(rapidity): [0., 0.3, 0.8, 1.2, 1.6, 2.1, 2.8]
+  #  i.e. we save histograms of yields, for a given pt bin, as a function of rapidity
+  #       and then we can construct RAA(y1)/RAA(y2) in the plotting script
+  # We skip the pp QA for convenience, since the pp histograms consist of separate histograms
+  #   for each y, binned in pt -- whereas the PbPb histograms are separated in pt and binned in y
+  pt_y_atlas:
+    jet_R: [0.4]
+    y_cut: 2.8
+    pt: [158, 200, 251, 316, 562]
+    centrality: [[0,10]]
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
+
+    hepdata: 'HEPData-ins1673184-v1-root.root'
+    hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-7
+    y_max_pp: 1e4
+    skip_pp: True
+
+    # Note: the y binnings are identical for each pt bin
+    hepdata_AA_dir_R0.4_pt0: 'Table 27'
+    hepdata_AA_gname_R0.4_pt0: ['Graph1D_y1'] 
+    hepdata_AA_hname_R0.4_pt0: ['Hist1D_y1']
+
+    hepdata_AA_dir_R0.4_pt1: 'Table 27'
+    hepdata_AA_gname_R0.4_pt1: ['Graph1D_y2']
+    hepdata_AA_hname_R0.4_pt1: ['Hist1D_y2']
+
+    hepdata_AA_dir_R0.4_pt2: 'Table 27'
+    hepdata_AA_gname_R0.4_pt2: ['Graph1D_y3']
+    hepdata_AA_hname_R0.4_pt2: ['Hist1D_y3']
+
+    hepdata_AA_dir_R0.4_pt3: 'Table 27'
+    hepdata_AA_gname_R0.4_pt3: ['Graph1D_y4']
+    hepdata_AA_hname_R0.4_pt3: ['Hist1D_y4'] 
+
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 1.9

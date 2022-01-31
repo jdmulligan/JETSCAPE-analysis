@@ -107,6 +107,9 @@ class PlotUtils(common_base.CommonBase):
         # For certain Soft Drop observables, we need to exclude the "untagged" bin so that it will become underflow
         if observable == 'zg_alice' or observable == 'tg_alice':
             bins = bins[1:]
+        # For ATLAS RAA y-dependence, add a bin at 0<abs(y)<0.3 (it is not included in the hepdata since they take a ratio to that bin)
+        if observable == 'pt_y_atlas':
+            bins = np.insert(bins, 0, 0., axis=0)
 
         f.Close()
         

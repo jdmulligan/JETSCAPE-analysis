@@ -450,6 +450,18 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             if self.is_AA:
                                 self.observable_dict_event[f'inclusive_jet_pt_atlas_R{jetR}_unsubtracted'].append(jet_pt_uncorrected)
 
+            # ATLAS RAA -- rapidity-dependence
+            if self.centrality_accepted(self.inclusive_jet_observables['pt_y_atlas']['centrality']):
+                pt_min = self.inclusive_jet_observables['pt_y_atlas']['pt'][0]
+                pt_max = self.inclusive_jet_observables['pt_y_atlas']['pt'][-1]
+                if jetR in self.inclusive_jet_observables['pt_y_atlas']['jet_R']:
+                    y_abs = abs(jet.rap())
+                    if y_abs < self.inclusive_jet_observables['pt_y_atlas']['y_cut']:
+                        if jet_pt > pt_min and jet_pt < pt_max:
+                            self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}'].append([jet_pt, y_abs])
+                            if self.is_AA:
+                                self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}_unsubtracted'].append([jet_pt_uncorrected, y_abs])                   
+
             # CMS RAA
             if self.centrality_accepted(self.inclusive_jet_observables['pt_cms']['centrality']):
                 pt_min = self.inclusive_jet_observables['pt_cms']['pt'][0]
