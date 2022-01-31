@@ -252,7 +252,7 @@ inclusive_jet:
     y_cut: 2.8
     pt: [158, 200, 251, 316, 562]
     centrality: [[0,10]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    xtitle: '|#it{y}|'
     logy: True
 
     hepdata: 'HEPData-ins1673184-v1-root.root'
@@ -280,7 +280,7 @@ inclusive_jet:
     hepdata_AA_gname_R0.4_pt3: ['Graph1D_y4']
     hepdata_AA_hname_R0.4_pt3: ['Hist1D_y4'] 
 
-    ytitle_AA: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}(y) / #it{R}_{AA}(y=0.3)'
     y_min_AA: 0.
     y_max_AA: 1.9
 

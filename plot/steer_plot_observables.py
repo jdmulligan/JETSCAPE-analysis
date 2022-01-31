@@ -62,7 +62,7 @@ def main():
 
     # Specify input directory containing final_state_hadrons files
     sqrts = 5020
-    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_stampede/Run0029'
+    final_state_hadron_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_stampede/Run0001'
     final_state_hadron_files = [file for file in os.listdir(final_state_hadron_dir) if 'jetscape' in file]
     system = final_state_hadron_files[0].split('_')[1]
 
@@ -71,10 +71,10 @@ def main():
 
     # Note: the construction of observables and histograms is usually done on XSEDE,
     #       and only the merging/plotting step is needed to be run locally
-    construct_observables = False
+    construct_observables = True
     construct_histograms = False
     merge_histograms = False
-    plot_histograms = True
+    plot_histograms = False
 
     #-----------------------------------------------------------------
     # Loop through final_state_hadron files, and construct observables

@@ -14,7 +14,6 @@ import argparse
 
 # Data analysis and plotting
 import ROOT
-import ctypes
 import numpy as np
 import pptx             # pip install python-pptx
 
@@ -381,6 +380,9 @@ class PlotResults(common_base.CommonBase):
             if self.plot_holes or self.plot_unsubtracted:
                 self.scale_histogram(self.observable_settings['jetscape_distribution_unsubtracted'], observable_type, observable, 
                                     centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
+
+        # Perform any additional manipulations on scaled histograms
+        self.post_process_histogram(observable)
     
     #-------------------------------------------------------------------------------------------
     # Get histogram and add to self.observable_settings
@@ -587,9 +589,10 @@ class PlotResults(common_base.CommonBase):
             elif observable_type == 'inclusive_jet':
                 if observable == 'pt_alice':
                     h.Scale(1./(2*self.eta_cut))
-                if observable == 'pt_atlas':
-                    h.Scale(1./(2*self.y_cut))
+                if observable in ['pt_atlas', 'pt_y_atlas']:
                     h.Scale(1.e6) # convert to nb
+                    if observable == 'pt_atlas':
+                        h.Scale(1./(2*self.y_cut))
                 if observable == 'pt_cms':
                     h.Scale(1./(2*self.eta_cut))
                     h.Scale(1.e6) # convert to nb
@@ -628,6 +631,32 @@ class PlotResults(common_base.CommonBase):
                 h.Scale(1./integral)
             else:
                 print('WARNING: integral for self-normalization is 0')
+
+    #-------------------------------------------------------------------------------------------
+    # Perform any additional manipulations on scaled histograms    
+    #-------------------------------------------------------------------------------------------
+    def post_process_histogram(self, observable):
+
+        # For the ATLAS rapidity-dependence, we need to divide the histograms by their first bin (|y|<0.3) to form a double ratio
+        if observable == 'pt_y_atlas':
+
+            # Get y=0.3 entry, and create a histogram to divide by (so that uncertainties are propagated)
+            denominator = self.observable_settings['jetscape_distribution'].GetBinContent(1)
+            denominator_uncertainty = self.observable_settings['jetscape_distribution'].GetBinError(1)
+            h_denominator = self.observable_settings['jetscape_distribution'].Clone()
+            h_denominator.SetName(f'{h_denominator.GetName()}_denominator')
+            n = h_denominator.GetNbinsX()
+            for i in range(n):
+                h_denominator.SetBinContent(i+1, denominator)
+                h_denominator.SetBinError(i+1, denominator_uncertainty)
+
+            # Divide histograms
+            self.observable_settings['jetscape_distribution'].Divide(h_denominator)
+
+            # Rebin to remove first bin (|y|<0.3)
+            bins = np.array(self.observable_settings['jetscape_distribution'].GetXaxis().GetXbins())
+            hname = self.observable_settings['jetscape_distribution'].GetName()
+            self.observable_settings['jetscape_distribution'] = self.observable_settings['jetscape_distribution'].Rebin(n-1, hname, bins[1:])
 
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
