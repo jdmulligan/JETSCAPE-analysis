@@ -15,6 +15,7 @@ from __future__ import print_function
 
 # General
 import os
+import sys
 import yaml
 import time
 from pathlib import Path
@@ -217,7 +218,12 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
     #
     # By default, select all particles
     # If select_status='+', select only positive status particles
-    # If select_status='-', select only positive status particles
+    # If select_status='-', select only negative status particles
+    #
+    # We return the list of fastjet::PseudoJets, where the user_index is set to:
+    #   user_index = (+/-)i,
+    #   where i is the index in the list, and is weighted by (+/-) for positive/negative status particles
+    # We also return the list of PID values, so that it can later be determined from the index i
     # ---------------------------------------------------------------
     def fill_fastjet_constituents(self, event, select_status=None, select_charged=False):
 
@@ -228,11 +234,12 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             status_mask = (event['status'] > -1)
         else:
             # Picked a value to make an all true mask. We don't select anything
-            status_mask = event["status"] > -1e6
+            status_mask = event['status'] > -1e6
 
         # Construct indices according to charge
         charged_mask = get_charged_mask(event['particle_ID'], select_charged)
 
+        # Get selected particles
         full_mask = status_mask & charged_mask
         px = event['px'][full_mask]
         py = event['py'][full_mask]
@@ -240,13 +247,23 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         e = event['E'][full_mask]
         pid = event['particle_ID'][full_mask]
 
+        # Define status_factor -- either +1 (positive status) or -1 (negative status)
+        status_selected = event['status'][full_mask] # Either 0 (positive) or -1 (negative)
+        status_factor = 2*status_selected + 1 # Change to +1 (positive) or -1 (negative)
+        for status in np.unique(status_selected): # Check that we only encounter expected statuses
+            if status not in [0,-1]:
+                sys.exit('ERROR: fill_fastjet_constituents -- unexpected particle status -- {status}')
+
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
 
-        # Set pid as user_index
-        [fj_particles[i].set_user_index(int(pid[i])) for i,_ in enumerate(fj_particles)]
+        # Set user_index = (+/-)i, so that we encode both the status information and the pid index
+        if len(fj_particles) == len(status_factor):
+            [fj_particles[i].set_user_index(int(status_factor[i]*i)) for i,_ in enumerate(fj_particles)]
+        else:
+            sys.exit('ERROR: fill_fastjet_constituents -- len(fj_particles) != {len(status_factor) -- {len(fj_particles)} vs. {len(status_factor)}')
 
-        return fj_particles
+        return fj_particles, pid
 
     # ---------------------------------------------------------------
     # This function is called once per event

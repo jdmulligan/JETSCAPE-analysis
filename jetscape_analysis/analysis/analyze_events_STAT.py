@@ -111,19 +111,19 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         self.initialize_output_lists()
 
         # Create list of fastjet::PseudoJets (separately for jet shower particles and holes)
-        fj_hadrons_positive = self.fill_fastjet_constituents(event, select_status='+')
-        fj_hadrons_negative = self.fill_fastjet_constituents(event, select_status='-')
+        fj_hadrons_positive, pid_hadrons_positive = self.fill_fastjet_constituents(event, select_status='+')
+        fj_hadrons_negative, pid_hadrons_negative = self.fill_fastjet_constituents(event, select_status='-')
 
         # Create list of charged particles
-        fj_hadrons_positive_charged = self.fill_fastjet_constituents(event, select_status='+',
+        fj_hadrons_positive_charged, pid_hadrons_positive_charged = self.fill_fastjet_constituents(event, select_status='+',
                                                                      select_charged=True)
-        fj_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
+        fj_hadrons_negative_charged, pid_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
                                                                      select_charged=True)
 
         # Fill hadron observables for jet shower particles
-        self.fill_hadron_observables(fj_hadrons_positive, status='+')
+        self.fill_hadron_observables(fj_hadrons_positive, pid_hadrons_positive, status='+')
         if self.is_AA:
-            self.fill_hadron_observables(fj_hadrons_negative, status='-')
+            self.fill_hadron_observables(fj_hadrons_negative, pid_hadrons_negative, status='-')
 
         # Fill hadron correlation observables
         self.fill_hadron_correlation_observables(fj_hadrons_positive)
@@ -142,7 +142,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             jets_selected = jet_selector(jets)
 
             # Fill inclusive full jet observables
-            [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, jetR, full_jet=True) for jet in jets_selected]
+            [self.analyze_inclusive_jet(jet, fj_hadrons_positive, fj_hadrons_negative, pid_hadrons_positive, pid_hadrons_negative, jetR, full_jet=True) for jet in jets_selected]
 
             # Charged jets
             # -----------------
@@ -151,7 +151,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             jets_selected_charged = jet_selector(jets_charged)
 
             # Fill inclusive charged jet observables
-            [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, jetR, full_jet=False) for jet in jets_selected_charged]
+            [self.analyze_inclusive_jet(jet, fj_hadrons_positive_charged, fj_hadrons_negative_charged, pid_hadrons_positive_charged, pid_hadrons_negative_charged, jetR, full_jet=False) for jet in jets_selected_charged]
 
             # Fill semi-inclusive jet correlations
             if self.semi_inclusive_chjet_observables:
@@ -272,7 +272,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Fill hadron observables
     # (assuming weak strange decays are off, but charm decays are on)
     # ---------------------------------------------------------------
-    def fill_hadron_observables(self, fj_particles, status='+'):
+    def fill_hadron_observables(self, fj_particles, pid_hadrons, status='+'):
 
         # Note that for identified particles, we store holes of the identified species
         suffix = ''
@@ -283,7 +283,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         for i,particle in enumerate(fj_particles):
 
             # Fill some basic hadron info
-            pid = particle.user_index()
+            pid = pid_hadrons[np.abs(particle.user_index())]
             pt = particle.pt()
             eta = particle.eta()
 
@@ -370,7 +370,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill inclusive jet observables
     # ---------------------------------------------------------------
-    def analyze_inclusive_jet(self, jet, fj_hadrons_positive, fj_hadrons_negative, jetR, full_jet=True):
+    def analyze_inclusive_jet(self, jet, fj_hadrons_positive, fj_hadrons_negative, pid_positive, pid_negative, jetR, full_jet=True):
 
         holes_in_jet = []
         if self.is_AA:
@@ -390,7 +390,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if full_jet:
 
             # Ungroomed
-            self.fill_full_jet_ungroomed_observables(jet, fj_hadrons_positive, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR)
+            self.fill_full_jet_ungroomed_observables(jet, fj_hadrons_positive, holes_in_jet, pid_positive, pid_negative, jet_pt, jet_pt_uncorrected, jetR)
 
             # Groomed
             if self.grooming_settings:
@@ -400,7 +400,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         else:
 
             # Ungroomed
-            self.fill_charged_jet_ungroomed_observables(jet, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR)
+            self.fill_charged_jet_ungroomed_observables(jet, holes_in_jet, pid_positive, jet_pt, jet_pt_uncorrected, jetR)
 
             # Groomed
             if self.grooming_settings:
@@ -410,7 +410,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_full_jet_ungroomed_observables(self, jet, fj_hadrons_positive, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR):
+    def fill_full_jet_ungroomed_observables(self, jet, fj_hadrons_positive, holes_in_jet, pid_positive, pid_holes, jet_pt, jet_pt_uncorrected, jetR):
 
         if self.sqrts in [2760, 5020]:
 
@@ -432,7 +432,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             for constituent in jet.constituents():
                                 if constituent.pt() > min_leading_track_pt:
                                     # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                    if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                    if abs(pid_positive[np.abs(constituent.user_index())]) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                         accept_jet = True
                             if accept_jet:
                                 self.observable_dict_event[f'inclusive_jet_pt_alice_R{jetR}'].append(jet_pt)
@@ -483,7 +483,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             self.observable_dict_event[f'inclusive_jet_Dz_atlas_R{jetR}_Njets'].append(jet_pt)
                             for hadron in fj_hadrons_positive:
                                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                pid = hadron.user_index()
+                                pid = pid_positive[np.abs(hadron.user_index())]
                                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                     if jet.delta_R(hadron) < jetR:
                                         z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
@@ -492,7 +492,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             if self.is_AA:
                                 for hadron in holes_in_jet:
                                     # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                    pid = hadron.user_index()
+                                    pid = pid_holes[np.abs(hadron.user_index())]
                                     if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                         if jet.delta_R(hadron) < jetR:
                                             z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
@@ -513,7 +513,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 for hadron in fj_hadrons_positive:
                                     if hadron.pt() > track_pt_min:
                                         # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                        pid = hadron.user_index()
+                                        pid = pid_positive[np.abs(hadron.user_index())]
                                         if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                             if jet.delta_R(hadron) < jetR:
                                                 z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
@@ -524,7 +524,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     for hadron in holes_in_jet:
                                         if hadron.pt() > track_pt_min:
                                             # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                            pid = hadron.user_index()
+                                            pid = pid_holes[np.abs(hadron.user_index())]
                                             if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                                 if jet.delta_R(hadron) < jetR:
                                                     z = hadron.pt() * np.cos(jet.delta_R(hadron)) / jet_pt
@@ -545,7 +545,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     for hadron in fj_hadrons_positive:
                                         if hadron.pt() > self.inclusive_jet_observables['charge_cms']['track_pt_min']:
                                             # Charged particles (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                            pid = hadron.user_index()
+                                            pid = pid_positive[np.abs(hadron.user_index())]
                                             if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                                 if jet.delta_R(hadron) < jetR:
                                                     sum += self.charge(pid) * np.power(hadron.pt(), kappa)
@@ -553,7 +553,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                         for hadron in holes_in_jet:
                                             if hadron.pt() > self.inclusive_jet_observables['charge_cms']['track_pt_min']:
                                                 # Charged particles (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                                pid = hadron.user_index()
+                                                pid = pid_holes[np.abs(hadron.user_index())]
                                                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                                     if jet.delta_R(hadron) < jetR:
                                                         sum_holes += self.charge(pid) * np.power(hadron.pt(), kappa)
@@ -606,7 +606,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill inclusive charged jet observables
     # ---------------------------------------------------------------
-    def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, jet_pt, jet_pt_uncorrected, jetR):
+    def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, pid_positive, jet_pt, jet_pt_uncorrected, jetR):
 
         if self.sqrts == 5020:
 
@@ -678,7 +678,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             for constituent in jet.constituents():
                                 if constituent.pt() > self.inclusive_chjet_observables['pt_alice']['leading_track_min_pt']:
                                     # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                    if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                    if abs(pid_positive[np.abs(constituent.user_index())]) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                         accept_jet = True
                             if accept_jet:
                                 self.observable_dict_event[f'inclusive_chjet_pt_alice_R{jetR}'].append(jet_pt)
@@ -761,7 +761,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             for constituent in jet.constituents():
                                 if constituent.pt() > min_leading_track_pt:
                                     # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                    if abs(constituent.user_index()) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                    if abs(pid_positive[np.abs(constituent.user_index())]) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                         accept_jet = True
                             if accept_jet:
                                 self.observable_dict_event[f'inclusive_chjet_pt_star_R{jetR}'].append(jet_pt)
