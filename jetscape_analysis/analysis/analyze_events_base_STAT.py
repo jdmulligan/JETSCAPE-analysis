@@ -304,3 +304,21 @@ def get_charged_mask(pid, select_charged: bool):
                 charged_mask[i] = True
 
     return charged_mask
+
+
+@jit(nopython=True)  # type: ignore
+def dphi_in_range_for_hadron_correlations(dphi: float, min_phi: float = -np.pi / 2, max_phi: float = 3 * np.pi / 2) -> float:
+    """ Put dphi in range min_phi <= dphi < max_phi
+
+    Args:
+        dphi: phi value to normalize.
+        min_phi: minimum allowed phi. Default: -pi/2
+        max_phi: maximum allowed phi. Default: 3*pi/2
+    Returns:
+        Normalized phi
+    """
+    if dphi < min_phi:
+        dphi += 2 * np.pi
+    elif dphi >= max_phi:
+        dphi -= 2 * np.pi
+    return dphi
