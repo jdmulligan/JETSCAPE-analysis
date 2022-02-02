@@ -120,6 +120,11 @@ hadron_correlations:
     # NOTE: Need to convert from N_part to centrality, which is available in Table 2 in https://inspirehep.net/literature/588808
     # NOTE: They also report 40-60%, but that goes outside of our centrality range, so we skip it here
     centrality: [[0,5], [5, 10], [10, 20], [20, 30], [30, 40]]
+
+    custom_data: 'custom_data.yaml'
+    skip_pp: True
+
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
