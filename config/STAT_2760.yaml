@@ -52,6 +52,18 @@ pt_ref: 10.
 jet_R: [0.2, 0.3, 0.4, 0.5]
 min_jet_pt: 20.
 max_jet_y: 3.
+
+# If AA, set different options for hole subtraction treatment 
+# If pp, defaults will override this: ['']
+jet_collection_labels: ['_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
+
+# Constituent subtractor, for hole treatment
+constituent_subtractor:
+  R_max: 0.25
+  max_eta: 3.
+  ghost_area: 0.01
+  bge_rho_grid_size: 1.
+thermal_rejection_fraction: 0.33
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 

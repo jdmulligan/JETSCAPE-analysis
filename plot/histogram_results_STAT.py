@@ -14,7 +14,6 @@ import argparse
 
 # Data analysis and plotting
 import ROOT
-from array import *
 import numpy as np
 import pandas as pd
 
@@ -55,10 +54,15 @@ class HistogramResults(common_base.CommonBase):
         self.power = self.config['power']
         self.pt_ref = self.config['pt_ref']
 
+        # If AA, set different options for hole subtraction treatment
+        if self.is_AA:
+            self.jet_collection_labels = self.config['jet_collection_labels']
+        else:
+            self.jet_collection_labels = ['']
+
         #------------------------------------------------------
         # Read input file
         self.observables_df = pd.read_parquet(self.input_file)
-        #self.observables_df = ak.Array(self.input_file)
         self.weights = self.observables_df['event_weight']
         self.pt_hat = self.observables_df['pt_hat']
 
@@ -89,23 +93,29 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def histogram_results(self):
 
+        # Hadron histograms
         self.histogram_hadron_observables(observable_type='hadron')
 
         self.histogram_hadron_correlation_observables(observable_type='hadron_correlations')
 
-        self.histogram_jet_observables(observable_type='inclusive_chjet')
+        # Jet histograms: loop through different hole subtraction treatments
+        for jet_collection_label in self.jet_collection_labels:
 
-        if 'inclusive_jet' in self.config:
-            self.histogram_jet_observables(observable_type='inclusive_jet')
+            self.histogram_jet_observables(observable_type='inclusive_chjet', jet_collection_label=jet_collection_label)
 
-        if 'semi_inclusive_chjet' in self.config:
-            self.histogram_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
+            if 'inclusive_jet' in self.config:
+                self.histogram_jet_observables(observable_type='inclusive_jet', jet_collection_label=jet_collection_label)
 
-        if 'dijet' in self.config:
-            self.histogram_jet_observables(observable_type='dijet')
+            if 'semi_inclusive_chjet' in self.config:
+                self.histogram_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet', jet_collection_label=jet_collection_label)
 
+            if 'dijet' in self.config:
+                self.histogram_jet_observables(observable_type='dijet', jet_collection_label=jet_collection_label)
+
+        # QA histograms
         self.histogram_event_qa()
 
+        # Write output to ROOT file
         self.write_output_objects()
 
     #-------------------------------------------------------------------------------------------
@@ -214,7 +224,8 @@ class HistogramResults(common_base.CommonBase):
 
                 # Histogram observable
                 self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins, centrality=centrality)
-                self.histogram_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins, centrality=centrality)
+                if self.is_AA:
+                    self.histogram_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins, centrality=centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram hadron correlation observables
@@ -230,25 +241,29 @@ class HistogramResults(common_base.CommonBase):
                 if self.is_AA and centrality not in self.observable_centrality_list:
                     self.observable_centrality_list.append(centrality)
 
-                # Construct appropriate binning
-                dphi_bins = np.array(block["dphi_bins"])
+                # STAR dihadron
+                if observable == 'dihadron_star':
 
-                # Histogram observable
-                pt_trigger_ranges = block["pt_trig"]
-                pt_associated_ranges = block["pt_assoc"]
-                # Loop over trigger and associated ranges
-                # NOTE: n_trig will be calculated within the histogram observable
-                for i_trig_bin, pt_trig_range in enumerate(pt_trigger_ranges):
-                    for pt_trig_min, pt_trig_max in pt_trig_range:
-                        for pt_assoc_range in pt_associated_ranges:
-                            for pt_assoc_min, pt_assoc_max in pt_assoc_range:
-                                label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
-                                self.histogram_observable(column_name=f'{observable_type}_{observable}_{label}', bins=dphi_bins, centrality=centrality, pt_bin=i_trig_bin)
+                    # Construct appropriate binning
+                    print(block)
+                    dphi_bins = np.array(block["dphi_bins"])
+
+                    # Histogram observable
+                    pt_trigger_ranges = block["pt_trig"]
+                    pt_associated_ranges = block["pt_assoc"]
+                    # Loop over trigger and associated ranges
+                    # NOTE: n_trig will be calculated within the histogram observable
+                    for i_trig_bin, pt_trig_range in enumerate(pt_trigger_ranges):
+                        for pt_trig_min, pt_trig_max in pt_trig_range:
+                            for pt_assoc_range in pt_associated_ranges:
+                                for pt_assoc_min, pt_assoc_max in pt_assoc_range:
+                                    label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
+                                    self.histogram_observable(column_name=f'{observable_type}_{observable}_{label}', bins=dphi_bins, centrality=centrality, pt_bin=i_trig_bin)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
     #-------------------------------------------------------------------------------------------
-    def histogram_jet_observables(self, observable_type=''):
+    def histogram_jet_observables(self, observable_type='', jet_collection_label=''):
         print()
         print(f'Histogram {observable_type} observables...')
 
@@ -301,10 +316,11 @@ class HistogramResults(common_base.CommonBase):
                                     if not bins.any():
                                         continue
 
-                                    self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}',
+                                    self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}{jet_collection_label}',
                                                                 bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
-                                    self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}_unsubtracted',
-                                                                bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+                                    if jet_collection_label in ['_shower_recoil']:
+                                        self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}{jet_collection_label}_unsubtracted',
+                                                                    bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
                             else:
 
                                 self.suffix = f'_R{jet_R}{subobservable_label}'
@@ -315,14 +331,16 @@ class HistogramResults(common_base.CommonBase):
                                 if not bins.any():
                                     continue
 
-                                self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}',
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}{jet_collection_label}',
                                                           bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
-                                self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}_unsubtracted',
-                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+                                if jet_collection_label in ['_shower_recoil']:
+                                    self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}{jet_collection_label}_unsubtracted',
+                                                            bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+
     #-------------------------------------------------------------------------------------------
     # Histogram semi-inclusive jet observables
     #-------------------------------------------------------------------------------------------
-    def histogram_semi_inclusive_chjet_observables(self, observable_type=''):
+    def histogram_semi_inclusive_chjet_observables(self, observable_type='', jet_collection_label=''):
         print()
         print(f'Histogram {observable_type} observables...')
 
@@ -344,37 +362,40 @@ class HistogramResults(common_base.CommonBase):
 
                     if self.sqrts == 2760:
 
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger',
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}',
                                                   bins=bins, centrality=centrality)
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger',
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}',
                                                   bins=bins, centrality=centrality)
 
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger_unsubtracted',
-                                                  bins=bins, centrality=centrality)
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger_unsubtracted',
-                                                  bins=bins, centrality=centrality)
+                        if jet_collection_label in ['_shower_recoil']:
+                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}_unsubtracted',
+                                                    bins=bins, centrality=centrality)
+                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}_unsubtracted',
+                                                    bins=bins, centrality=centrality)
 
                         if np.isclose(jet_R, block['jet_R'][0]):
-                            column_name = f'{observable_type}_alice_trigger_pt'
+                            column_name = f'{observable_type}_alice_trigger_pt{jet_collection_label}'
                             bins = np.array(block['low_trigger_range'] + block['high_trigger_range']).astype(np.float)
                             self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, observable=observable)
 
                     elif self.sqrts == 200:
 
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}',
+                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}{jet_collection_label}',
                                                   bins=bins, centrality=centrality)
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_unsubtracted',
-                                                  bins=bins, centrality=centrality)
+                        if jet_collection_label in ['_shower_recoil']:
+                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}{jet_collection_label}_unsubtracted',
+                                                    bins=bins, centrality=centrality)
 
                         if observable == 'IAA_star' and np.isclose(jet_R, block['jet_R'][0]):
-                            column_name = f'{observable_type}_star_trigger_pt'
+                            column_name = f'{observable_type}_star_trigger_pt{jet_collection_label}'
                             bins = np.array(block['trigger_range'])
                             self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', pt_bin=None, block=None, observable=''):
+    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', 
+                             pt_bin=None, block=None, observable=''):
 
         # Check if event centrality is within observable centrality bin
         if not self.centrality_accepted(centrality):
@@ -389,7 +410,7 @@ class HistogramResults(common_base.CommonBase):
         # Find dimension of observable
         dim_observable = 0
         for i,_ in enumerate(col):
-            if len(col[i]) > 0:
+            if col[i] is not None:
                 dim_observable = col[i][0].size
                 break
 
@@ -415,7 +436,6 @@ class HistogramResults(common_base.CommonBase):
             bins = np.array([block["pt_trig"][pt_bin]])
             self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
 
-
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
@@ -427,7 +447,7 @@ class HistogramResults(common_base.CommonBase):
 
         # Fill histogram
         for i,_ in enumerate(col):
-            if len(col[i]) > 0:
+            if col[i] is not None:
                 for value in col[i]:
                     h.Fill(value, self.weights[i])
 
@@ -450,7 +470,7 @@ class HistogramResults(common_base.CommonBase):
 
         # Fill histogram
         for i,_ in enumerate(col):
-            if len(col[i]) > 0:
+            if col[i] is not None:
                 for value in col[i]:
                     if pt_min < value[0] < pt_max:
                         h.Fill(value[1], self.weights[i])
@@ -466,8 +486,8 @@ class HistogramResults(common_base.CommonBase):
         # AA
         if self.is_AA:
 
-            if self.centrality[0] >= observable_centrality[0] or np.isclose(observable_centrality[0],self.centrality[0]):
-                if self.centrality[1] <= observable_centrality[1] or np.isclose(observable_centrality[1],self.centrality[1]):
+            if self.centrality[0] >= observable_centrality[0]:
+                if self.centrality[1] <= observable_centrality[1]:
                     return True
             return False
 

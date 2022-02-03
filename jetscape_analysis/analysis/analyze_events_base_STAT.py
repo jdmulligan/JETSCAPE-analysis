@@ -29,6 +29,8 @@ import numpy as np
 from pathlib import Path
 
 # Fastjet via python (from external library heppy)
+import fastjet as fj
+import fjcontrib
 import fjext
 
 from jetscape_analysis.base import common_base
@@ -56,6 +58,8 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             else:
                 self.n_event_max = -1
 
+            self.thermal_rejection_fraction = config['thermal_rejection_fraction']
+
         # Check whether pp or AA
         if 'PbPb' in self.input_file_hadrons or 'AuAu' in self.input_file_hadrons:
             self.is_AA = True
@@ -76,6 +80,26 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 centrality_string = _run_info["index_to_hydro_event"][_file_index].split('/')[0].split('_')
                 # index of 1 and 2 based on an example entry of "cent_00_01"
                 self.centrality = [int(centrality_string[1]), int(centrality_string[2])]
+
+        # If AA, initialize constituent subtractor
+        self.constituent_subtractor = None
+        if self.is_AA:
+            print('Constituent subtractor is enabled.')
+            constituent_subtractor = config['constituent_subtractor']
+            max_distance = constituent_subtractor['R_max']
+            max_eta = constituent_subtractor['max_eta']
+            ghost_area = constituent_subtractor['ghost_area']
+            bge_rho_grid_size = constituent_subtractor['bge_rho_grid_size']
+            self.bge_rho = fj.GridMedianBackgroundEstimator(max_eta, bge_rho_grid_size)
+            self.constituent_subtractor = fjcontrib.ConstituentSubtractor()
+            self.constituent_subtractor.set_background_estimator(self.bge_rho)
+            self.constituent_subtractor.set_max_distance(max_distance)
+            self.constituent_subtractor.set_ghost_area(ghost_area)
+            self.constituent_subtractor.set_max_eta(max_eta)
+            self.constituent_subtractor.initialize()
+            print(dir(self.constituent_subtractor))
+        else:
+            print('Constituent subtractor is disabled.')
 
     # ---------------------------------------------------------------
     # Main processing function
@@ -131,7 +155,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 # Fill event cross-section weight
                 self.observable_dict_event['event_weight'] = event_weight
                 self.observable_dict_event['pt_hat'] = event['pt_hat']
-
+                
                 self.output_event_list.append(self.observable_dict_event)
 
         # Get total cross-section (same for all events at this point), weight sum, and centrality
@@ -252,16 +276,19 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         status_factor = 2*status_selected + 1 # Change to +1 (positive) or -1 (negative)
         for status in np.unique(status_selected): # Check that we only encounter expected statuses
             if status not in [0,-1]:
-                sys.exit('ERROR: fill_fastjet_constituents -- unexpected particle status -- {status}')
+                sys.exit(f'ERROR: fill_fastjet_constituents -- unexpected particle status -- {status}')
 
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
 
-        # Set user_index = (+/-)i, so that we encode both the status information and the pid index
+        # Set user_index = (+/-)(i+1), so that we encode both the status information and the pid index
+        # Note that we use i+1 since 0-index otherwise does not distinguish +/-
+        # We then have: pid_index = abs(user_index) - 1
+        # In this way, user_index > 0 corresponds to positive status particles, and user_index < 0 corresponds to negative status particles
         if len(fj_particles) == len(status_factor):
-            [fj_particles[i].set_user_index(int(status_factor[i]*i)) for i,_ in enumerate(fj_particles)]
+            [fj_particles[i].set_user_index(int(status_factor[i]*(i+1))) for i,_ in enumerate(fj_particles)]
         else:
-            sys.exit('ERROR: fill_fastjet_constituents -- len(fj_particles) != {len(status_factor) -- {len(fj_particles)} vs. {len(status_factor)}')
+            sys.exit(f'ERROR: fill_fastjet_constituents -- len(fj_particles) != {len(status_factor)} -- {len(fj_particles)} vs. {len(status_factor)}')
 
         return fj_particles, pid
 
