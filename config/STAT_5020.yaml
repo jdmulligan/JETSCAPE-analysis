@@ -8,16 +8,41 @@
 # labeled as: {type}_{observable}_{experiment}_{suffix}
 # For example: hadron_pt_cms
 #              jet_mass_alice_R0.2
-# where the optional suffix is only present when needed. 
+# where the optional suffix is only present when needed.
 #
 # We compute each observable only if it lies in the specified centrality range.
 # We include all available centralities up to 50% centrality, at present.
 #
 # We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
 # to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
-# Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
-# Note that we bin pp observables according to the binning in each AA centrality;
-# the pp hepdata tgraphs are included only for QA.
+#   - Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+#   - Note that we bin pp observables according to the binning in each AA centrality;
+#     the pp hepdata tgraphs are included only for QA.
+#
+# The histogram binnings are determined from: plot_results_STAT_utils.bins_from_config()
+#   - The hepdata_AA dir/hname fields need to have either:
+#     (i) list of dirs, with single hname
+#     (ii) list of hnames, with single dir
+#     where the list corresponds to the centrality list in the config block.
+#   - The AA binnings are always used, since we ultimately want to form PbPb/pp ratios
+#
+# The data TGraphs are determined from: plot_results_STAT_utils.tgraph_from_hepdata()
+#   - For pp: The hepdata_pp dir/gname should have only a single entry for dir/gname -- not a list.
+#             Unless on rare occasion the pp data with different binnings for each centrality
+#             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
+#   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
+#
+# Note that for the inputs to the likelihood calculation, we use the Pb-Pb/pp ratios, rather
+# than the Pb-Pb and pp distributions themselves. This choice is intended to minimize dependence
+# on the pp baseline, although may be susceptible to shape effects from the distributions themselves;
+# one could consider to investigate the magnitude of these effects in the future.
+#
+# Note that when using these experimental data for the Bayesian calibration, we need to
+# revisit the treatment/breakdown of uncertainties and construct a covariance matrix
+# for each measurement (close attention was not paid during the event generation QA stage).
+#
+# Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
+#           noted otherwise with "TODO"
 #------------------------------------------------------------------
 sqrt_s: 5020
 power: 4.
@@ -34,6 +59,18 @@ SoftDrop:
   - {'zcut': 0.2, 'beta': 0}
   - {'zcut': 0.4, 'beta': 0}
   - {'zcut': 0.5, 'beta': 1.5}
+
+# If AA, set different options for hole subtraction treatment 
+# If pp, defaults will override this: ['']
+jet_collection_labels: ['_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
+
+# Constituent subtractor, for hole treatment
+constituent_subtractor:
+  R_max: 0.25
+  max_eta: 3.
+  ghost_area: 0.01
+  bge_rho_grid_size: 1.
+thermal_rejection_fraction: 0.33
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron spectra
@@ -47,38 +84,38 @@ hadron:
     centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
-    
+
     hepdata: 'HEPData-ins1657384-v1-root.root'
     hepdata_pp_dir: 'Table 4'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e4
-    
+
     hepdata_AA_dir: 'Table 8'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
   
-  # https://www.hepdata.net/record/ins1759506 -- charged pions
+  # https://www.hepdata.net/record/ins1759506 -- charged pions 
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
     centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T}'
     logy: True
-    
+
     hepdata: 'HEPData-ins1759506-v1-root.root'
     hepdata_pp_dir: 'Table 2'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e4
-    
+
     hepdata_AA_dir: 'Table 15'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y7', 'Graph1D_y8', 'Graph1D_y9']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y7', 'Hist1D_y8', 'Hist1D_y9']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
 
   # https://www.hepdata.net/record/ins1496050
   pt_ch_cms:
@@ -87,7 +124,7 @@ hadron:
     centrality: [[0,5], [5,10], [10,30], [30,50]]
     xtitle: '#it{p}_{T}'
     logy: True
-    
+
     hepdata: 'HEPData-ins1496050-v2-root.root'
     hepdata_pp_dir: 'Table 7'
     hepdata_pp_gname: 'Graph1D_y1'
@@ -95,11 +132,13 @@ hadron:
     y_min_pp: 2e-18
     y_max_pp: 1e4
     scale_by: '1/pt'
-    
+
     hepdata_AA_dir: ['Table 8', 'Table 9', 'Table 10', 'Table 11']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0
+    y_max_AA: 2.
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations
@@ -107,44 +146,46 @@ hadron_correlations:
 
   # https://www.hepdata.net/record/ins1686834
   # Fig 5 (scalar product method)
+  # TODO: Implement this observable
   v2_atlas:
     eta_cut: 2.5
     pt: [5., 60.]
     centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
-    
+
     hepdata: 'HEPData-ins1686834-v1-root.root'
     hepdata_pp_dir: 'Table 11'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#it{v}_{2}(SP)'
     y_min_pp: 0.3
     y_max_pp: 0.
-    
+
     hepdata_AA_dir: ['Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{v}_{2}(SP)'
-  
+    ytitle_AA: '#it{v}_{2}(SP)'
+
   # https://www.hepdata.net/record/ins1511868
   # Fig 1 (scalar product method)
   # Note: histogram binnings are not provided
+  # TODO: Implement this observable
   v2_cms:
     eta_cut: 1.
     pt: [5., 100.]
     pt_min: 1.
     centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
-    
+
     hepdata: 'HEPData-ins1511868-v1-root.root'
     hepdata_pp_dir: 'Table 7'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#it{v}_{2}(SP)'
     y_min_pp: 0.3
     y_max_pp: 0.
-    
+
     hepdata_AA_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6']
     hepdata_AA_gname: 'Graph1D_y1'
-    ytitle: '#it{v}_{2}(SP)'
+    ytitle_AA: '#it{v}_{2}(SP)'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
@@ -162,26 +203,31 @@ inclusive_jet:
     centrality: [[0,10]]
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
-    
+
     hepdata: 'HEPData-ins1755387-v1-root.root'
     hepdata_pp_dir_R0.2: 'Table 2'
     hepdata_pp_dir_R0.4: 'Table 4'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-8
-    y_max_pp: 1e-1
-    
+    y_min_pp: 2e-7
+    y_max_pp: 1e-3
+
     hepdata_AA_dir_R0.2: ['Table 30']
     hepdata_AA_dir_R0.4: ['Table 31']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1673184
   # Note: Two charged tracks with pt>4 GeV are required in Pb-Pb
-  #       (they argue this is small...unclear if they correct for it...we will ignore it here)
-  # Note: The paper also performs rapidity dependence for 0-10%, which we omit for now
-  # Note the PbPb binning in hepdata is different than the pp hepdata cross-section binning
+  #       (they argue this is small...unclear if they correct for it...we will ignore it here).
+  #       RE 1/28/22: Laura confirmed that this should be accounted for in the reconstruction efficiency,
+  #         so we shouldn't need it here.
+  # Note: The paper also performs rapidity dependence for 0-10% -- we make a separate block for this
+  #       below, since the y-integrated RAA has different binning than the y-differential RAA
+  # Note: The PbPb binning in hepdata is different than the pp hepdata cross-section binning
   pt_atlas:
     jet_R: [0.4]
     y_cut: 2.8
@@ -194,14 +240,62 @@ inclusive_jet:
     hepdata_pp_dir_R0.4: 'Table 4'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-8
+    y_min_pp: 2e-7
     y_max_pp: 1e4
-    
+    skip_pp_ratio: True
+
     hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    ytitle: '#it{R}_{AA}'
-    
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
+
+  # https://www.hepdata.net/record/ins1673184
+  # Note: Same as above block, except we include rapidity dependence for 0-10%
+  # We save [pt,y] and bin according to the pt,y bins in Fig. 7
+  # The AA histograms are binned in abs(rapidity): [0., 0.3, 0.8, 1.2, 1.6, 2.1, 2.8]
+  #  i.e. we save histograms of yields, for a given pt bin, as a function of rapidity
+  #       and then we can construct RAA(y1)/RAA(y2) in the plotting script
+  # We skip the pp QA for convenience, since the pp histograms consist of separate histograms
+  #   for each y, binned in pt -- whereas the PbPb histograms are separated in pt and binned in y
+  pt_y_atlas:
+    jet_R: [0.4]
+    y_cut: 2.8
+    pt: [158, 200, 251, 316, 562]
+    centrality: [[0,10]]
+    xtitle: '|#it{y}|'
+    logy: True
+
+    hepdata: 'HEPData-ins1673184-v1-root.root'
+    hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-7
+    y_max_pp: 1e4
+    skip_pp: True
+
+    # Note: the y binnings are identical for each pt bin
+    hepdata_AA_dir_R0.4_pt0: 'Table 27'
+    hepdata_AA_gname_R0.4_pt0: ['Graph1D_y1'] 
+    hepdata_AA_hname_R0.4_pt0: ['Hist1D_y1']
+
+    hepdata_AA_dir_R0.4_pt1: 'Table 27'
+    hepdata_AA_gname_R0.4_pt1: ['Graph1D_y2']
+    hepdata_AA_hname_R0.4_pt1: ['Hist1D_y2']
+
+    hepdata_AA_dir_R0.4_pt2: 'Table 27'
+    hepdata_AA_gname_R0.4_pt2: ['Graph1D_y3']
+    hepdata_AA_hname_R0.4_pt2: ['Hist1D_y3']
+
+    hepdata_AA_dir_R0.4_pt3: 'Table 27'
+    hepdata_AA_gname_R0.4_pt3: ['Graph1D_y4']
+    hepdata_AA_hname_R0.4_pt3: ['Hist1D_y4'] 
+
+    ytitle_AA: '#it{R}_{AA}(y) / #it{R}_{AA}(y=0.3)'
+    y_min_AA: 0.
+    y_max_AA: 1.9
+
   # https://www.hepdata.net/record/ins1848440
   pt_cms:
     jet_R: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0]
@@ -218,11 +312,11 @@ inclusive_jet:
     hepdata_pp_dir_R0.6: 'Figure 5-4'
     hepdata_pp_dir_R0.8: 'Figure 5-5'
     hepdata_pp_dir_R1.0: 'Figure 5-6'
-    hepdata_pp_gname: 'Graph1D_y1'
+    hepdata_pp_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e2
-    
+
     hepdata_AA_dir_R0.2: 'Figure 7-1'
     hepdata_AA_dir_R0.3: 'Figure 7-2'
     hepdata_AA_dir_R0.4: 'Figure 7-3'
@@ -231,7 +325,9 @@ inclusive_jet:
     hepdata_AA_dir_R1.0: 'Figure 7-6'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
 
   # https://www.hepdata.net/record/ins1673177
   Dz_atlas:
@@ -239,9 +335,9 @@ inclusive_jet:
     y_cut: 2.1
     pt: [126., 158.49, 199.53, 251.19, 316.22, 398.1]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    xtitle: '#it{z}'
     logy: True
-    
+
     hepdata: 'HEPData-ins1673177-v2-root.root'
     hepdata_pp_dir_R0.4_pt0: 'Table 0'
     hepdata_pp_dir_R0.4_pt1: 'Table 4'
@@ -252,7 +348,7 @@ inclusive_jet:
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{z}}'
     y_min_pp: 2e-3
     y_max_pp: 1e6
-    
+
     hepdata_AA_dir_R0.4_pt0: 'Table 2'
     hepdata_AA_dir_R0.4_pt1: 'Table 6'
     hepdata_AA_dir_R0.4_pt2: 'Table 10'
@@ -260,16 +356,18 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_pt4: 'Table 18'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
-    ytitle: '#it{R}_{D(z)}'
-    
+    ytitle_AA: '#it{R}_{D(z)}'
+    y_min_AA: 0
+    y_max_AA: 2.5
+
   Dpt_atlas:
     jet_R: [0.4]
     y_cut: 2.1
     pt: [126., 158.49, 199.53, 251.19, 316.22, 398.1]
     centrality: [[0,10], [10,20], [20,30], [30,40]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
-    
+
     hepdata: 'HEPData-ins1673177-v2-root.root'
     hepdata_pp_dir_R0.4_pt0: 'Table 1'
     hepdata_pp_dir_R0.4_pt1: 'Table 5'
@@ -279,8 +377,8 @@ inclusive_jet:
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
     y_min_pp: 2e-4
-    y_max_pp: 1e4
-    
+    y_max_pp: 1e2
+
     hepdata_AA_dir_R0.4_pt0: 'Table 3'
     hepdata_AA_dir_R0.4_pt1: 'Table 7'
     hepdata_AA_dir_R0.4_pt2: 'Table 11'
@@ -288,9 +386,14 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_pt4: 'Table 19'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
-    ytitle: '#it{R}_{D(pt)}'
-  
+    ytitle_AA: '#it{R}_{D(pt)}'
+    y_min_AA: 0
+    y_max_AA: 2.5
+
   # https://www.hepdata.net/record/ins1789224
+  # Note that the paper does not construct the PbPb/pp ratio directly,
+  # but only contains the distributions (and q/g templates).
+  # We therefore skip constructing the PbPb/pp ratio for now.
   charge_cms:
     jet_R: [0.4]
     eta_cut: 1.5
@@ -300,7 +403,7 @@ inclusive_jet:
     xtitle: 'Q'
     track_pt_min: 1.
     kappa: [0.3, 0.5, 0.7]
-    
+
     hepdata: 'HEPData-ins1789224-v1-root.root'
     hepdata_pp_dir_R0.4_k0.3: 'Table 8'
     hepdata_pp_dir_R0.4_k0.5: 'Table 1'
@@ -309,14 +412,17 @@ inclusive_jet:
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{Q}} #left[1/e#right]'
     y_min_pp: 0.
     y_max_pp: 2.5
-    
+
     hepdata_AA_dir_R0.4_k0.3: 'Table 8'
     hepdata_AA_dir_R0.4_k0.5: 'Table 1'
     hepdata_AA_dir_R0.4_k0.7: 'Table 9'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
-    ytitle: '#it{R}_{AA}'
-    
+    ytitle_AA: '#frac{1}{#sigma} #frac{d#sigma}{d#it{Q}} #left[1/e#right]'
+    y_min_AA: 0
+    y_max_AA: 2.5
+    skip_AA_ratio: True
+
   # https://www.hepdata.net/record/ins1672962
   mg_cms:
     jet_R: [0.4]
@@ -328,7 +434,7 @@ inclusive_jet:
       - {'zcut': 0.1, 'beta': 0}
       - {'zcut': 0.5, 'beta': 1.5}
     xtitle: '#it{m}_{g}/#it{p}_{T,jet}'
-    
+
     hepdata: 'HEPData-ins1672962-v1-root.root'
     hepdata_pp_dir_R0.4_zcut0.1_beta0: 'Figure 2a'
     hepdata_pp_dir_R0.4_zcut0.5_beta1.5: 'Figure 2b'
@@ -336,41 +442,46 @@ inclusive_jet:
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{m}_{g}} #left[GeV^{-2}#right]'
     y_min_pp: 0.
     y_max_pp: 25
-    
+    skip_pp_ratio: True
+
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt0: 'Figure 5b'
     hepdata_AA_gname_R0.4_zcut0.1_beta0_pt0: ['Graph1D_y1']
     hepdata_AA_hname_R0.4_zcut0.1_beta0_pt0: ['Hist1D_y1']
-    
+
     hepdata_AA_dir_R0.4_zcut0.5_beta1.5_pt0: 'Figure 6b'
     hepdata_AA_gname_R0.4_zcut0.5_beta1.5_pt0: ['Graph1D_y1']
     hepdata_AA_hname_R0.4_zcut0.5_beta1.5_pt0: ['Hist1D_y1']
-    
+
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt1: 'Figure 3b'
     hepdata_AA_gname_R0.4_zcut0.1_beta0_pt1: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     hepdata_AA_hname_R0.4_zcut0.1_beta0_pt1: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
-    
+
     hepdata_AA_dir_R0.4_zcut0.5_beta1.5_pt1: 'Figure 4b'
     hepdata_AA_gname_R0.4_zcut0.5_beta1.5_pt1: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
     hepdata_AA_hname_R0.4_zcut0.5_beta1.5_pt1: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
-    
+
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt2: 'Figure 5b'
     hepdata_AA_gname_R0.4_zcut0.1_beta0_pt2: ['Graph1D_y3']
     hepdata_AA_hname_R0.4_zcut0.1_beta0_pt2: ['Hist1D_y3']
-    
+
     hepdata_AA_dir_R0.4_zcut0.5_beta1.5_pt2: 'Figure 6b'
     hepdata_AA_gname_R0.4_zcut0.5_beta1.5_pt2: ['Graph1D_y3']
     hepdata_AA_hname_R0.4_zcut0.5_beta1.5_pt2: ['Hist1D_y3']
-    
+
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt3: 'Figure 5b'
     hepdata_AA_gname_R0.4_zcut0.1_beta0_pt3: ['Graph1D_y4']
     hepdata_AA_hname_R0.4_zcut0.1_beta0_pt3: ['Hist1D_y4']
-    
+
     hepdata_AA_dir_R0.4_zcut0.5_beta1.5_pt3: 'Figure 6b'
     hepdata_AA_gname_R0.4_zcut0.5_beta1.5_pt3: ['Graph1D_y4']
     hepdata_AA_hname_R0.4_zcut0.5_beta1.5_pt3: ['Hist1D_y4']
-    ytitle: 'PbPb / smeared pp'
-    
+    ytitle_AA: 'PbPb / smeared pp'
+    y_min_AA: 0.
+    y_max_AA: 7.
+
   # https://www.hepdata.net/record/ins1620905
+  # Note that pp distributions are not reported except for 160-180 GeV
+  # (the other pt bins have only "pp smeared" reported)
   zg_cms:
     jet_R: [0.4]
     eta_cut: 1.3
@@ -386,8 +497,9 @@ inclusive_jet:
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
     y_min_pp: 0.
-    y_max_pp: 25
-    
+    y_max_pp: 15
+    skip_pp: True
+
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt0: ['Table 11']
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt1: ['Table 10', 'Table 9', 'Table 8']
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt2: ['Table 13']
@@ -396,29 +508,106 @@ inclusive_jet:
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt5: ['Table 16']
     hepdata_AA_gname: 'Graph1D_y1'
     hepdata_AA_hname: 'Hist1D_y1'
-    
+    ytitle_AA: 'PbPb / smeared pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
 inclusive_chjet:
-  
-  # ALICE-PUBLIC-2020-006 (no hepdata yet)
-  # TODO: Update binnings
+
+  # https://inspirehep.net/literature/1893479 (no hepdata yet)
+  # TODO: update hepdata
   zg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
     pt: [60., 80.]
     centrality: [[0,10], [30,50]]
-    bins: [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
+    xtitle: '#it{z}_{g}'
+
+    hepdata: 'HEPData-1627454721-v1-root.root'
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 2', '']
+    hepdata_pp_dir_R0.4_zcut0.2_beta0: ['', 'Table 4']
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
+    y_min_pp: 0.
+    y_max_pp: 7.
+
+    hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 3', '']
+    hepdata_AA_dir_R0.4_zcut0.2_beta0: ['', 'Table 6']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
+
   tg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
     pt: [60., 80.]
     centrality: [[0,10], [30,50]]
-    bins: [0., 0.1, 0.15, 0.22, 0.3, 0.4, 0.5, 0.7, 1.0]
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
-      - {'zcut': 0.4, 'beta': 0}
+    xtitle: '#it{#theta}_{g}'
+
+    hepdata: 'HEPData-1627454721-v1-root.root'
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 7', '']
+    hepdata_pp_dir_R0.4_zcut0.2_beta0: ['', 'Table 10']
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{#theta}_{g}}'
+    y_min_pp: 0.
+    y_max_pp: 5.
+
+    hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 9', '']
+    hepdata_AA_dir_R0.4_zcut0.2_beta0: ['', 'Table 12']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
+
+  # ALICE, (no hepdata)
+  # TODO: Update binnings
+  zr_alice:
+    jet_R: [0.4]
+    eta_cut_R: 0.9
+    pt: [100., 150.]
+    centrality: [[0,10]]
+    r: [0.1, 0.2]
+    bins: [0.6, 0.65, 0.7, 0.75, 0.77, 0.8, 0.83, 0.86, 0.89, 0.92, 0.95, 0.98, 1.0]
+
+  # ALICE, (no hepdata)
+  # TODO: Update binnings
+  axis_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.9
+    pt: [40., 60., 80., 100., 150.]
+    centrality: [[0,10]]
+
+  # ALICE, (no hepdata)
+  # TODO: Update binnings
+  angularity_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.9
+    pt: [40., 60., 80., 100., 150.]
+    centrality: [[0,10]]
+    alpha: [1, 1.5, 2, 3]
+    SoftDrop:
+      - {'zcut': 0.2, 'beta': 0}
+
+  # ALICE, (no hepdata)
+  # TODO: Update binnings/groomers
+  kt_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.9
+    pt: [60., 80.]
+    centrality: [[0,10], [30, 50]]
+    SoftDrop:
+      - {'zcut': 0.2, 'beta': 0}
+    dynamical_grooming_a: [0.5, 1, 2]
+    bins_R02: [-0.001, 0.001, 0.25, 0.5, 1, 1.5, 2, 3, 4, 6, 8]
+    bins_R04: [-0.001, 0.001, 0.25, 0.5, 1, 2, 4, 6, 8, 10, 15]
 #------------------------------------------------------------------

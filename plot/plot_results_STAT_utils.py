@@ -58,12 +58,12 @@ class PlotUtils(common_base.CommonBase):
         
         # Find the relevant directory:
         # - We require that the centrality index is specified -- but
-        #   the directory name may be found either in the config either
+        #   the directory name may be found in the config either
         #   as a list of dirs, or a single dir with a list of histogram names
         # - The list of dir/hist names may also contain a suffix,
         #   which specifies e.g. the pt bin, jetR, or other parameters
-        
-        # First, check for dir/hist names in config
+
+        # First, check for dir names in config
         if f'hepdata_AA_dir{suffix}' in block:
             dir_key = f'hepdata_AA_dir{suffix}'
         elif f'hepdata_AA_dir' in block:
@@ -71,6 +71,7 @@ class PlotUtils(common_base.CommonBase):
         else:
             print(f'hepdata_AA_dir{suffix} not found!')
             
+        # Check for hist names in config
         if f'hepdata_AA_hname{suffix}' in block:
             h_key = f'hepdata_AA_hname{suffix}'
         elif f'hepdata_AA_hname' in block:
@@ -102,6 +103,14 @@ class PlotUtils(common_base.CommonBase):
         dir = f.Get(dir_name)
         h = dir.Get(h_name)
         bins = np.array(h.GetXaxis().GetXbins())
+
+        # For certain Soft Drop observables, we need to exclude the "untagged" bin so that it will become underflow
+        if observable == 'zg_alice' or observable == 'tg_alice':
+            bins = bins[1:]
+        # For ATLAS RAA y-dependence, add a bin at 0<abs(y)<0.3 (it is not included in the hepdata since they take a ratio to that bin)
+        if observable == 'pt_y_atlas':
+            bins = np.insert(bins, 0, 0., axis=0)
+
         f.Close()
         
         return bins
@@ -109,7 +118,7 @@ class PlotUtils(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Get tgraph from hepdata file specified in config block
     # ---------------------------------------------------------------
-    def tgraph_from_hepdata(self, block, sqrts, observable_type, observable, suffix='', pt_suffix=''):
+    def tgraph_from_hepdata(self, block, is_AA, sqrts, observable_type, observable, centrality_index, suffix='', pt_suffix=''):
 
         # Open the HEPData file
         hepdata_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
@@ -119,28 +128,57 @@ class PlotUtils(common_base.CommonBase):
         # Find the relevant directory:
         # - The list of dir/hist names may contain a suffix,
         #   which specifies e.g. the pt bin, jetR, or other parameters
-        
-        # First, check for dir/hist names in config
-        if f'hepdata_pp_dir{suffix}' in block:
-            dir_key = f'hepdata_pp_dir{suffix}'
-        elif f'hepdata_pp_dir{suffix}{pt_suffix}' in block:
-            dir_key = f'hepdata_pp_dir{suffix}{pt_suffix}'
-        elif f'hepdata_pp_dir' in block:
-            dir_key = f'hepdata_pp_dir'
+
+        if is_AA:
+            system = 'AA'
+        else:
+            system = 'pp'
+
+        # First, check for dir names in config
+        if f'hepdata_{system}_dir{suffix}' in block:
+            dir_key = f'hepdata_{system}_dir{suffix}'
+        elif f'hepdata_{system}_dir{suffix}{pt_suffix}' in block:
+            dir_key = f'hepdata_{system}_dir{suffix}{pt_suffix}'
+        elif f'hepdata_{system}_dir' in block:
+            dir_key = f'hepdata_{system}_dir'
         else:
             #print(f'hepdata_pp_dir{suffix} not found!')
             return None
             
-        if f'hepdata_pp_gname{suffix}' in block:
-            g_key = f'hepdata_pp_gname{suffix}'
-        elif f'hepdata_pp_gname' in block:
-            g_key = f'hepdata_pp_gname'
+        # Check for hist names in config
+        if f'hepdata_{system}_gname{suffix}' in block:
+            g_key = f'hepdata_{system}_gname{suffix}'
+        elif f'hepdata_{system}_gname{suffix}{pt_suffix}' in block:
+            g_key = f'hepdata_{system}_gname{suffix}{pt_suffix}'
+        elif f'hepdata_{system}_gname' in block:
+            g_key = f'hepdata_{system}_gname'
         else:
-            #print(f'hepdata_pp_gname{suffix} not found!')
+            #print(f'hepdata_{system}_gname{suffix} not found!')
             return None
+            
+        # Get the appropriate centrality entry in the dir/hist list
+        if type(block[dir_key]) is list:
+            
+            # If fewer entries than the observable's centrality, skip
+            if centrality_index > len(block[dir_key])-1:
+                return np.array([])
+        
+            dir_name = block[dir_key][centrality_index]
+            g_name = block[g_key]
+            
+        elif type(block[g_key]) is list:
+        
+            # If fewer entries than the observable's centrality, skip
+            if centrality_index > len(block[g_key])-1:
+                return np.array([])
+        
+            dir_name = block[dir_key]
+            g_name = block[g_key][centrality_index]
 
-        dir_name = block[dir_key]
-        g_name = block[g_key]
+        else:
+
+            dir_name = block[dir_key]
+            g_name = block[g_key]
         
         # Get the tgraph, and return the bins
         dir = f.Get(dir_name)
@@ -149,6 +187,59 @@ class PlotUtils(common_base.CommonBase):
         
         return g
         
+    # ---------------------------------------------------------------
+    # Get tgraph from data points specified in config block
+    # ---------------------------------------------------------------
+    def tgraph_from_yaml(self, block, is_AA, sqrts, observable_type, observable, centrality_index, suffix='', pt_suffix=''):
+
+        # Load yaml file containing the data
+        data_dir = f'data/STAT/{sqrts}/{observable_type}/{observable}'
+        data_filename = os.path.join(data_dir, block['custom_data'])
+        with open(data_filename, 'r') as stream:
+            data = yaml.safe_load(stream)
+
+        # Find the relevant config block:
+        # - The list of dir/hist names may contain a suffix,
+        #   which specifies e.g. the pt bin, jetR, or other parameters
+
+        if is_AA:
+            system = 'AA'
+        else:
+            system = 'pp'
+
+        # First, check for key names in config
+        if f'data_{system}_{suffix}' in data:
+            key = f'data_{system}{suffix}'
+        elif f'data_{system}{suffix}{pt_suffix}' in data:
+            key = f'data_{system}{suffix}{pt_suffix}'
+        elif f'data_{system}' in data:
+            key = f'data_{system}'
+        else:
+            #print(f'data_pp_dir{suffix} not found!')
+            return None
+
+        # Get the appropriate centrality entry in the list
+        if type(data[key]['y'][0]) is list:
+            y = np.array(data[key]['y'][centrality_index])
+            if 'y_err' in data[key]:
+                y_err = np.array(data[key]['y_err'][centrality_index])
+        else:
+            y = np.array(data[key]['y'])
+            if 'y_err' in data[key]:
+                y_err = np.array(data[key]['y_err'])
+
+        if 'x' in data[key]:
+            x = np.array(data[key]['x'][centrality_index])
+        else:
+            bins = np.array(block['bins'])
+            x = (bins[1:] + bins[:-1]) / 2
+        n = len(x)
+        
+        # Construct TGraph
+        g = ROOT.TGraphAsymmErrors(n, x, y, np.zeros(n), np.zeros(n), y_err, y_err)
+        
+        return g
+
     #---------------------------------------------------------------
     # Divide a histogram by a tgraph, point-by-point
     #---------------------------------------------------------------
@@ -158,6 +249,7 @@ class PlotUtils(common_base.CommonBase):
         g_new = g.Clone(f'{g.GetName()}_divided')
     
         nBins = h.GetNbinsX()
+        h_offset = 0
         for bin in range(1, nBins+1):
 
             # Get histogram (x,y)
@@ -166,25 +258,41 @@ class PlotUtils(common_base.CommonBase):
             h_error = h.GetBinError(bin)
 
             # Get TGraph (x,y) and errors
-            g_x = ctypes.c_double(0)
-            g_y = ctypes.c_double(0)
-            g.GetPoint(bin-1, g_x, g_y)
-            yErrLow = g.GetErrorYlow(bin-1)
-            yErrUp  = g.GetErrorYhigh(bin-1)
-            
-            gx = g_x.value
-            gy = g_y.value
+            gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1)
 
-            # Skip if tgraph starts below hist (since hist has min cut)
-            if gx < h_x:
-                continue
-                
+            #print(f'h_x: {h_x}')
+            #print(f'gx: {gx}')
+            #print(f'h_y: {h_y}')
+            #print(f'gy: {gy}')
+
+            # If tgraph starts below hist (e.g. when hist has min cut), try to get next tgraph point
+            g_offset = 0
+            while gx < h_x and g_offset < g.GetN()+1:
+                g_offset += 1
+                gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1+g_offset)
+            #print(f'new gx: {gx}')
+
+
+            # If tgraph started above hist (see below) and we exhausted the tgraph points, skip
+            if h_offset > 0 and np.isclose(gx, 0):
+                continue  
+
+            # If tgraph starts above hist, try to get next hist bin
+            h_offset = 0
+            while gx > h_x and h_offset < nBins+1:
+                h_offset += 1
+                h_x = h.GetBinCenter(bin+h_offset)
+                h_y = h.GetBinContent(bin+h_offset)
+                h_error = h.GetBinError(bin+h_offset)
+                #print(f'h_x: {h_x}')
+                #print(f'gx: {gx}')
+
             if not np.isclose(h_x, gx):
                 print(f'ERROR: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
                 return None
-          
+
             new_content = h_y / gy
-            
+
             # Combine tgraph and histogram relative uncertainties in quadrature
             if gy > 0. and h_y > 0.:
                 new_error_low = np.sqrt( pow(yErrLow/gy,2) + pow(h_error/h_y,2) ) * new_content
@@ -193,9 +301,25 @@ class PlotUtils(common_base.CommonBase):
                 new_error_low = (yErrLow/gy) * new_content
                 new_error_up = (yErrUp/gy) * new_content
 
-            g_new.SetPoint(bin-1, h_x, new_content)
-            g_new.SetPointError(bin-1, 0, 0, new_error_low, new_error_up)
+            g_new.SetPoint(bin-1+g_offset, h_x, new_content)
+            g_new.SetPointError(bin-1+g_offset, 0, 0, new_error_low, new_error_up)
         return g_new
+
+    #---------------------------------------------------------------
+    # Get points from tgraph by index
+    #---------------------------------------------------------------
+    def get_gx_gy(self, g, index):
+
+        g_x = ctypes.c_double(0)
+        g_y = ctypes.c_double(0)
+        g.GetPoint(index, g_x, g_y)
+        yErrLow = g.GetErrorYlow(index)
+        yErrUp  = g.GetErrorYhigh(index)
+        
+        gx = g_x.value
+        gy = g_y.value
+
+        return gx, gy, yErrLow, yErrUp
 
     #---------------------------------------------------------------
     # Divide a tgraph by a tgraph, point-by-point: g1/g2

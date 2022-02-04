@@ -15,9 +15,34 @@
 #
 # We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
 # to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
-# Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
-# Note that we bin pp observables according to the binning in each AA centrality;
-# the pp hepdata tgraphs are included only for QA.
+#   - Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+#   - Note that we bin pp observables according to the binning in each AA centrality;
+#     the pp hepdata tgraphs are included only for QA.
+#
+# The histogram binnings are determined from: plot_results_STAT_utils.bins_from_config()
+#   - The hepdata_AA dir/hname fields need to have either:
+#     (i) list of dirs, with single hname
+#     (ii) list of hnames, with single dir
+#     where the list corresponds to the centrality list in the config block.
+#   - The AA binnings are always used, since we ultimately want to form PbPb/pp ratios
+#
+# The data TGraphs are determined from: plot_results_STAT_utils.tgraph_from_hepdata()
+#   - For pp: The hepdata_pp dir/gname should have only a single entry for dir/gname -- not a list.
+#             Unless on rare occasion the pp data with different binnings for each centrality
+#             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
+#   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
+#
+# Note that for the inputs to the likelihood calculation, we use the Pb-Pb/pp ratios, rather
+# than the Pb-Pb and pp distributions themselves. This choice is intended to minimize dependence
+# on the pp baseline, although may be susceptible to shape effects from the distributions themselves;
+# one could consider to investigate the magnitude of these effects in the future.
+#
+# Note that when using these experimental data for the Bayesian calibration, we need to
+# revisit the treatment/breakdown of uncertainties and construct a covariance matrix
+# for each measurement (close attention was not paid during the event generation QA stage).
+#
+# Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
+#           noted otherwise.
 #------------------------------------------------------------------
 sqrt_s: 200
 power: 4.
@@ -27,6 +52,18 @@ pt_ref: 10.
 jet_R: [0.2, 0.4, 0.5]
 min_jet_pt: 10.
 max_jet_y: 3.
+
+# If AA, set different options for hole subtraction treatment 
+# If pp, defaults will override this: ['']
+jet_collection_labels: ['_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
+
+# Constituent subtractor, for hole treatment
+constituent_subtractor:
+  R_max: 0.25
+  max_eta: 3.
+  ghost_area: 0.01
+  bge_rho_grid_size: 1.
+thermal_rejection_fraction: 0.33
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron spectra
@@ -39,10 +76,20 @@ hadron:
     eta_cut: 0.35
     pt: [5., 20.]
     centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
+    bins: [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10., 12., 14., 16., 18., 20.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
-    
-    data_AA: ['Data_PHENIX_AuAu200_RAACharged_0to10_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_10to20_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_20to30_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_30to40_2013.dat', 'Data_PHENIX_AuAu200_RAACharged_40to50_2013.dat']
-    ytitle: '#it{R}_{AA}'
+    logy: True
+
+    custom_data: 'custom_data.yaml'
+    ytitle_pp: '#frac{1}{2#pip_{T}} #frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[mb GeV^{2}#right]'
+    y_min_pp: 2e-12
+    y_max_pp: 1e-4
+    scale_by: '1/pt'
+    skip_pp: True
+
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 2.
 
   # https://www.hepdata.net/record/ins619063
   # Summed yields of pi+-, K+-, p, anti-p
@@ -52,7 +99,7 @@ hadron:
     centrality: [[0,5], [10,20], [20,30], [30,40]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
-    
+
     hepdata: 'HEPData-ins619063-v1-root.root'
     hepdata_pp_dir: 'Table 1'
     hepdata_pp_gname: 'Graph1D_y8'
@@ -60,23 +107,36 @@ hadron:
     y_min_pp: 2e-10
     y_max_pp: 2e2
     scale_by: '1/pt'
-    
+
     hepdata_AA_dir: 'Table 3'
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations
 hadron_correlations:
-    
+
   # https://www.hepdata.net/record/ins715470
   # Di-hadron correlations -- delta-phi and D(z)
   # See Fig 3 here: https://arxiv.org/pdf/nucl-th/0701045.pdf
+  # pmj 13/1/22: incomplete. This is a key RHIC paper imho (based on the analysis of Xin-Nian et al., which formed the basis of a lot of developments)
   dihadron_star:
-    pt_trig: [8., 15.]
-    centrality: [[0,10]]
+    eta_cut: 1.0
+    pt_trig: [[8., 15.]]
+    # TODO: Do we want to skip 4-6?
+    pt_assoc: [[4, 6], [6, -1]]
+    # They appear to have 40 bins between [-pi/2, 3pi/2], so generated with `np.linspace(-np.pi/2, 3*np.pi/2, 41)`
+    dphi_bins: [-1.5707963267948966, -1.413716694115407, -1.2566370614359172, -1.0995574287564276, -0.9424777960769379, -0.7853981633974483, -0.6283185307179586, -0.47123889803846897, -0.3141592653589793, -0.15707963267948966, 0.0, 0.15707963267948966, 0.3141592653589793, 0.47123889803846897, 0.6283185307179586, 0.7853981633974483, 0.9424777960769379, 1.0995574287564276, 1.2566370614359172, 1.413716694115407, 1.5707963267948966, 1.7278759594743862, 1.8849555921538759, 2.0420352248333655, 2.199114857512855, 2.356194490192345, 2.5132741228718345, 2.670353755551324, 2.827433388230814, 2.9845130209103035, 3.141592653589793, 3.2986722862692828, 3.4557519189487724, 3.612831551628262, 3.7699111843077517, 3.9269908169872414, 4.084070449666731, 4.241150082346221, 4.39822971502571, 4.5553093477052, 4.71238898038469]
+    # NOTE: Need to convert from N_part to centrality, which is available in Table 2 in https://inspirehep.net/literature/588808
+    # NOTE: They also report 40-60%, but that goes outside of our centrality range, so we skip it here
+    centrality: [[0,5], [5, 10], [10, 20], [20, 30], [30, 40]]
+
+    custom_data: 'custom_data.yaml'
+    skip_pp: True
+
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
@@ -93,11 +153,12 @@ inclusive_chjet:
     centrality: [[0,10]]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
-    
+
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[b/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-14
-    y_max_pp: 1e-2
-       
+    y_min_pp: 2e-8
+    y_max_pp: 1e-1
+    skip_pp: True
+
     hepdata: 'HEPData-ins1798665-v1-root.root'
     hepdata_AA_dir: 'Table 10'
     hepdata_AA_gname_R0.2: ['Graph1D_y1']
@@ -106,7 +167,9 @@ inclusive_chjet:
     hepdata_AA_hname_R0.3: ['Hist1D_y1']
     hepdata_AA_gname_R0.4: ['Graph1D_y1']
     hepdata_AA_hname_R0.4: ['Hist1D_y1']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 2.
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Jet correlation observables
@@ -114,6 +177,9 @@ semi_inclusive_chjet:
 
   # https://www.hepdata.net/record/ins1512115
   # Note: no pp reference -- RCP and R02/R05 -- we include only R02/R05 for now
+  # pmj 13/1/22: QA OK other than issues with hepdata that you identify.
+  # pmj 13/1/22: Please formulate your questions about the hepdata entries and I will send them to Alex (I thought they had been fixed ;-( )
+
   IAA_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: 1.
@@ -123,18 +189,19 @@ semi_inclusive_chjet:
     trigger_range: [9., 30.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
-    
+
     ytitle_pp: 'I_{AA}'
-    y_min_pp: 2e-8
+    y_min_pp: 2e-5
     y_max_pp: 2.
-       
+    skip_pp: True
+
     hepdata: 'HEPData-ins1512115-v1-root.root'
     hepdata_AA_dir: 'Table 38'
     hepdata_AA_dir_R02_R05: 'Table 38'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
-    ytitle: '#it{R}_{AA}'
-    
+    ytitle_AA: '#it{R}_{AA}'
+
   # HEPData does not contain histogram bins -- appears to be 25 bins from [pi/2,3pi/2]
   # TODO: Confirm binning
   # The bin width is constant at 0.1256.  For the most left two data points, there are really missing in HEP
@@ -147,14 +214,14 @@ semi_inclusive_chjet:
     trigger_range: [9., 30.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
-    
+
     hepdata: 'HEPData-ins1512115-v1-root.root'
     hepdata_pp_dir:  'Table 42'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#Phi(#Delta#it{#varphi})'
     y_min_pp: 0.
     y_max_pp: 1.
-       
+
     bins: [1.57079633, 1.69646003, 1.82212374, 1.94778745, 2.07345115,
        2.19911486, 2.32477856, 2.45044227, 2.57610598, 2.70176968,
        2.82743339, 2.95309709, 3.0787608 , 3.20442451, 3.33008821,
@@ -164,5 +231,7 @@ semi_inclusive_chjet:
     hepdata_AA_dir: 'Table 39'
     hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: ['Hist1D_y1']
-    ytitle: '#it{R}_{AA}'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 2.
 #------------------------------------------------------------------
