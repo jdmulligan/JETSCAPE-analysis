@@ -665,7 +665,14 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     def fill_full_jet_groomed_observables(self, grooming_setting, jet, jet_pt, jetR, jet_collection_label=''):
 
         # Construct groomed jet
-        gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
+
+        # For negative_recombiner case, we set the negative recombiner also for the C/A reclustering
+        jet_def = fj.JetDefinition(fj.cambridge_algorithm, jetR)
+        if jet_collection_label in ['_negative_recombiner']:
+            recombiner = fjext.NegativeEnergyRecombiner()
+            jet_def.set_recombiner(recombiner)
+        gshop = fjcontrib.GroomerShop(jet, jet_def)
+
         zcut = grooming_setting['zcut']
         beta = grooming_setting['beta']
         jet_groomed_lund = gshop.soft_drop(beta, zcut, jetR)
@@ -739,7 +746,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             # ALICE jet axis Standard-WTA
             #   Hole treatment: 
             #    - For show_recoil case, correct the pt only
-            #    - For negative_recombiner case, no subtraction is needed
+            #    - For negative_recombiner case, no subtraction is needed, although we recluster using the negative recombiner again
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['axis_alice']['centrality']):
                 pt_min = self.inclusive_chjet_observables['axis_alice']['pt'][0]
@@ -749,6 +756,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if pt_min < jet_pt < pt_max:
 
                             jet_def_wta = fj.JetDefinition(fj.cambridge_algorithm, 2*jetR)
+                            if jet_collection_label in ['_negative_recombiner']:
+                                recombiner = fjext.NegativeEnergyRecombiner()
+                                jet_def_wta.set_recombiner(recombiner)
                             jet_def_wta.set_recombination_scheme(fj.WTA_pt_scheme)
                             reclusterer_wta = fjcontrib.Recluster(jet_def_wta)
                             jet_wta = reclusterer_wta.result(jet)
@@ -909,7 +919,14 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     def fill_charged_jet_groomed_observables(self, grooming_setting, jet, jet_pt, jetR, jet_collection_label=''):
 
         # Construct groomed jet
-        gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
+
+        # For negative_recombiner case, we set the negative recombiner also for the C/A reclustering
+        jet_def = fj.JetDefinition(fj.cambridge_algorithm, jetR)
+        if jet_collection_label in ['_negative_recombiner']:
+            recombiner = fjext.NegativeEnergyRecombiner()
+            jet_def.set_recombiner(recombiner)
+        gshop = fjcontrib.GroomerShop(jet, jet_def)
+
         zcut = grooming_setting['zcut']
         beta = grooming_setting['beta']
         jet_groomed_lund = gshop.soft_drop(beta, zcut, jetR)
