@@ -309,14 +309,12 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             dphi_values = []
                             for associated_particle in assoc_particles:
                                 # Trigger particle pt must be larger than the associated particle.
-                                # If it's smaller, skip it. By definition, we'll have picked that particle up as a trigger
-                                print(f"trig: {trigger_particle.pt()}, assoc: {associated_particle.pt()}")
-                                print(f"Same particle? {trigger_particle == associated_particle}")
+                                # If it's smaller, skip it. We'll have picked up the higher pt particle as a trigger, so
+                                # we'll account for it when we loop over that trigger.
                                 # NOTE: We also want to ensure that the trigger and associated aren't the same particle.
                                 #       However, requiring trigger pt > assoc pt also implicitly requires that the
                                 #       two particles can't be the same.
                                 if trigger_particle.pt() > associated_particle.pt():
-                                    print("passed")
                                     # stores phi_trig - phi_assoc
                                     dphi_values.append(associated_particle.delta_phi_to(trigger_particle))
 
