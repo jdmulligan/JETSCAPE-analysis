@@ -296,8 +296,6 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     associated_particles[(pt_assoc_min, pt_assoc_max)].append(particle)
 
                 # Now, create the correlations over our reduced set of particles
-                print(f"triggers particles: { {k: [t.pt() for t in tp] for k, tp in trigger_particles.items()} }")
-                print(f"associated particles: { {k: [t.pt() for t in tp] for k, tp in associated_particles.items()} }")
                 for (pt_trig_min, pt_trig_max), trig_particles in trigger_particles.items():
                     for trigger_particle in trig_particles:
                         # Store the trigger pt to count the number of triggers
@@ -307,12 +305,6 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig'].append(trigger_particle.pt())
 
                         for (pt_assoc_min, pt_assoc_max), assoc_particles in associated_particles.items():
-                            print(f"pt assoc range: {pt_assoc_min, pt_assoc_max}")
-                            ## First, check if the associated is the same as the trigger. If so, skip over it
-                            #if len(assoc_particles) == 1 and assoc_particles[0] == trigger_particle
-                            #    print(f"Skipping associated particle {associated_particle.pt()} because it's the same as the trigger")
-                            #    continue
-
                             # First, just calculate the values
                             dphi_values = []
                             for associated_particle in assoc_particles:
@@ -328,17 +320,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     # stores phi_trig - phi_assoc
                                     dphi_values.append(associated_particle.delta_phi_to(trigger_particle))
 
-                            ## Store the trigger pt to count the number of triggers
-                            ## Only want to do this once per trigger which has at least one associated particle,
-                            ## so we wait until we enter the associated particle loop.
-                            #if recorded_trigger_particle_for_n_trig:
-                            #    # In principle, the dphi list is enough to get the number of triggers, but it's not so easy
-                            #    # to integrate with the existing histogram code. So we keep separate track of the triggers,
-                            #    # same as is done for D(z)
-                            #    self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig'].append(trigger_particle.pt())
-                            #    recorded_trigger_particle_for_n_trig = False
-
-                            # If nothing to record, then break out
+                            # If nothing to record, then skip over this trigger
+                            # NOTE: This is actually quite important for the output because calling extend on a defaultdict
+                            #       with an empty list causes the None (what we want for an empty list for our output) to
+                            #       be stored as an empty list (which we don't want). Unfortunately, this is subtle to see
+                            #       when debugging, so have some care and keep an eye out for this with this observable.
                             if len(dphi_values) == 0:
                                 continue
 
@@ -350,12 +336,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             #       it's more difficult to integrate with the existing infrastructure, but so we take the simpler route
                             #       and use a flat list
                             # NOTE: Here we standardize the values to match with the measured correlation range
-                            print(f"About to fill correlations for {label}: trig: {trigger_particle.pt()}, dphi_values: {dphi_values}")
                             self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}'].extend([
                                 analyze_events_base_STAT.dphi_in_range_for_hadron_correlations(phi) for phi in dphi_values
                             ])
-                            print(f"stored: {self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}']}")
-                        #print(f"stored after associated part loop: {self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}']}")
 
     # ---------------------------------------------------------------
     # Fill jet observables
