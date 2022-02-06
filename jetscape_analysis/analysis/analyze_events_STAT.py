@@ -17,7 +17,7 @@
            (ii) Additive substructure -- subtract holes within R
            (iii) Non-additive substructure -- correct the jet pt only
           We also save unsubtracted histograms for comparison (although for substructure we still correct pt)
-      (3) Using shower+recoil+hole particles, with negative recombiner 
+      (3) Using shower+recoil+hole particles, with negative recombiner
           In this case, observable-specific hole subtraction necessary
           We consider three different classes of jet observables:
            (i) Jet pt-like observables -- no further hole subtraction
@@ -103,7 +103,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         self.min_jet_pt = config['min_jet_pt']
         self.max_jet_y = config['max_jet_y']
 
-        # General grooming parameters'            
+        # General grooming parameters'
         self.grooming_settings = {}
         if 'SoftDrop' in config:
             self.grooming_settings = config['SoftDrop']
@@ -153,7 +153,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 hadrons_positive_charged = self.constituent_subtractor.subtract_event(fj_hadrons_positive_charged)
                 hadrons_negative_charged = None
 
-            # For shower_recoil and negative_recombiner cases, keep both positive and negative hadrons 
+            # For shower_recoil and negative_recombiner cases, keep both positive and negative hadrons
             else:
                 hadrons_positive = fj_hadrons_positive
                 hadrons_negative = fj_hadrons_negative
@@ -161,9 +161,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 hadrons_negative_charged = fj_hadrons_negative_charged
 
             # Find jets and fill observables
-            self.fill_jet_observables(hadrons_positive, hadrons_negative, 
+            self.fill_jet_observables(hadrons_positive, hadrons_negative,
                                       hadrons_positive_charged, hadrons_negative_charged,
-                                      pid_hadrons_positive, pid_hadrons_negative, 
+                                      pid_hadrons_positive, pid_hadrons_negative,
                                       pid_hadrons_positive_charged, pid_hadrons_negative_charged,
                                       jet_collection_label=jet_collection_label)
 
@@ -283,51 +283,79 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if pid_hadrons[np.abs(particle.user_index())-1] in [211, 321, 2212]:
                             pt = particle.pt()
                             for pt_trig_range in pt_trigger_ranges:
-                                for pt_trig_min, pt_trig_max in pt_trig_range:
-                                    if pt_trig_min <= pt < pt_trig_max:
-                                        # Found trigger - save it
-                                        trigger_particles[(pt_trig_min, pt_trig_max)].append(particle)
+                                pt_trig_min, pt_trig_max = pt_trig_range
+                                if pt_trig_min <= pt < pt_trig_max:
+                                    # Found trigger - save it
+                                    trigger_particles[(pt_trig_min, pt_trig_max)].append(particle)
 
                             for pt_assoc_range in pt_associated_ranges:
-                                for pt_assoc_min, pt_assoc_max in pt_assoc_range:
-                                    # If the upper range has -1, it's unbounded, so we make it large enough not to matter
-                                    pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
-                                    if pt_assoc_min <= pt < pt_assoc_max:
-                                        associated_particles[(pt_assoc_min, pt_assoc_max)].append(particle)
+                                pt_assoc_min, pt_assoc_max = pt_assoc_range
+                                # If the upper range has -1, it's unbounded, so we make it large enough not to matter
+                                pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
+                                if pt_assoc_min <= pt < pt_assoc_max:
+                                    associated_particles[(pt_assoc_min, pt_assoc_max)].append(particle)
 
                 # Now, create the correlations over our reduced set of particles
+                print(f"triggers particles: { {k: [t.pt() for t in tp] for k, tp in trigger_particles.items()} }")
+                print(f"associated particles: { {k: [t.pt() for t in tp] for k, tp in associated_particles.items()} }")
                 for (pt_trig_min, pt_trig_max), trig_particles in trigger_particles.items():
                     for trigger_particle in trig_particles:
-                        recorded_trigger_particle_for_n_trig = True
+                        # Store the trigger pt to count the number of triggers
+                        # In principle, the dphi list could have been enough to get the number of triggers,
+                        # but it's not so easy to integrate with the existing histogram code.
+                        # So we keep separate track of the triggers, same as is done for D(z)
+                        self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig'].append(trigger_particle.pt())
+
                         for (pt_assoc_min, pt_assoc_max), assoc_particles in associated_particles.items():
-                            # Store the trigger pt to count the number of triggers
-                            # Only want to do this once per trigger which has at least one associated particle
-                            if recorded_trigger_particle_for_n_trig:
-                                # In principle, the dphi list is enough to get the number of triggers, but it's not so easy
-                                # to integrate with the existing histogram code. So we keep separate track of the triggers,
-                                # same as is done for D(z)
-                                self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig'].append(trigger_particle.pt())
-                                recorded_trigger_particle_for_n_trig = False
+                            print(f"pt assoc range: {pt_assoc_min, pt_assoc_max}")
+                            ## First, check if the associated is the same as the trigger. If so, skip over it
+                            #if len(assoc_particles) == 1 and assoc_particles[0] == trigger_particle
+                            #    print(f"Skipping associated particle {associated_particle.pt()} because it's the same as the trigger")
+                            #    continue
+
                             # First, just calculate the values
                             dphi_values = []
                             for associated_particle in assoc_particles:
                                 # Trigger particle pt must be larger than the associated particle.
                                 # If it's smaller, skip it. By definition, we'll have picked that particle up as a trigger
+                                print(f"trig: {trigger_particle.pt()}, assoc: {associated_particle.pt()}")
+                                print(f"Same particle? {trigger_particle == associated_particle}")
+                                # NOTE: We also want to ensure that the trigger and associated aren't the same particle.
+                                #       However, requiring trigger pt > assoc pt also implicitly requires that the
+                                #       two particles can't be the same.
                                 if trigger_particle.pt() > associated_particle.pt():
+                                    print("passed")
                                     # stores phi_trig - phi_assoc
                                     dphi_values.append(associated_particle.delta_phi_to(trigger_particle))
+
+                            ## Store the trigger pt to count the number of triggers
+                            ## Only want to do this once per trigger which has at least one associated particle,
+                            ## so we wait until we enter the associated particle loop.
+                            #if recorded_trigger_particle_for_n_trig:
+                            #    # In principle, the dphi list is enough to get the number of triggers, but it's not so easy
+                            #    # to integrate with the existing histogram code. So we keep separate track of the triggers,
+                            #    # same as is done for D(z)
+                            #    self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig'].append(trigger_particle.pt())
+                            #    recorded_trigger_particle_for_n_trig = False
+
+                            # If nothing to record, then break out
+                            if len(dphi_values) == 0:
+                                continue
 
                             # Label with both pt ranges
                             label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
                             # Store a list of dphi of associated particles
-                            # Since we need to keep track of the number of trigger particles, we store a list per trigger
-                            # NOTE: We actually store the triggers separately, but in principle we could extract it directly from here.
-                            #       It's more difficult to integrate with the existing infrastructure, but it could be used later to save
-                            #       space if needed.
+                            # NOTE: We actually store the triggers separately, but in principle we could extract it directly from here if
+                            #       we stored the associated particles per trigger (ie. used append rather than extend). However,
+                            #       it's more difficult to integrate with the existing infrastructure, but so we take the simpler route
+                            #       and use a flat list
                             # NOTE: Here we standardize the values to match with the measured correlation range
-                            self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}'].append([
+                            print(f"About to fill correlations for {label}: trig: {trigger_particle.pt()}, dphi_values: {dphi_values}")
+                            self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}'].extend([
                                 analyze_events_base_STAT.dphi_in_range_for_hadron_correlations(phi) for phi in dphi_values
                             ])
+                            print(f"stored: {self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}']}")
+                        #print(f"stored after associated part loop: {self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}']}")
 
     # ---------------------------------------------------------------
     # Fill jet observables
@@ -344,7 +372,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     #        (iii) Non-additive substructure -- correct the jet pt only
     #       We also save unsubtracted histograms for comparison.
     #
-    #   (3) Using shower+recoil+hole particles, using negative recombiner 
+    #   (3) Using shower+recoil+hole particles, using negative recombiner
     #       In this case, observable-specific hole subtraction necessary
     #       We consider three different classes of jet observables:
     #        (i) Jet pt-like observables -- no further hole subtraction
@@ -353,7 +381,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     def fill_jet_observables(self, hadrons_positive, hadrons_negative,
                              hadrons_positive_charged, hadrons_negative_charged,
-                             pid_hadrons_positive, pid_hadrons_negative, 
+                             pid_hadrons_positive, pid_hadrons_negative,
                              pid_hadrons_positive_charged, pid_hadrons_negative_charged,
                              jet_collection_label=''):
 
@@ -376,36 +404,36 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.max_jet_y)
 
             # Full jets
-            self.find_jets_and_fill(hadrons_for_jet_finding, hadrons_negative, 
-                                    pid_hadrons_positive, pid_hadrons_negative, 
+            self.find_jets_and_fill(hadrons_for_jet_finding, hadrons_negative,
+                                    pid_hadrons_positive, pid_hadrons_negative,
                                     jet_def, jet_selector, jetR, jet_collection_label, full_jet=True)
 
-            # Charged jets  
+            # Charged jets
             self.find_jets_and_fill(hadrons_for_jet_finding_charged, hadrons_negative_charged,
-                                    pid_hadrons_positive_charged, pid_hadrons_negative_charged, 
+                                    pid_hadrons_positive_charged, pid_hadrons_negative_charged,
                                     jet_def, jet_selector, jetR, jet_collection_label, full_jet=False)
 
     # ---------------------------------------------------------------
     # Find jets and fill histograms -- either full or charged
     # ---------------------------------------------------------------
     def find_jets_and_fill(self, hadrons_for_jet_finding, hadrons_negative,
-                           pid_hadrons_positive, pid_hadrons_negative, 
-                           jet_def, jet_selector, jetR, jet_collection_label, full_jet=True):                    
-    
+                           pid_hadrons_positive, pid_hadrons_negative,
+                           jet_def, jet_selector, jetR, jet_collection_label, full_jet=True):
+
         # Fill inclusive jets
         cs = fj.ClusterSequence(hadrons_for_jet_finding, jet_def)
         jets = fj.sorted_by_pt(cs.inclusive_jets())
         jets_selected = jet_selector(jets)
 
-        [self.analyze_inclusive_jet(jet, hadrons_for_jet_finding, hadrons_negative, 
-                                    pid_hadrons_positive, pid_hadrons_negative, 
-                                    jetR, full_jet=full_jet, 
+        [self.analyze_inclusive_jet(jet, hadrons_for_jet_finding, hadrons_negative,
+                                    pid_hadrons_positive, pid_hadrons_negative,
+                                    jetR, full_jet=full_jet,
                                     jet_collection_label=jet_collection_label) for jet in jets_selected]
 
         # Fill dijet observables -- full jets only
         if full_jet:
             if self.dijet_observables:
-                self.fill_dijet_observables(jets_selected, hadrons_negative, jetR, 
+                self.fill_dijet_observables(jets_selected, hadrons_negative, jetR,
                                             jet_collection_label=jet_collection_label)
 
         # Fill semi-inclusive jet correlations -- charged jets only
@@ -416,14 +444,14 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 elif self.sqrts == 200:
                     jetR_list = self.semi_inclusive_chjet_observables['IAA_star']['jet_R']
                 if jetR in jetR_list:
-                    self.fill_semi_inclusive_chjet_observables(jets_selected, hadrons_for_jet_finding, hadrons_negative, 
+                    self.fill_semi_inclusive_chjet_observables(jets_selected, hadrons_for_jet_finding, hadrons_negative,
                                                                 jetR, jet_collection_label=jet_collection_label)
 
     # ---------------------------------------------------------------
     # Fill inclusive jet observables
     # ---------------------------------------------------------------
-    def analyze_inclusive_jet(self, jet, hadrons_for_jet_finding, hadrons_negative, 
-                              pid_hadrons_positive, pid_hadrons_negative, 
+    def analyze_inclusive_jet(self, jet, hadrons_for_jet_finding, hadrons_negative,
+                              pid_hadrons_positive, pid_hadrons_negative,
                               jetR, full_jet=True, jet_collection_label=''):
 
         # Get the list of holes inside the jet, if applicable
@@ -451,8 +479,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if full_jet:
 
             # Ungroomed
-            self.fill_full_jet_ungroomed_observables(jet, hadrons_for_jet_finding, holes_in_jet, 
-                                                     pid_hadrons_positive, pid_hadrons_negative, 
+            self.fill_full_jet_ungroomed_observables(jet, hadrons_for_jet_finding, holes_in_jet,
+                                                     pid_hadrons_positive, pid_hadrons_negative,
                                                      jet_pt, jet_pt_uncorrected, jetR, jet_collection_label=jet_collection_label)
 
             # Groomed
@@ -463,26 +491,26 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         else:
 
             # Ungroomed
-            self.fill_charged_jet_ungroomed_observables(jet, holes_in_jet, pid_hadrons_positive, jet_pt, jet_pt_uncorrected, 
+            self.fill_charged_jet_ungroomed_observables(jet, holes_in_jet, pid_hadrons_positive, jet_pt, jet_pt_uncorrected,
                                                         jetR, jet_collection_label=jet_collection_label)
 
             # Groomed
             if self.grooming_settings:
                 for grooming_setting in self.grooming_settings:
-                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, jet_pt, jetR, 
+                    self.fill_charged_jet_groomed_observables(grooming_setting, jet, jet_pt, jetR,
                                                               jet_collection_label=jet_collection_label)
 
     # ---------------------------------------------------------------
     # Fill inclusive full jet observables
     # ---------------------------------------------------------------
-    def fill_full_jet_ungroomed_observables(self, jet, hadrons_for_jet_finding, holes_in_jet, 
-                                            pid_hadrons_positive, pid_hadrons_negative, 
+    def fill_full_jet_ungroomed_observables(self, jet, hadrons_for_jet_finding, holes_in_jet,
+                                            pid_hadrons_positive, pid_hadrons_negative,
                                             jet_pt, jet_pt_uncorrected, jetR, jet_collection_label=''):
 
         if self.sqrts in [2760, 5020]:
 
             # ALICE RAA
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For RAA, all jet collections can be filled from the corrected jet pt
             #    - In the shower_recoil case, we also fill the unsubtracted jet pt
             if self.centrality_accepted(self.inclusive_jet_observables['pt_alice']['centrality']):
@@ -530,7 +558,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if pt_min < jet_pt < pt_max:
                             self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}'].append([jet_pt, y_abs])
                             if jet_collection_label in ['_shower_recoil']:
-                                self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}_unsubtracted'].append([jet_pt_uncorrected, y_abs])                   
+                                self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}_unsubtracted'].append([jet_pt_uncorrected, y_abs])
 
             # CMS RAA
             if self.centrality_accepted(self.inclusive_jet_observables['pt_cms']['centrality']):
@@ -544,9 +572,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_jet_pt_cms_R{jetR}{jet_collection_label}_unsubtracted'].append(jet_pt_uncorrected)
 
             # ATLAS D(z)
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, we separately fill using hadrons_for_jet_finding (which are positive only) and holes_in_jet
-            #    - For negative_recombiner case, we separately fill the positive-status and negative-status hadrons_for_jet_finding 
+            #    - For negative_recombiner case, we separately fill the positive-status and negative-status hadrons_for_jet_finding
             #    - For constituent_subtraction, we will using hadrons_for_jet_finding (which are positive only)
             #   Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             acceptable_hadrons = [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]
@@ -578,9 +606,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                             self.observable_dict_event[f'inclusive_jet_Dpt_atlas_R{jetR}_holes{jet_collection_label}'].append([jet_pt, hadron.pt()])
 
             # CMS D(z)
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, we separately fill using hadrons_for_jet_finding (which are positive only) and holes_in_jet
-            #    - For negative_recombiner case, we separately fill the positive-status and negative-status hadrons_for_jet_finding 
+            #    - For negative_recombiner case, we separately fill the positive-status and negative-status hadrons_for_jet_finding
             #    - For constituent_subtraction, we will using hadrons_for_jet_finding (which are positive only)
             #   Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             acceptable_hadrons = [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]
@@ -619,9 +647,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                     self.observable_dict_event[f'inclusive_jet_Dpt_cms_R{jetR}_holes{jet_collection_label}'].append([jet_pt, hadron.pt()])
 
             # CMS jet charge
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, we subtract the contribution of holes within R (and also store the unsubtracted charge)
-            #    - For negative_recombiner case, we subtract the contribution of holes within R 
+            #    - For negative_recombiner case, we subtract the contribution of holes within R
             #    - For constituent_subtraction, no subtraction is needed
             # Charged particles (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
             acceptable_hadrons = [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]
@@ -632,7 +660,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(jet.eta()) < self.inclusive_jet_observables['charge_cms']['eta_cut']:
                             if jet_pt > pt_min:
                                 for kappa in self.inclusive_jet_observables['charge_cms']['kappa']:
-                                    sum = 0                                        
+                                    sum = 0
                                     for hadron in hadrons_for_jet_finding:
                                         if jet_collection_label in ['_negative_recombiner'] and hadron.user_index() < 0 :
                                             continue
@@ -682,7 +710,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if self.sqrts == 5020:
 
             # CMS m_g
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
@@ -698,7 +726,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     self.observable_dict_event[f'inclusive_jet_mg_cms_R{jetR}_zcut{zcut}_beta{beta}{jet_collection_label}'].append([jet_pt, mg])
 
             # CMS z_g
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
@@ -716,13 +744,13 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill inclusive charged jet observables
     # ---------------------------------------------------------------
-    def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, pid_hadrons_positive, 
+    def fill_charged_jet_ungroomed_observables(self, jet, holes_in_jet, pid_hadrons_positive,
                                                jet_pt, jet_pt_uncorrected, jetR, jet_collection_label=''):
 
         if self.sqrts == 5020:
 
             # ALICE subjet z_R
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, subtract holes within r (for subjets) and R (for jets)
             #    - For negative_recombiner case, subtract holes within r (for subjets) only
             #    - For constituent_subtraction, no subtraction is needed
@@ -744,7 +772,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_chjet_zr_alice_R{jetR}_r{r}{jet_collection_label}'].append([z_leading])
 
             # ALICE jet axis Standard-WTA
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed, although we recluster using the negative recombiner again
             #    - For constituent_subtraction, no subtraction is needed
@@ -767,7 +795,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             self.observable_dict_event[f'inclusive_chjet_axis_alice_R{jetR}{jet_collection_label}'].append([jet_pt, deltaR])
 
             # ALICE ungroomed angularity
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
             #    - For negative_recombiner case, subtract the hole contribution within R to the angularity
             #    - For constituent_subtraction, no subtraction is needed
@@ -818,7 +846,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     self.observable_dict_event[f'inclusive_chjet_pt_alice_R{jetR}{jet_collection_label}_unsubtracted'].append(jet_pt_uncorrected)
 
             # g
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
             #    - For negative_recombiner case, subtract the hole contribution within R to the angularity
             #    - For constituent_subtraction, no subtraction is needed
@@ -843,7 +871,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             self.observable_dict_event[f'inclusive_chjet_g_alice_R{jetR}{jet_collection_label}'].append(g)
 
             # pTD
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
             #    - For negative_recombiner case, subtract the hole contribution within R to the angularity
             #    - For constituent_subtraction, no subtraction is needed
@@ -868,7 +896,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}'].append(np.sqrt(sum) / jet_pt)
 
             # Jet mass
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, subtract recoils within R from four-vector (also store unsubtracted case)
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
@@ -932,7 +960,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         jet_groomed_lund = gshop.soft_drop(beta, zcut, jetR)
 
         # ALICE hardest kt
-        #   Hole treatment: 
+        #   Hole treatment:
         #    - For show_recoil case, correct the pt only
         #    - For negative_recombiner case, no subtraction is needed
         #    - For constituent_subtraction, no subtraction is needed
@@ -964,7 +992,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if self.sqrts == 5020:
 
             # Soft Drop zg and theta_g
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
@@ -982,7 +1010,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_chjet_tg_alice_R{jetR}_zcut{zcut}_beta{beta}{jet_collection_label}'].append(theta_g)
 
             # ALICE groomed angularity
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, correct the pt only
             #    - For negative_recombiner case, correct the pt only
             #    - For constituent_subtraction, no subtraction is needed
@@ -1069,7 +1097,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     jet_pt = jet_pt_unsubtracted = jet.pt()
 
                                 # Jet yield and Delta phi
-                                #   Hole treatment: 
+                                #   Hole treatment:
                                 #    - For show_recoil case, correct the pt only (and also store unsubtracted pt)
                                 #    - For negative_recombiner case, no subtraction is needed
                                 #    - For constituent_subtraction, no subtraction is needed
@@ -1099,7 +1127,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                 self.observable_dict_event[f'semi_inclusive_chjet_dphi_alice_R{jetR}_highTrigger{jet_collection_label}'].append(np.abs(hadron.delta_phi_to(jet)))
 
                                 # Nsubjettiness
-                                #   Hole treatment: 
+                                #   Hole treatment:
                                 #    - For show_recoil case, correct the pt only
                                 #    - For negative_recombiner case, no subtraction is needed
                                 #    - For constituent_subtraction, no subtraction is needed
@@ -1185,7 +1213,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if self.sqrts == 2760:
 
             # ATLAS xj
-            #   Hole treatment: 
+            #   Hole treatment:
             #    - For show_recoil case, correct jet pt by subtracting holes within R
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed

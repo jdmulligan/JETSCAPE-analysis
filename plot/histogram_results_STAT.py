@@ -254,11 +254,14 @@ class HistogramResults(common_base.CommonBase):
                     # Loop over trigger and associated ranges
                     # NOTE: n_trig will be calculated within the histogram observable
                     for i_trig_bin, pt_trig_range in enumerate(pt_trigger_ranges):
-                        for pt_trig_min, pt_trig_max in pt_trig_range:
-                            for pt_assoc_range in pt_associated_ranges:
-                                for pt_assoc_min, pt_assoc_max in pt_assoc_range:
-                                    label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
-                                    self.histogram_observable(column_name=f'{observable_type}_{observable}_{label}', bins=dphi_bins, centrality=centrality, pt_bin=i_trig_bin)
+                        pt_trig_min, pt_trig_max = pt_trig_range
+                        for pt_assoc_range in pt_associated_ranges:
+                            pt_assoc_min, pt_assoc_max = pt_assoc_range
+                            label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
+                            self.histogram_observable(
+                                column_name=f'{observable_type}_{observable}_{label}',
+                                bins=dphi_bins, centrality=centrality, pt_bin=i_trig_bin, block=block
+                            )
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -394,7 +397,7 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Histogram a single observable
     #-------------------------------------------------------------------------------------------
-    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='', 
+    def histogram_observable(self, column_name=None, bins=None, centrality=None, pt_suffix='',
                              pt_bin=None, block=None, observable=''):
 
         # Check if event centrality is within observable centrality bin
@@ -433,7 +436,10 @@ class HistogramResults(common_base.CommonBase):
         if "dihadron_" in column_name:
             start_of_label = column_name.find("_pt_trig")
             column_name = f'{column_name[:start_of_label]}_Ntrig'
-            bins = np.array([block["pt_trig"][pt_bin]])
+            # We want the same binning for all triggers, so we flatten all of the trigger binning to a flat list
+            # NOTE: This assumes that the triggers ranges do not overlap.
+            # NOTE: The unique ensures that the binning is valid if the bin edges match up.
+            bins = np.unique(np.array([v for trig_range in block["pt_trig"] for v in trig_range]))  # type: ignore
             self.histogram_1d_observable(col, column_name=column_name, bins=bins, centrality=centrality, pt_suffix=pt_suffix)
 
     #-------------------------------------------------------------------------------------------
