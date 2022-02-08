@@ -144,9 +144,8 @@ class PlotResults(common_base.CommonBase):
                 if 'hepdata' not in block and 'custom_data' not in block:
                     continue
 
-                #Amit for v2
+                #for hadron v2
                 if 'v2' in observable: 
-                    print('Amit:v2 plot hadron corre obs = ',observable, ',cent=', centrality)
                     self.init_observable(observable_type, observable, block, centrality, centrality_index)
                     # Histogram observable                                                          
                     self.plot_observable(observable_type, observable, centrality)
@@ -302,7 +301,7 @@ class PlotResults(common_base.CommonBase):
                 self.observable_settings['ratio'] = None
         if 'v2' in observable and self.is_AA and self.observable_settings[f'jetscape_distribution']:
             self.observable_settings['ratio'] =  self.plot_utils.divide_histogram_by_tgraph(self.observable_settings[f'jetscape_distribution'], self.observable_settings['data_distribution'])
-            print('Amit:v2 ratio computed ')
+
     #-------------------------------------------------------------------------------------------
     # Initialize from settings from config file into class members
     #-------------------------------------------------------------------------------------------
@@ -332,11 +331,10 @@ class PlotResults(common_base.CommonBase):
         else:
             self.logy = False
 
-        #Amit v2
+        #for v2
         if 'v2' in observable:
             self.y_ratio_min = -0.5
             self.y_ratio_max = 1.99
-        #print('Amit:v2 init=',block)
             
         if self.is_AA:
             if 'ytitle_AA' in block:
@@ -425,13 +423,9 @@ class PlotResults(common_base.CommonBase):
                     self.observable_settings['jetscape_distribution'].Add(self.observable_settings['jetscape_distribution_holes'], -1)
 
                 # Perform any additional manipulations on scaled histograms
-                #self.post_process_histogram( observable)
                 self.post_process_histogram(observable_type, observable, centrality)
-                #self.hname = f'h_{observable_type}_{observable}{self.suffix}{collection_label}_{centrality}{pt_suffix}'
-                #keys = [key.ReadObj().GetTitle() for key in self.input_file.GetListOfKeys()]
-                #hname = 'h_hadron_correlations_v2_atlas_[0, 5]'
-                #for keyname in keys:
-                #    print('Amit: Yes v2 atlas key found=',keyname)
+
+
             #-------------------------------------------------------------
             # For jet histograms, loop through all available hole subtraction variations, and initialize histogram
             else:
@@ -443,7 +437,6 @@ class PlotResults(common_base.CommonBase):
                     self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix, collection_label=jet_collection_label)
                     self.scale_histogram(observable_type, observable, centrality, 
                                         collection_label=jet_collection_label, pt_suffix=pt_suffix, self_normalize=self_normalize)
-                    #self.post_process_histogram(observable, collection_label=jet_collection_label)
                     self.post_process_histogram(observable_type, observable, centrality, collection_label=jet_collection_label)
 
         #-------------------------------------------------------------
@@ -451,7 +444,6 @@ class PlotResults(common_base.CommonBase):
         else:
             self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix)
             self.scale_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
-            #self.post_process_histogram(observable)
             self.post_process_histogram(observable_type, observable, centrality)
     #-------------------------------------------------------------------------------------------
     # Get histogram and add to self.observable_settings
@@ -474,12 +466,11 @@ class PlotResults(common_base.CommonBase):
             if self.hname in keys:
                 h_jetscape = self.input_file.Get(self.hname)
                 h_jetscape.SetDirectory(0)
-                print('Amit:v2 name of histohram1 =',self.hname)
+
             else:
                 h_jetscape = None
             self.observable_settings[f'jetscape_distribution{collection_label}'] = h_jetscape
-        print('Amit:v2 name of histohram2 =',self.hname, ",label=",f'jetscape_distribution{collection_label}')
-        #self.input_file.ls()
+        
     #-------------------------------------------------------------------------------------------
     # Construct semi-inclusive observables from difference of histograms
     #-------------------------------------------------------------------------------------------
@@ -539,10 +530,9 @@ class PlotResults(common_base.CommonBase):
         h = self.observable_settings[f'jetscape_distribution{collection_label}']
         if not h:
             return
-        #Amit v2 -------------------------
+        
         # (0) No scaling is needed for hadron v2 and jet v2
         if 'v2' in observable:
-            print('Amit:V2 scale hist observable = ', observable)
             return
         
         #--------------------------------------------------
@@ -706,14 +696,10 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def post_process_histogram(self, observable_type, observable, centrality, collection_label=''):
     #def post_process_histogram(self, observable, collection_label=''):
-        print(f'Amit:v2 post process: jetscape_distribution{collection_label}')
-        #Amit hadron v2
+        #hadron v2
         if 'v2' in observable:
             h = self.observable_settings[f'jetscape_distribution{collection_label}']
-            print(f'Amit:v2, jetscape name=jetscape_distribution{collection_label}, observable={observable}, and {centrality}')
-            #print('Amit:v2 post process Observable=',h.GetName())
             if h:
-                print('Amit:v2 post process Observable=',h.GetName())
                 h_num_name = f'h_{observable_type}_{observable}_{centrality}'
                 h_num_name_holes = f'h_{observable_type}_{observable}_holes_{centrality}'
                 h_denom_name = f'h_{observable_type}_{observable}_denom_{centrality}'
@@ -781,7 +767,7 @@ class PlotResults(common_base.CommonBase):
 
         label = f'{observable_type}_{observable}_{self.sqrts}_{centrality}_{self.suffix}_{pt_suffix}'
 
-        #Amit v2
+        #for hadron v2
         if 'v2' in observable:
             if self.observable_settings[f'jetscape_distribution']:
                 self.plot_distribution_and_ratio(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)                

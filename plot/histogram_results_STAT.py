@@ -235,20 +235,18 @@ class HistogramResults(common_base.CommonBase):
         print(f'Histogram {observable_type} observables...')
 
         for observable, block in self.config[observable_type].items():
-            print(f'Amit: {observable}')
             for centrality_index,centrality in enumerate(block['centrality']):
                 
                 # Add centrality bin to list, if needed
                 if self.is_AA and centrality not in self.observable_centrality_list:
                     self.observable_centrality_list.append(centrality)
 
-                # v2 ATLAS and CMS (Amit)
+                # v2 ATLAS and CMS 
                 # Construct appropriate binning
                 bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable, centrality, centrality_index)
                 if not bins.any():
                     continue
                 if observable == 'v2_atlas' or observable == 'v2_cms' :
-                    print('Amit:v2 CMS test: ',observable)
                     self.histogram_observable(column_name=f'{observable_type}_{observable}', bins=bins, centrality=centrality)
                     if self.is_AA:
                         self.histogram_observable(column_name=f'{observable_type}_{observable}_holes', bins=bins, centrality=centrality)               
@@ -456,8 +454,6 @@ class HistogramResults(common_base.CommonBase):
         hname = f'h_{column_name}{observable}_{centrality}{pt_suffix}'
         h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
         h.Sumw2()
-
-        print('Amit:1D v2 Hist=',hname)
             
         # Fill histogram
         for i,_ in enumerate(col):
@@ -476,13 +472,10 @@ class HistogramResults(common_base.CommonBase):
         hname = f'h_{column_name}_{centrality}{pt_suffix}'
         h = ROOT.TH1F(hname, hname, len(bins)-1, bins)
         h.Sumw2()
-        #for v2 calculation only Amit
+        #for v2 calculation only
         
-        print('Amit:2D Hist=',hname)
         if("hadron_correlations_v2" in hname):
-            print('Amit:True 2D Hist=',hname)
             hname2=f'h_{column_name}_denom_{centrality}{pt_suffix}'
-            print('Amit:True 2D Hist2=',hname2)
             h2 = ROOT.TH1F(hname2, hname2, len(bins)-1, bins)
             h2.Sumw2()
             #Fill histogram
