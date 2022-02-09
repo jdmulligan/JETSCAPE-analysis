@@ -145,11 +145,11 @@ class PlotResults(common_base.CommonBase):
                     continue
 
                 #for hadron v2
-                if 'v2' in observable: 
+                if 'v2' in observable:
                     self.init_observable(observable_type, observable, block, centrality, centrality_index)
-                    # Histogram observable                                                          
+                    # Histogram observable
                     self.plot_observable(observable_type, observable, centrality)
-                    
+
                 # STAR dihadron
                 if observable == 'dihadron_star':
 
@@ -335,7 +335,7 @@ class PlotResults(common_base.CommonBase):
         if 'v2' in observable:
             self.y_ratio_min = -0.5
             self.y_ratio_max = 1.99
-            
+
         if self.is_AA:
             if 'ytitle_AA' in block:
                 self.ytitle = block['ytitle_AA']
@@ -413,7 +413,7 @@ class PlotResults(common_base.CommonBase):
                     # Normalization
                     # Note: If we divide by the sum of weights (corresponding to n_events) and multiply by the
                     #       pt-hat cross-section, then JETSCAPE distribution gives cross-section: dsigma/dx (in mb)
-                    self.scale_histogram(observable_type, observable, centrality, 
+                    self.scale_histogram(observable_type, observable, centrality,
                                          collection_label=hole_label, pt_suffix=pt_suffix, self_normalize=self_normalize)
 
                 # Subtract the holes (and save unsubtracted histogram)
@@ -429,13 +429,13 @@ class PlotResults(common_base.CommonBase):
             #-------------------------------------------------------------
             # For jet histograms, loop through all available hole subtraction variations, and initialize histogram
             else:
-                
+
                 for jet_collection_label in self.jet_collection_labels:
 
                     # Get histogram and add to self.observable_settings
                     #  - In the case of semi-inclusive measurements construct difference of histograms
                     self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix, collection_label=jet_collection_label)
-                    self.scale_histogram(observable_type, observable, centrality, 
+                    self.scale_histogram(observable_type, observable, centrality,
                                         collection_label=jet_collection_label, pt_suffix=pt_suffix, self_normalize=self_normalize)
                     self.post_process_histogram(observable_type, observable, centrality, collection_label=jet_collection_label)
 
@@ -470,7 +470,7 @@ class PlotResults(common_base.CommonBase):
             else:
                 h_jetscape = None
             self.observable_settings[f'jetscape_distribution{collection_label}'] = h_jetscape
-        
+
     #-------------------------------------------------------------------------------------------
     # Construct semi-inclusive observables from difference of histograms
     #-------------------------------------------------------------------------------------------
@@ -530,11 +530,11 @@ class PlotResults(common_base.CommonBase):
         h = self.observable_settings[f'jetscape_distribution{collection_label}']
         if not h:
             return
-        
+
         # (0) No scaling is needed for hadron v2 and jet v2
         if 'v2' in observable:
             return
-        
+
         #--------------------------------------------------
         # (1) Scale all histograms by the min-pt-hat cross-section and weight-sum
         if self.is_AA:
@@ -695,9 +695,8 @@ class PlotResults(common_base.CommonBase):
     # Perform any additional manipulations on scaled histograms
     #-------------------------------------------------------------------------------------------
     def post_process_histogram(self, observable_type, observable, centrality, collection_label=''):
-    #def post_process_histogram(self, observable, collection_label=''):
-        #hadron v2
         if 'v2' in observable:
+            # hadron v2
             h = self.observable_settings[f'jetscape_distribution{collection_label}']
             if h:
                 h_num_name = f'h_{observable_type}_{observable}_{centrality}'
@@ -707,13 +706,13 @@ class PlotResults(common_base.CommonBase):
 
                 self.observable_settings[f'jetscape_distribution'] = self.input_file.Get(h_num_name).Clone()
                 self.observable_settings[f'jetscape_distribution_unsubtracted'] = self.input_file.Get(h_num_name).Clone()
-                
+
                 for i in range(0,self.input_file.Get(h_num_name).GetNbinsX()):
                     h_num_i = self.input_file.Get(h_num_name).GetBinContent(i)
                     h_num_holes_i = self.input_file.Get(h_num_name_holes).GetBinContent(i)
                     h_denom_i = self.input_file.Get(h_denom_name).GetBinContent(i)
                     h_denom_holes_i = self.input_file.Get(h_denom_name_holes).GetBinContent(i)
-                    if h_denom_i ==0.0:
+                    if h_denom_i == 0.0:
                         h_denom_i = -99.0
                         h_denom_holes_i =0.0
                     self.observable_settings[f'jetscape_distribution'].SetBinContent(i, (h_num_i - h_num_holes_i)/(h_denom_i - h_denom_holes_i) )
@@ -721,10 +720,10 @@ class PlotResults(common_base.CommonBase):
 
                 self.observable_settings[f'jetscape_distribution'].Print()
                 self.observable_settings[f'jetscape_distribution_unsubtracted'].Print()
-                
-                self.observable_settings[f'jetscape_distribution'].SetName(f'jetscape_distribution_{observable_type}_{observable}_{centrality}') 
+
+                self.observable_settings[f'jetscape_distribution'].SetName(f'jetscape_distribution_{observable_type}_{observable}_{centrality}')
                 self.observable_settings[f'jetscape_distribution_unsubtracted'].SetName(f'jetscape_distribution_unsubtracted_{observable_type}_{observable}_{centrality}')
-            
+
         # For the ATLAS rapidity-dependence, we need to divide the histograms by their first bin (|y|<0.3) to form a double ratio
         if observable == 'pt_y_atlas':
 
@@ -767,12 +766,12 @@ class PlotResults(common_base.CommonBase):
 
         label = f'{observable_type}_{observable}_{self.sqrts}_{centrality}_{self.suffix}_{pt_suffix}'
 
-        #for hadron v2
         if 'v2' in observable:
+            # for hadron v2
             if self.observable_settings[f'jetscape_distribution']:
-                self.plot_distribution_and_ratio(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)                
+                self.plot_distribution_and_ratio(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)
             return
-        
+
         # If AA: Plot PbPb/pp ratio, and comparison to data
         # If pp: Plot distribution, and ratio to data
         if self.is_AA:
@@ -786,7 +785,7 @@ class PlotResults(common_base.CommonBase):
     # We plot all available modes of hole subtraction:
     #   For hadron histograms (self.subtract_holes = True):
     #       - self.observable_settings['jetscape_distribution']
-    #       - self.observable_settings['jetscape_distribution_unsubtracted'] 
+    #       - self.observable_settings['jetscape_distribution_unsubtracted']
     #   For jet histograms:
     #       for jet_collection_label in self.jet_collection_labels:
     #           self.observable_settings[f'jetscape_distribution{jet_collection_label}']
@@ -801,7 +800,7 @@ class PlotResults(common_base.CommonBase):
         self.jetscape_legend_label['jetscape_distribution_shower_recoil'] = 'JETSCAPE (shower+recoil)'
         self.jetscape_legend_label['jetscape_distribution_shower_recoil_unsubtracted'] = 'JETSCAPE (shower+recoil, unsubtracted)'
         self.jetscape_legend_label['jetscape_distribution_negative_recombiner'] = 'JETSCAPE (negative recombiner)'
-        self.jetscape_legend_label['jetscape_distribution_constituent_subtraction'] = 'JETSCAPE (CS)' 
+        self.jetscape_legend_label['jetscape_distribution_constituent_subtraction'] = 'JETSCAPE (CS)'
 
         if not self.observable_settings[keys_to_plot[0]]:
             print(f'WARNING: skipping {observable} {label} {centrality} since data is missing')
