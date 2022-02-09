@@ -11,26 +11,79 @@
 #
 # The data are stored as a function of centrality:
 # [0,5], [5, 10], [10, 20], [20, 30], [30, 40]
+# NOTE on repetition:
+# However, we then copy the data (once for each centrality bin) so that we can plot the same comparison
+# (as a function of centrality) for each single centrality bin where we extract the data.
+# Basically, since there's a single value per centrality, we just say that each data point will compare against
+# all centrality bins. It's redundant, but simpler.
 #
 # NOTE: The systematic uncertainties are negligible for pt_assoc > 4 (which is where we concern ourselves),
 #       so we disregard the systematics and only extract the statistical uncertainties
 
 # Near side from HEPdata figure 3.0
-data_AA_nearSide_ptAssoc1:
-  y: [0.049, 0.062, 0.051, 0.046, 0.061]
-  y_err: [0.003, 0.007, 0.005, 0.005, 0.006]
+# See note on repetition in the header
+#data_AA_nearSide_ptAssoc1:
+data_AA_nearSide_pt_trig_8_15_pt_assoc_4_6:
+  y:
+    - [0.049, 0.062, 0.051, 0.046, 0.061]
+    - [0.049, 0.062, 0.051, 0.046, 0.061]
+    - [0.049, 0.062, 0.051, 0.046, 0.061]
+    - [0.049, 0.062, 0.051, 0.046, 0.061]
+    - [0.049, 0.062, 0.051, 0.046, 0.061]
+  y_err:
+    - [0.003, 0.007, 0.005, 0.005, 0.006]
+    - [0.003, 0.007, 0.005, 0.005, 0.006]
+    - [0.003, 0.007, 0.005, 0.005, 0.006]
+    - [0.003, 0.007, 0.005, 0.005, 0.006]
+    - [0.003, 0.007, 0.005, 0.005, 0.006]
 
-# Near side from HEPdata figure 3.1
-data_AA_awaySide_ptAssoc1:
-  y: [0.026, 0.046, 0.045, 0.049, 0.064]
-  y_err: [0.002, 0.006, 0.005, 0.005, 0.007]
+# Away side from HEPdata figure 3.1
+# See note on repetition in the header
+#data_AA_awaySide_ptAssoc1:
+data_AA_awaySide_pt_trig_8_15_pt_assoc_4_6:
+  y:
+    - [0.026, 0.046, 0.045, 0.049, 0.064]
+    - [0.026, 0.046, 0.045, 0.049, 0.064]
+    - [0.026, 0.046, 0.045, 0.049, 0.064]
+    - [0.026, 0.046, 0.045, 0.049, 0.064]
+    - [0.026, 0.046, 0.045, 0.049, 0.064]
+  y_err:
+    - [0.002, 0.006, 0.005, 0.005, 0.007]
+    - [0.002, 0.006, 0.005, 0.005, 0.007]
+    - [0.002, 0.006, 0.005, 0.005, 0.007]
+    - [0.002, 0.006, 0.005, 0.005, 0.007]
+    - [0.002, 0.006, 0.005, 0.005, 0.007]
 
 # Near side from HEPdata figure 3.0
-data_AA_nearSide_ptAssoc2:
-  y: [0.018, 0.019, 0.022, 0.020, 0.020]
-  y_err: [0.001, 0.003, 0.003, 0.003, 0.004]
+# See note on repetition in the header
+#data_AA_nearSide_ptAssoc2:
+data_AA_nearSide_pt_trig_8_15_pt_assoc_6_100:
+  y:
+    - [0.018, 0.019, 0.022, 0.020, 0.020]
+    - [0.018, 0.019, 0.022, 0.020, 0.020]
+    - [0.018, 0.019, 0.022, 0.020, 0.020]
+    - [0.018, 0.019, 0.022, 0.020, 0.020]
+    - [0.018, 0.019, 0.022, 0.020, 0.020]
+  y_err:
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
 
-# Near side from HEPdata figure 3.1
-data_AA_awaySide_ptAssoc2:
-  y: [0.013, 0.019, 0.021, 0.027, 0.035]
-  y_err: [0.001, 0.003, 0.003, 0.003, 0.004]
+# Away side from HEPdata figure 3.1
+# See note on repetition in the header
+#data_AA_awaySide_ptAssoc2:
+data_AA_awaySide_pt_trig_8_15_pt_assoc_6_100:
+  y:
+    - [0.013, 0.019, 0.021, 0.027, 0.035]
+    - [0.013, 0.019, 0.021, 0.027, 0.035]
+    - [0.013, 0.019, 0.021, 0.027, 0.035]
+    - [0.013, 0.019, 0.021, 0.027, 0.035]
+    - [0.013, 0.019, 0.021, 0.027, 0.035]
+  y_err:
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
+    - [0.001, 0.003, 0.003, 0.003, 0.004]
