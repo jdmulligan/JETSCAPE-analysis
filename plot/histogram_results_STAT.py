@@ -267,6 +267,9 @@ class HistogramResults(common_base.CommonBase):
                         pt_trig_min, pt_trig_max = pt_trig_range
                         for pt_assoc_range in pt_associated_ranges:
                             pt_assoc_min, pt_assoc_max = pt_assoc_range
+                            # If the upper range has -1, it's unbounded, so we make it large enough not to matter
+                            pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
+
                             label = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
                             self.histogram_observable(
                                 column_name=f'{observable_type}_{observable}_{label}',
@@ -278,7 +281,7 @@ class HistogramResults(common_base.CommonBase):
                             if self.is_AA:
                                 self.histogram_observable(
                                     column_name=f'{observable_type}_{observable}_{label}_holes',
-                                    bins=dphi_bins, centrality=centrality
+                                    bins=dphi_bins, centrality=centrality,
                                     # We only want to histogram the number of triggers once. Otherwise, we're just
                                     # repeatedly replacing the histogram.
                                     pt_bin=i_trig_bin if histogrammed_n_trig == False else None, block=block

@@ -157,17 +157,16 @@ class PlotResults(common_base.CommonBase):
                     pt_trigger_ranges = block["pt_trig"]
                     pt_associated_ranges = block["pt_assoc"]
                     # Loop over trigger and associated ranges
-                    for pt_trig_range in pt_trigger_ranges:
-                        for pt_trig_min, pt_trig_max in pt_trig_range:
-                            for pt_assoc_range in pt_associated_ranges:
-                                for pt_assoc_min, pt_assoc_max in pt_assoc_range:
-                                    # If the upper range has -1, it's unbounded, so we make it large enough not to matter
-                                    pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
-                                    self.suffix = f"_pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
-                                    self.init_observable(observable_type, observable, block, centrality, centrality_index)
+                    for pt_trig_min, pt_trig_max in pt_trigger_ranges:
+                        for pt_assoc_min, pt_assoc_max in pt_associated_ranges:
+                            # If the upper range has -1, it's unbounded, so we make it large enough not to matter
+                            pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
+                            self.suffix = f"_pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
+                            print(f"suffix: {self.suffix}")
+                            self.init_observable(observable_type, observable, block, centrality, centrality_index)
 
-                                    # Histogram observable
-                                    self.plot_observable(observable_type, observable, centrality)
+                            # Histogram observable
+                            self.plot_observable(observable_type, observable, centrality)
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -578,7 +577,7 @@ class PlotResults(common_base.CommonBase):
                     if n_trig > 0.:
                         h.Scale(1./(n_trig * (xsec/weight_sum)))
                     else:
-                        print('WARNING: N_trig = 0')
+                        print('WARNING: N_trig for dihadron_star == 0')
             elif observable_type == 'inclusive_chjet':
                 if observable == 'pt_star':
                     h.Scale(1./(2*self.eta_cut))
@@ -747,42 +746,45 @@ class PlotResults(common_base.CommonBase):
                 self.observable_settings[f'jetscape_distribution{collection_label}'] = h.Rebin(n-1, hname, bins[1:])
 
         if observable_type == "hadron_correlations" and observable == "dihadron_star":
-            # Grab the delta phi correlation
-            h = self.observable_settings[f'jetscape_distribution']
-            # Extract the yield
-            yield_lower_range_value, yield_upper_range_value = block["yield_range"]
-            # First, near side
-            _temp_error = ctypes.c_double(0)
-            near_side_yield = h.Integral(
-                h.GetXaxis().FindBin(yield_lower_range_value), h.GetXaxis().FindBin(yield_upper_range_value),
-                _temp_error,
-            )
-            near_side_yield_error = _temp_error.value
-            # Then the away side
-            _temp_error = ctypes.c_double(0)
-            away_side_yield = h.Integral(
-                # Both are np.pi + because the yield_lower_range_value is negative
-                h.GetXaxis().FindBin(np.pi + yield_lower_range_value), h.GetXaxis().FindBin(np.pi + yield_upper_range_value),
-                _temp_error,
-            )
-            away_side_yield_error = _temp_error.value
+            # In the case of pp, just look at the deltaPhi correlations themselves
+            # In any case, we don't have data to compare against.
+            if not self.skip_pp:
+                # Grab the delta phi correlation
+                h = self.observable_settings[f'jetscape_distribution']
+                # Extract the yield
+                yield_lower_range_value, yield_upper_range_value = block["yield_range"]
+                # First, near side
+                _temp_error = ctypes.c_double(0)
+                near_side_yield = h.IntegralAndError(
+                    h.GetXaxis().FindBin(yield_lower_range_value), h.GetXaxis().FindBin(yield_upper_range_value),
+                    _temp_error,
+                )
+                near_side_yield_error = _temp_error.value
+                # Then the away side
+                _temp_error = ctypes.c_double(0)
+                away_side_yield = h.IntegralAndError(
+                    # Both are np.pi + because the yield_lower_range_value is negative
+                    h.GetXaxis().FindBin(np.pi + yield_lower_range_value), h.GetXaxis().FindBin(np.pi + yield_upper_range_value),
+                    _temp_error,
+                )
+                away_side_yield_error = _temp_error.value
 
-            # Encode the values into a single TGraph
-            # Based the graph off the data distribution so we don't have to worry about the size,
-            # # and then reset to start from a clean slate
-            g_data = self.observable_settings["data_distribution"]
-            n = g_data.GetN()
-            yield_values = np.zeros(n)
-            yield_errors = np.zeros(n)
-            yield_values[centrality_index] = near_side_yield
-            yield_errors[centrality_index] = near_side_yield_error
-            # round is just to ensure we have an int
-            yield_values[centrality_index + round(n / 2)] = away_side_yield
-            yield_errors[centrality_index + round(n / 2)] = away_side_yield_error
+                # Encode the values into a single TGraph
+                # Based the graph off the data distribution so we don't have to worry about the size,
+                # # and then reset to start from a clean slate
+                g_data = self.observable_settings["data_distribution"]
+                n = g_data.GetN()
+                yield_values = np.zeros(n)
+                yield_errors = np.zeros(n)
+                yield_values[centrality_index] = near_side_yield
+                yield_errors[centrality_index] = near_side_yield_error
+                # round is just to ensure we have an int
+                yield_values[centrality_index + round(n / 2)] = away_side_yield
+                yield_errors[centrality_index + round(n / 2)] = away_side_yield_error
 
-            # Now, put it together and store the result
-            g_width = ROOT.TGraphAsymmErrors(n, g_data.GetX(), yield_values, np.zeros(n), np.zeros(n), yield_errors, yield_errors)
-            self.observable_settings["jetscape_distribution"] = g_width
+                # Now, put it together and store the result
+                g_width = ROOT.TGraphAsymmErrors(n, g_data.GetX(), yield_values, np.zeros(n), np.zeros(n), yield_errors, yield_errors)
+                self.observable_settings["jetscape_distribution"] = g_width
 
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
