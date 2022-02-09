@@ -162,8 +162,6 @@ class PlotResults(common_base.CommonBase):
                             # If the upper range has -1, it's unbounded, so we make it large enough not to matter
                             pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
                             self.suffix = f"_pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
-                            # TODO: Cleanup print statement
-                            print(f"suffix: {self.suffix}")
                             self.init_observable(observable_type, observable, block, centrality, centrality_index)
 
                             # Histogram observable
@@ -358,6 +356,9 @@ class PlotResults(common_base.CommonBase):
             else:
                 self.y_ratio_min = 0.
                 self.y_ratio_max = 1.99
+            # Provide the opportunity to disable logy in pp, but keep in AA
+            if 'logy_pp' in block:
+                self.logy = block["logy_pp"]
 
         if 'skip_pp' in block:
             self.skip_pp = block['skip_pp']
@@ -571,14 +572,11 @@ class PlotResults(common_base.CommonBase):
 
                     # And then the trigger hist
                     hname = f"h_{observable_type}_dihadron_star_Ntrig_{centrality}"
-                    print(f"hname: {hname}")
                     h_ntrig = self.input_file.Get(hname)
                     h_ntrig.SetDirectory(0)
 
                     # Finally, scale by the n_trig
                     n_trig = h_ntrig.GetBinContent(h_ntrig.GetXaxis().FindBin((pt_trig_max + pt_trig_min) / 2)) # Note that Njets histogram should also be scaled by xsec/n_events
-                    print(f"scaling by n_trig of {n_trig}")
-                    print(f"actual: {(n_trig * (xsec/weight_sum))}")
                     if n_trig > 0.:
                         h.Scale(1./(n_trig * (xsec/weight_sum)))
                     else:
@@ -753,12 +751,10 @@ class PlotResults(common_base.CommonBase):
         if observable_type == "hadron_correlations" and observable == "dihadron_star":
             # In the case of pp, just look at the deltaPhi correlations themselves
             # In any case, we don't have data to compare against.
-            h = self.observable_settings[f'jetscape_distribution']
-            print(f"dihadron {observable}, entries: {h.GetEntries()}")
+            # If skip_pp is turned off, then we can check the yields in pp.
             if not self.skip_pp:
                 # Grab the delta phi correlation
                 h = self.observable_settings[f'jetscape_distribution']
-                print(f"dihadron {observable}, entries: {h.GetEntries()}")
                 # Extract the yield
                 yield_lower_range_value, yield_upper_range_value = block["yield_range"]
                 # First, near side
@@ -779,16 +775,11 @@ class PlotResults(common_base.CommonBase):
 
                 # Encode the values into a single TH1F. We put it into a TH1F instead of a TGraph because
                 # the framework seems to require that the jetscape data is in a histogram.
-                ## Based the graph off the data distribution so we don't have to worry about the size,
-                ## and then reset to start from a clean slate
-                #g_data = self.observable_settings["data_distribution"]
-                #n = g_data.GetN()
-                #print(f"n: {n}")
-                #print(f"x_data: {[g_data.GetX()[i] for i in range(10)]}")
-                #h_yield = ROOT.TH1F(f"{h.GetName()}_yields", f"{h.GetName()}_yields", n)
                 yield_bins = np.array(block["yield_bins"])
                 n = len(yield_bins) - 1
                 h_yield = ROOT.TH1F(f"{h.GetName()}_yield", f"{h.GetName()}_yields", n, yield_bins)
+
+                # Fill in extracted values
                 yield_values = np.zeros(n)
                 yield_errors = np.zeros(n)
                 yield_values[centrality_index] = near_side_yield
@@ -803,7 +794,6 @@ class PlotResults(common_base.CommonBase):
                     h_yield.SetBinError(i, ye)
 
                 # Now, put it together and store the result
-                #g_yield = ROOT.TGraphAsymmErrors(n, g_data.GetX(), yield_values, np.zeros(n), np.zeros(n), yield_errors, yield_errors)
                 self.observable_settings["jetscape_distribution"] = h_yield
 
     #-------------------------------------------------------------------------------------------
@@ -974,7 +964,6 @@ class PlotResults(common_base.CommonBase):
         self.plot_utils.setup_legend(legend_ratio, 0.07, sep=-0.1)
 
         self.bins = np.array(self.observable_settings[f'jetscape_distribution'].GetXaxis().GetXbins())
-        print(self.observable_settings[f'jetscape_distribution'])
         myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
         myBlankHisto.SetNdivisions(505)
         myBlankHisto.SetXTitle(self.xtitle)
