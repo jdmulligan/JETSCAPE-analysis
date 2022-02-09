@@ -336,7 +336,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         # In principle, the dphi list could have been enough to get the number of triggers,
                         # but it's not so easy to integrate with the existing histogram code.
                         # So we keep separate track of the triggers, same as is done for D(z)
-                        self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig'].append(trigger_particle.pt())
+                        self.observable_dict_event[f'hadron_correlations_dihadron_star_Ntrig{suffix}'].append(trigger_particle.pt())
 
                         for (pt_assoc_min, pt_assoc_max), assoc_particles in associated_particles.items():
                             # First, just calculate the values
@@ -368,7 +368,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                             #       it's more difficult to integrate with the existing infrastructure, but so we take the simpler route
                             #       and use a flat list
                             # NOTE: Here we standardize the values to match with the measured correlation range
-                            self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}'].extend([
+                            self.observable_dict_event[f'hadron_correlations_dihadron_star_{label}{suffix}'].extend([
                                 analyze_events_base_STAT.dphi_in_range_for_hadron_correlations(phi) for phi in dphi_values
                             ])
 

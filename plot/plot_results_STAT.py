@@ -379,7 +379,8 @@ class PlotResults(common_base.CommonBase):
         # Flag to plot hole histogram (for hadron histograms only)
         if self.is_AA:
             self.subtract_holes = observable in ['pt_ch_alice', 'pt_pi_alice', 'pt_pi0_alice', 'pt_ch_cms',
-                                                 'pt_ch_atlas', 'pt_pi0_phenix', 'pt_ch_star', 'v2_atlas', 'v2_cms']
+                                                 'pt_ch_atlas', 'pt_pi0_phenix', 'pt_ch_star', 'v2_atlas', 'v2_cms',
+                                                 'dihadron_star']
         else:
             self.subtract_holes = False
 

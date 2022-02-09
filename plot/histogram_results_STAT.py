@@ -271,10 +271,19 @@ class HistogramResults(common_base.CommonBase):
                             self.histogram_observable(
                                 column_name=f'{observable_type}_{observable}_{label}',
                                 bins=dphi_bins, centrality=centrality,
-                                # We only want to histogram the number of triggers. Otherwise, we're just
+                                # We only want to histogram the number of triggers once. Otherwise, we're just
                                 # repeatedly replacing the histogram.
                                 pt_bin=i_trig_bin if histogrammed_n_trig == False else None, block=block
                             )
+                            if self.is_AA:
+                                self.histogram_observable(
+                                    column_name=f'{observable_type}_{observable}_{label}_holes',
+                                    bins=dphi_bins, centrality=centrality
+                                    # We only want to histogram the number of triggers once. Otherwise, we're just
+                                    # repeatedly replacing the histogram.
+                                    pt_bin=i_trig_bin if histogrammed_n_trig == False else None, block=block
+                                )
+                            histogrammed_n_trig = True
 
     #-------------------------------------------------------------------------------------------
     # Histogram inclusive jet observables
@@ -450,7 +459,8 @@ class HistogramResults(common_base.CommonBase):
         #       We then only set it sometimes so that we don't repeating histogram the same quantity.
         if "dihadron_" in column_name and pt_bin is not None:
             start_of_label = column_name.find("_pt_trig")
-            column_name = f'{column_name[:start_of_label]}_Ntrig'
+            column_name_suffix = "_holes" if "_holes" in column_name else ""
+            column_name = f'{column_name[:start_of_label]}_Ntrig{column_name_suffix}'
             col = self.observables_df[column_name]
             # We want the same binning for all triggers, so we flatten all of the trigger binning to a flat list
             # NOTE: This assumes that the triggers ranges do not overlap.
