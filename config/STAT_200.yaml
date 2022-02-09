@@ -53,7 +53,7 @@ jet_R: [0.2, 0.4, 0.5]
 min_jet_pt: 10.
 max_jet_y: 3.
 
-# If AA, set different options for hole subtraction treatment 
+# If AA, set different options for hole subtraction treatment
 # If pp, defaults will override this: ['']
 jet_collection_labels: ['_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
 
@@ -127,11 +127,16 @@ hadron_correlations:
     pt_trig: [[8., 15.]]
     # TODO: Do we want to skip 4-6?
     pt_assoc: [[4, 6], [6, -1]]
+    # Yield range are defined relative to 0 and pi
+    # NOTE: The paper says 0.63, but I (RE) strongly suspect they're rounding from 0.628.
+    #       If we use 0.63, ROOT will include the full next bin, which is for sure too much.
+    yield_range: [-0.62, 0.62]
     # They appear to have 40 bins between [-pi/2, 3pi/2], so generated with `np.linspace(-np.pi/2, 3*np.pi/2, 41)`
     dphi_bins: [-1.5707963267948966, -1.413716694115407, -1.2566370614359172, -1.0995574287564276, -0.9424777960769379, -0.7853981633974483, -0.6283185307179586, -0.47123889803846897, -0.3141592653589793, -0.15707963267948966, 0.0, 0.15707963267948966, 0.3141592653589793, 0.47123889803846897, 0.6283185307179586, 0.7853981633974483, 0.9424777960769379, 1.0995574287564276, 1.2566370614359172, 1.413716694115407, 1.5707963267948966, 1.7278759594743862, 1.8849555921538759, 2.0420352248333655, 2.199114857512855, 2.356194490192345, 2.5132741228718345, 2.670353755551324, 2.827433388230814, 2.9845130209103035, 3.141592653589793, 3.2986722862692828, 3.4557519189487724, 3.612831551628262, 3.7699111843077517, 3.9269908169872414, 4.084070449666731, 4.241150082346221, 4.39822971502571, 4.5553093477052, 4.71238898038469]
     # NOTE: Need to convert from N_part to centrality, which is available in Table 2 in https://inspirehep.net/literature/588808
     # NOTE: They also report 40-60%, but that goes outside of our centrality range, so we skip it here
     centrality: [[0,5], [5, 10], [10, 20], [20, 30], [30, 40]]
+    xtitle: "Centrality bin index"
 
     custom_data: 'custom_data.yaml'
     skip_pp: True
