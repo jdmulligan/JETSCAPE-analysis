@@ -39,6 +39,7 @@ import numpy as np
 from collections import defaultdict
 from pathlib import Path
 from collections import defaultdict
+import math
 
 # Fastjet via python (from external library heppy)
 import fjcontrib
@@ -137,9 +138,13 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         if self.is_AA:
             self.fill_hadron_observables(fj_hadrons_negative, pid_hadrons_negative, status='-')
 
-        # Fill hadron correlation observables
-        self.fill_hadron_correlation_observables(fj_hadrons_positive, pid_hadrons_positive)
-
+        # Fill hadron correlation observables 
+        event_plane_angle = event['event_plane_angle']
+        event_weight=event['event_weight']
+        self.fill_hadron_correlation_observables(fj_hadrons_positive, pid_hadrons_positive, event_plane_angle, status='+')
+        if self.is_AA:
+            self.fill_hadron_correlation_observables(fj_hadrons_negative, pid_hadrons_negative, event_plane_angle, status='-')
+        
         # Fill jet observables
         for jet_collection_label in self.jet_collection_labels:
 
@@ -263,7 +268,39 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # ---------------------------------------------------------------
     # Fill hadron correlation observables
     # ---------------------------------------------------------------
-    def fill_hadron_correlation_observables(self, fj_particles, pid_hadrons) -> None:
+    def fill_hadron_correlation_observables(self, fj_particles, pid_hadrons, event_plane_angle,status='+') -> None:
+
+        # Note that for identified particles, we store holes of the identified species
+        suffix = ''
+        if status == '-':
+            suffix = '_holes'
+        # Loop through hadrons
+        for particle in fj_particles:
+
+            # Fill some basic hadron info
+            pid = pid_hadrons[np.abs(particle.user_index())-1]
+            pt = particle.pt()
+            eta = particle.eta()
+            CosineDPhi = math.cos(2.0*(particle.phi() - event_plane_angle)) 
+            
+            if self.sqrts in [5020]:
+                # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)   
+                if self.centrality_accepted(self.hadron_correlation_observables['v2_atlas']['centrality']):
+                    pt_min = self.hadron_correlation_observables['v2_atlas']['pt'][0]
+                    pt_max = self.hadron_correlation_observables['v2_atlas']['pt'][1]
+                    if pt > pt_min and pt < pt_max:
+                        if abs(eta) < self.hadron_correlation_observables['v2_atlas']['eta_cut']:
+                            if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                self.observable_dict_event[f'hadron_correlations_v2_atlas{suffix}'].append([pt,CosineDPhi])
+                if self.centrality_accepted(self.hadron_correlation_observables['v2_cms']['centrality']):
+                    pt_min = self.hadron_correlation_observables['v2_cms']['pt'][0]
+                    pt_max = self.hadron_correlation_observables['v2_cms']['pt'][1]
+                    if pt > pt_min and pt < pt_max:
+                        if abs(eta) < self.hadron_correlation_observables['v2_cms']['eta_cut']:
+                            if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
+                                self.observable_dict_event[f'hadron_correlations_v2_cms{suffix}'].append([pt,CosineDPhi])
+                                
+                                
         # NOTE: The loop order here is different than other functions because without some optimization,
         #       it's very easy to have an O(n^2) loop looking for trigger and associated particles.
         #       We keep track of the particles which pass our conditions, so the double loop ends up
