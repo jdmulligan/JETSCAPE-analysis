@@ -125,7 +125,6 @@ hadron_correlations:
   dihadron_star:
     eta_cut: 1.0
     pt_trig: [[8., 15.]]
-    # TODO: Do we want to skip 4-6?
     pt_assoc: [[4, 6], [6, -1]]
     # Yield range are defined relative to 0 and pi
     # NOTE: The paper says 0.63, but I (RE) strongly suspect they're rounding from 0.628.
@@ -136,10 +135,27 @@ hadron_correlations:
     # NOTE: Need to convert from N_part to centrality, which is available in Table 2 in https://inspirehep.net/literature/588808
     # NOTE: They also report 40-60%, but that goes outside of our centrality range, so we skip it here
     centrality: [[0,5], [5, 10], [10, 20], [20, 30], [30, 40]]
+    # The yield bins are based on a centrality index since plotting as properly labeled centrality isn't
+    # worth the additional complexity. The first five bins are the near side, while the latter five are the away side.
+    yield_bins: [0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10.]
     xtitle: "Centrality bin index"
 
     custom_data: 'custom_data.yaml'
+    # We default to enabling skip_pp. In this case, we draw the deltaPhi correlations.
+    # If skip_pp is set to false, it will extract the yields and plot them.
+    # In the case of AA, we always extract and draw the yields
+    # NOTE: The delta phi correlations are always available in the histograms from the skim
+    # NOTE: The xtitle is wrong in the case where we draw the deltaPhi correlations. One can tell
+    #       by looking at the x range: [-pi/2, 3pi/2] is the correlations, which 0-10 is the yields.
     skip_pp: True
+    # These ranges are more appropriate for the delta phi correlations
+    y_min_pp: 0.01
+    y_max_pp: 0.2
+    logy_pp: False
+    # Whereas these are more appropriate for the yields
+    y_min_AA: 0.01
+    y_max_AA: 0.6
+    logy: True
 
 
 #------------------------------------------------------------------

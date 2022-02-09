@@ -1,28 +1,29 @@
 # This custom data is constructed from the HEPdata file since we need to translate
 # from N_part back to centrality for a comparison between simulations and data
 #
-# The pt associated index is mapped as follows:
-# 0: 3 < pt_assoc < 4 (we exclude this bin to avoid inflating the size of the skim with background contamination)
-# 1: 4 < pt_assoc < 6
-# 2: 6 < pt_assoc (in practice, the upper limit is 1000, but this is just a coding convention)
-#
-# The name is formatted as:
-# data_{collision_system}_{NS,AS}_ptAssoc{index}
-#
+# The pt trigger and pt associated name is encoded into each section
 # The data are stored as a function of centrality:
 # [0,5], [5, 10], [10, 20], [20, 30], [30, 40]
-# NOTE on repetition:
-# However, we then copy the data (once for each centrality bin) so that we can plot the same comparison
-# (as a function of centrality) for each single centrality bin where we extract the data.
-# Basically, since there's a single value per centrality, we just say that each data point will compare against
-# all centrality bins. It's redundant, but simpler.
 #
-# NOTE: The systematic uncertainties are negligible for pt_assoc > 4 (which is where we concern ourselves),
-#       so we disregard the systematics and only extract the statistical uncertainties
+# Since it is difficult in the current framework to create separate near-side and
+# away-side plots, we instead encode them into one plot. So the first 5 bins contain
+# the near-side yields (5 bins because there are 5 centrality bins), and then the next
+# 5 bins contain the away-side yields.
+#
+# NOTE on repetition:
+# We then copy the data 5 times, creating identical copies for each centrality bin.
+# This way, we can use the centrality index in the framework. For each comparison,
+# we will plot the data against all of the centrality points, but only two data points
+# will be populated (one for the near-side, and one for the away-side).
+# Basically, since there's a single value per centrality, we just say that each data
+# point will compare against all centrality bins. It's redundant, but simpler.
+#
+# NOTE: The systematic uncertainties are negligible for pt_assoc > 4 (which is where we
+#       concern ourselves), so we disregard the systematics and only extract the
+#       statistical uncertainties
 
-# Near side from HEPdata figure 3.0
+# Near side from HEPdata figure 3.0, away side from HEPdata figure 3.1
 # See note on repetition in the header
-#data_AA_nearSide_ptAssoc1:
 data_AA_pt_trig_8_15_pt_assoc_4_6:
   x:
     - [0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5,  8.5,  9.5]
@@ -93,26 +94,8 @@ data_AA_pt_trig_8_15_pt_assoc_4_6:
       0.002, 0.006, 0.005, 0.005, 0.007,
     ]
 
-# Away side from HEPdata figure 3.1
+# Near side from HEPdata figure 3.0, away side from HEPdata figure 3.1
 # See note on repetition in the header
-#data_AA_awaySide_ptAssoc1:
-#data_AA_awaySide_pt_trig_8_15_pt_assoc_4_6:
-#  y:
-#    - [0.026, 0.046, 0.045, 0.049, 0.064]
-#    - [0.026, 0.046, 0.045, 0.049, 0.064]
-#    - [0.026, 0.046, 0.045, 0.049, 0.064]
-#    - [0.026, 0.046, 0.045, 0.049, 0.064]
-#    - [0.026, 0.046, 0.045, 0.049, 0.064]
-#  y_err:
-#    - [0.002, 0.006, 0.005, 0.005, 0.007]
-#    - [0.002, 0.006, 0.005, 0.005, 0.007]
-#    - [0.002, 0.006, 0.005, 0.005, 0.007]
-#    - [0.002, 0.006, 0.005, 0.005, 0.007]
-#    - [0.002, 0.006, 0.005, 0.005, 0.007]
-
-# Near side from HEPdata figure 3.0
-# See note on repetition in the header
-#data_AA_nearSide_ptAssoc2:
 data_AA_pt_trig_8_15_pt_assoc_6_100:
   x:
     - [0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5,  8.5,  9.5]
@@ -182,20 +165,3 @@ data_AA_pt_trig_8_15_pt_assoc_6_100:
       # AS as a function of centrality
       0.001, 0.003, 0.003, 0.003, 0.004,
     ]
-
-# Away side from HEPdata figure 3.1
-# See note on repetition in the header
-##data_AA_awaySide_ptAssoc2:
-#data_AA_awaySide_pt_trig_8_15_pt_assoc_6_100:
-#  y:
-#    - [0.013, 0.019, 0.021, 0.027, 0.035]
-#    - [0.013, 0.019, 0.021, 0.027, 0.035]
-#    - [0.013, 0.019, 0.021, 0.027, 0.035]
-#    - [0.013, 0.019, 0.021, 0.027, 0.035]
-#    - [0.013, 0.019, 0.021, 0.027, 0.035]
-#  y_err:
-#    - [0.001, 0.003, 0.003, 0.003, 0.004]
-#    - [0.001, 0.003, 0.003, 0.003, 0.004]
-#    - [0.001, 0.003, 0.003, 0.003, 0.004]
-#    - [0.001, 0.003, 0.003, 0.003, 0.004]
-#    - [0.001, 0.003, 0.003, 0.003, 0.004]
