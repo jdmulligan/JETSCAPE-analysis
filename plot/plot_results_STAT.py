@@ -7,6 +7,7 @@
 # Author: James Mulligan (james.mulligan@berkeley.edu)
 
 # General
+import ctypes
 import os
 import sys
 import yaml
@@ -15,7 +16,6 @@ import argparse
 # Data analysis and plotting
 import ROOT
 import numpy as np
-import pptx             # pip install python-pptx
 
 # Base class
 sys.path.append('.')
@@ -161,13 +161,9 @@ class PlotResults(common_base.CommonBase):
                         for pt_trig_min, pt_trig_max in pt_trig_range:
                             for pt_assoc_range in pt_associated_ranges:
                                 for pt_assoc_min, pt_assoc_max in pt_assoc_range:
-                                    self.suffix = f"pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
-                                    # Do I want to use the pt suffix for the associated? What if the bins change??
-                                    # Maybe that's worth taking as the cost of doing it by hand? Or I could just map it here,
-                                    # since it's the only place that matters
-                                    # TODO: Try this... (will need to update the name elsewhere)
-                                    # TODO: We don't need this - the suffix is passed through to the data...
-                                    pt_suffix_map = {(4, 6): 0, (6, -1): 1}
+                                    # If the upper range has -1, it's unbounded, so we make it large enough not to matter
+                                    pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
+                                    self.suffix = f"_pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
                                     self.init_observable(observable_type, observable, block, centrality, centrality_index)
 
                                     # Histogram observable
@@ -289,7 +285,7 @@ class PlotResults(common_base.CommonBase):
 
         #-----------------------------------------------------------
         # Initialize JETSCAPE distribution into self.observable_settings
-        self.initialize_jetscape_distribution(observable_type, observable, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
+        self.initialize_jetscape_distribution(observable_type, observable, block, centrality, centrality_index, pt_suffix=pt_suffix, self_normalize=self_normalize)
 
         #-----------------------------------------------------------
         # For pp case -- form ratio of JETSCAPE to data and load into self.observable_settings
@@ -390,7 +386,7 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Initialize JETSCAPE distribution into self.observable_settings
     #-------------------------------------------------------------------------------------------
-    def initialize_jetscape_distribution(self, observable_type, observable, centrality, pt_suffix='', self_normalize=False):
+    def initialize_jetscape_distribution(self, observable_type, observable, block, centrality, centrality_index, pt_suffix='', self_normalize=False):
 
         #-------------------------------------------------------------
         # AA
@@ -423,7 +419,7 @@ class PlotResults(common_base.CommonBase):
                     self.observable_settings['jetscape_distribution'].Add(self.observable_settings['jetscape_distribution_holes'], -1)
 
                 # Perform any additional manipulations on scaled histograms
-                self.post_process_histogram(observable_type, observable, centrality)
+                self.post_process_histogram(observable_type, observable, block, centrality, centrality_index)
 
 
             #-------------------------------------------------------------
@@ -437,14 +433,14 @@ class PlotResults(common_base.CommonBase):
                     self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix, collection_label=jet_collection_label)
                     self.scale_histogram(observable_type, observable, centrality,
                                         collection_label=jet_collection_label, pt_suffix=pt_suffix, self_normalize=self_normalize)
-                    self.post_process_histogram(observable_type, observable, centrality, collection_label=jet_collection_label)
+                    self.post_process_histogram(observable_type, observable, block, centrality, centrality_index, collection_label=jet_collection_label)
 
         #-------------------------------------------------------------
         # pp
         else:
             self.get_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix)
             self.scale_histogram(observable_type, observable, centrality, pt_suffix=pt_suffix, self_normalize=self_normalize)
-            self.post_process_histogram(observable_type, observable, centrality)
+            self.post_process_histogram(observable_type, observable, block, centrality, centrality_index)
     #-------------------------------------------------------------------------------------------
     # Get histogram and add to self.observable_settings
     #  - In AA case, also add hole histogram
@@ -566,11 +562,13 @@ class PlotResults(common_base.CommonBase):
                     h.Scale(1./sigma_inel)
                 if observable == "dihadron_star":
                     # Need to grab the pt trig range
+                    # Example: "_pt_trig_8_15_...." -> split -> ['', 'pt', 'trig', '8', '15', '....']
+                    # So we grab index 3 and 4
                     split_suffix = self.suffix.split("_")
-                    pt_trig_min, pt_trig_max = float(split_suffix[2]), float(split_suffix[3])
+                    pt_trig_min, pt_trig_max = float(split_suffix[3]), float(split_suffix[4])
 
                     # And then the trigger hist
-                    hname = f"h_{observable_type}_dihadron_star_Ntrig{collection_label}"
+                    hname = f"h_{observable_type}_dihadron_star_Ntrig"
                     h_ntrig = self.input_file.Get(hname)
                     h_ntrig.SetDirectory(0)
 
@@ -694,7 +692,7 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     # Perform any additional manipulations on scaled histograms
     #-------------------------------------------------------------------------------------------
-    def post_process_histogram(self, observable_type, observable, centrality, collection_label=''):
+    def post_process_histogram(self, observable_type, observable, block, centrality, centrality_index: int, collection_label=''):
         if 'v2' in observable:
             # hadron v2
             h = self.observable_settings[f'jetscape_distribution{collection_label}']
@@ -747,17 +745,43 @@ class PlotResults(common_base.CommonBase):
                 hname = h.GetName()
                 self.observable_settings[f'jetscape_distribution{collection_label}'] = h.Rebin(n-1, hname, bins[1:])
 
-        if observable == "hadron_correlations_dihadron_star":
-            # Grab the
-            # NS, ...., AS, .....
-            [0.5, 0, 0, 0, 0.25, 0, 0, 0]
-            # use custom_data.yaml
-            ...
-            # if pp, plot the deltaphi distributions...
-            #   - just do nothing to do this (w/ skip_pp: True in the config)
-            #   (at least for debugging)
-            # if AA, then extract yields
+        if observable_type == "hadron_correlations" and observable == "dihadron_star":
+            # Grab the delta phi correlation
+            h = self.observable_settings[f'jetscape_distribution']
+            # Extract the yield
+            yield_lower_range_value, yield_upper_range_value = block["yield_range"]
+            # First, near side
+            _temp_error = ctypes.c_double(0)
+            near_side_yield = h.Integral(
+                h.GetXaxis().FindBin(yield_lower_range_value), h.GetXaxis().FindBin(yield_upper_range_value),
+                _temp_error,
+            )
+            near_side_yield_error = _temp_error.value
+            # Then the away side
+            _temp_error = ctypes.c_double(0)
+            away_side_yield = h.Integral(
+                # Both are np.pi + because the yield_lower_range_value is negative
+                h.GetXaxis().FindBin(np.pi + yield_lower_range_value), h.GetXaxis().FindBin(np.pi + yield_upper_range_value),
+                _temp_error,
+            )
+            away_side_yield_error = _temp_error.value
 
+            # Encode the values into a single TGraph
+            # Based the graph off the data distribution so we don't have to worry about the size,
+            # # and then reset to start from a clean slate
+            g_data = self.observable_settings["data_distribution"]
+            n = g_data.GetN()
+            yield_values = np.zeros(n)
+            yield_errors = np.zeros(n)
+            yield_values[centrality_index] = near_side_yield
+            yield_errors[centrality_index] = near_side_yield_error
+            # round is just to ensure we have an int
+            yield_values[centrality_index + round(n / 2)] = away_side_yield
+            yield_errors[centrality_index + round(n / 2)] = away_side_yield_error
+
+            # Now, put it together and store the result
+            g_width = ROOT.TGraphAsymmErrors(n, g_data.GetX(), yield_values, np.zeros(n), np.zeros(n), yield_errors, yield_errors)
+            self.observable_settings["jetscape_distribution"] = g_width
 
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
@@ -1291,6 +1315,10 @@ class PlotResults(common_base.CommonBase):
     # Generate pptx of one plot per slide, for convenience
     #-------------------------------------------------------------------------------------------
     def generate_pptx(self):
+        # Delayed import since this isn't on available on many systems
+        # For those that need can install it (ie. systems where powerpoint can run) you can use:
+        #   pip install python-pptx
+        import pptx
 
         # Create a blank presentation
         p = pptx.Presentation()
