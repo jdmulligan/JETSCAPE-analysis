@@ -162,6 +162,7 @@ class PlotResults(common_base.CommonBase):
                             # If the upper range has -1, it's unbounded, so we make it large enough not to matter
                             pt_assoc_max = 1000 if pt_assoc_max == -1 else pt_assoc_max
                             self.suffix = f"_pt_trig_{pt_trig_min:g}_{pt_trig_max:g}_pt_assoc_{pt_assoc_min:g}_{pt_assoc_max:g}"
+                            # TODO: Cleanup print statement
                             print(f"suffix: {self.suffix}")
                             self.init_observable(observable_type, observable, block, centrality, centrality_index)
 
@@ -560,6 +561,7 @@ class PlotResults(common_base.CommonBase):
                     h.Scale(1./(2*self.eta_cut))
                     h.Scale(1./(2*np.pi))
                     h.Scale(1./sigma_inel)
+            elif observable_type == 'hadron_correlations':
                 if observable == "dihadron_star":
                     # Need to grab the pt trig range
                     # Example: "_pt_trig_8_15_...." -> split -> ['', 'pt', 'trig', '8', '15', '....']
@@ -568,12 +570,15 @@ class PlotResults(common_base.CommonBase):
                     pt_trig_min, pt_trig_max = float(split_suffix[3]), float(split_suffix[4])
 
                     # And then the trigger hist
-                    hname = f"h_{observable_type}_dihadron_star_Ntrig"
+                    hname = f"h_{observable_type}_dihadron_star_Ntrig_{centrality}"
+                    print(f"hname: {hname}")
                     h_ntrig = self.input_file.Get(hname)
                     h_ntrig.SetDirectory(0)
 
                     # Finally, scale by the n_trig
                     n_trig = h_ntrig.GetBinContent(h_ntrig.GetXaxis().FindBin((pt_trig_max + pt_trig_min) / 2)) # Note that Njets histogram should also be scaled by xsec/n_events
+                    print(f"scaling by n_trig of {n_trig}")
+                    print(f"actual: {(n_trig * (xsec/weight_sum))}")
                     if n_trig > 0.:
                         h.Scale(1./(n_trig * (xsec/weight_sum)))
                     else:
@@ -748,9 +753,12 @@ class PlotResults(common_base.CommonBase):
         if observable_type == "hadron_correlations" and observable == "dihadron_star":
             # In the case of pp, just look at the deltaPhi correlations themselves
             # In any case, we don't have data to compare against.
+            h = self.observable_settings[f'jetscape_distribution']
+            print(f"dihadron {observable}, entries: {h.GetEntries()}")
             if not self.skip_pp:
                 # Grab the delta phi correlation
                 h = self.observable_settings[f'jetscape_distribution']
+                print(f"dihadron {observable}, entries: {h.GetEntries()}")
                 # Extract the yield
                 yield_lower_range_value, yield_upper_range_value = block["yield_range"]
                 # First, near side
@@ -769,11 +777,18 @@ class PlotResults(common_base.CommonBase):
                 )
                 away_side_yield_error = _temp_error.value
 
-                # Encode the values into a single TGraph
-                # Based the graph off the data distribution so we don't have to worry about the size,
-                # # and then reset to start from a clean slate
-                g_data = self.observable_settings["data_distribution"]
-                n = g_data.GetN()
+                # Encode the values into a single TH1F. We put it into a TH1F instead of a TGraph because
+                # the framework seems to require that the jetscape data is in a histogram.
+                ## Based the graph off the data distribution so we don't have to worry about the size,
+                ## and then reset to start from a clean slate
+                #g_data = self.observable_settings["data_distribution"]
+                #n = g_data.GetN()
+                #print(f"n: {n}")
+                #print(f"x_data: {[g_data.GetX()[i] for i in range(10)]}")
+                #h_yield = ROOT.TH1F(f"{h.GetName()}_yields", f"{h.GetName()}_yields", n)
+                yield_bins = np.array(block["yield_bins"])
+                n = len(yield_bins) - 1
+                h_yield = ROOT.TH1F(f"{h.GetName()}_yield", f"{h.GetName()}_yields", n, yield_bins)
                 yield_values = np.zeros(n)
                 yield_errors = np.zeros(n)
                 yield_values[centrality_index] = near_side_yield
@@ -782,9 +797,14 @@ class PlotResults(common_base.CommonBase):
                 yield_values[centrality_index + round(n / 2)] = away_side_yield
                 yield_errors[centrality_index + round(n / 2)] = away_side_yield_error
 
+                # start at 1 to account for ROOT bin indexing
+                for i, (yv, ye) in enumerate(zip(yield_values, yield_errors), start=1):
+                    h_yield.SetBinContent(i, yv)
+                    h_yield.SetBinError(i, ye)
+
                 # Now, put it together and store the result
-                g_width = ROOT.TGraphAsymmErrors(n, g_data.GetX(), yield_values, np.zeros(n), np.zeros(n), yield_errors, yield_errors)
-                self.observable_settings["jetscape_distribution"] = g_width
+                #g_yield = ROOT.TGraphAsymmErrors(n, g_data.GetX(), yield_values, np.zeros(n), np.zeros(n), yield_errors, yield_errors)
+                self.observable_settings["jetscape_distribution"] = h_yield
 
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel
@@ -954,6 +974,7 @@ class PlotResults(common_base.CommonBase):
         self.plot_utils.setup_legend(legend_ratio, 0.07, sep=-0.1)
 
         self.bins = np.array(self.observable_settings[f'jetscape_distribution'].GetXaxis().GetXbins())
+        print(self.observable_settings[f'jetscape_distribution'])
         myBlankHisto = ROOT.TH1F('myBlankHisto','Blank Histogram', 1, self.bins[0], self.bins[-1])
         myBlankHisto.SetNdivisions(505)
         myBlankHisto.SetXTitle(self.xtitle)

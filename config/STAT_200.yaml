@@ -136,10 +136,17 @@ hadron_correlations:
     # NOTE: Need to convert from N_part to centrality, which is available in Table 2 in https://inspirehep.net/literature/588808
     # NOTE: They also report 40-60%, but that goes outside of our centrality range, so we skip it here
     centrality: [[0,5], [5, 10], [10, 20], [20, 30], [30, 40]]
+    # The yield bins are based on a centrality index since plotting as properly labeled centrality isn't
+    # worth the additional complexity. The first five bins are the near side, while the latter five are the away side.
+    yield_bins: [0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10.]
     xtitle: "Centrality bin index"
 
     custom_data: 'custom_data.yaml'
-    skip_pp: True
+    #skip_pp: True
+    skip_pp_ratio: True
+    y_min_pp: 0.01
+    y_max_pp: 0.6
+    logy: True
 
 
 #------------------------------------------------------------------
