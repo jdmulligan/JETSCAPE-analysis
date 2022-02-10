@@ -588,7 +588,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # ATLAS D(z)
             #   Hole treatment:
-            #    - For show_recoil case, we separately fill using hadrons_for_jet_finding (which are positive only) and holes_in_jet
+            #    - For shower_recoil case, we separately fill using hadrons_for_jet_finding (which are positive only) and holes_in_jet
             #    - For negative_recombiner case, we separately fill the positive-status and negative-status hadrons_for_jet_finding
             #    - For constituent_subtraction, we will using hadrons_for_jet_finding (which are positive only)
             #   Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
@@ -622,7 +622,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # CMS D(z)
             #   Hole treatment:
-            #    - For show_recoil case, we separately fill using hadrons_for_jet_finding (which are positive only) and holes_in_jet
+            #    - For shower_recoil case, we separately fill using hadrons_for_jet_finding (which are positive only) and holes_in_jet
             #    - For negative_recombiner case, we separately fill the positive-status and negative-status hadrons_for_jet_finding
             #    - For constituent_subtraction, we will using hadrons_for_jet_finding (which are positive only)
             #   Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
@@ -663,7 +663,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # CMS jet charge
             #   Hole treatment:
-            #    - For show_recoil case, we subtract the contribution of holes within R (and also store the unsubtracted charge)
+            #    - For shower_recoil case, we subtract the contribution of holes within R (and also store the unsubtracted charge)
             #    - For negative_recombiner case, we subtract the contribution of holes within R
             #    - For constituent_subtraction, no subtraction is needed
             # Charged particles (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
@@ -675,7 +675,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if abs(jet.eta()) < self.inclusive_jet_observables['charge_cms']['eta_cut']:
                             if jet_pt > pt_min:
                                 for kappa in self.inclusive_jet_observables['charge_cms']['kappa']:
-                                    sum = 0
+                                    sum_charge = 0
                                     for hadron in hadrons_for_jet_finding:
                                         if jet_collection_label in ['_negative_recombiner'] and hadron.user_index() < 0 :
                                             continue
@@ -683,7 +683,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                             pid = pid_hadrons_positive[np.abs(hadron.user_index())-1]
                                             if abs(pid) in acceptable_hadrons:
                                                 if jet.delta_R(hadron) < jetR:
-                                                    sum += self.charge(pid) * np.power(hadron.pt(), kappa)
+                                                    sum_charge += self.charge(pid) * np.power(hadron.pt(), kappa)
                                     if jet_collection_label in ['_shower_recoil', '_negative_recombiner']:
                                         sum_holes = 0
                                         for hadron in holes_in_jet:
@@ -694,12 +694,12 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                 if abs(pid) in acceptable_hadrons:
                                                     if jet.delta_R(hadron) < jetR:
                                                         sum_holes += self.charge(pid) * np.power(hadron.pt(), kappa)
-                                        charge = (sum - sum_holes) / np.power(jet_pt, kappa)
+                                        charge = (sum_charge - sum_holes) / np.power(jet_pt, kappa)
                                         if jet_collection_label in ['_shower_recoil']:
-                                            charge_unsubtracted = sum / np.power(jet_pt, kappa)
+                                            charge_unsubtracted = sum_charge / np.power(jet_pt, kappa)
                                             self.observable_dict_event[f'inclusive_jet_charge_cms_R{jetR}_k{kappa}{jet_collection_label}_unsubtracted'].append(charge_unsubtracted)
                                     else:
-                                        charge = sum / np.power(jet_pt, kappa)
+                                        charge = sum_charge / np.power(jet_pt, kappa)
                                     self.observable_dict_event[f'inclusive_jet_charge_cms_R{jetR}_k{kappa}{jet_collection_label}'].append(charge)
 
     # ---------------------------------------------------------------
@@ -726,7 +726,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # CMS m_g
             #   Hole treatment:
-            #    - For show_recoil case, correct the pt only
+            #    - For shower_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_jet_observables['mg_cms']['centrality']):
@@ -742,7 +742,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # CMS z_g
             #   Hole treatment:
-            #    - For show_recoil case, correct the pt only
+            #    - For shower_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_jet_observables['zg_cms']['centrality']):
@@ -766,7 +766,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # ALICE subjet z_R
             #   Hole treatment:
-            #    - For show_recoil case, subtract holes within r (for subjets) and R (for jets)
+            #    - For shower_recoil case, subtract holes within r (for subjets) and R (for jets)
             #    - For negative_recombiner case, subtract holes within r (for subjets) only
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['zr_alice']['centrality']):
@@ -788,7 +788,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # ALICE jet axis Standard-WTA
             #   Hole treatment:
-            #    - For show_recoil case, correct the pt only
+            #    - For shower_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed, although we recluster using the negative recombiner again
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['axis_alice']['centrality']):
@@ -811,7 +811,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # ALICE ungroomed angularity
             #   Hole treatment:
-            #    - For show_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
+            #    - For shower_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
             #    - For negative_recombiner case, subtract the hole contribution within R to the angularity
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['angularity_alice']['centrality']):
@@ -828,6 +828,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     lambda_alpha = 0
                                     for hadron in jet.constituents():
                                         if hadron.user_index() > 0:
+                                            # NOTE: Implicitly uses kappa = 1 here
                                             lambda_alpha += hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
                                 if jet_collection_label in ['_shower_recoil']:
                                     self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}{jet_collection_label}_unsubtracted'].append([jet_pt, lambda_alpha])
@@ -835,12 +836,16 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     for hadron in holes_in_jet:
                                         if jet_collection_label in ['_negative_recombiner'] and hadron.user_index() > 0 :
                                             continue
+                                        # NOTE: Implicitly uses kappa = 1 here
                                         lambda_alpha -= hadron.pt() / jet_pt  * np.power(hadron.delta_R(jet)/jetR, alpha)
                                 self.observable_dict_event[f'inclusive_chjet_angularity_alice_R{jetR}_alpha{alpha}{jet_collection_label}'].append([jet_pt, lambda_alpha])
 
         if self.sqrts == 2760:
 
             # ALICE charged jet RAA
+            #   Hole treatment (same as with full jets - copied here for convenience):
+            #    - For RAA, all jet collections can be filled from the corrected jet pt
+            #    - In the shower_recoil case, we also fill the unsubtracted jet pt
             if self.centrality_accepted(self.inclusive_chjet_observables['pt_alice']['centrality']):
                 pt_min = self.inclusive_chjet_observables['pt_alice']['pt'][0]
                 pt_max = self.inclusive_chjet_observables['pt_alice']['pt'][1]
@@ -862,7 +867,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # g
             #   Hole treatment:
-            #    - For show_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
+            #    - For shower_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
             #    - For negative_recombiner case, subtract the hole contribution within R to the angularity
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['g_alice']['centrality']):
@@ -887,7 +892,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # pTD
             #   Hole treatment:
-            #    - For show_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
+            #    - For shower_recoil case, subtract the hole contribution within R to the angularity (also store unsubtracted case)
             #    - For negative_recombiner case, subtract the hole contribution within R to the angularity
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['ptd_alice']['centrality']):
@@ -896,23 +901,23 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                 if abs(jet.eta()) < (self.inclusive_chjet_observables['ptd_alice']['eta_cut_R'] - jetR):
                     if jetR in self.inclusive_chjet_observables['ptd_alice']['jet_R']:
                         if pt_min < jet_pt < pt_max:
-                            sum = 0
+                            sum_ptd = 0
                             for constituent in jet.constituents():
                                 if jet_collection_label in ['_negative_recombiner'] and constituent.user_index() < 0:
                                     continue
-                                sum += np.power(constituent.pt(), 2)
+                                sum_ptd += np.power(constituent.pt(), 2)
                             if jet_collection_label in ['_shower_recoil']:
                                 self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}_unsubtracted'].append(np.sqrt(sum) / jet_pt)
                             if jet_collection_label in ['_shower_recoil', '_negative_recombiner']:
                                 for hadron in holes_in_jet:
                                     if jet_collection_label in ['_negative_recombiner'] and hadron.user_index() > 0 :
                                         continue
-                                    sum -= np.power(hadron.pt(), 2)
+                                    sum_ptd -= np.power(hadron.pt(), 2)
                             self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}'].append(np.sqrt(sum) / jet_pt)
 
             # Jet mass
             #   Hole treatment:
-            #    - For show_recoil case, subtract recoils within R from four-vector (also store unsubtracted case)
+            #    - For shower_recoil case, subtract recoils within R from four-vector (also store unsubtracted case)
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['mass_alice']['centrality']):
@@ -923,12 +928,12 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                         if pt_min < jet_pt < pt_max:
                             jet_mass = jet.m()
                             if jet_collection_label in ['_shower_recoil']:
+                                # NOTE: Since we haven't assigned to `jet_mass` yet, it still contains the unsubtracted mass
                                 self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}{jet_collection_label}_unsubtracted'].append([jet_pt, jet_mass])
                                 # Subtract hole four vectors from the original jet, and then take the mass
                                 jet_for_mass_calculation = fj.PseudoJet(jet)    # Avoid modifying the original jet.
                                 for hadron in holes_in_jet:
                                     jet_for_mass_calculation -= hadron
-                                # NOTE: Since we haven't assigned to `jet_mass` yet, it still contains the unsubtracted mass
                                 jet_mass = jet_for_mass_calculation.m()
                             self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}{jet_collection_label}'].append([jet_pt, jet_mass])
 
@@ -976,7 +981,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
         # ALICE hardest kt
         #   Hole treatment:
-        #    - For show_recoil case, correct the pt only
+        #    - For shower_recoil case, correct the pt only
         #    - For negative_recombiner case, no subtraction is needed
         #    - For constituent_subtraction, no subtraction is needed
         # For DyG, we need to record regardless of whether it passes SD, so we look at that observable first,
@@ -1008,7 +1013,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # Soft Drop zg and theta_g
             #   Hole treatment:
-            #    - For show_recoil case, correct the pt only
+            #    - For shower_recoil case, correct the pt only
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['zg_alice']['centrality']):
@@ -1026,7 +1031,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # ALICE groomed angularity
             #   Hole treatment:
-            #    - For show_recoil case, correct the pt only
+            #    - For shower_recoil case, correct the pt only
             #    - For negative_recombiner case, correct the pt only
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.inclusive_chjet_observables['angularity_alice']['centrality']):
@@ -1113,7 +1118,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
                                 # Jet yield and Delta phi
                                 #   Hole treatment:
-                                #    - For show_recoil case, correct the pt only (and also store unsubtracted pt)
+                                #    - For shower_recoil case, correct the pt only (and also store unsubtracted pt)
                                 #    - For negative_recombiner case, no subtraction is needed
                                 #    - For constituent_subtraction, no subtraction is needed
                                 if self.centrality_accepted(self.semi_inclusive_chjet_observables['IAA_alice']['centrality']):
@@ -1143,7 +1148,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
                                 # Nsubjettiness
                                 #   Hole treatment:
-                                #    - For show_recoil case, correct the pt only
+                                #    - For shower_recoil case, correct the pt only
                                 #    - For negative_recombiner case, no subtraction is needed
                                 #    - For constituent_subtraction, no subtraction is needed
                                 if self.centrality_accepted(self.semi_inclusive_chjet_observables['nsubjettiness_alice']['centrality']):
@@ -1164,7 +1169,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                 if pt_nsubjettiness[0] < jet_pt < pt_nsubjettiness[1]:
                                                     tau1 = n_subjettiness_calculator1.result(jet)/jet_pt_unsubtracted
                                                     tau2 = n_subjettiness_calculator2.result(jet)/jet_pt_unsubtracted
-                                                    if tau1 > 1e-6:
+                                                    if tau1 > 1e-3:
                                                         self.observable_dict_event[f'semi_inclusive_chjet_nsubjettiness_alice_R{jetR}_highTrigger{jet_collection_label}'].append(tau2/tau1)
 
         if self.sqrts == 200:
@@ -1229,7 +1234,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # ATLAS xj
             #   Hole treatment:
-            #    - For show_recoil case, correct jet pt by subtracting holes within R
+            #    - For shower_recoil case, correct jet pt by subtracting holes within R
             #    - For negative_recombiner case, no subtraction is needed
             #    - For constituent_subtraction, no subtraction is needed
             if self.centrality_accepted(self.dijet_observables['xj_atlas']['centrality']):
