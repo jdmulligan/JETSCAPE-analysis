@@ -63,8 +63,14 @@ class HistogramResults(common_base.CommonBase):
         #------------------------------------------------------
         # Read input file
         self.observables_df = pd.read_parquet(self.input_file)
-        self.weights = self.observables_df['event_weight']
-        self.pt_hat = self.observables_df['pt_hat']
+        # It's possible that there are no entries in observables_df, so we use get here and
+        # return an empty list so that the code doesn't crash. In this case, we'll have to
+        # bail out immediately when processing.
+        # NOTE: We should still write an empty ROOT file when we go to run the histogramming.
+        #       Otherwise the steering will fail because it will see the missing file and think
+        #       that the jobs failed.
+        self.weights = self.observables_df.get('event_weight', [])
+        self.pt_hat = self.observables_df.get('pt_hat', [])
 
         #------------------------------------------------------
         # Read cross-section file
@@ -93,26 +99,31 @@ class HistogramResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def histogram_results(self):
 
-        # Hadron histograms
-        self.histogram_hadron_observables(observable_type='hadron')
+        if len(self.observables_df) != 0:
+            # Hadron histograms
+            self.histogram_hadron_observables(observable_type='hadron')
 
-        self.histogram_hadron_correlation_observables(observable_type='hadron_correlations')
+            self.histogram_hadron_correlation_observables(observable_type='hadron_correlations')
 
-        # Jet histograms: loop through different hole subtraction treatments
-        for jet_collection_label in self.jet_collection_labels:
+            # Jet histograms: loop through different hole subtraction treatments
+            for jet_collection_label in self.jet_collection_labels:
 
-            self.histogram_jet_observables(observable_type='inclusive_chjet', jet_collection_label=jet_collection_label)
+                self.histogram_jet_observables(observable_type='inclusive_chjet', jet_collection_label=jet_collection_label)
 
-            if 'inclusive_jet' in self.config:
-                self.histogram_jet_observables(observable_type='inclusive_jet', jet_collection_label=jet_collection_label)
+                if 'inclusive_jet' in self.config:
+                    self.histogram_jet_observables(observable_type='inclusive_jet', jet_collection_label=jet_collection_label)
 
-            if 'semi_inclusive_chjet' in self.config:
-                self.histogram_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet', jet_collection_label=jet_collection_label)
+                if 'semi_inclusive_chjet' in self.config:
+                    self.histogram_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet', jet_collection_label=jet_collection_label)
 
-            if 'dijet' in self.config:
-                self.histogram_jet_observables(observable_type='dijet', jet_collection_label=jet_collection_label)
+                if 'dijet' in self.config:
+                    self.histogram_jet_observables(observable_type='dijet', jet_collection_label=jet_collection_label)
+        else:
+            print("\tWARNING: There are no entries in the observables df. Will only write event level QA.")
 
         # QA histograms
+        # NOTE: These histograms still work even if there are no observables (well, at least many of them,
+        #       but not all), so we might, as well collect event level QA.
         self.histogram_event_qa()
 
         # Write output to ROOT file
