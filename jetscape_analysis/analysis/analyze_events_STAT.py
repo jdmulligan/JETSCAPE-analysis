@@ -564,16 +564,17 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 self.observable_dict_event[f'inclusive_jet_pt_atlas_R{jetR}{jet_collection_label}_unsubtracted'].append(jet_pt_uncorrected)
 
             # ATLAS RAA -- rapidity-dependence
-            if self.centrality_accepted(self.inclusive_jet_observables['pt_y_atlas']['centrality']):
-                pt_min = self.inclusive_jet_observables['pt_y_atlas']['pt'][0]
-                pt_max = self.inclusive_jet_observables['pt_y_atlas']['pt'][-1]
-                if jetR in self.inclusive_jet_observables['pt_y_atlas']['jet_R']:
-                    y_abs = abs(jet.rap())
-                    if y_abs < self.inclusive_jet_observables['pt_y_atlas']['y_cut']:
-                        if pt_min < jet_pt < pt_max:
-                            self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}'].append([jet_pt, y_abs])
-                            if jet_collection_label in ['_shower_recoil']:
-                                self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}_unsubtracted'].append([jet_pt_uncorrected, y_abs])
+            if self.sqrts in [5020]:
+                if self.centrality_accepted(self.inclusive_jet_observables['pt_y_atlas']['centrality']):
+                    pt_min = self.inclusive_jet_observables['pt_y_atlas']['pt'][0]
+                    pt_max = self.inclusive_jet_observables['pt_y_atlas']['pt'][-1]
+                    if jetR in self.inclusive_jet_observables['pt_y_atlas']['jet_R']:
+                        y_abs = abs(jet.rap())
+                        if y_abs < self.inclusive_jet_observables['pt_y_atlas']['y_cut']:
+                            if pt_min < jet_pt < pt_max:
+                                self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}'].append([jet_pt, y_abs])
+                                if jet_collection_label in ['_shower_recoil']:
+                                    self.observable_dict_event[f'inclusive_jet_pt_y_atlas_R{jetR}{jet_collection_label}_unsubtracted'].append([jet_pt_uncorrected, y_abs])
 
             # CMS RAA
             if self.centrality_accepted(self.inclusive_jet_observables['pt_cms']['centrality']):
@@ -907,13 +908,13 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                     continue
                                 sum_ptd += np.power(constituent.pt(), 2)
                             if jet_collection_label in ['_shower_recoil']:
-                                self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}_unsubtracted'].append(np.sqrt(sum) / jet_pt)
+                                self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}_unsubtracted'].append(np.sqrt(sum_ptd) / jet_pt)
                             if jet_collection_label in ['_shower_recoil', '_negative_recombiner']:
                                 for hadron in holes_in_jet:
                                     if jet_collection_label in ['_negative_recombiner'] and hadron.user_index() > 0 :
                                         continue
                                     sum_ptd -= np.power(hadron.pt(), 2)
-                            self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}'].append(np.sqrt(sum) / jet_pt)
+                            self.observable_dict_event[f'inclusive_chjet_ptd_alice_R{jetR}{jet_collection_label}'].append(np.sqrt(sum_ptd) / jet_pt)
 
             # Jet mass
             #   Hole treatment:
