@@ -290,7 +290,7 @@ class PlotResults(common_base.CommonBase):
         if not self.is_AA:
             if self.observable_settings['data_distribution'] and self.observable_settings[f'jetscape_distribution'] and not self.observable_settings[f'jetscape_distribution'].InheritsFrom(ROOT.TH2.Class()) and not self.skip_pp_ratio:
                 self.observable_settings['ratio'] = self.plot_utils.divide_histogram_by_tgraph(self.observable_settings[f'jetscape_distribution'],
-                                                                                self.observable_settings['data_distribution'])
+                                                                                self.observable_settings['data_distribution'], include_tgraph_uncertainties=False)
             else:
                 self.observable_settings['ratio'] = None
         if 'v2' in observable and self.is_AA and self.observable_settings[f'jetscape_distribution']:
@@ -464,6 +464,8 @@ class PlotResults(common_base.CommonBase):
             if self.hname in keys:
                 h_jetscape = self.input_file.Get(self.hname)
                 h_jetscape.SetDirectory(0)
+                if not h_jetscape.GetSumw2():
+                    h_jetscape.Sumw2()
 
             else:
                 h_jetscape = None
@@ -696,7 +698,7 @@ class PlotResults(common_base.CommonBase):
     # Perform any additional manipulations on scaled histograms
     #-------------------------------------------------------------------------------------------
     def post_process_histogram(self, observable_type, observable, block, centrality, centrality_index: int, collection_label=''):
-        if 'v2' in observable:
+        if 'v2' in observable and self.is_AA:
             # hadron v2
             h = self.observable_settings[f'jetscape_distribution{collection_label}']
             if h:

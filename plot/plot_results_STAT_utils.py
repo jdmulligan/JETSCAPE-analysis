@@ -243,7 +243,7 @@ class PlotUtils(common_base.CommonBase):
     #---------------------------------------------------------------
     # Divide a histogram by a tgraph, point-by-point
     #---------------------------------------------------------------
-    def divide_histogram_by_tgraph(self, h, g):
+    def divide_histogram_by_tgraph(self, h, g, include_tgraph_uncertainties=True):
 
         # Clone tgraph, in order to return a new one
         g_new = g.Clone(f'{g.GetName()}_divided')
@@ -295,8 +295,12 @@ class PlotUtils(common_base.CommonBase):
 
             # Combine tgraph and histogram relative uncertainties in quadrature
             if gy > 0. and h_y > 0.:
-                new_error_low = np.sqrt( pow(yErrLow/gy,2) + pow(h_error/h_y,2) ) * new_content
-                new_error_up = np.sqrt( pow(yErrUp/gy,2) + pow(h_error/h_y,2) ) * new_content
+                if include_tgraph_uncertainties:
+                    new_error_low = np.sqrt( pow(yErrLow/gy,2) + pow(h_error/h_y,2) ) * new_content
+                    new_error_up = np.sqrt( pow(yErrUp/gy,2) + pow(h_error/h_y,2) ) * new_content
+                else:
+                    new_error_low = h_error/h_y * new_content
+                    new_error_up = h_error/h_y * new_content
             else:
                 new_error_low = (yErrLow/gy) * new_content
                 new_error_up = (yErrUp/gy) * new_content
