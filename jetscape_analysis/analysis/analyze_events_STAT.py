@@ -932,7 +932,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 # NOTE: Since we haven't assigned to `jet_mass` yet, it still contains the unsubtracted mass
                                 self.observable_dict_event[f'inclusive_chjet_mass_alice_R{jetR}{jet_collection_label}_unsubtracted'].append([jet_pt, jet_mass])
                                 # Subtract hole four vectors from the original jet, and then take the mass
-                                jet_for_mass_calculation = fj.PseudoJet(jet)    # Avoid modifying the original jet.
+                                jet_for_mass_calculation = fj.PseudoJet()    # Avoid modifying the original jet.
+                                jet_for_mass_calculation.reset(jet)
                                 for hadron in holes_in_jet:
                                     jet_for_mass_calculation -= hadron
                                 jet_mass = jet_for_mass_calculation.m()
@@ -1283,9 +1284,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
             # Get the corrected jet pt by subtracting the negative recoils within R
             jet_pt = jet.pt()
-            for temp_hadron in fj_hadrons_negative:
-                if jet.delta_R(temp_hadron) < jetR:
-                    jet_pt -= temp_hadron.pt()
+
+            if fj_hadrons_negative:
+                for temp_hadron in fj_hadrons_negative:
+                    if jet.delta_R(temp_hadron) < jetR:
+                        jet_pt -= temp_hadron.pt()
 
             if not leading_jet:
                 leading_jet = jet
