@@ -5,18 +5,21 @@
 
   To run this script:
 
-    - Edit the configuration options at the start of main()
-    - Set up environment 
-        If downloading files from OSN, you will need to enter the STAT-XSEDE-2021 environment
-        For example:
+    - Set up environment:
+        If downloading from OSN ("download_runinfo" or "download_histograms" True):
             cd STAT-XSEDE-2021/scripts
             python -m venv venv            # only needed the first time
             source venv/bin/activate
             pip install .                  # only needed the first time
-        If plotting,
-            cd JETSCAPE-analysis && pipenv shell && source init_local.sh
-        [I think actually the venv will be sufficient for everything...but check]
+        If merging/plotting histograms ("merge_histograms", "aggregate_histograms", "plot_histograms" True), 
+        need ROOT compiled with python, e.g.:
+            export ROOTSYS=/path/to/root/root-current
+            source $ROOTSYS/bin/thisroot.sh
+            (e.g. cd JETSCAPE-analysis && pipenv shell && source init_local.sh)
+    - Edit the configuration options at the start of main()
     - Run script: python plot/steer_aggregate_and_plot_observables.py
+
+------------------------------------------------------------------------
 
   The workflow is as follows:
 
@@ -24,20 +27,18 @@
        
        This involves two steps:
          (i) Download runs.yaml for each facility, from STAT-XSEDE-2021/docs/DataManagement
-         (ii) Using these runs.yaml, download run_info.yaml for all runs and populate a dictionary with run info
+         (ii) Using these runs.yaml, download run_info.yaml for all runs and populate a dictionary with all relevant info for each run
     
-   (2) Download and merge histograms from a set of runs on OSN, using the dictionary from step (1).
+   (2) Download histograms for each run.
      
-       This involves two steps:
-         (i) Download all histograms into a file structure
-         (ii) Merge histograms from each run together.
+   (3) Merge histograms for each run together.
 
-   (3) Aggregate runs.
+   (4) Aggregate runs, using the dictionary from step (1).
        
        For each sqrts and design point, merge all histograms into a single one.
        (summed over facilities, run numbers, centralities)
 
-   (4) Plot final observables and write table for input to Bayesian analysis.
+   (5) Plot final observables and write table for input to Bayesian analysis.
 
        In the AA case, we plot the AA/pp ratios
        In the pp case, we plot the pp distributions
@@ -56,21 +57,25 @@ from collections import defaultdict
 
 # ---------------------------------------------------------------
 def main():
+
     #-----------------------------------------------------------------
     # Set which options you want to execute
     download_runinfo = False
     download_histograms = False
+    merge_histograms = True
     aggregate_histograms = False
     plot_histograms = False
 
     # Edit these parameters
     analysis_name = 'Analysis1'
-    facilities = ['bridges2', 'expanse'] # ['bridges2', 'expanse', 'stampede2']
+    facilities = ['bridges2', 'expanse']
     stat_xsede_2021_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/STAT-XSEDE-2021'
     local_base_outputdir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_Analysis1'
+    #-----------------------------------------------------------------
 
     #-----------------------------------------------------------------
     # (1) Download info for all runs from OSN, and create a dictionary with all info needed to download and aggregate histograms
+    #-----------------------------------------------------------------
     runs = {}
     run_dictionary = {}
 
@@ -105,8 +110,14 @@ def main():
                     run_dictionary[facility][run]['sqrt_s'] = run_info['sqrt_s']
                     run_dictionary[facility][run]['centrality'] = run_info['centrality']
                     if run_info['calculation_type'] == 'jet_energy_loss':
+                        if run_info['sqrt_s'] in [200]:
+                            run_dictionary[facility][run]['system'] = 'AuAu'
+                        elif run_info['sqrt_s'] in [2760, 5020]:
+                            run_dictionary[facility][run]['system'] = 'PbPb'
                         run_dictionary[facility][run]['design_point_index'] = run_info['parametrization']['design_point_index']
                         run_dictionary[facility][run]['parametrization'] = run_info['parametrization']
+                    else:
+                        run_dictionary[facility][run]['system'] = 'pp'
             else:
                 if download_runinfo:
                     print(f'Warning: {run}_info.yaml not found on OSN')
@@ -124,35 +135,55 @@ def main():
         print()
 
     #-----------------------------------------------------------------
-    # Download histograms
+    # Download histograms for each run
+    #-----------------------------------------------------------------
     if download_histograms:
+        print('Downloading all histograms...')
+        print()
 
-        # (i) Download all available histograms for each run
+        histogram_download_location = os.path.join(local_base_outputdir, 'histograms')
         for facility in facilities:
-            runs = [name for name in list(runs[facility].keys())]
-            for run in runs:
-                histogram_download_location = os.path.join(local_base_outputdir, f'histograms/{run}')
+            for run in runs[facility]:
                 download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
                 cmd = f'python {download_script} -s {facility}/{run}/ -d {histogram_download_location} -f histograms'
-                print(cmd)
                 subprocess.run(cmd, check=True, shell=True)
+                print()
 
-   
-        for run in runlist:
+        print('Done!')
 
-            local_run_dir = f'{local_base_dir}/Run{run}'
-            if not os.path.exists(local_run_dir):
-                os.makedirs(local_run_dir)
-            else:
-                continue
-
-            cmd = f'scp -r {remote_user}@{remote_hostname}:{stampede_base_dir}/Run{run}/histograms {local_run_dir}'
-            print(cmd)
-            subprocess.run(cmd, check=True, shell=True)
-            
     #-----------------------------------------------------------------
-    # Merge histograms
+    # Merge for each run into a single histogram per run
+    #-----------------------------------------------------------------
     if merge_histograms:
+
+        for facility in facilities:
+            for run in runs[facility]:
+
+                outputdir = os.path.join(local_base_outputdir, f'histograms/{facility}/{run}')
+                inputdir = os.path.join(outputdir, 'histograms')
+
+                if os.path.exists(outputdir):
+
+                    ROOT_files = os.listdir(os.path.join(local_base_outputdir, f'histograms/{facility}/{run}/histograms'))
+                    system = run_dictionary[facility][run]['system']
+                    sqrts = run_dictionary[facility][run]['sqrt_s']
+                    fname = f'histograms_{system}_Run{run}_{sqrts}_merged.root'
+
+                    cmd = f'hadd -j 8 -f {os.path.join(outputdir, fname)}'
+                    for file in ROOT_files:
+                        if '.root' in file:
+                            cmd += f' {os.path.join(inputdir, file)}'
+                    subprocess.run(cmd, check=True, shell=True)
+
+    #-----------------------------------------------------------------
+    # Aggregate histograms for runs with a common sqrts and design point
+    # (summed over facilities, run numbers, centralities)
+    #
+    # Note that we store xsec and weight_sum separately for each centrality, 
+    # such that we can merge before running plotting script     
+    #-----------------------------------------------------------------
+    if aggregate_histograms:
+        print('...')
 
         for run in runlist:
     
@@ -175,17 +206,10 @@ def main():
                 if '.root' in file:
                     cmd += f' {os.path.join(inputdir, file)}'
             subprocess.run(cmd, check=True, shell=True)
-
-    #-----------------------------------------------------------------
-    # Aggregate histograms -- combine centralities together
-    #
-    # Note that we store xsec and weight_sum separately for each centrality, 
-    # such that we can merge before running plotting script  
-    if aggregate_histograms:
-        print('...')
         
     #-----------------------------------------------------------------
     # Plot histograms
+    #-----------------------------------------------------------------
     if plot_histograms:
 
         # First plot pp
