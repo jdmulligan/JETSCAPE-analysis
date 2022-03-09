@@ -5,27 +5,29 @@
 
   To run this script:
 
+    - Edit the configuration options at the start of main()
+
     - Set up environment:
         If downloading from OSN ("download_runinfo" or "download_histograms" True):
             cd STAT-XSEDE-2021/scripts
             python -m venv venv            # only needed the first time
             source venv/bin/activate
             pip install .                  # only needed the first time
-        If merging/plotting histograms ("merge_histograms", "aggregate_histograms", "plot_histograms" True), 
+        If merging/plotting histograms ("merge_histograms", "aggregate_histograms", or "plot_histograms" True), 
         need ROOT compiled with python, e.g.:
             export ROOTSYS=/path/to/root/root-current
             source $ROOTSYS/bin/thisroot.sh
             (e.g. cd JETSCAPE-analysis && pipenv shell && source init_local.sh)
-    - Edit the configuration options at the start of main()
+
     - Run script: python plot/steer_aggregate_and_plot_observables.py
 
 ------------------------------------------------------------------------
 
-  The workflow is as follows:
+  The workflow is as follows, with each step toggle-able below:
 
    (1) Download run info for the set of runs on OSN.
        
-       This involves two steps:
+       This involves two pieces:
          (i) Download runs.yaml for each facility, from STAT-XSEDE-2021/docs/DataManagement
          (ii) Using these runs.yaml, download run_info.yaml for all runs and populate a dictionary with all relevant info for each run
     
@@ -38,12 +40,14 @@
        For each sqrts and design point, merge all histograms into a single one.
        (summed over facilities, run numbers, centralities)
 
-   (5) Plot final observables and write table for input to Bayesian analysis.
+   (5) Plot final observables, and write table for input to Bayesian analysis.
 
        In the AA case, we plot the AA/pp ratios
        In the pp case, we plot the pp distributions
 
-       We support the same specifications for retrieval of experimental as described for histogram binning.
+       Make plots for each design point, as well as a few global QA plots
+
+       We support the same specifications for retrieval of experimental data as described for histogram binning.
        See the STAT_{sqrts}.yaml files for documentation on how to specify the centralities to be looped over.
 
   Author: James Mulligan (james.mulligan@berkeley.edu)
@@ -64,7 +68,7 @@ def main():
     download_histograms = False
     merge_histograms = True
     aggregate_histograms = False
-    plot_histograms = False
+    plot_and_save = False
 
     # Edit these parameters
     analysis_name = 'Analysis1'
@@ -164,16 +168,19 @@ def main():
 
                 if os.path.exists(outputdir):
 
-                    ROOT_files = os.listdir(os.path.join(local_base_outputdir, f'histograms/{facility}/{run}/histograms'))
+                    ROOT_filenames = os.listdir(os.path.join(local_base_outputdir, f'histograms/{facility}/{run}/histograms'))
+                    file_list = os.path.join(outputdir, 'files_to_merge.txt')
+                    with open(file_list, 'w') as f:
+                        for filename in ROOT_filenames:
+                            f.write(f'{os.path.join(inputdir, filename)}\n')
+
                     system = run_dictionary[facility][run]['system']
                     sqrts = run_dictionary[facility][run]['sqrt_s']
-                    fname = f'histograms_{system}_Run{run}_{sqrts}_merged.root'
+                    fname = f'histograms_{system}_{run}_{sqrts}.root'
 
-                    cmd = f'hadd -j 8 -f {os.path.join(outputdir, fname)}'
-                    for file in ROOT_files:
-                        if '.root' in file:
-                            cmd += f' {os.path.join(inputdir, file)}'
+                    cmd = f'hadd -j 8 -f {os.path.join(outputdir, fname)} @{file_list}'
                     subprocess.run(cmd, check=True, shell=True)
+                    os.remove(file_list)
 
     #-----------------------------------------------------------------
     # Aggregate histograms for runs with a common sqrts and design point
