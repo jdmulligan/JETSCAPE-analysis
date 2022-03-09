@@ -58,6 +58,7 @@ import os
 import subprocess
 import yaml
 from collections import defaultdict
+import pathlib
 
 # ---------------------------------------------------------------
 def main():
@@ -66,8 +67,8 @@ def main():
     # Set which options you want to execute
     download_runinfo = False
     download_histograms = False
-    merge_histograms = True
-    aggregate_histograms = False
+    merge_histograms = False
+    aggregate_histograms = True
     plot_and_save = False
 
     # Edit these parameters
@@ -118,7 +119,6 @@ def main():
                             run_dictionary[facility][run]['system'] = 'AuAu'
                         elif run_info['sqrt_s'] in [2760, 5020]:
                             run_dictionary[facility][run]['system'] = 'PbPb'
-                        run_dictionary[facility][run]['design_point_index'] = run_info['parametrization']['design_point_index']
                         run_dictionary[facility][run]['parametrization'] = run_info['parametrization']
                     else:
                         run_dictionary[facility][run]['system'] = 'pp'
@@ -145,7 +145,7 @@ def main():
         print('Downloading all histograms...')
         print()
 
-        histogram_download_location = os.path.join(local_base_outputdir, 'histograms')
+        histogram_download_location = os.path.join(local_base_outputdir, 'histograms_per_run')
         for facility in facilities:
             for run in runs[facility]:
                 download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
@@ -163,12 +163,12 @@ def main():
         for facility in facilities:
             for run in runs[facility]:
 
-                outputdir = os.path.join(local_base_outputdir, f'histograms/{facility}/{run}')
+                outputdir = os.path.join(local_base_outputdir, f'histograms_per_run/{facility}/{run}')
                 inputdir = os.path.join(outputdir, 'histograms')
 
                 if os.path.exists(outputdir):
 
-                    ROOT_filenames = os.listdir(os.path.join(local_base_outputdir, f'histograms/{facility}/{run}/histograms'))
+                    ROOT_filenames = os.listdir(os.path.join(local_base_outputdir, f'histograms_per_run/{facility}/{run}/histograms'))
                     file_list = os.path.join(outputdir, 'files_to_merge.txt')
                     with open(file_list, 'w') as f:
                         for filename in ROOT_filenames:
@@ -183,36 +183,62 @@ def main():
                     os.remove(file_list)
 
     #-----------------------------------------------------------------
-    # Aggregate histograms for runs with a common sqrts and design point
-    # (summed over facilities, run numbers, centralities)
+    # Aggregate histograms for runs with a common: (sqrts, system, parametrization, design_point_index)
+    # We sum over: facilities, run numbers, centralities
     #
     # Note that we store xsec and weight_sum separately for each centrality, 
     # such that we can merge before running plotting script     
     #-----------------------------------------------------------------
     if aggregate_histograms:
-        print('...')
+        print('Aggregate histograms for runs with common (sqrts, system, parametrization, design_point_index)')
+        print()
 
-        for run in runlist:
-    
-            local_run_dir = f'{local_base_dir}/Run{run}'
-            inputdir = os.path.join(local_run_dir, 'histograms')
-            outputdir = os.path.join(local_run_dir, 'plot')
+        # Create a dict that stores list of local paths for each aggregated histogram:
+        #   aggregated_run_dictionary[(sqrts, system, parametrization_type, design_point_index)] = ['path/to/run1', 'path/to/run2', ...]
+        aggregated_run_dictionary = {}
+        for facility in facilities:
+            for run in runs[facility]:
+
+                filepath_base = os.path.join(local_base_outputdir, f'histograms_per_run/{facility}/{run}')
+                if not list(pathlib.Path(filepath_base).rglob('*.root')):
+                    continue
+
+                sqrts = run_dictionary[facility][run]['sqrt_s']
+                system = run_dictionary[facility][run]['system']
+                if run_dictionary[facility][run]['calculation_type'] == 'jet_energy_loss':
+                    parametrization = run_dictionary[facility][run]['parametrization']
+                    parametrization_type = parametrization['type']
+                    design_point_index = parametrization['design_point_index']
+                else:
+                    parametrization = None
+                    parametrization_type = None
+                    design_point_index = None
+
+                design_point_tuple = (sqrts, system, parametrization_type, design_point_index)
+                if design_point_tuple not in aggregated_run_dictionary.keys():
+                    aggregated_run_dictionary[design_point_tuple] = defaultdict(list)
+
+                filepath = os.path.join(filepath_base, f'histograms_{system}_{run}_{sqrts}.root')
+                aggregated_run_dictionary[design_point_tuple]['files'].append(filepath)
+                aggregated_run_dictionary[design_point_tuple]['parametrization'] = parametrization
+
+        # Merge each list of histograms together, and write into a new directory structure
+        outputdir_base = os.path.join(local_base_outputdir, 'histograms_aggregated')
+        for design_point_tuple in aggregated_run_dictionary.keys():
+            print(design_point_tuple)
+            print()
+            sqrts, system, parametrization_type, design_point_index = design_point_tuple
+            fname = f'histograms_design_point_{design_point_index}.root'
+
+            outputdir = os.path.join(outputdir_base, f'{sqrts}_{system}_{parametrization_type}')
             if not os.path.exists(outputdir):
                 os.makedirs(outputdir)
-            
-            system = os.listdir(inputdir)[0].split('_')[1]    
-            sqrts = os.listdir(inputdir)[0].split('_')[3]
-            #centrality = ?
-            #design_point_index = ?
-            #parameterization_type = ?
 
-            ROOT_files = os.listdir(inputdir)
-            fname = f'histograms_{system}_Run{run}_{sqrts}_merged.root'
             cmd = f'hadd -f {os.path.join(outputdir, fname)}'
-            for file in ROOT_files:
-                if '.root' in file:
-                    cmd += f' {os.path.join(inputdir, file)}'
+            for filepath in aggregated_run_dictionary[design_point_tuple]['files']:
+                cmd += f' {filepath}'
             subprocess.run(cmd, check=True, shell=True)
+            print()
         
     #-----------------------------------------------------------------
     # Plot histograms
