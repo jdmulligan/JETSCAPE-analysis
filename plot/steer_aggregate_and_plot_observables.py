@@ -37,18 +37,13 @@
 
    (4) Aggregate runs, using the dictionary from step (1).
        
-       For each sqrts and design point, merge all histograms into a single one.
-       (summed over facilities, run numbers, centralities)
+       For each (sqrts, system, parametrization_type, design_point_index), 
+       merge all histograms into a single one, summed over facilities, run numbers, centralities.
 
-   (5) Plot final observables, and write table for input to Bayesian analysis.
+   (5) Plot final observables for each design point, and write table for input to Bayesian analysis.
 
        In the AA case, we plot the AA/pp ratios
        In the pp case, we plot the pp distributions
-
-       Make plots for each design point, as well as a few global QA plots
-
-       We support the same specifications for retrieval of experimental data as described for histogram binning.
-       See the STAT_{sqrts}.yaml files for documentation on how to specify the centralities to be looped over.
 
   Author: James Mulligan (james.mulligan@berkeley.edu)
 """
@@ -66,18 +61,20 @@ def main():
 
     #-----------------------------------------------------------------
     # Set which options you want to execute
-    download_runinfo = False
+    download_runinfo = True
     download_histograms = False
     merge_histograms = False
     aggregate_histograms = False
-    plot_and_save = True
+    plot_and_save = False
 
     # Edit these parameters
-    analysis_name = 'Analysis1'
-    facilities = ['bridges2', 'expanse']
     stat_xsede_2021_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/JETSCAPE-analysis'
     local_base_outputdir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_Analysis1'
+
+    # You may need to edit these for a future analysis -- but can leave as is for now
+    analysis_name = 'Analysis1'
+    facilities = ['bridges2', 'expanse']
     #-----------------------------------------------------------------
 
     #-----------------------------------------------------------------
@@ -280,6 +277,7 @@ def main():
                 subprocess.run(cmd, check=True, shell=True)
 
         # Then plot AA, using appropriate pp reference
+        # TODO: This also writes the PbPb/pp values for each design point to a table to be used for Bayesian analysis
         for design_point_tuple in design_point_dictionary.keys():
             sqrts, system, parametrization_type, design_point_index = design_point_tuple
             if system in ['AuAu', 'PbPb']:
@@ -293,8 +291,6 @@ def main():
                     cmd += f' -r {pp_reference_filename}'
                     cmd += f' -o {outputdir}'
                     subprocess.run(cmd, check=True, shell=True)
-
-        # Write PbPb/pp values for each design point to table to be used for Bayesian analysis
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
