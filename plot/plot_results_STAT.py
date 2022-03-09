@@ -31,9 +31,15 @@ class PlotResults(common_base.CommonBase):
     # ---------------------------------------------------------------
     # Constructor
     # ---------------------------------------------------------------
-    def __init__(self, config_file='', input_file='', pp_ref_file='', **kwargs):
+    def __init__(self, config_file='', input_file='', output_dir='', pp_ref_file='', **kwargs):
         super(PlotResults, self).__init__(**kwargs)
-        self.output_dir = os.path.dirname(input_file)
+
+        if output_dir:
+            self.output_dir = output_dir
+            if not os.path.exists(self.output_dir):
+                os.makedirs(self.output_dir)
+        else:
+            self.output_dir = os.path.dirname(input_file)
 
         self.plot_utils = plot_results_STAT_utils.PlotUtils()
         self.plot_utils.setOptions()
@@ -1388,6 +1394,15 @@ if __name__ == '__main__':
         help='Input file'
     )
     parser.add_argument(
+        '-o',
+        '--outputDir',
+        action='store',
+        type=str,
+        metavar='outputDir',
+        default='',
+        help='Output directory for output to be written to',
+    )
+    parser.add_argument(
         '-r',
         '--refFile',
         action='store',
@@ -1410,5 +1425,5 @@ if __name__ == '__main__':
         print('File "{0}" does not exist! Exiting!'.format(args.inputFile))
         sys.exit(0)
 
-    analysis = PlotResults(config_file=args.configFile, input_file=args.inputFile, pp_ref_file=args.refFile)
+    analysis = PlotResults(config_file=args.configFile, input_file=args.inputFile, output_dir=args.outputDir, pp_ref_file=args.refFile)
     analysis.plot_results()
