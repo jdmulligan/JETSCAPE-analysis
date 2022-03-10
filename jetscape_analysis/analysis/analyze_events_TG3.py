@@ -10,12 +10,12 @@
 from __future__ import print_function
 
 # General
-import itertools
 import sys
 import os
 import argparse
 import yaml
 import numpy as np
+from collections import defaultdict
 
 # Fastjet via python (from external library heppy)
 import fastjet as fj
@@ -121,7 +121,15 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         f.Close()
         
         # Angularity
-        self.inclusive_chjet_angularity_alice_bins = np.linspace(0., 1., 100+1)
+        self.inclusive_chjet_angularity_alice_bins = defaultdict(dict)
+        for label in ['groomed', 'ungroomed']:
+            self.inclusive_chjet_angularity_alice_bins[label] = defaultdict(dict)
+            for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
+                for i,_ in enumerate(self.inclusive_chjet_observables['angularity_alice']['pt']):
+                    if i < len(self.inclusive_chjet_observables['angularity_alice']['pt'])-1:
+                        pt_min = self.inclusive_chjet_observables['angularity_alice']['pt'][i]
+                        pt_max = self.inclusive_chjet_observables['angularity_alice']['pt'][i+1]
+                        self.inclusive_chjet_angularity_alice_bins[label][f'{pt_min}-{pt_max}'][alpha] = np.array(self.inclusive_chjet_observables['angularity_alice']['bins'][label][f'{pt_min}-{pt_max}'][alpha])
 
         # Jet mass (binning not in hepdata)
         self.inclusive_chjet_mass_alice_bins = np.array(self.inclusive_chjet_observables['mass_alice']['bins'])
@@ -137,7 +145,24 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.inclusive_chjet_subjets_alice_bins = np.linspace(0., 1., 100+1)
         
         # Jet axis
-        self.inclusive_chjet_axis_alice_bins = np.linspace(0., 0.2, 200+1)
+        self.inclusive_chjet_axis_alice_bins = {}
+        self.inclusive_chjet_axis_alice_bins['Standard_WTA_R0.2'] = np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_WTA'])
+        self.inclusive_chjet_axis_alice_bins['WTA_SD_zcut01_R0.2'] = np.array(self.inclusive_chjet_observables['axis_alice']['bins_WTA_SD_zcut01'])
+        self.inclusive_chjet_axis_alice_bins['WTA_SD_zcut02_R0.2'] = np.array(self.inclusive_chjet_observables['axis_alice']['bins_WTA_SD_zcut02'])
+        self.inclusive_chjet_axis_alice_bins['Standard_SD_zcut01_R0.2'] = np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_SD_zcut01'])
+        self.inclusive_chjet_axis_alice_bins['Standard_SD_zcut02_R0.2'] = np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_SD_zcut02'])
+
+        self.inclusive_chjet_axis_alice_bins['Standard_WTA_R0.4'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_WTA'])
+        self.inclusive_chjet_axis_alice_bins['WTA_SD_zcut01_R0.4'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_WTA_SD_zcut01'])
+        self.inclusive_chjet_axis_alice_bins['WTA_SD_zcut02_R0.4'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_WTA_SD_zcut02'])
+        self.inclusive_chjet_axis_alice_bins['Standard_SD_zcut01_R0.4'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_SD_zcut01'])
+        self.inclusive_chjet_axis_alice_bins['Standard_SD_zcut02_R0.4'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_SD_zcut02'])
+
+        self.inclusive_chjet_axis_alice_bins['Standard_WTA_R0.5'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_WTA'])
+        self.inclusive_chjet_axis_alice_bins['WTA_SD_zcut01_R0.5'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_WTA_SD_zcut01'])
+        self.inclusive_chjet_axis_alice_bins['WTA_SD_zcut02_R0.5'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_WTA_SD_zcut02'])
+        self.inclusive_chjet_axis_alice_bins['Standard_SD_zcut01_R0.5'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_SD_zcut01'])
+        self.inclusive_chjet_axis_alice_bins['Standard_SD_zcut02_R0.5'] = 2*np.array(self.inclusive_chjet_observables['axis_alice']['bins_Standard_SD_zcut02'])
 
         # Hardest kt
         self.inclusive_chjet_hardest_kt_alice_R02_bins = np.array(self.inclusive_chjet_observables["hardest_kt_alice"]["bins_ktg_R02"])
@@ -292,11 +317,17 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Angularity (5.02 definition)
                 for label in ['groomed', 'ungroomed']:
                     for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
-                        hname = f'h_chjet_angularity_{label}_alice_R{jetR}_alpha{alpha}_pt{constituent_threshold}'
-                        h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_angularity_alice_bins)-1,
-                                                    self.inclusive_chjet_angularity_alice_bins)
-                        h.Sumw2()
-                        setattr(self, hname, h)
+                        for i,_ in enumerate(self.inclusive_chjet_observables['angularity_alice']['pt']):
+                            if i < len(self.inclusive_chjet_observables['angularity_alice']['pt'])-1:
+                                pt_min = self.inclusive_chjet_observables['angularity_alice']['pt'][i]
+                                pt_max = self.inclusive_chjet_observables['angularity_alice']['pt'][i+1]
+                                hname = f'h_chjet_angularity_{label}_alice_R{jetR}_pt{pt_min}-{pt_max}_alpha{alpha}_pt{constituent_threshold}'
+                                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_angularity_alice_bins[label][f'{pt_min}-{pt_max}'][alpha])-1, 
+                                                            self.inclusive_chjet_angularity_alice_bins[label][f'{pt_min}-{pt_max}'][alpha])
+
+                                            
+                                h.Sumw2()
+                                setattr(self, hname, h)
 
                 # Jet mass
                 hname = f'h_chjet_mass_alice_R{jetR}_pt{constituent_threshold}'
@@ -337,27 +368,45 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Subjet z
                 for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
                     hname = f'h_chjet_subjetz_alice_R{jetR}_r{r}_pt{constituent_threshold}'
-                    h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_subjets_alice_bins)-1,
-                                                    self.inclusive_chjet_subjets_alice_bins)
+                    h = ROOT.TH2F(hname, hname, len(self.inclusive_chjet_pt_bins)-1, self.inclusive_chjet_pt_bins,
+                                                len(self.inclusive_chjet_subjets_alice_bins)-1,
+                                                self.inclusive_chjet_subjets_alice_bins)
                     h.Sumw2()
                     setattr(self, hname, h)
             
                 # Jet axis
                 hname = f'h_chjet_axis_Standard_WTA_alice_R{jetR}_pt{constituent_threshold}'
-                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
-                                                self.inclusive_chjet_axis_alice_bins)
+                h = ROOT.TH2F(hname, hname, len(self.inclusive_chjet_pt_bins)-1, self.inclusive_chjet_pt_bins, 
+                                                len(self.inclusive_chjet_axis_alice_bins[f'Standard_WTA_R{jetR}'])-1,
+                                                self.inclusive_chjet_axis_alice_bins[f'Standard_WTA_R{jetR}'])
+                h.Sumw2()
+                setattr(self, hname, h)
+
+                hname = f'h_chjet_axis_WTA_SD_alice_R{jetR}_zcut01_pt{constituent_threshold}'
+                h = ROOT.TH2F(hname, hname, len(self.inclusive_chjet_pt_bins)-1, self.inclusive_chjet_pt_bins, 
+                                                len(self.inclusive_chjet_axis_alice_bins[f'WTA_SD_zcut01_R{jetR}'])-1,
+                                                self.inclusive_chjet_axis_alice_bins[f'WTA_SD_zcut01_R{jetR}'])
+                h.Sumw2()
+                setattr(self, hname, h)
+
+                hname = f'h_chjet_axis_WTA_SD_alice_R{jetR}_zcut02_pt{constituent_threshold}'
+                h = ROOT.TH2F(hname, hname, len(self.inclusive_chjet_pt_bins)-1, self.inclusive_chjet_pt_bins, 
+                                                len(self.inclusive_chjet_axis_alice_bins[f'WTA_SD_zcut02_R{jetR}'])-1,
+                                                self.inclusive_chjet_axis_alice_bins[f'WTA_SD_zcut02_R{jetR}'])
                 h.Sumw2()
                 setattr(self, hname, h)
                 
-                hname = f'h_chjet_axis_Standard_SD_alice_R{jetR}_pt{constituent_threshold}'
-                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
-                                                self.inclusive_chjet_axis_alice_bins)
+                hname = f'h_chjet_axis_Standard_SD_alice_R{jetR}_zcut01_pt{constituent_threshold}'
+                h = ROOT.TH2F(hname, hname, len(self.inclusive_chjet_pt_bins)-1, self.inclusive_chjet_pt_bins, 
+                                                len(self.inclusive_chjet_axis_alice_bins[f'Standard_SD_zcut01_R{jetR}'])-1,
+                                                self.inclusive_chjet_axis_alice_bins[f'Standard_SD_zcut01_R{jetR}'])
                 h.Sumw2()
                 setattr(self, hname, h)
                 
-                hname = f'h_chjet_axis_SD_WTA_alice_R{jetR}_pt{constituent_threshold}'
-                h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_axis_alice_bins)-1,
-                                                self.inclusive_chjet_axis_alice_bins)
+                hname = f'h_chjet_axis_Standard_SD_alice_R{jetR}_zcut02_pt{constituent_threshold}'
+                h = ROOT.TH2F(hname, hname, len(self.inclusive_chjet_pt_bins)-1, self.inclusive_chjet_pt_bins, 
+                                                len(self.inclusive_chjet_axis_alice_bins[f'Standard_SD_zcut02_R{jetR}'])-1,
+                                                self.inclusive_chjet_axis_alice_bins[f'Standard_SD_zcut02_R{jetR}'])
                 h.Sumw2()
                 setattr(self, hname, h)
 
@@ -462,8 +511,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # Analyze a single event -- fill user-defined output objects
     #
     # The jet finding is done on positive status particles (shower+recoil),
-    # and the negative status particles (holes) are then used after jet
-    # finding to perform corrections
+    # and the negative status particles (holes) using the negative recombiner
     # ---------------------------------------------------------------
     def analyze_event(self, event):
 
@@ -489,12 +537,22 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             fj_hadrons_negative = [hadron for hadron in fj_hadrons_negative_all if hadron.pt() > constituent_threshold]
             fj_hadrons_positive_charged = [hadron for hadron in fj_hadrons_positive_charged_all if hadron.pt() > constituent_threshold]
             fj_hadrons_negative_charged = [hadron for hadron in fj_hadrons_negative_charged_all if hadron.pt() > constituent_threshold]
+
+            if self.is_AA:
+                hadrons_for_jet_finding = list(fj_hadrons_positive) + list(fj_hadrons_negative)
+                hadrons_for_jet_finding_charged = list(fj_hadrons_positive_charged) + list(fj_hadrons_negative_charged)
+            else:
+                hadrons_for_jet_finding = list(fj_hadrons_positive)
+                hadrons_for_jet_finding_charged = list(fj_hadrons_positive_charged)
                 
             # Loop through specified jet R
             for jetR in self.jet_R:
                 
                 # Set jet definition and a jet selector
                 jet_def = fj.JetDefinition(fj.antikt_algorithm, jetR)
+                if self.is_AA:
+                    recombiner = fjext.NegativeEnergyRecombiner()
+                    jet_def.set_recombiner(recombiner)
                 jet_selector = fj.SelectorPtMin(self.min_jet_pt) & fj.SelectorAbsRapMax(self.max_jet_y)
                 if self.debug_level > 0:
                     print('jet definition is:', jet_def)
@@ -502,7 +560,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
 
                 # Full jets
                 # -----------------
-                cs = fj.ClusterSequence(fj_hadrons_positive, jet_def)
+                cs = fj.ClusterSequence(hadrons_for_jet_finding, jet_def)
                 jets = fj.sorted_by_pt(cs.inclusive_jets())
                 jets_selected = jet_selector(jets)
 
@@ -514,7 +572,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 
                 # Charged jets
                 # -----------------
-                cs_charged = fj.ClusterSequence(fj_hadrons_positive_charged, jet_def)
+                cs_charged = fj.ClusterSequence(hadrons_for_jet_finding_charged, jet_def)
                 jets_charged = fj.sorted_by_pt(cs_charged.inclusive_jets())
                 jets_selected_charged = jet_selector(jets_charged)
 
@@ -569,15 +627,15 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     # ---------------------------------------------------------------
     # Fill inclusive jet histograms
     #
-    # To correct jet pt: sum up the hole pt within R of jet axis
+    # To correct jet pt: taken care of by negative recombiner
     # To correct substructure:
     #   - For additive observables, sum up the hole substructure observable and subtract
     #   - For identified objects within jets or between jets (groomed jet, subjet, jet axis, delta_phi),
-    #     construct the observable only from the positive status particles, and correct only the jet pt
+    #     construct the observable only from the negative recombiner
     # ---------------------------------------------------------------
     def analyze_inclusive_jet(self, jet, fj_hadrons_positive, fj_hadrons_negative, jetR, constituent_threshold, charged=False):
 
-        # Get the corrected jet pt by subtracting the negative recoils within R
+        # Get the list of holes inside the jet -- we do not need to adjust the pt, but we want to keep track of the holes
         holes_in_jet = []
         negative_pt = 0.
         for hadron in fj_hadrons_negative:
@@ -585,8 +643,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 negative_pt += hadron.pt()
                 holes_in_jet.append(hadron)
     
-        jet_pt_uncorrected = jet.pt()               # uncorrected pt: shower+recoil
-        jet_pt = jet_pt_uncorrected - negative_pt   # corrected pt: shower+recoil-holes
+        jet_pt = jet.pt()
         
         if charged:
             getattr(self, f'h_chjet_pt_recoils_R{jetR}_pt{constituent_threshold}').Fill(jet_pt, negative_pt)
@@ -594,7 +651,12 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
             getattr(self, f'h_jet_pt_recoils_R{jetR}_pt{constituent_threshold}').Fill(jet_pt, negative_pt)
             
         # Construct groomed jet
-        gshop = fjcontrib.GroomerShop(jet, jetR, fj.cambridge_algorithm)
+        # For negative_recombiner case, we set the negative recombiner also for the C/A reclustering
+        jet_def = fj.JetDefinition(fj.cambridge_algorithm, jetR)
+        if self.is_AA:
+            recombiner = fjext.NegativeEnergyRecombiner()
+            jet_def.set_recombiner(recombiner)
+        gshop = fjcontrib.GroomerShop(jet, jet_def)
 
         # Fill histograms
         if charged:
@@ -643,52 +705,64 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
     def fill_charged_jet_histograms(self, jet, gshop, holes_in_jet, jet_pt, jetR, constituent_threshold):
     
         # Grooming jet
-        jet_groomed_lund = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], self.inclusive_chjet_observables['soft_drop_zcut'][0], jetR)
+        jet_groomed_lund = {0.1: None, 0.2: None}
+        for zcut in self.inclusive_chjet_observables['soft_drop_zcut']:
+            jet_groomed_lund[zcut] = gshop.soft_drop(self.inclusive_chjet_observables['soft_drop_beta'], zcut, jetR)
     
         # g
         if 40 < jet_pt < 60 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             g = 0
-            for constituent in jet.constituents():
-                g += constituent.pt() / jet_pt * constituent.delta_R(jet)
-            for hadron in holes_in_jet:
-                g -= hadron.pt() / jet_pt * hadron.delta_R(jet)
+            for hadron in jet.constituents():
+                if hadron.user_index() > 0:
+                    g += hadron.pt() / jet_pt * hadron.delta_R(jet)
+                for hadron in holes_in_jet:
+                    if hadron.user_index() > 0:
+                        continue
+                    g -= hadron.pt() / jet_pt * hadron.delta_R(jet)
             getattr(self, f'h_chjet_g_alice_R{jetR}_pt{constituent_threshold}').Fill(g)
 
         # Angularity (5.02 definition)
-        if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+        if 20 < jet_pt < 150 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             for alpha in self.inclusive_chjet_observables['angularity_alice']['alpha']:
-            
-                kappa=1
-                lambda_alpha = fjext.lambda_beta_kappa(jet, alpha, kappa, jetR)
-                for hadron in holes_in_jet:
-                    lambda_alpha -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet), alpha)
-                getattr(self, f'h_chjet_angularity_ungroomed_alice_R{jetR}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha)
-                
-                if jet_groomed_lund:
-                    lambda_alpha_g = fjext.lambda_beta_kappa(jet_groomed_lund.pair(), alpha, kappa, jetR)
-                    for hadron in holes_in_jet:
-                        lambda_alpha_g -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet), alpha)
-                    getattr(self, f'h_chjet_angularity_groomed_alice_R{jetR}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha_g)
+                for i,_ in enumerate(self.inclusive_chjet_observables['angularity_alice']['pt']):
+                    if i < len(self.inclusive_chjet_observables['angularity_alice']['pt'])-1:
+                        pt_min = self.inclusive_chjet_observables['angularity_alice']['pt'][i]
+                        pt_max = self.inclusive_chjet_observables['angularity_alice']['pt'][i+1]
+                        if pt_min < jet_pt < pt_max:
+
+                            lambda_alpha = 0
+                            for hadron in jet.constituents():
+                                if hadron.user_index() > 0:
+                                    lambda_alpha += hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
+                            for hadron in holes_in_jet:
+                                if hadron.user_index() > 0:
+                                    continue
+                                lambda_alpha -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
+                            getattr(self, f'h_chjet_angularity_ungroomed_alice_R{jetR}_pt{pt_min}-{pt_max}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha)
+                            
+                            if jet_groomed_lund[0.2]:
+                                lambda_alpha_g = 0
+                                if jet_groomed_lund[0.2].pair().has_constituents():
+                                    for hadron in jet_groomed_lund[0.2].pair().constituents():
+                                        if hadron.user_index() > 0:
+                                            lambda_alpha_g += hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
+                                    for hadron in holes_in_jet:
+                                        if hadron.user_index() > 0:
+                                            continue
+                                        for groomed_hadron in jet_groomed_lund[0.2].pair().constituents():
+                                            if np.isclose(hadron.pt(), groomed_hadron.pt()) and np.isclose(hadron.eta(), groomed_hadron.eta()) and np.isclose(hadron.phi(), groomed_hadron.phi()):
+                                                lambda_alpha_g -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
+                                                break                                            
+                                            
+                                    getattr(self, f'h_chjet_angularity_groomed_alice_R{jetR}_pt{pt_min}-{pt_max}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha_g)
 
         # Jet mass
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
-        
             jet_mass = jet.m()
-
-            # Add holes together as four vectors, and then calculate their mass, removing it from the jet mass.
-            if holes_in_jet:
-                # Avoid modifying the original hole.
-                hole_four_vector = fj.PseudoJet()
-                for hadron in holes_in_jet:
-                    hole_four_vector += hadron
-
-                # Remove mass from holes
-                jet_mass -= hole_four_vector.m()
-
             getattr(self, f'h_chjet_mass_alice_R{jetR}_pt{constituent_threshold}').Fill(jet_mass)
             
         # Subjet z
-        if 80 < jet_pt < 120 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+        if 20 < jet_pt < 200 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             for r in self.inclusive_chjet_observables['subjetz_alice']['r']:
                 
                 cs_subjet = fj.ClusterSequence(jet.constituents(), fj.JetDefinition(fj.antikt_algorithm, r))
@@ -703,30 +777,39 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                     z_leading = 0.999
                 
                 # Fill histogram
-                getattr(self, f'h_chjet_subjetz_alice_R{jetR}_r{r}_pt{constituent_threshold}').Fill(z_leading)
+                getattr(self, f'h_chjet_subjetz_alice_R{jetR}_r{r}_pt{constituent_threshold}').Fill(jet_pt, z_leading)
         
         # Jet axis
-        if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+        if 20 < jet_pt < 300 and abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
             
             # Recluster with WTA (with larger jet R)
             jet_def_wta = fj.JetDefinition(fj.cambridge_algorithm, 2*jetR)
+            if self.is_AA:
+                recombiner = fjext.NegativeEnergyRecombiner()
+                jet_def_wta.set_recombiner(recombiner)
             jet_def_wta.set_recombination_scheme(fj.WTA_pt_scheme)
             reclusterer_wta = fjcontrib.Recluster(jet_def_wta)
             jet_wta = reclusterer_wta.result(jet)
             
             # Standard-WTA
             deltaR = jet.delta_R(jet_wta)
-            getattr(self, f'h_chjet_axis_Standard_WTA_alice_R{jetR}_pt{constituent_threshold}').Fill(deltaR)
-
-            # Standard-SD
-            if jet_groomed_lund:
-                deltaR = jet.delta_R(jet_groomed_lund.pair())
-                getattr(self, f'h_chjet_axis_Standard_SD_alice_R{jetR}_pt{constituent_threshold}').Fill(deltaR)
+            getattr(self, f'h_chjet_axis_Standard_WTA_alice_R{jetR}_pt{constituent_threshold}').Fill(jet_pt, deltaR)
 
             # SD-WTA
-            if jet_groomed_lund:
-                deltaR = jet_wta.delta_R(jet_groomed_lund.pair())
-                getattr(self, f'h_chjet_axis_SD_WTA_alice_R{jetR}_pt{constituent_threshold}').Fill(deltaR)
+            if jet_groomed_lund[0.1]:
+                deltaR = jet_wta.delta_R(jet_groomed_lund[0.1].pair())
+                getattr(self, f'h_chjet_axis_WTA_SD_alice_R{jetR}_zcut01_pt{constituent_threshold}').Fill(jet_pt, deltaR)
+            if jet_groomed_lund[0.2]:
+                deltaR = jet_wta.delta_R(jet_groomed_lund[0.2].pair())
+                getattr(self, f'h_chjet_axis_WTA_SD_alice_R{jetR}_zcut02_pt{constituent_threshold}').Fill(jet_pt, deltaR)
+
+            # Standard-SD
+            if jet_groomed_lund[0.1]:
+                deltaR = jet.delta_R(jet_groomed_lund[0.1].pair())
+                getattr(self, f'h_chjet_axis_Standard_SD_alice_R{jetR}_zcut01_pt{constituent_threshold}').Fill(jet_pt, deltaR)
+            if jet_groomed_lund[0.2]:
+                deltaR = jet.delta_R(jet_groomed_lund[0.2].pair())
+                getattr(self, f'h_chjet_axis_Standard_SD_alice_R{jetR}_zcut02_pt{constituent_threshold}').Fill(jet_pt, deltaR)
 
         # Hardest kt
         if 60 < jet_pt < 80 and abs(jet.eta()) < (self.inclusive_chjet_observables["eta_cut_alice_R"] - jetR):
@@ -736,7 +819,7 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                 # Note: untagged will return kt = 0
                 getattr(self, f"h_chjet_ktg_dyg_a_{round(a*10):03}_alice_R{round(jetR*10):02}_pt{constituent_threshold}").Fill(ktg)
 
-            ktg = jet_groomed_lund.kt()
+            ktg = jet_groomed_lund[0.2].kt()
             # Note: untagged jets will return kt = 0
             getattr(self, f"h_chjet_ktg_soft_drop_z_cut_02_alice_R{round(jetR*10):02}_pt{constituent_threshold}").Fill(ktg)
             
