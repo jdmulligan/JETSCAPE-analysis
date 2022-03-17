@@ -25,13 +25,17 @@
 
   The workflow is as follows, with each step toggle-able below:
 
-   (1) Download run info for the set of runs on OSN.
+   (1) Download run info for the set of runs on OSN. 
        
        This involves two pieces:
          (i) Download runs.yaml for each facility, from STAT-XSEDE-2021/docs/DataManagement
          (ii) Using these runs.yaml, download run_info.yaml for all runs and populate a dictionary with all relevant info for each run
+
+       By default this will only download files that you have not downloaded locally. You can force re-download all with force_download=True.
     
    (2) Download histograms for each run.
+
+       By default this will only download files that you have not downloaded locally. You can force re-download all with force_download=True.
      
    (3) Merge histograms for each run together.
 
@@ -55,22 +59,26 @@ import yaml
 import pickle
 from collections import defaultdict
 import pathlib
+import numpy as np
+import pandas as pd
+import h5py
 
 # ---------------------------------------------------------------
 def main():
 
     #-----------------------------------------------------------------
     # Set which options you want to execute
-    download_runinfo = True
+    download_runinfo = False
     download_histograms = False
     merge_histograms = False
     aggregate_histograms = False
-    plot_and_save = False
+    plot_and_save = True
 
     # Edit these parameters
     stat_xsede_2021_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/JETSCAPE-analysis'
     local_base_outputdir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_Analysis1'
+    force_download = False
 
     # You may need to edit these for a future analysis -- but can leave as is for now
     analysis_name = 'Analysis1'
@@ -102,13 +110,20 @@ def main():
             for run in runs[facility]:
 
                 run_info_download_location = os.path.join(local_base_outputdir, 'run_info')
+                run_info_file = os.path.join(run_info_download_location, f'{facility}/{run}/{run}_info.yaml')
+
                 if download_runinfo:
-                    download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
-                    cmd = f'python {download_script} -s {facility}/{run}/ -d {run_info_download_location} -f {run}_info.yaml'
-                    subprocess.run(cmd, check=True, shell=True)
+                    if os.path.exists(run_info_file) and not force_download:
+                        print(f'File already exists, will not re-download: {run_info_file} ')
+                    else:
+                        if force_download:
+                            print('Force download enabled -- re-download all runinfo files...')
+
+                        download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
+                        cmd = f'python {download_script} -s {facility}/{run}/ -d {run_info_download_location} -f {run}_info.yaml'
+                        subprocess.run(cmd, check=True, shell=True)
 
                 # Add the run_info block to the run_dictionary
-                run_info_file = os.path.join(run_info_download_location, f'{facility}/{run}/{run}_info.yaml')
                 if os.path.exists(run_info_file):
                     with open(run_info_file, 'r') as f:
                         run_info = yaml.safe_load(f)
@@ -149,10 +164,18 @@ def main():
         histogram_download_location = os.path.join(local_base_outputdir, 'histograms_per_run')
         for facility in facilities:
             for run in runs[facility]:
-                download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
-                cmd = f'python {download_script} -s {facility}/{run}/ -d {histogram_download_location} -f histograms'
-                subprocess.run(cmd, check=True, shell=True)
-                print()
+
+                histogram_dir = os.path.join(histogram_download_location, f'{facility}/{run}/histograms')
+                if os.path.exists(histogram_dir) and not force_download:
+                    print(f'Histogram dir already exists, will not re-download: {histogram_dir} ')
+                else:
+                    if force_download:
+                        print('Force download enabled -- re-download all histograms...')
+
+                    download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
+                    cmd = f'python {download_script} -s {facility}/{run}/ -d {histogram_download_location} -f histograms'
+                    subprocess.run(cmd, check=True, shell=True)
+                    print()
 
         print('Done!')
 
@@ -276,12 +299,11 @@ def main():
                 cmd += f' -o {outputdir}'
                 subprocess.run(cmd, check=True, shell=True)
 
-        # Then plot AA, using appropriate pp reference
-        # TODO: This also writes the PbPb/pp values for each design point to a table to be used for Bayesian analysis
+        # Then plot AA, using appropriate pp reference, and construct dataframe of PbPb/pp values to be used for Bayesian analysis
         for design_point_tuple in design_point_dictionary.keys():
             sqrts, system, parametrization_type, design_point_index = design_point_tuple
             if system in ['AuAu', 'PbPb']:
-                outputdir = os.path.join(local_base_outputdir, f'plot/{sqrts}_{system}_{parametrization_type}')       
+                outputdir = os.path.join(local_base_outputdir, f'plot/{sqrts}_{system}_{parametrization_type}/{design_point_index}')       
                 inputfile = os.path.join(outputdir_base, f'{sqrts}_{system}_{parametrization_type}/histograms_design_point_{design_point_index}.root')  
                 pp_reference_filename = os.path.join(local_base_outputdir, f'plot/{sqrts}_pp/final_results.root') 
                 if os.path.exists(pp_reference_filename):
@@ -291,6 +313,43 @@ def main():
                     cmd += f' -r {pp_reference_filename}'
                     cmd += f' -o {outputdir}'
                     subprocess.run(cmd, check=True, shell=True)
+
+        # Construct table of model predictions for all design points, as input to Bayesian analysis
+        # We can easily adapt this to the format v1.0 specified here, although we may want to update a bit: https://www.evernote.com/l/ACWFCWrEcPxHPJ3_P0zUT74nuasCoL_DBmY
+        print()
+        print('Write predictions to table...')
+        plot_dir = os.path.join(local_base_outputdir, 'plot')
+        for label in os.listdir(plot_dir):
+            if 'AuAu' in label or 'PbPb' in label:
+
+                output_dict = {}
+
+                # Loop through design points and observables, and construct a dataframe for each observable
+                #   columns=[design1, design2, ...]
+                #   rows=[bin1, bin2, ...]
+                label_dir = os.path.join(plot_dir, label)
+                for design_point_index in os.listdir(label_dir):
+                    if not os.path.isfile(os.path.join(label_dir, design_point_index)):
+
+                        final_result_h5 = os.path.join(f'{label_dir}/{design_point_index}', 'final_results.h5')
+
+                        with h5py.File(final_result_h5, 'r') as hf:
+                            for key in list(hf.keys()):
+                                if 'values' in key:
+                                    if key not in output_dict:
+                                        output_dict[key] = pd.DataFrame()
+                                    output_dict[key][f'design_point{design_point_index}'] = hf[key][:]
+
+                # Write dataframes to csv
+                # TODO: Some df's seem to have a bunch of leading bins with value 0
+                output_dir = os.path.join(label_dir, 'tables')
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+
+                for key,df in output_dict.items():
+                    filename = os.path.join(output_dir, f'Predictions_{key}.csv')
+                    df.to_csv(filename)
+        print('Done!')
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------

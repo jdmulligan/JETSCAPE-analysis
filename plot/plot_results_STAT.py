@@ -16,6 +16,8 @@ import argparse
 # Data analysis and plotting
 import ROOT
 import numpy as np
+import uproot
+import h5py
 
 # Base class
 sys.path.append('.')
@@ -1318,11 +1320,12 @@ class PlotResults(common_base.CommonBase):
     # Save all ROOT histograms to file
     # ---------------------------------------------------------------
     def write_output_objects(self):
+        print()
 
-        # Save output objects
-        self.output_filename = os.path.join(self.output_dir, 'final_results.root')
-        fout = ROOT.TFile(self.output_filename, 'recreate')
-        fout.cd()
+        # Save histograms to ROOT file
+        output_ROOT_filename = os.path.join(self.output_dir, 'final_results.root')
+        f_ROOT = ROOT.TFile(output_ROOT_filename, 'recreate')
+        f_ROOT.cd()
         for key,val in self.output_dict.items():
             if val:
                 val.SetName(key)
@@ -1330,7 +1333,25 @@ class PlotResults(common_base.CommonBase):
                 if isinstance(val, (ROOT.TH1)):
                     val.SetDirectory(0)
                     del val
-        fout.Close()
+        f_ROOT.Close()
+
+        # Also save JETSCAPE AA/pp ratios as numpy arrays to HDF5 file
+        if self.is_AA:
+            with uproot.open(output_ROOT_filename) as uproot_file:
+                output_HDF5_filename = os.path.join(self.output_dir, 'final_results.h5')
+                with h5py.File(output_HDF5_filename, 'w') as hf:
+
+                    keys = [key.split(';',1)[0] for key in uproot_file.keys()]
+                    for key in keys:
+                        if 'jetscape' in key:
+
+                            bin_edges = uproot_file[key].axis().edges()
+                            values = uproot_file[key].values()
+                            errors = uproot_file[key].errors()
+
+                            hf.create_dataset(f'{key}_bin_edges', data=bin_edges)
+                            hf.create_dataset(f'{key}_values', data=values)
+                            hf.create_dataset(f'{key}_errors', data=errors)
 
     #-------------------------------------------------------------------------------------------
     # Generate pptx of one plot per slide, for convenience
