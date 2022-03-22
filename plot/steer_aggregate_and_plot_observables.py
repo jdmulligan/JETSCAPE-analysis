@@ -75,9 +75,9 @@ def main():
     plot_and_save = True
 
     # Edit these parameters
-    stat_xsede_2021_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/STAT-XSEDE-2021'
-    jetscape_analysis_dir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/Users/jamesmulligan/JETSCAPE/jetscape-docker/xsede_Analysis1'
+    stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
+    jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1'
     force_download = False
 
     # You may need to edit these for a future analysis -- but can leave as is for now
@@ -92,6 +92,7 @@ def main():
 
         runs = {}
         run_dictionary = {}
+        missing_runinfo = defaultdict(list)
 
         # (i) Load the runs.yaml for each facility from STAT-XSEDE-2021
         for facility in facilities.copy():
@@ -107,7 +108,7 @@ def main():
         for facility in facilities:
 
             run_dictionary[facility] = defaultdict(dict)
-            for run in runs[facility]:
+            for run in runs[facility].copy():
 
                 run_info_download_location = os.path.join(local_base_outputdir, 'run_info')
                 run_info_file = os.path.join(run_info_download_location, f'{facility}/{run}/{run}_info.yaml')
@@ -141,17 +142,23 @@ def main():
                 else:
                     if download_runinfo:
                         print(f'Warning: {run}_info.yaml not found on OSN')
+                    runs[facility].remove(run)
+                    missing_runinfo[facility].append(run)
+
                 if download_runinfo:
                     print()
 
         # Print what we found
-        print('We found the following runs:')
-        print()
         for facility in facilities:
-            print(f'  {facility}:')
+            print(f'{facility}:')
             print()
-            for run in runs[facility]:
-                    print(f'    {run}: {dict(run_dictionary[facility][run])}')
+            print('  We found the following runs:')
+            print()
+            print(f'    {list(dict(run_dictionary[facility]).keys())}')
+            print()
+            print(f'Warning: We did NOT find run_info for the following runs:')
+            print(f'    {missing_runinfo[facility]}')
+            print()
             print()
 
     #-----------------------------------------------------------------
