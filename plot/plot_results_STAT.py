@@ -96,20 +96,33 @@ class PlotResults(common_base.CommonBase):
     #-------------------------------------------------------------------------------------------
     def plot_results(self):
 
-        self.plot_hadron_observables(observable_type='hadron')
+        self.analysis = 'Analysis1'
+        
+        if self.analysis == 'Analysis1':
 
-        self.plot_hadron_correlation_observables(observable_type='hadron_correlations')
+            self.plot_hadron_observables(observable_type='hadron')
+                        
+            self.plot_jet_observables(observable_type='inclusive_chjet')
 
-        self.plot_jet_observables(observable_type='inclusive_chjet')
+            if 'inclusive_jet' in self.config:
+                self.plot_jet_observables(observable_type='inclusive_jet')
 
-        if 'inclusive_jet' in self.config:
-            self.plot_jet_observables(observable_type='inclusive_jet')
+        else:
 
-        if 'semi_inclusive_chjet' in self.config:
-            self.plot_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
+            self.plot_hadron_observables(observable_type='hadron')
 
-        if 'dijet' in self.config:
-            self.plot_jet_observables(observable_type='dijet')
+            self.plot_hadron_correlation_observables(observable_type='hadron_correlations')
+
+            self.plot_jet_observables(observable_type='inclusive_chjet')
+
+            if 'inclusive_jet' in self.config:
+                self.plot_jet_observables(observable_type='inclusive_jet')
+
+            if 'semi_inclusive_chjet' in self.config:
+                self.plot_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
+
+            if 'dijet' in self.config:
+                self.plot_jet_observables(observable_type='dijet')
 
         self.plot_event_qa()
 
@@ -184,6 +197,11 @@ class PlotResults(common_base.CommonBase):
 
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
+
+                if self.analysis == 'Analysis1':
+                    if not observable.startswith('pt_'):
+                        print(f'skipping {observable}')
+                        continue
 
                 for self.jet_R in block['jet_R']:
 

@@ -219,21 +219,25 @@ class PlotUtils(common_base.CommonBase):
             return None
 
         # Get the appropriate centrality entry in the list
-        if isinstance(data[key]['y'][0], list):
-            y = np.array(data[key]['y'][centrality_index])
-            if 'y_err' in data[key]:
-                y_err = np.array(data[key]['y_err'][centrality_index])
-        else:
-            y = np.array(data[key]['y'])
-            if 'y_err' in data[key]:
-                y_err = np.array(data[key]['y_err'])
-
         if 'x' in data[key]:
             x = np.array(data[key]['x'][centrality_index])
         else:
             bins = np.array(block['bins'])
             x = (bins[1:] + bins[:-1]) / 2
         n = len(x)
+
+        if isinstance(data[key]['y'][0], list):
+            y = np.array(data[key]['y'][centrality_index])
+            if 'y_err' in data[key]:
+                y_err = np.array(data[key]['y_err'][centrality_index])
+            else:
+                y_err = np.zeros(n)
+        else:
+            y = np.array(data[key]['y'])
+            if 'y_err' in data[key]:
+                y_err = np.array(data[key]['y_err'])
+            else:
+                y_err = np.zeros(n)
 
         # Construct TGraph
         g = ROOT.TGraphAsymmErrors(n, x, y, np.zeros(n), np.zeros(n), y_err, y_err)
