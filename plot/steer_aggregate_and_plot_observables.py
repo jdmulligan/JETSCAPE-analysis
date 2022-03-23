@@ -15,9 +15,9 @@
             pip install .                  # only needed the first time
         If merging/plotting histograms ("merge_histograms", "aggregate_histograms", or "plot_histograms" True), 
         need ROOT compiled with python, e.g.:
-            export ROOTSYS=/path/to/root/root-current
+            [enter virtual environment with needed python packages, and same python version as ROOT build]
+            export ROOTSYS=/home/software/users/james/heppy/external/packages/root-6.18.04-python
             source $ROOTSYS/bin/thisroot.sh
-            (e.g. cd JETSCAPE-analysis && pipenv shell && source init_local.sh)
 
     - Run script: python plot/steer_aggregate_and_plot_observables.py
 
@@ -72,7 +72,8 @@ def main():
     download_histograms = False
     merge_histograms = False
     aggregate_histograms = False
-    plot_and_save = True
+    plot_and_save_histograms = False
+    write_tables = True
 
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
@@ -284,9 +285,9 @@ def main():
             pickle.dump(design_point_dictionary, f)
         
     #-----------------------------------------------------------------
-    # Plot histograms and save output table
+    # Plot histograms and save to ROOT files
     #-----------------------------------------------------------------
-    if plot_and_save:
+    if plot_and_save_histograms:
 
         # Get dictionary containing info for each design point: (sqrts, system, parametrization_type, design_point_index)
         outputdir_base = os.path.join(local_base_outputdir, 'histograms_aggregated')
@@ -321,6 +322,11 @@ def main():
                     cmd += f' -o {outputdir}'
                     subprocess.run(cmd, check=True, shell=True)
 
+    #-----------------------------------------------------------------
+    # Convert histograms to data tables and save
+    #-----------------------------------------------------------------
+    if write_tables:
+
         # Construct table of model predictions for all design points, as input to Bayesian analysis
         # We can easily adapt this to the format v1.0 specified here, although we may want to update a bit: https://www.evernote.com/l/ACWFCWrEcPxHPJ3_P0zUT74nuasCoL_DBmY
         print()
@@ -336,7 +342,7 @@ def main():
                 #   rows=[bin1, bin2, ...]
                 label_dir = os.path.join(plot_dir, label)
                 for design_point_index in os.listdir(label_dir):
-                    if not os.path.isfile(os.path.join(label_dir, design_point_index)):
+                    if not os.path.isfile(os.path.join(label_dir, design_point_index)) and design_point_index != 'tables':
 
                         final_result_h5 = os.path.join(f'{label_dir}/{design_point_index}', 'final_results.h5')
 
@@ -356,6 +362,7 @@ def main():
                 for key,df in output_dict.items():
                     filename = os.path.join(output_dir, f'Predictions_{key}.csv')
                     df.to_csv(filename)
+                    
         print('Done!')
 
 #-------------------------------------------------------------------------------------------
