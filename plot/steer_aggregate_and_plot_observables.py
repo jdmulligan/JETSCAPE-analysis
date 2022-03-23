@@ -331,6 +331,7 @@ def main():
         # We can easily adapt this to the format v1.0 specified here, although we may want to update a bit: https://www.evernote.com/l/ACWFCWrEcPxHPJ3_P0zUT74nuasCoL_DBmY
         print()
         print('Write predictions to table...')
+        table_base_dir = os.path.join(local_base_outputdir, 'tables')
         plot_dir = os.path.join(local_base_outputdir, 'plot')
         for label in os.listdir(plot_dir):
             if 'AuAu' in label or 'PbPb' in label:
@@ -355,7 +356,7 @@ def main():
 
                 # Write dataframes to csv
                 # TODO: Some df's seem to have a bunch of leading bins with value 0
-                output_dir = os.path.join(label_dir, 'tables')
+                output_dir = os.path.join(table_base_dir, label)
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
 
