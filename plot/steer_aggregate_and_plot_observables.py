@@ -362,6 +362,7 @@ def main():
 
                 for key,df in output_dict.items():
                     filename = os.path.join(output_dir, f'Predictions_{key}.csv')
+                    df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) # Sort columns
                     df.to_csv(filename)
                     
         print('Done!')
