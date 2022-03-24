@@ -360,11 +360,13 @@ def main():
                                         output_dict[key] = pd.DataFrame()
                                     output_dict[key][f'design_point{design_point_index}'] = hf[key][:]
 
-                # Write dataframes to csv
-                # TODO: Some df's seem to have a bunch of leading bins with value 0
+                # Write dataframes to txt
                 # TODO: For now we use negative recombiner for jet observables
                 for key,df in output_dict.items():
                     if 'jetscape_distribution' in key and 'values' in key:
+
+                        # Sort columns
+                        df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) 
 
                         key_items = key.split('_')
                         if 'hadron' in key and 'unsubtracted' not in key:
@@ -372,6 +374,16 @@ def main():
                             observable = f'{key_items[2]}_{key_items[3]}_{key_items[4]}'
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[7].split(',')]
                             observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+
+                            # Remove rows with leading zeros (corresponding to bins below the min_pt cut)
+                            n_zero_rows = 0
+                            for row in df.to_numpy():
+                                if np.all(row == 0):
+                                    n_zero_rows += 1
+                                else:
+                                    break
+                            df = df.iloc[n_zero_rows:, :]
+
                         elif 'negative_recombiner' in key and '_y_' not in key:
                             experiment = key_items[7]
                             observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[11]}'
@@ -381,7 +393,6 @@ def main():
                             continue
 
                         filename = os.path.join(table_base_dir, f'Prediction_{observable_name}.dat')
-                        df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) # Sort columns
                         design_point_file = 'Design.dat'
                         header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}'
                         np.savetxt(filename, df.values, header=header)
