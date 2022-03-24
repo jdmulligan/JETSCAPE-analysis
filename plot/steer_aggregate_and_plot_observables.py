@@ -54,6 +54,7 @@
 
 # General
 import os
+import sys
 import subprocess
 import yaml
 import pickle
@@ -333,8 +334,13 @@ def main():
         print('Write predictions to table...')
         table_base_dir = os.path.join(local_base_outputdir, 'tables')
         plot_dir = os.path.join(local_base_outputdir, 'plot')
+
+        if not os.path.exists(table_base_dir):
+            os.makedirs(table_base_dir)
+
         for label in os.listdir(plot_dir):
             if 'AuAu' in label or 'PbPb' in label:
+                sqrts, system, parameterization  = label.split('_')
 
                 output_dict = {}
 
@@ -356,14 +362,31 @@ def main():
 
                 # Write dataframes to csv
                 # TODO: Some df's seem to have a bunch of leading bins with value 0
-                output_dir = os.path.join(table_base_dir, label)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-
+                # TODO: For now we use negative recombiner for jet observables
                 for key,df in output_dict.items():
-                    filename = os.path.join(output_dir, f'Predictions_{key}.csv')
-                    df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) # Sort columns
-                    df.to_csv(filename)
+                    if 'jetscape_distribution' in key and 'values' in key:
+
+                        key_items = key.split('_')
+                        if 'hadron' in key and 'unsubtracted' not in key:
+                            experiment = key_items[5]
+                            observable = f'{key_items[2]}_{key_items[3]}_{key_items[4]}'
+                            centrality = [''.join(filter(str.isdigit, s)) for s in key_items[7].split(',')]
+                            observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                        elif 'negative_recombiner' in key and '_y_' not in key:
+                            experiment = key_items[7]
+                            observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[11]}'
+                            centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
+                            observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                        else:
+                            continue
+
+                        filename = os.path.join(table_base_dir, f'Prediction_{observable_name}.dat')
+                        df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) # Sort columns
+                        design_point_file = 'Design.dat'
+                        header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}'
+                        np.savetxt(filename, df.values, header=header)
+                    else:
+                        sys.exit(f'Unknown key encountered: {key}')
                     
         print('Done!')
 
