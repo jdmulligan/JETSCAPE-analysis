@@ -444,7 +444,8 @@ class PlotResults(common_base.CommonBase):
                 if self.observable_settings[f'jetscape_distribution']:
                     self.observable_settings['jetscape_distribution_unsubtracted'] = self.observable_settings[f'jetscape_distribution'].Clone()
                     self.observable_settings['jetscape_distribution_unsubtracted'].SetName('{}_unsubtracted'.format(self.observable_settings[f'jetscape_distribution'].GetName()))
-                    self.observable_settings['jetscape_distribution'].Add(self.observable_settings['jetscape_distribution_holes'], -1)
+                    if self.observable_settings['jetscape_distribution_holes']:
+                        self.observable_settings['jetscape_distribution'].Add(self.observable_settings['jetscape_distribution_holes'], -1)
 
                 # Perform any additional manipulations on scaled histograms
                 self.post_process_histogram(observable_type, observable, block, centrality, centrality_index)
