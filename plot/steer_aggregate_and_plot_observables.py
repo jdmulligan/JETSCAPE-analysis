@@ -339,6 +339,13 @@ def main():
         if not os.path.exists(table_base_dir):
             os.makedirs(table_base_dir)
 
+        # We will write out design point files as well
+        design_point_dir = os.path.join(local_base_outputdir, 'histograms_aggregated')
+        outfile = os.path.join(design_point_dir, 'design_point_info.pkl')
+        with open(outfile, 'rb') as f:
+            design_point_dictionary = pickle.load(f)
+        design_df = {}
+
         # Loop through each directory corresponding to a given (sqrts, parameterization)
         for label in os.listdir(plot_dir):
             if 'AuAu' in label or 'PbPb' in label:
@@ -376,6 +383,16 @@ def main():
                                 
                                 output_dict[type][key][f'design_point{design_point_index}'] = hf[key][:]
 
+                                # Put design point info into dataframe, with design point index as index of dataframe 
+                                design_point_key = (int(sqrts), system, parameterization, int(design_point_index))
+                                parameterization_values = pd.DataFrame(data=[design_point_dictionary[design_point_key]['parametrization']['parametrization_values']], 
+                                                                       index=[int(design_point_index)])
+                                if parameterization not in design_df.keys():
+                                    design_df[parameterization] = parameterization_values
+                                else:
+                                    if int(design_point_index) not in design_df[parameterization].index:
+                                        design_df[parameterization] = pd.concat([design_df[parameterization], parameterization_values])
+
                 # Write dataframes to txt
                 # TODO: For now we use negative recombiner for jet observables
                 for type in output_dict.keys():
@@ -406,19 +423,59 @@ def main():
                             experiment = key_items[7]
                             observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[11]}'
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
-                            observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                            observable_name = f'{experiment}_{system}{sqrts}_{observable}_{centrality[0]}to{centrality[1]}'
                         else:
                             continue
 
                         filename = os.path.join(table_base_dir, f'Prediction_{observable_name}_{type}.dat')
-                        design_point_file = 'Design.dat'
+                        design_point_file = f'Design_{parameterization}.dat'
                         header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}\n'
                         header += ' '.join(columns)
                         np.savetxt(filename, df.values, header=header)
 
-                # TODO: Also write out the Design.dat file
-                    
+        # Write out the Design.dat files
+        for parameterization in design_df.keys():
+
+            # Sort according to index
+            df = design_df[parameterization].sort_index()
+
+            # Rename columns
+            df.rename(columns={'t_start': 'Tau0', 'alpha_s': 'AlphaS', 'q_switch': 'Q0', 'A': 'C1',  'B': 'C2'}, inplace=True)
+            if parameterization == 'binomial':
+                df.rename(columns={'C': 'A', 'D': 'B'}, inplace=True)
+            elif parameterization == 'exponential':
+                df.rename(columns={'C': 'C3'}, inplace=True)
+
+            # Reorder columns to match previous convention
+            if parameterization == 'binomial':
+                ordered_columns = ['AlphaS', 'Q0', 'C1', 'C2', 'Tau0', 'A', 'B']
+            elif parameterization == 'exponential':
+                ordered_columns = ['AlphaS', 'Q0', 'C1', 'C2', 'Tau0', 'C3']
+            df = df[ordered_columns]
+
+            # Write
+            filename = os.path.join(table_base_dir, f'Design_{parameterization}.dat')
+            header = f'Version 1.0\n'
+            header += f'- Design points for {parameterization} PDF\n'
+            parameters = ' '.join(df.keys())
+            header += f'Parameter {parameters}\n'
+            header += f'- Parameter AlphaS: Linear [0.1, 0.5]\n'
+            header += f'- Parameter Q0: Linear [1, 10]\n'
+            header += f'- Parameter C1: Log [0.006737946999085467, 10]\n'
+            header += f'- Parameter C2: Log [0.006737946999085467, 10]\n'
+            header += f'- Parameter Tau0: Linear [0.0, 1.5]\n'
+            if parameterization == 'binomial':
+                header += f'- Parameter A: Linear [-10, 100]\n'
+                header += f'- Parameter B: Linear [-10, 100]\n'
+            elif parameterization == 'exponential':
+                header += f'- Parameter C3: Log [0.049787068367863944, 100]\n'
+            indices = ' '.join([str(i) for i in df.index])
+            header += f'Design point indices (row index): {indices}'
+            np.savetxt(filename, df.values, header=header)
+      
         print('Done!')
+
+
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
