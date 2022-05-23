@@ -16,7 +16,7 @@
         If merging/plotting histograms ("merge_histograms", "aggregate_histograms", or "plot_histograms" True), 
         need ROOT compiled with python, e.g.:
             [enter virtual environment with needed python packages, and same python version as ROOT build]
-            export ROOTSYS=/home/software/users/james/heppy/external/packages/root-6.18.04-python
+            export ROOTSYS=/home/software/users/james/heppy/external/root/root-current
             source $ROOTSYS/bin/thisroot.sh
 
     - Run script: python plot/steer_aggregate_and_plot_observables.py
@@ -79,8 +79,9 @@ def main():
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220523'
     force_download = False
+    n_cores = 20
 
     # You may need to edit these for a future analysis -- but can leave as is for now
     analysis_name = 'Analysis1'
@@ -211,7 +212,7 @@ def main():
                     sqrts = run_dictionary[facility][run]['sqrt_s']
                     fname = f'histograms_{system}_{run}_{sqrts}.root'
 
-                    cmd = f'hadd -j 8 -f {os.path.join(outputdir, fname)} @{file_list}'
+                    cmd = f'hadd -j {n_cores} -f {os.path.join(outputdir, fname)} @{file_list}'
                     subprocess.run(cmd, check=True, shell=True)
                     os.remove(file_list)
 
@@ -338,35 +339,52 @@ def main():
         if not os.path.exists(table_base_dir):
             os.makedirs(table_base_dir)
 
+        # Loop through each directory corresponding to a given (sqrts, parameterization)
         for label in os.listdir(plot_dir):
             if 'AuAu' in label or 'PbPb' in label:
                 sqrts, system, parameterization  = label.split('_')
 
-                output_dict = {}
+                output_dict = defaultdict()
+                output_dict['values'] = {}
+                output_dict['errors'] = {}
+                output_dict['bin_edges'] = {}
 
                 # Loop through design points and observables, and construct a dataframe for each observable
                 #   columns=[design1, design2, ...]
                 #   rows=[bin1, bin2, ...]
                 label_dir = os.path.join(plot_dir, label)
                 for design_point_index in os.listdir(label_dir):
-                    if not os.path.isfile(os.path.join(label_dir, design_point_index)) and design_point_index != 'tables':
+                    if not os.path.isfile(os.path.join(label_dir, design_point_index)):
 
                         final_result_h5 = os.path.join(f'{label_dir}/{design_point_index}', 'final_results.h5')
 
                         with h5py.File(final_result_h5, 'r') as hf:
                             for key in list(hf.keys()):
+
+                                # Use a separate dataframe for values, errors, bin_edges
                                 if 'values' in key:
-                                    if key not in output_dict:
-                                        output_dict[key] = pd.DataFrame()
-                                    output_dict[key][f'design_point{design_point_index}'] = hf[key][:]
+                                    type = 'values'
+                                elif 'errors' in key:
+                                    type = 'errors'
+                                elif 'bin_edges' in key:
+                                    type = 'bin_edges'
+                                else:
+                                    sys.exit(f'Unexpected key: {key}')
+
+                                if key not in output_dict[type]:
+                                    output_dict[type][key] = pd.DataFrame()
+                                
+                                output_dict[type][key][f'design_point{design_point_index}'] = hf[key][:]
 
                 # Write dataframes to txt
                 # TODO: For now we use negative recombiner for jet observables
-                for key,df in output_dict.items():
-                    if 'jetscape_distribution' in key and 'values' in key:
+                for type in output_dict.keys():
+                    for key,df in output_dict[type].items():
 
                         # Sort columns
+                        df = output_dict[type][key]
                         df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) 
+                        columns = list(df.columns)
 
                         key_items = key.split('_')
                         if 'hadron' in key and 'unsubtracted' not in key:
@@ -392,12 +410,13 @@ def main():
                         else:
                             continue
 
-                        filename = os.path.join(table_base_dir, f'Prediction_{observable_name}.dat')
+                        filename = os.path.join(table_base_dir, f'Prediction_{observable_name}_{type}.dat')
                         design_point_file = 'Design.dat'
-                        header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}'
+                        header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}\n'
+                        header += ' '.join(columns)
                         np.savetxt(filename, df.values, header=header)
-                    else:
-                        sys.exit(f'Unknown key encountered: {key}')
+
+                # TODO: Also write out the Design.dat file
                     
         print('Done!')
 
