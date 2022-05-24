@@ -430,7 +430,7 @@ def main():
                             experiment = key_items[7]
                             observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[11]}'
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
-                            observable_name = f'{experiment}_{system}{sqrts}_{observable}_{centrality[0]}to{centrality[1]}'
+                            observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
                         else:
                             continue
 
@@ -495,7 +495,7 @@ def main():
 
         #----------------------
         # Plot n_events 
-        # Make a 2d plot from a 2d numpy array: n_generated/n_target for each (sqrts, paramterization, centrality) vs. design_point_index
+        # Make a 2d plot from a 2d numpy array: n_generated/n_target for (sqrts_paramterization_centrality, design_point_index)
         n_design_points = 80
         n_systems = 12
         shape = (n_systems, n_design_points)
@@ -545,6 +545,69 @@ def main():
         #----------------------
         # Plot statistical uncertainty for each bin of each observable (for a given design point)
 
+        table_dir = os.path.join(local_base_outputdir, 'tables')
+
+        parameterizations = ['exponential', 'binomial']
+        n_bins = 21
+        n_observables = int(len([x for x in os.listdir(table_dir) if 'Prediction' in x and 'values' in x]) / len(parameterizations))
+        shape = (n_bins, n_design_points, n_observables)
+        relative_uncertainty = np.zeros(shape)
+
+        # Construct 3d arrray: relative statistical uncertainty for (design_point_index, observable, bin)
+        for parameterization in parameterizations:
+            observable_labels = []
+            i_observable = 0
+            for file in os.listdir(table_dir):
+                if 'Prediction' in file and 'values' in file and parameterization in file:
+                    observable = file[11:-11]
+                    file_errors = file.replace('values', 'errors') 
+
+                    values = np.loadtxt(os.path.join(table_dir, file), ndmin=2)
+                    errors = np.loadtxt(os.path.join(table_dir, file_errors), ndmin=2)
+                    relative_uncertainty_unpadded = np.divide(errors, values)
+
+                    # Zero pad to fixed size
+                    if relative_uncertainty_unpadded.shape[0] > n_bins:
+                        sys.exit(f'Set n_bins to be {relative_uncertainty_unpadded.shape[0]} or larger (due to {observable})')
+
+                    observable_shape = relative_uncertainty_unpadded.shape
+                    n_pads_x = shape[0] - observable_shape[0]
+                    n_pads_y = shape[1] - observable_shape[1]
+                    relative_uncertainty_padded = np.pad(relative_uncertainty_unpadded, ((0,n_pads_x), (0,n_pads_y)))
+
+                    relative_uncertainty[:,:,i_observable] = relative_uncertainty_padded
+                    observable_labels.append(observable.replace(parameterization, ''))
+                    i_observable += 1
+
+            # Order the observables by sqrts, and then alphabetically (i.e. by observable and centrality)
+            ordered_labels = np.sort(observable_labels).tolist()
+            ordered_indices = np.argsort(observable_labels).tolist()
+            ordered_indices_200 = [ordered_indices[i] for i in range(n_observables) if '200' in ordered_labels[i]]
+            ordered_indices_2700 = [ordered_indices[i] for i in range(n_observables) if '2760' in ordered_labels[i]]
+            ordered_indices_5020 = [ordered_indices[i] for i in range(n_observables) if '5020' in ordered_labels[i]]
+            ordered_indices = ordered_indices_5020 + ordered_indices_2700 + ordered_indices_200
+
+            relative_uncertainty[:] = relative_uncertainty[:,:,ordered_indices]
+            observable_labels_ordered = [observable_labels[i] for i in ordered_indices]
+
+            # Plot for each design point
+            # TODO: Normalize by uncertainty in experimental measurement
+            # TODO: plot average over all design points? (need to exclude points we haven't run yet)
+            for design_point_index in range(n_design_points):
+                fig = plt.figure(figsize=[12, 15])
+                ax = plt.axes()
+                fig.suptitle(f'Relative statistical uncertainty, design point {design_point_index}', fontsize=24)
+                c = ax.imshow(np.transpose(relative_uncertainty[:,design_point_index,:]), cmap='jet', aspect='auto', vmin=0., vmax=0.2)
+                fig.colorbar(c)
+                ax.set_xlabel('Observable bin', size=16)
+                bin_ticks = range(n_bins)
+                plt.xticks(bin_ticks, bin_ticks, size=10)
+                observable_ticks = np.linspace(0, n_observables-1, n_observables)
+                plt.yticks(observable_ticks, observable_labels_ordered, size=10)
+                outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_{parameterization}_design_point{design_point_index}.pdf')
+                plt.tight_layout()
+                plt.savefig(outfilename)
+                plt.close()
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
