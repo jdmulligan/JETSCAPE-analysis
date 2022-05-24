@@ -62,7 +62,13 @@ from collections import defaultdict
 import pathlib
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import h5py
+
+try:
+    import ROOT
+except ImportError:
+    pass
 
 # ---------------------------------------------------------------
 def main():
@@ -74,7 +80,8 @@ def main():
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
-    write_tables = True
+    write_tables = False
+    plot_global_QA = True
 
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
@@ -475,6 +482,68 @@ def main():
       
         print('Done!')
 
+    #-----------------------------------------------------------------
+    # Plot some QA over all aggregated runs
+    #-----------------------------------------------------------------
+    if plot_global_QA:
+
+        histograms_aggregated_dir = os.path.join(local_base_outputdir, 'histograms_aggregated')
+        plot_dir = os.path.join(local_base_outputdir, 'plot')
+        global_qa_dir = os.path.join(local_base_outputdir, 'global_qa')
+        if not os.path.exists(global_qa_dir):
+            os.makedirs(global_qa_dir)
+
+        #----------------------
+        # Plot n_events 
+        # Make a 2d plot from a 2d numpy array: n_generated/n_target for each (sqrts, paramterization, centrality) vs. design_point_index
+        n_design_points = 80
+        n_systems = 12
+        shape = (n_systems, n_design_points)
+        n_events = np.zeros(shape)
+        n_target = {'200': 500000, '2760': 442000, '5020': 1700000}
+
+        # Loop through each directory corresponding to a given (sqrts, parameterization)
+        system_index = 0
+        system_labels = []
+        for sqrts_parameterization_label in os.listdir(plot_dir):
+            if 'AuAu' in sqrts_parameterization_label or 'PbPb' in sqrts_parameterization_label:
+                sqrts, system, parameterization  = sqrts_parameterization_label.split('_')
+                qa_plot_dir = os.path.join(plot_dir, sqrts_parameterization_label)
+
+                for design_point_index in os.listdir(qa_plot_dir):
+            
+                    fname = f'{sqrts_parameterization_label}/histograms_design_point_{design_point_index}.root'
+                    f = ROOT.TFile(os.path.join(histograms_aggregated_dir, fname), 'read')
+                    h = f.Get('h_centrality_generated')
+                    ratio_0_10 = h.Integral(0, 10) / n_target[sqrts]
+                    ratio_10_50 = h.Integral(10, 50) / n_target[sqrts]
+
+                    n_events[system_index, int(design_point_index)] = ratio_0_10
+                    n_events[system_index+1, int(design_point_index)] = ratio_10_50
+
+                system_labels.append(f'{sqrts_parameterization_label}_0-10')
+                system_labels.append(f'{sqrts_parameterization_label}_10-50')
+                system_index += 2
+
+        # Order the systems
+        ordered_indices = [3, 2, 11, 10, 9, 8, 5, 4, 7, 6, 1, 0]
+        n_events[:] = n_events[ordered_indices,:]
+        system_labels = [system_labels[i] for i in ordered_indices]
+            
+        # Plot
+        fig, ax = plt.subplots()
+        fig.suptitle(r'Number of events: $N_{gen} / N_{target}$', fontsize=16)
+        c = ax.imshow(n_events, cmap='jet', aspect='auto', vmin=0., vmax=2.)
+        fig.colorbar(c)
+        ax.set_xlabel('Design point index', size=12)
+        system_ticks = np.linspace(0, n_systems-1, n_systems)
+        plt.yticks(system_ticks, system_labels, size=6)
+        outfilename = os.path.join(global_qa_dir, f'n_events.pdf')
+        plt.tight_layout()
+        plt.savefig(outfilename)
+
+        #----------------------
+        # Plot statistical uncertainty for each bin of each observable (for a given design point)
 
 
 #-------------------------------------------------------------------------------------------
