@@ -245,28 +245,29 @@ class PlotUtils(common_base.CommonBase):
         return g
 
     #---------------------------------------------------------------
-    # Divide a histogram by a tgraph, point-by-point
+    # Truncate data tgraph to histogram binning range
     #---------------------------------------------------------------
-    def divide_histogram_by_tgraph(self, h, g, include_tgraph_uncertainties=True):
+    def truncate_tgraph(self, g, h):
 
-        # Clone tgraph, in order to return a new one
-        g_new = g.Clone(f'{g.GetName()}_divided')
+        #print(h.GetName())
+        #print(np.array(h.GetXaxis().GetXbins()))
 
+        # Create new TGraph with number of points equal to number of histogram bins
         nBins = h.GetNbinsX()
+        g_new = ROOT.TGraphAsymmErrors(nBins)
+        g_new.SetName(f'{g.GetName()}_truncated')
+
         h_offset = 0
         for bin in range(1, nBins+1):
 
-            # Get histogram (x,y)
+            # Get histogram (x)
             h_x = h.GetBinCenter(bin)
-            h_y = h.GetBinContent(bin)
-            h_error = h.GetBinError(bin)
 
             # Get TGraph (x,y) and errors
             gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1)
 
             #print(f'h_x: {h_x}')
             #print(f'gx: {gx}')
-            #print(f'h_y: {h_y}')
             #print(f'gy: {gy}')
 
             # If tgraph starts below hist (e.g. when hist has min cut), try to get next tgraph point
@@ -275,7 +276,6 @@ class PlotUtils(common_base.CommonBase):
                 g_offset += 1
                 gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1+g_offset)
             #print(f'new gx: {gx}')
-
 
             # If tgraph started above hist (see below) and we exhausted the tgraph points, skip
             if h_offset > 0 and np.isclose(gx, 0):
@@ -286,13 +286,50 @@ class PlotUtils(common_base.CommonBase):
             while gx > h_x and h_offset < nBins+1:
                 h_offset += 1
                 h_x = h.GetBinCenter(bin+h_offset)
-                h_y = h.GetBinContent(bin+h_offset)
-                h_error = h.GetBinError(bin+h_offset)
                 #print(f'h_x: {h_x}')
                 #print(f'gx: {gx}')
 
             if not np.isclose(h_x, gx):
-                print(f'ERROR: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
+                print(f'ERROR: hist x: {h_x}, graph x: {gx}')
+                return None
+
+            g_new.SetPoint(bin-1, gx, gy)
+            g_new.SetPointError(bin-1, 0, 0, yErrLow, yErrUp)
+            #print()
+
+        return g_new
+
+    #---------------------------------------------------------------
+    # Divide a histogram by a tgraph, point-by-point
+    #---------------------------------------------------------------
+    def divide_histogram_by_tgraph(self, h, g, include_tgraph_uncertainties=True):
+
+        # Truncate tgraph to range of histogram bins
+        g_truncated = self.truncate_tgraph(g, h)
+        if not g_truncated:
+            return None
+
+        # Clone tgraph, in order to return a new one
+        g_new = g_truncated.Clone(f'{g_truncated.GetName()}_divided')
+
+        nBins = h.GetNbinsX()
+        for bin in range(1, nBins+1):
+
+            # Get histogram (x,y)
+            h_x = h.GetBinCenter(bin)
+            h_y = h.GetBinContent(bin)
+            h_error = h.GetBinError(bin)
+
+            # Get TGraph (x,y) and errors
+            gx, gy, yErrLow, yErrUp = self.get_gx_gy(g_truncated, bin-1)
+
+            #print(f'h_x: {h_x}')
+            #print(f'gx: {gx}')
+            #print(f'h_y: {h_y}')
+            #print(f'gy: {gy}')
+
+            if not np.isclose(h_x, gx):
+                print(f'ERROR?: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
                 return None
 
             new_content = h_y / gy
@@ -309,8 +346,9 @@ class PlotUtils(common_base.CommonBase):
                 new_error_low = (yErrLow/gy) * new_content
                 new_error_up = (yErrUp/gy) * new_content
 
-            g_new.SetPoint(bin-1+g_offset, h_x, new_content)
-            g_new.SetPointError(bin-1+g_offset, 0, 0, new_error_low, new_error_up)
+            g_new.SetPoint(bin-1, h_x, new_content)
+            g_new.SetPointError(bin-1, 0, 0, new_error_low, new_error_up)
+
         return g_new
 
     #---------------------------------------------------------------

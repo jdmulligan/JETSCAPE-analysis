@@ -17,6 +17,7 @@ import argparse
 import ROOT
 import numpy as np
 import uproot
+import pandas as pd
 import h5py
 
 # Base class
@@ -826,11 +827,11 @@ class PlotResults(common_base.CommonBase):
                 self.observable_settings["jetscape_distribution"] = h_yield
 
     #-------------------------------------------------------------------------------------------
-    # Plot distributions in upper panel, and ratio in lower panel
+    # Plot distributions
     #-------------------------------------------------------------------------------------------
     def plot_observable(self, observable_type, observable, centrality, pt_suffix='', logy = False):
 
-        label = f'{observable_type}_{observable}_{self.sqrts}_{centrality}_{self.suffix}_{pt_suffix}'
+        label = f'{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}'
 
         if 'v2' in observable:
             # for hadron v2
@@ -842,9 +843,54 @@ class PlotResults(common_base.CommonBase):
         # If pp: Plot distribution, and ratio to data
         if self.is_AA:
             self.plot_RAA(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)
+            self.write_experimental_data(observable_type, observable, centrality, label, pt_suffix=pt_suffix)
         else:
             if self.observable_settings[f'jetscape_distribution']:
                 self.plot_distribution_and_ratio(observable_type, observable, centrality, label, pt_suffix=pt_suffix, logy=logy)
+
+    #-------------------------------------------------------------------------------------------
+    # Write experimental data tables
+    #-------------------------------------------------------------------------------------------
+    def write_experimental_data(self, observable_type, observable, centrality, label, pt_suffix=''):
+
+        output_dir = os.path.join(self.output_dir, f'../Data')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        force_write = True        
+        filename = f'Data_{observable_type}_{observable}{self.suffix}_{centrality}{pt_suffix}.dat'
+        outputfile = os.path.join(output_dir, filename)
+        if force_write or not os.path.exists(outputfile):
+
+            # Get histogram binning
+            key = [key for key in self.observable_settings.keys() if 'jetscape_distribution' in key and 'holes' not in key][0]
+            h_prediction = self.observable_settings[key]
+
+            # Truncate data tgraph to prediction histogram binning
+            if h_prediction:
+
+                xbins = np.array(h_prediction.GetXaxis().GetXbins())
+                x_min = xbins[:-1]
+                x_max = xbins[1:]
+                
+                g_data = self.observable_settings['data_distribution']
+                g_truncated = self.plot_utils.truncate_tgraph(g_data, h_prediction) 
+                if g_truncated:
+                    x = np.array(g_truncated.GetX())
+                    y = np.array(g_truncated.GetY())
+                    y_err = np.array(g_truncated.GetEY())
+                    df = pd.DataFrame({'x_min': x_min, 'x_max': x_max, 'x': x, 'y': y, 'y_err': y_err})
+
+                    # Write table
+                    header = f'Version 1.1\n'
+                    header += f'Label xmin xmax y y_err'
+                    np.savetxt(outputfile, df.values, header=header)
+                else:
+                    print(f'Did not write Data table: {filename} -- missing tgraph')
+            else:
+                print(f'Did not write Data table: {filename} -- missing histogram')
+        else:
+            sys.exit()
 
     #-------------------------------------------------------------------------------------------
     # Plot distributions in upper panel, and ratio in lower panel

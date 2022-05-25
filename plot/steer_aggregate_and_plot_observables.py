@@ -80,13 +80,13 @@ def main():
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
-    write_tables = False
-    plot_global_QA = True
+    write_tables = True
+    plot_global_QA = False
 
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220523'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/dev'
     force_download = False
     n_cores = 20
 
@@ -317,6 +317,8 @@ def main():
                 subprocess.run(cmd, check=True, shell=True)
 
         # Then plot AA, using appropriate pp reference, and construct dataframe of PbPb/pp values to be used for Bayesian analysis
+        max_processes = 20
+        process_list = []
         for design_point_tuple in design_point_dictionary.keys():
             sqrts, system, parametrization_type, design_point_index = design_point_tuple
             if system in ['AuAu', 'PbPb']:
@@ -329,7 +331,15 @@ def main():
                     cmd += f' -i {inputfile}'
                     cmd += f' -r {pp_reference_filename}'
                     cmd += f' -o {outputdir}'
-                    subprocess.run(cmd, check=True, shell=True)
+
+                    # Execute in parallel
+                    # Simple & quick implementation:once max_processes have been launched, wait for them to finish before continuing
+                    process = subprocess.Popen(cmd, shell=True)
+                    process_list.append(process)
+                    if len(process_list) > max_processes:
+                        for subproc in process_list:
+                            subproc.wait()
+                        process_list = []
 
     #-----------------------------------------------------------------
     # Convert histograms to data tables and save
@@ -362,13 +372,14 @@ def main():
                 output_dict['values'] = {}
                 output_dict['errors'] = {}
                 output_dict['bin_edges'] = {}
+                output_dict['observable_label'] = {}
 
                 # Loop through design points and observables, and construct a dataframe for each observable
                 #   columns=[design1, design2, ...]
                 #   rows=[bin1, bin2, ...]
                 label_dir = os.path.join(plot_dir, label)
                 for design_point_index in os.listdir(label_dir):
-                    if not os.path.isfile(os.path.join(label_dir, design_point_index)):
+                    if not os.path.isfile(os.path.join(label_dir, design_point_index)) and design_point_index != 'Data':
 
                         final_result_h5 = os.path.join(f'{label_dir}/{design_point_index}', 'final_results.h5')
 
@@ -385,12 +396,19 @@ def main():
                                 else:
                                     sys.exit(f'Unexpected key: {key}')
 
+                                # Get observable label for bookkeeping
+                                observable_labels = [s.replace('h_','',1).replace('.pdf','') for s in os.listdir(os.path.join(label_dir, design_point_index)) if 'pdf' in s]
+                                output_dict['observable_label'][key] = None
+                                for s in observable_labels:
+                                    if s in key:
+                                        output_dict['observable_label'][key] = s
+
+                                # Put design point info into dataframe, with design point index as index of dataframe 
                                 if key not in output_dict[type]:
                                     output_dict[type][key] = pd.DataFrame()
                                 
                                 output_dict[type][key][f'design_point{design_point_index}'] = hf[key][:]
 
-                                # Put design point info into dataframe, with design point index as index of dataframe 
                                 design_point_key = (int(sqrts), system, parameterization, int(design_point_index))
                                 parameterization_values = pd.DataFrame(data=[design_point_dictionary[design_point_key]['parametrization']['parametrization_values']], 
                                                                        index=[int(design_point_index)])
@@ -400,45 +418,69 @@ def main():
                                     if int(design_point_index) not in design_df[parameterization].index:
                                         design_df[parameterization] = pd.concat([design_df[parameterization], parameterization_values])
 
-                # Write dataframes to txt
+                # Write Prediction and Data dataframes to txt
                 # TODO: For now we use negative recombiner for jet observables
                 for type in output_dict.keys():
-                    for key,df in output_dict[type].items():
+                    if type == 'observable_label':
+                        continue
 
-                        # Sort columns
-                        df = output_dict[type][key]
-                        df = df.reindex(sorted(df.columns, key=lambda x: float(x[12:])), axis=1) 
-                        columns = list(df.columns)
+                    for key,df in output_dict[type].items():
 
                         key_items = key.split('_')
                         if 'hadron' in key and 'unsubtracted' not in key:
                             experiment = key_items[5]
                             observable = f'{key_items[2]}_{key_items[3]}_{key_items[4]}'
-                            centrality = [''.join(filter(str.isdigit, s)) for s in key_items[7].split(',')]
+                            centrality = [''.join(filter(str.isdigit, s)) for s in key_items[6].split(',')]
                             observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
-
-                            # Remove rows with leading zeros (corresponding to bins below the min_pt cut)
-                            n_zero_rows = 0
-                            for row in df.to_numpy():
-                                if np.all(row == 0):
-                                    n_zero_rows += 1
-                                else:
-                                    break
-                            df = df.iloc[n_zero_rows:, :]
-
                         elif 'negative_recombiner' in key and '_y_' not in key:
                             experiment = key_items[7]
-                            observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[11]}'
+                            observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[8]}'
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
                             observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
                         else:
                             continue
 
+                        # Sort columns
+                        df_prediction = output_dict[type][key]
+                        df_prediction = df_prediction.reindex(sorted(df_prediction.columns, key=lambda x: float(x[12:])), axis=1) 
+                        columns = list(df_prediction.columns)
+
+                        # Get experimental data
+                        observable_label = output_dict['observable_label'][key]
+                        data_dir = os.path.join(plot_dir, f'{label}/Data')
+                        filename = f'Data_{observable_label}.dat'
+                        data_file = os.path.join(data_dir, filename)
+                        if os.path.exists(data_file):
+                            data = np.loadtxt(data_file, ndmin=2)
+
+                        if df_prediction.to_numpy().shape[0] != data.shape[0]:
+                            print(f'Mismatch of number of bins: prediction ({df_prediction.to_numpy().shape[0]}) vs. data ({data.shape[0]})')
+
+                        # Remove rows with leading zeros (corresponding to bins below the min_pt cut)
+                        n_zero_rows = 0
+                        for row in df_prediction.to_numpy():
+                            if np.all(row == 0):
+                                n_zero_rows += 1
+                            else:
+                                break
+                        df_prediction = df_prediction.iloc[n_zero_rows:, :]
+                        data = data[n_zero_rows:, :]
+
+                        if df_prediction.to_numpy().shape[0] != data.shape[0]:
+                            print(f'Mismatch of number of bins after removing zeros: prediction ({df_prediction.to_numpy().shape[0]}) vs. data ({data.shape[0]})')
+                            print()
+
+                        # Write Prediction.dat and Data.dat files
                         filename = os.path.join(table_base_dir, f'Prediction_{observable_name}_{type}.dat')
                         design_point_file = f'Design_{parameterization}.dat'
                         header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}\n'
                         header += ' '.join(columns)
-                        np.savetxt(filename, df.values, header=header)
+                        np.savetxt(filename, df_prediction.values, header=header)
+
+                        #filename = os.path.join(table_base_dir, f'Data_{observable_name}.dat')
+                        #header = f'Version 1.1\n'
+                        #header += 'Label xmin xmax y y_err'
+                        #np.savetxt(filename, data, header=header)
 
         # Write out the Design.dat files
         for parameterization in design_df.keys():
