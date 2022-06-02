@@ -80,13 +80,13 @@ def main():
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
-    write_tables = True
-    plot_global_QA = False
+    write_tables = False
+    plot_global_QA = True
 
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/dev'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220601'
     force_download = False
     n_cores = 20
 
@@ -382,6 +382,8 @@ def main():
                     if not os.path.isfile(os.path.join(label_dir, design_point_index)) and design_point_index != 'Data':
 
                         final_result_h5 = os.path.join(f'{label_dir}/{design_point_index}', 'final_results.h5')
+                        if not os.path.exists(final_result_h5):
+                            continue
 
                         with h5py.File(final_result_h5, 'r') as hf:
                             for key in list(hf.keys()):
@@ -538,11 +540,15 @@ def main():
         #----------------------
         # Plot n_events 
         # Make a 2d plot from a 2d numpy array: n_generated/n_target for (sqrts_paramterization_centrality, design_point_index)
-        n_design_points = 80
+        n_design_points = 140
         n_systems = 12
         shape = (n_systems, n_design_points)
         n_events = np.zeros(shape)
         n_target = {'200': 500000, '2760': 442000, '5020': 1700000}
+
+        # Keep track of which design points need to be re-run
+        rerun_threshold = 0.75
+        rerun_dict = defaultdict(list)
 
         # Loop through each directory corresponding to a given (sqrts, parameterization)
         system_index = 0
@@ -553,6 +559,8 @@ def main():
                 qa_plot_dir = os.path.join(plot_dir, sqrts_parameterization_label)
 
                 for design_point_index in os.listdir(qa_plot_dir):
+                    if design_point_index == 'Data':
+                        continue
             
                     fname = f'{sqrts_parameterization_label}/histograms_design_point_{design_point_index}.root'
                     f = ROOT.TFile(os.path.join(histograms_aggregated_dir, fname), 'read')
@@ -562,6 +570,11 @@ def main():
 
                     n_events[system_index, int(design_point_index)] = ratio_0_10
                     n_events[system_index+1, int(design_point_index)] = ratio_10_50
+
+                    if ratio_0_10 < rerun_threshold:
+                        rerun_dict[f'{sqrts_parameterization_label}_0-10'].append(design_point_index)
+                    if ratio_10_50 < rerun_threshold:
+                        rerun_dict[f'{sqrts_parameterization_label}_10-50'].append(design_point_index)
 
                 system_labels.append(f'{sqrts_parameterization_label}_0-10')
                 system_labels.append(f'{sqrts_parameterization_label}_10-50')
@@ -575,7 +588,7 @@ def main():
         # Plot
         fig, ax = plt.subplots()
         fig.suptitle(r'Number of events: $N_{gen} / N_{target}$', fontsize=16)
-        c = ax.imshow(n_events, cmap='jet', aspect='auto', vmin=0., vmax=2.)
+        c = ax.imshow(n_events, cmap='jet', aspect='auto', vmin=0., vmax=2., interpolation='nearest')
         fig.colorbar(c)
         ax.set_xlabel('Design point index', size=12)
         system_ticks = np.linspace(0, n_systems-1, n_systems)
@@ -583,6 +596,14 @@ def main():
         outfilename = os.path.join(global_qa_dir, f'n_events.pdf')
         plt.tight_layout()
         plt.savefig(outfilename)
+        print('Plotted n_events.')
+
+        # Print which design points needs to be rerun
+        print()
+        print(f'The following design points had fewer than {rerun_threshold}x the target statistics')
+        for key,val in rerun_dict.items():
+            print(f'  {key}: {sorted(val)}')
+        print()
 
         #----------------------
         # Plot statistical uncertainty for each bin of each observable (for a given design point)
@@ -639,7 +660,7 @@ def main():
                 fig = plt.figure(figsize=[12, 15])
                 ax = plt.axes()
                 fig.suptitle(f'Relative statistical uncertainty, design point {design_point_index}', fontsize=24)
-                c = ax.imshow(np.transpose(relative_uncertainty[:,design_point_index,:]), cmap='jet', aspect='auto', vmin=0., vmax=0.2)
+                c = ax.imshow(np.transpose(relative_uncertainty[:,design_point_index,:]), cmap='jet', aspect='auto', vmin=0., vmax=0.2, interpolation='nearest')
                 fig.colorbar(c)
                 ax.set_xlabel('Observable bin', size=16)
                 bin_ticks = range(n_bins)
