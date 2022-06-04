@@ -76,17 +76,17 @@ def main():
     #-----------------------------------------------------------------
     # Set which options you want to execute
     download_runinfo = False
-    download_histograms = False
+    download_histograms = True
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
     write_tables = False
-    plot_global_QA = True
+    plot_global_QA = False
 
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220601'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220603'
     force_download = False
     n_cores = 20
 
@@ -182,12 +182,27 @@ def main():
         for facility in facilities:
             for run in runs[facility]:
 
+                # If directory exists locally, check number of histograms already downloaded and number on OSN
                 histogram_dir = os.path.join(histogram_download_location, f'{facility}/{run}/histograms')
-                if os.path.exists(histogram_dir) and not force_download:
-                    print(f'Histogram dir already exists, will not re-download: {histogram_dir} ')
+                if os.path.exists(histogram_dir):
+
+                    n_histograms_local = len([h for h in os.listdir(histogram_dir) if '.root' in h])
+
+                    script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/count_files_on_OSN.py')
+                    cmd = f'python {script} -s {facility}/{run}/ -f histograms'
+                    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+                    output = proc.stdout.read()
+                    n_histograms_expected = int(output.split()[-1])
+
+                # Download all histograms we are missing (or force download, if requested)
+                if os.path.exists(histogram_dir) and n_histograms_expected == n_histograms_local and not force_download:
+                    print(f'Histogram dir ({histogram_dir}) already exists and n_histograms_expected ({n_histograms_expected}) == n_histograms_local ({n_histograms_local}), will not re-download')
+                    print()
                 else:
                     if force_download:
                         print('Force download enabled -- re-download all histograms...')
+                    if os.path.exists(histogram_dir) and n_histograms_expected != n_histograms_local:
+                        print(f'Histogram dir already exists, but n_histograms_expected ({n_histograms_expected}) does not equal n_histograms_local ({n_histograms_local}), so we will redownload.')
 
                     download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
                     cmd = f'python {download_script} -s {facility}/{run}/ -d {histogram_download_location} -f histograms'
@@ -572,9 +587,9 @@ def main():
                     n_events[system_index+1, int(design_point_index)] = ratio_10_50
 
                     if ratio_0_10 < rerun_threshold:
-                        rerun_dict[f'{sqrts_parameterization_label}_0-10'].append(design_point_index)
+                        rerun_dict[f'{sqrts_parameterization_label}_0-10'].append(int(design_point_index))
                     if ratio_10_50 < rerun_threshold:
-                        rerun_dict[f'{sqrts_parameterization_label}_10-50'].append(design_point_index)
+                        rerun_dict[f'{sqrts_parameterization_label}_10-50'].append(int(design_point_index))
 
                 system_labels.append(f'{sqrts_parameterization_label}_0-10')
                 system_labels.append(f'{sqrts_parameterization_label}_10-50')
