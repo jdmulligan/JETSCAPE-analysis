@@ -76,12 +76,12 @@ def main():
     #-----------------------------------------------------------------
     # Set which options you want to execute
     download_runinfo = False
-    download_histograms = True
+    download_histograms = False
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
     write_tables = False
-    plot_global_QA = False
+    plot_global_QA = True
 
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
@@ -580,15 +580,15 @@ def main():
                     fname = f'{sqrts_parameterization_label}/histograms_design_point_{design_point_index}.root'
                     f = ROOT.TFile(os.path.join(histograms_aggregated_dir, fname), 'read')
                     h = f.Get('h_centrality_generated')
-                    ratio_0_10 = h.Integral(0, 10) / n_target[sqrts]
-                    ratio_10_50 = h.Integral(10, 50) / n_target[sqrts]
+                    ratio_0_10 = h.Integral(h.GetXaxis().FindBin(0+0.5), h.GetXaxis().FindBin(10-0.5)) / n_target[sqrts]
+                    ratio_10_50 = h.Integral(h.GetXaxis().FindBin(10+0.5), h.GetXaxis().FindBin(50-0.5)) / n_target[sqrts]
 
                     n_events[system_index, int(design_point_index)] = ratio_0_10
                     n_events[system_index+1, int(design_point_index)] = ratio_10_50
 
-                    if ratio_0_10 < rerun_threshold:
+                    if 0.01 < ratio_0_10 < rerun_threshold:
                         rerun_dict[f'{sqrts_parameterization_label}_0-10'].append(int(design_point_index))
-                    if ratio_10_50 < rerun_threshold:
+                    if 0.01 < ratio_10_50 < rerun_threshold:
                         rerun_dict[f'{sqrts_parameterization_label}_10-50'].append(int(design_point_index))
 
                 system_labels.append(f'{sqrts_parameterization_label}_0-10')
