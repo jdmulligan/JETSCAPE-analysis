@@ -70,6 +70,10 @@ try:
 except ImportError:
     pass
 
+# Suppress performance warning which seems to come from h5py
+from warnings import simplefilter
+simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
+
 # ---------------------------------------------------------------
 def main():
 
@@ -86,7 +90,7 @@ def main():
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220603'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220609'
     force_download = False
     n_cores = 20
 
@@ -332,7 +336,6 @@ def main():
                 subprocess.run(cmd, check=True, shell=True)
 
         # Then plot AA, using appropriate pp reference, and construct dataframe of PbPb/pp values to be used for Bayesian analysis
-        max_processes = 20
         process_list = []
         for design_point_tuple in design_point_dictionary.keys():
             sqrts, system, parametrization_type, design_point_index = design_point_tuple
@@ -351,7 +354,7 @@ def main():
                     # Simple & quick implementation:once max_processes have been launched, wait for them to finish before continuing
                     process = subprocess.Popen(cmd, shell=True)
                     process_list.append(process)
-                    if len(process_list) > max_processes:
+                    if len(process_list) > n_cores-1:
                         for subproc in process_list:
                             subproc.wait()
                         process_list = []
@@ -365,11 +368,18 @@ def main():
         # We can easily adapt this to the format v1.0 specified here, although we may want to update a bit: https://www.evernote.com/l/ACWFCWrEcPxHPJ3_P0zUT74nuasCoL_DBmY
         print()
         print('Write predictions to table...')
-        table_base_dir = os.path.join(local_base_outputdir, 'tables')
         plot_dir = os.path.join(local_base_outputdir, 'plot')
+        table_base_dir = os.path.join(local_base_outputdir, 'tables')
+        prediction_table_dir = os.path.join(table_base_dir, 'Prediction')
+        data_table_dir = os.path.join(table_base_dir, 'Data')
+        design_table_dir = os.path.join(table_base_dir, 'Design')
 
-        if not os.path.exists(table_base_dir):
-            os.makedirs(table_base_dir)
+        if not os.path.exists(prediction_table_dir):
+            os.makedirs(prediction_table_dir)
+        if not os.path.exists(data_table_dir):
+            os.makedirs(data_table_dir)
+        if not os.path.exists(design_table_dir):
+            os.makedirs(design_table_dir)
 
         # We will write out design point files as well
         design_point_dir = os.path.join(local_base_outputdir, 'histograms_aggregated')
@@ -389,7 +399,7 @@ def main():
                 output_dict['bin_edges'] = {}
                 output_dict['observable_label'] = {}
 
-                # Loop through design points and observables, and construct a dataframe for each observable
+                # Loop through design points and observables, and construct a dataframe of predictions for each observable
                 #   columns=[design1, design2, ...]
                 #   rows=[bin1, bin2, ...]
                 label_dir = os.path.join(plot_dir, label)
@@ -438,7 +448,7 @@ def main():
                 # Write Prediction and Data dataframes to txt
                 # TODO: For now we use negative recombiner for jet observables
                 for type in output_dict.keys():
-                    if type == 'observable_label':
+                    if type in ['observable_label', 'bin_edges']:
                         continue
 
                     for key,df in output_dict[type].items():
@@ -448,14 +458,18 @@ def main():
                             experiment = key_items[5]
                             observable = f'{key_items[2]}_{key_items[3]}_{key_items[4]}'
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[6].split(',')]
-                            observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                            observable_name_prediction = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                            observable_name_data = f'{experiment}_{system}{sqrts}_{observable}_{centrality[0]}to{centrality[1]}'
                         elif 'negative_recombiner' in key and '_y_' not in key:
                             experiment = key_items[7]
                             observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[8]}'
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
-                            observable_name = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                            observable_name_prediction = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
+                            observable_name_data = f'{experiment}_{system}{sqrts}_{observable}_{centrality[0]}to{centrality[1]}'
                         else:
                             continue
+
+                        print(f'  {key}')
 
                         # Sort columns
                         df_prediction = output_dict[type][key]
@@ -488,16 +502,16 @@ def main():
                             print()
 
                         # Write Prediction.dat and Data.dat files
-                        filename = os.path.join(table_base_dir, f'Prediction_{observable_name}_{type}.dat')
+                        filename = os.path.join(prediction_table_dir, f'Prediction_{observable_name_prediction}_{type}.dat')
                         design_point_file = f'Design_{parameterization}.dat'
-                        header = f'Version 2.0\nData Data_{observable_name}.dat\nDesign {design_point_file}\n'
+                        header = f'Version 2.0\nData Data_{observable_name_prediction}.dat\nDesign {design_point_file}\n'
                         header += ' '.join(columns)
                         np.savetxt(filename, df_prediction.values, header=header)
 
-                        #filename = os.path.join(table_base_dir, f'Data_{observable_name}.dat')
-                        #header = f'Version 1.1\n'
-                        #header += 'Label xmin xmax y y_err'
-                        #np.savetxt(filename, data, header=header)
+                        filename = os.path.join(data_table_dir, f'Data_{observable_name_data}.dat')
+                        header = f'Version 1.1\n'
+                        header += 'Label xmin xmax y y_err'
+                        np.savetxt(filename, data, header=header)
 
         # Write out the Design.dat files
         for parameterization in design_df.keys():
@@ -520,7 +534,7 @@ def main():
             df = df[ordered_columns]
 
             # Write
-            filename = os.path.join(table_base_dir, f'Design_{parameterization}.dat')
+            filename = os.path.join(design_table_dir, f'Design_{parameterization}.dat')
             header = f'Version 1.0\n'
             header += f'- Design points for {parameterization} PDF\n'
             parameters = ' '.join(df.keys())
@@ -622,39 +636,61 @@ def main():
 
         #----------------------
         # Plot statistical uncertainty for each bin of each observable (for a given design point)
-
         table_dir = os.path.join(local_base_outputdir, 'tables')
+        prediction_dir = os.path.join(table_dir, 'Prediction')
+        data_dir = os.path.join(table_dir, 'Data')
 
         parameterizations = ['exponential', 'binomial']
         n_bins = 21
-        n_observables = int(len([x for x in os.listdir(table_dir) if 'Prediction' in x and 'values' in x]) / len(parameterizations))
+        n_observables = int(len([x for x in os.listdir(prediction_dir) if 'Prediction' in x and 'values' in x]) / len(parameterizations))
         shape = (n_bins, n_design_points, n_observables)
-        relative_uncertainty = np.zeros(shape)
+        relative_uncertainty_prediction = np.zeros(shape)
+        relative_uncertainty_ratio_to_data = np.zeros(shape)
 
         # Construct 3d arrray: relative statistical uncertainty for (design_point_index, observable, bin)
         for parameterization in parameterizations:
             observable_labels = []
             i_observable = 0
-            for file in os.listdir(table_dir):
-                if 'Prediction' in file and 'values' in file and parameterization in file:
-                    observable = file[11:-11]
-                    file_errors = file.replace('values', 'errors') 
+            for file_prediction in os.listdir(prediction_dir):
+                if 'Prediction' in file_prediction and 'values' in file_prediction and parameterization in file_prediction:
+                    observable = file_prediction[11:-11].replace(parameterization, '')
+                    file_prediction_errors = file_prediction.replace('values', 'errors') 
 
-                    values = np.loadtxt(os.path.join(table_dir, file), ndmin=2)
-                    errors = np.loadtxt(os.path.join(table_dir, file_errors), ndmin=2)
-                    relative_uncertainty_unpadded = np.divide(errors, values)
+                    # Get predictions and compute relative uncertainty -- zero pad to fixed size
+                    prediction_values = np.loadtxt(os.path.join(prediction_dir, file_prediction), ndmin=2)
+                    prediction_errors = np.loadtxt(os.path.join(prediction_dir, file_prediction_errors), ndmin=2)
+                    if 0 in prediction_values:
+                        print(f'WARNING: Prediction {file_prediction} -- {observable} has value=0')
 
-                    # Zero pad to fixed size
-                    if relative_uncertainty_unpadded.shape[0] > n_bins:
-                        sys.exit(f'Set n_bins to be {relative_uncertainty_unpadded.shape[0]} or larger (due to {observable})')
-
-                    observable_shape = relative_uncertainty_unpadded.shape
+                    relative_uncertainty_prediction_unpadded = np.divide(prediction_errors, prediction_values)
+                    if relative_uncertainty_prediction_unpadded.shape[0] > n_bins:
+                        sys.exit(f'Set n_bins to be {relative_uncertainty_prediction_unpadded.shape[0]} or larger (due to {observable})')
+                    observable_shape = relative_uncertainty_prediction_unpadded.shape
                     n_pads_x = shape[0] - observable_shape[0]
                     n_pads_y = shape[1] - observable_shape[1]
-                    relative_uncertainty_padded = np.pad(relative_uncertainty_unpadded, ((0,n_pads_x), (0,n_pads_y)))
+                    relative_uncertainty_prediction_padded = np.pad(relative_uncertainty_prediction_unpadded, ((0,n_pads_x), (0,n_pads_y)))
+                    relative_uncertainty_prediction[:,:,i_observable] = relative_uncertainty_prediction_padded
 
-                    relative_uncertainty[:,:,i_observable] = relative_uncertainty_padded
-                    observable_labels.append(observable.replace(parameterization, ''))
+                    # Get data and compute relative uncertainty -- zero pad to fixed size
+                    file_data = f'Data_{observable}.dat'
+                    data = np.loadtxt(os.path.join(data_dir, file_data), ndmin=2)
+                    data_values = data[:,2]
+                    data_errors = data[:,3]
+                    if 0 in data_values:
+                        print(f'WARNING: Prediction {file_data} -- {observable} has value=0')
+
+                    relative_uncertainty_data_unpadded = np.divide(data_errors, data_values)
+
+                    # Compute ratio of prediction uncertainty to data uncertainty -- zero pad to fixed size
+                    if prediction_values.shape[0] != data_values.shape[0]:
+                        sys.exit(f'Prediction ({observable_shape}) has different shape than Data ({relative_uncertainty_data_unpadded.shape})')
+
+                    relative_uncertainty_ratio_to_data_unpadded = np.divide(relative_uncertainty_prediction_unpadded, 
+                                                                            relative_uncertainty_data_unpadded[:,None])
+                    relative_uncertainty_ratio_to_data_padded = np.pad(relative_uncertainty_ratio_to_data_unpadded, ((0,n_pads_x), (0,n_pads_y)))
+                    relative_uncertainty_ratio_to_data[:,:,i_observable] = relative_uncertainty_ratio_to_data_padded
+
+                    observable_labels.append(observable)
                     i_observable += 1
 
             # Order the observables by sqrts, and then alphabetically (i.e. by observable and centrality)
@@ -665,27 +701,86 @@ def main():
             ordered_indices_5020 = [ordered_indices[i] for i in range(n_observables) if '5020' in ordered_labels[i]]
             ordered_indices = ordered_indices_5020 + ordered_indices_2700 + ordered_indices_200
 
-            relative_uncertainty[:] = relative_uncertainty[:,:,ordered_indices]
+            relative_uncertainty_prediction[:] = relative_uncertainty_prediction[:,:,ordered_indices]
+            relative_uncertainty_ratio_to_data[:] = relative_uncertainty_ratio_to_data[:,:,ordered_indices]
             observable_labels_ordered = [observable_labels[i] for i in ordered_indices]
 
+            # Plot relative uncertainty of prediction
+            fig = plt.figure(figsize=[12, 15])
+            ax = plt.axes()
+            fig.suptitle(f'Relative statistical uncertainty -- Prediction -- mean', fontsize=24)
+            matrix = np.transpose(np.mean(relative_uncertainty_prediction, axis=1))
+            matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
+            c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=0.2, interpolation='nearest')
+            fig.colorbar(c)
+            ax.set_xlabel('Observable bin', size=16)
+            bin_ticks = range(n_bins)
+            plt.xticks(bin_ticks, bin_ticks, size=10)
+            observable_ticks = np.linspace(0, n_observables-1, n_observables)
+            plt.yticks(observable_ticks, observable_labels_ordered, size=10)
+            outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_prediction_{parameterization}_mean.pdf')
+            plt.tight_layout()
+            plt.savefig(outfilename)
+            plt.close()
+
+            # Plot ratio of relative uncertainty of prediction to that in data
+            fig = plt.figure(figsize=[12, 15])
+            ax = plt.axes()
+            fig.suptitle(f'Relative statistical uncertainty -- Prediction/Data -- mean', fontsize=24)
+            matrix = np.transpose(np.mean(relative_uncertainty_ratio_to_data, axis=1))
+            matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
+            c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=1., interpolation='nearest')
+            fig.colorbar(c)
+            ax.set_xlabel('Observable bin', size=16)
+            bin_ticks = range(n_bins)
+            plt.xticks(bin_ticks, bin_ticks, size=10)
+            observable_ticks = np.linspace(0, n_observables-1, n_observables)
+            plt.yticks(observable_ticks, observable_labels_ordered, size=10)
+            outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_ratio_{parameterization}_mean.pdf')
+            plt.tight_layout()
+            plt.savefig(outfilename)
+            plt.close()
+
             # Plot for each design point
-            # TODO: Normalize by uncertainty in experimental measurement
-            # TODO: plot average over all design points? (need to exclude points we haven't run yet)
-            for design_point_index in range(n_design_points):
-                fig = plt.figure(figsize=[12, 15])
-                ax = plt.axes()
-                fig.suptitle(f'Relative statistical uncertainty, design point {design_point_index}', fontsize=24)
-                c = ax.imshow(np.transpose(relative_uncertainty[:,design_point_index,:]), cmap='jet', aspect='auto', vmin=0., vmax=0.2, interpolation='nearest')
-                fig.colorbar(c)
-                ax.set_xlabel('Observable bin', size=16)
-                bin_ticks = range(n_bins)
-                plt.xticks(bin_ticks, bin_ticks, size=10)
-                observable_ticks = np.linspace(0, n_observables-1, n_observables)
-                plt.yticks(observable_ticks, observable_labels_ordered, size=10)
-                outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_{parameterization}_design_point{design_point_index}.pdf')
-                plt.tight_layout()
-                plt.savefig(outfilename)
-                plt.close()
+            plot_each_design_point = False
+            if plot_each_design_point:
+                for design_point_index in range(n_design_points):
+
+                    # Plot relative uncertainty of prediction
+                    fig = plt.figure(figsize=[12, 15])
+                    ax = plt.axes()
+                    fig.suptitle(f'Relative statistical uncertainty -- Prediction -- design point {design_point_index}', fontsize=24)
+                    matrix = np.transpose(relative_uncertainty_prediction[:,design_point_index,:])
+                    matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
+                    c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=0.2, interpolation='nearest')
+                    fig.colorbar(c)
+                    ax.set_xlabel('Observable bin', size=16)
+                    bin_ticks = range(n_bins)
+                    plt.xticks(bin_ticks, bin_ticks, size=10)
+                    observable_ticks = np.linspace(0, n_observables-1, n_observables)
+                    plt.yticks(observable_ticks, observable_labels_ordered, size=10)
+                    outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_prediction_{parameterization}_design_point{design_point_index}.pdf')
+                    plt.tight_layout()
+                    plt.savefig(outfilename)
+                    plt.close()
+
+                    # Plot ratio of relative uncertainty of prediction to that in data
+                    fig = plt.figure(figsize=[12, 15])
+                    ax = plt.axes()
+                    fig.suptitle(f'Relative statistical uncertainty -- Prediction/Data -- design point {design_point_index}', fontsize=24)
+                    matrix = np.transpose(relative_uncertainty_ratio_to_data[:,design_point_index,:])
+                    matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
+                    c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=1.0, interpolation='nearest')
+                    fig.colorbar(c)
+                    ax.set_xlabel('Observable bin', size=16)
+                    bin_ticks = range(n_bins)
+                    plt.xticks(bin_ticks, bin_ticks, size=10)
+                    observable_ticks = np.linspace(0, n_observables-1, n_observables)
+                    plt.yticks(observable_ticks, observable_labels_ordered, size=10)
+                    outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_ratio_{parameterization}_design_point{design_point_index}.pdf')
+                    plt.tight_layout()
+                    plt.savefig(outfilename)
+                    plt.close()
 
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
