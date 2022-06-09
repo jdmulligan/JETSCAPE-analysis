@@ -705,6 +705,8 @@ def main():
             relative_uncertainty_ratio_to_data[:] = relative_uncertainty_ratio_to_data[:,:,ordered_indices]
             observable_labels_ordered = [observable_labels[i] for i in ordered_indices]
 
+            # TODO: Do something about bins that have value=0 and cause division problem, leading to empty entry
+
             # Plot relative uncertainty of prediction
             fig = plt.figure(figsize=[12, 15])
             ax = plt.axes()
@@ -743,8 +745,9 @@ def main():
 
             # Plot for each design point
             plot_each_design_point = False
-            if plot_each_design_point:
-                for design_point_index in range(n_design_points):
+            for design_point_index in range(n_design_points):
+
+                if plot_each_design_point or design_point_index == 0:
 
                     # Plot relative uncertainty of prediction
                     fig = plt.figure(figsize=[12, 15])
