@@ -877,7 +877,7 @@ class PlotResults(common_base.CommonBase):
                 g_truncated = self.plot_utils.truncate_tgraph(g_data, h_prediction, is_AA = self.is_AA) 
                 if g_truncated:
                     y = np.array(g_truncated.GetY())
-                    y_err = np.array(g_truncated.GetEY())
+                    y_err = np.array([g_truncated.GetErrorY(i) for i in range(g_truncated.GetN())])
                     df = pd.DataFrame({'x_min': x_min, 'x_max': x_max, 'y': y, 'y_err': y_err})
 
                     x = np.array(g_truncated.GetX())
