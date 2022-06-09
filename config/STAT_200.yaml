@@ -70,23 +70,25 @@ thermal_rejection_fraction: 0.33
 # Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
 hadron:
 
-  # https://inspirehep.net/literature/1127262 (no hepdata)
+  # https://inspirehep.net/literature/1127262
   # Fig 11
   pt_pi0_phenix:
     eta_cut: 0.35
     pt: [5., 20.]
     centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
-    bins: [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10., 12., 14., 16., 18., 20.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
 
-    custom_data: 'custom_data.yaml'
+    hepdata: 'HEPData-ins1127262-v2-root.root'
     ytitle_pp: '#frac{1}{2#pip_{T}} #frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[mb GeV^{2}#right]'
     y_min_pp: 2e-12
     y_max_pp: 1e-4
     scale_by: '1/pt'
     skip_pp: True
 
+    hepdata_AA_dir: 'Figure 11'
+    hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5']
+    hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5']
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 2.
