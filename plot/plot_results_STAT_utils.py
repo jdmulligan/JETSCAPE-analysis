@@ -247,8 +247,9 @@ class PlotUtils(common_base.CommonBase):
     #---------------------------------------------------------------
     # Truncate data tgraph to histogram binning range
     #---------------------------------------------------------------
-    def truncate_tgraph(self, g, h):
+    def truncate_tgraph(self, g, h, is_AA=False):
 
+        #print('truncate_tgraph')
         #print(h.GetName())
         #print(np.array(h.GetXaxis().GetXbins()))
 
@@ -270,9 +271,20 @@ class PlotUtils(common_base.CommonBase):
             #print(f'gx: {gx}')
             #print(f'gy: {gy}')
 
+            # If traph is offset from center of the bin, center it
+            xErrLow = g.GetErrorXlow(bin-1)
+            xErrUp = g.GetErrorXhigh(bin-1)
+            if xErrLow > 0 and xErrUp > 0:
+                x_min = gx - xErrLow
+                x_max = gx + xErrUp
+                x_center = (x_min + x_max)/2.
+                if h_x > x_min and h_x < x_max:
+                    if not np.isclose(gx, x_center):
+                        gx = x_center
+
             # If tgraph starts below hist (e.g. when hist has min cut), try to get next tgraph point
             g_offset = 0
-            while gx < h_x and g_offset < g.GetN()+1:
+            while gx+1e-8 < h_x and g_offset < g.GetN()+1:
                 g_offset += 1
                 gx, gy, yErrLow, yErrUp = self.get_gx_gy(g, bin-1+g_offset)
             #print(f'new gx: {gx}')
@@ -283,15 +295,18 @@ class PlotUtils(common_base.CommonBase):
 
             # If tgraph starts above hist, try to get next hist bin
             h_offset = 0
-            while gx > h_x and h_offset < nBins+1:
+            while gx-1e-8 > h_x and h_offset < nBins+1:
                 h_offset += 1
                 h_x = h.GetBinCenter(bin+h_offset)
                 #print(f'h_x: {h_x}')
                 #print(f'gx: {gx}')
 
             if not np.isclose(h_x, gx):
-                print(f'ERROR: hist x: {h_x}, graph x: {gx}')
-                return None
+                if is_AA:
+                    sys.exit(f'ERROR: hist x: {h_x}, graph x: {gx}')
+                else:
+                    print(f'WARNING: hist x: {h_x}, graph x: {gx}')
+                    return None
 
             g_new.SetPoint(bin-1, gx, gy)
             g_new.SetPointError(bin-1, 0, 0, yErrLow, yErrUp)
@@ -329,7 +344,7 @@ class PlotUtils(common_base.CommonBase):
             #print(f'gy: {gy}')
 
             if not np.isclose(h_x, gx):
-                print(f'ERROR?: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
+                print(f'WARNING: hist x: {h_x}, graph x: {gx} -- will not plot ratio')
                 return None
 
             new_content = h_y / gy

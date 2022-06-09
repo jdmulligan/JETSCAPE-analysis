@@ -874,12 +874,15 @@ class PlotResults(common_base.CommonBase):
                 x_max = xbins[1:]
                 
                 g_data = self.observable_settings['data_distribution']
-                g_truncated = self.plot_utils.truncate_tgraph(g_data, h_prediction) 
+                g_truncated = self.plot_utils.truncate_tgraph(g_data, h_prediction, is_AA = self.is_AA) 
                 if g_truncated:
-                    x = np.array(g_truncated.GetX())
                     y = np.array(g_truncated.GetY())
                     y_err = np.array(g_truncated.GetEY())
-                    df = pd.DataFrame({'x_min': x_min, 'x_max': x_max, 'x': x, 'y': y, 'y_err': y_err})
+                    df = pd.DataFrame({'x_min': x_min, 'x_max': x_max, 'y': y, 'y_err': y_err})
+
+                    x = np.array(g_truncated.GetX())
+                    if np.any(np.greater(x_min, x)) or np.any(np.greater(x, x_max)):
+                        sys.exit(f'ERROR: x not contained in hist binning: x={x} vs. x_bins={xbins}')
 
                     # Write table
                     header = f'Version 1.1\n'
