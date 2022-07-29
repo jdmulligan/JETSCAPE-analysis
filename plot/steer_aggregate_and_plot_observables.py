@@ -90,7 +90,7 @@ def main():
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220609'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220720'
     force_download = False
     n_cores = 20
 
@@ -569,7 +569,8 @@ def main():
         #----------------------
         # Plot n_events 
         # Make a 2d plot from a 2d numpy array: n_generated/n_target for (sqrts_paramterization_centrality, design_point_index)
-        n_design_points = 140
+        n_design_points = 230
+        n_design_point_max = {'exponential': 230, 'binomial': 60}
         n_systems = 12
         shape = (n_systems, n_design_points)
         n_events = np.zeros(shape)
@@ -578,6 +579,7 @@ def main():
         # Keep track of which design points need to be re-run
         rerun_threshold = 0.75
         rerun_dict = defaultdict(list)
+        missing_dict = defaultdict(list)
 
         # Loop through each directory corresponding to a given (sqrts, parameterization)
         system_index = 0
@@ -587,10 +589,16 @@ def main():
                 sqrts, system, parameterization  = sqrts_parameterization_label.split('_')
                 qa_plot_dir = os.path.join(plot_dir, sqrts_parameterization_label)
 
-                for design_point_index in os.listdir(qa_plot_dir):
-                    if design_point_index == 'Data':
+                for design_point_index in range(n_design_points):
+
+                    if design_point_index >= n_design_point_max[parameterization]:
                         continue
-            
+
+                    if not os.path.exists(os.path.join(qa_plot_dir, str(design_point_index))):
+                        missing_dict[f'{sqrts_parameterization_label}_0-10'].append(int(design_point_index))
+                        missing_dict[f'{sqrts_parameterization_label}_10-50'].append(int(design_point_index))
+                        continue
+
                     fname = f'{sqrts_parameterization_label}/histograms_design_point_{design_point_index}.root'
                     f = ROOT.TFile(os.path.join(histograms_aggregated_dir, fname), 'read')
                     h = f.Get('h_centrality_generated')
@@ -604,6 +612,10 @@ def main():
                         rerun_dict[f'{sqrts_parameterization_label}_0-10'].append(int(design_point_index))
                     if 0.01 < ratio_10_50 < rerun_threshold:
                         rerun_dict[f'{sqrts_parameterization_label}_10-50'].append(int(design_point_index))
+                    if np.isclose(ratio_0_10, 0.):
+                        missing_dict[f'{sqrts_parameterization_label}_0-10'].append(int(design_point_index))
+                    if np.isclose(ratio_10_50, 0.):
+                        missing_dict[f'{sqrts_parameterization_label}_10-50'].append(int(design_point_index))
 
                 system_labels.append(f'{sqrts_parameterization_label}_0-10')
                 system_labels.append(f'{sqrts_parameterization_label}_10-50')
@@ -631,6 +643,10 @@ def main():
         print()
         print(f'The following design points had fewer than {rerun_threshold}x the target statistics')
         for key,val in rerun_dict.items():
+            print(f'  {key}: {sorted(val)}')
+        print()
+        print(f'The following design points have not yet been uploaded')
+        for key,val in missing_dict.items():
             print(f'  {key}: {sorted(val)}')
         print()
 
@@ -710,7 +726,7 @@ def main():
             # Plot relative uncertainty of prediction
             fig = plt.figure(figsize=[12, 15])
             ax = plt.axes()
-            fig.suptitle(f'Relative statistical uncertainty -- Prediction -- mean', fontsize=24)
+            fig.suptitle(f'% statistical uncertainty on prediction -- mean', fontsize=24)
             matrix = np.transpose(np.mean(relative_uncertainty_prediction, axis=1))
             matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
             c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=0.2, interpolation='nearest')
@@ -728,7 +744,25 @@ def main():
             # Plot ratio of relative uncertainty of prediction to that in data
             fig = plt.figure(figsize=[12, 15])
             ax = plt.axes()
-            fig.suptitle(f'Relative statistical uncertainty -- Prediction/Data -- mean', fontsize=24)
+            fig.suptitle(f'(% statistical uncertainty on prediction) / (% total uncertainty on data) -- mean', fontsize=18)
+            matrix = np.transpose(np.mean(relative_uncertainty_ratio_to_data, axis=1))
+            matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
+            c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=5., interpolation='nearest')
+            fig.colorbar(c)
+            ax.set_xlabel('Observable bin', size=16)
+            bin_ticks = range(n_bins)
+            plt.xticks(bin_ticks, bin_ticks, size=10)
+            observable_ticks = np.linspace(0, n_observables-1, n_observables)
+            plt.yticks(observable_ticks, observable_labels_ordered, size=10)
+            outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_ratio_{parameterization}_mean_0_5.pdf')
+            plt.tight_layout()
+            plt.savefig(outfilename)
+            plt.close()
+
+            # Repeat with different z axis range
+            fig = plt.figure(figsize=[12, 15])
+            ax = plt.axes()
+            fig.suptitle(f'(% statistical uncertainty on prediction) / (% total uncertainty on data) -- mean', fontsize=18)
             matrix = np.transpose(np.mean(relative_uncertainty_ratio_to_data, axis=1))
             matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
             c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=1., interpolation='nearest')
@@ -738,7 +772,7 @@ def main():
             plt.xticks(bin_ticks, bin_ticks, size=10)
             observable_ticks = np.linspace(0, n_observables-1, n_observables)
             plt.yticks(observable_ticks, observable_labels_ordered, size=10)
-            outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_ratio_{parameterization}_mean.pdf')
+            outfilename = os.path.join(global_qa_dir, f'stat_uncertainty_ratio_{parameterization}_mean_0_1.pdf')
             plt.tight_layout()
             plt.savefig(outfilename)
             plt.close()
@@ -752,7 +786,7 @@ def main():
                     # Plot relative uncertainty of prediction
                     fig = plt.figure(figsize=[12, 15])
                     ax = plt.axes()
-                    fig.suptitle(f'Relative statistical uncertainty -- Prediction -- design point {design_point_index}', fontsize=24)
+                    fig.suptitle(f'% statistical uncertainty on prediction -- design point {design_point_index}', fontsize=24)
                     matrix = np.transpose(relative_uncertainty_prediction[:,design_point_index,:])
                     matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
                     c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=0.2, interpolation='nearest')
@@ -770,10 +804,10 @@ def main():
                     # Plot ratio of relative uncertainty of prediction to that in data
                     fig = plt.figure(figsize=[12, 15])
                     ax = plt.axes()
-                    fig.suptitle(f'Relative statistical uncertainty -- Prediction/Data -- design point {design_point_index}', fontsize=24)
+                    fig.suptitle(f'(% statistical uncertainty on prediction) / (% total uncertainty on data) -- design point {design_point_index}', fontsize=18)
                     matrix = np.transpose(relative_uncertainty_ratio_to_data[:,design_point_index,:])
                     matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
-                    c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=1.0, interpolation='nearest')
+                    c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=5.0, interpolation='nearest')
                     fig.colorbar(c)
                     ax.set_xlabel('Observable bin', size=16)
                     bin_ticks = range(n_bins)
