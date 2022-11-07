@@ -15,6 +15,7 @@ import os
 import argparse
 import yaml
 import numpy as np
+import random
 from collections import defaultdict
 
 # Fastjet via python (from external library heppy)
@@ -884,87 +885,120 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         n_subjettiness_calculator1 = fjcontrib.Nsubjettiness(1, axis_definition, measure_definition)
         n_subjettiness_calculator2 = fjcontrib.Nsubjettiness(2, axis_definition, measure_definition)
 
+        # split events into signal and reference-classed events
+        # majority signal to optimise stat. unc.
+        frac_signal = 0.8
+        is_signal_event = True
+        if random.random() > frac_signal:
+            is_signal_event = False
+
+
+        # hadron + jet
+        trigger_array_hjet = []
+
         for hadron in fj_hadrons_positive_charged:
         
             if abs(hadron.eta()) < self.semi_inclusive_chjet_observables['hjet_alice']['hadron_eta_cut']:
 
                 # Search for hadron trigger
-                hjet_found_low_276 = False
-                hjet_found_low_502 = False
-                hjet_found_high = False
-                nsubjettiness_found_low = False
-                nsubjettiness_found_high = False
+                if hjet_low_trigger_range_276[0] < hadron.pt() < hjet_low_trigger_range_276[1] and not is_signal_event:
+                    trigger_array_hjet.append(hadron)
+                if hjet_high_trigger_range[0] < hadron.pt() < hjet_high_trigger_range[1] and is_signal_event:
+                    trigger_array_hjet.append(hadron)
 
-                if hjet_low_trigger_range_276[0] < hadron.pt() < hjet_low_trigger_range_276[1]:
-                    hjet_found_low_276 = True
-                if hjet_low_trigger_range_502[0] < hadron.pt() < hjet_low_trigger_range_502[1]:
-                    hjet_found_low_502 = True
-                if hjet_high_trigger_range[0] < hadron.pt() < hjet_high_trigger_range[1]:
-                    hjet_found_high = True
-                if nsubjettiness_low_trigger_range[0] < hadron.pt() < nsubjettiness_low_trigger_range[1]:
-                    nsubjettiness_found_low = True
-                if nsubjettiness_high_trigger_range[0] < hadron.pt() < nsubjettiness_high_trigger_range[1]:
-                    nsubjettiness_found_high = True
-                found_trigger =  hjet_found_low_276 or hjet_found_low_502 or hjet_found_high or nsubjettiness_found_low or nsubjettiness_found_high
+        # Search for recoil jets
+        if len(trigger_array_hjet) > 0:
 
-                # Record N triggers
-                getattr(self, f'h_semi_inclusive_{ch_label}_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
-                getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(hadron.pt())
-                
-                # Search for recoil jets
-                if found_trigger:
-                    for jet in jets_selected:
-                        if abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
-                                        
-                            # Get the corrected jet pt: shower+recoil-holes
-                            jet_pt = jet.pt()
-                            for temp_hadron in fj_hadrons_negative_charged:
-                                if jet.delta_R(temp_hadron) < jetR:
-                                    jet_pt -= temp_hadron.pt()
+            # random selection of the trigger, since we may have more than one found in the event
+            trigger = trigger_array_hjet[random.randrange(len(trigger_array_hjet))]
 
-                            # Jet yield and Delta phi
-                            if hjet_found_low_276:
-                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    getattr(self, f'h_semi_inclusive_{ch_label}_IAA_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
+            # Record hadron pt for trigger normalization
+            # NOTE: This will record the hadron trigger even if it's not used in the IAA. However,
+            #       this is fine because we account for the difference in low and high trigger ranges
+            #       when we construct the histograms.
+            getattr(self, f'h_semi_inclusive_{ch_label}_hjet_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(trigger.pt())
 
-                                if 40 < jet_pt < 60:
-                                    getattr(self, f'h_semi_inclusive_{ch_label}_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
+            for jet in jets_selected:
+                if abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+                                
+                    # Get the corrected jet pt: shower+recoil-holes
+                    jet_pt = jet.pt()
+                    for temp_hadron in fj_hadrons_negative_charged:
+                        if jet.delta_R(temp_hadron) < jetR:
+                            jet_pt -= temp_hadron.pt()
 
-                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                    # Jet yield and Delta phi
+                    if is_signal_event:
+                        if np.abs(jet.delta_phi_to(trigger)) > (np.pi - 0.6):
+                            getattr(self, f'h_semi_inclusive_{ch_label}_IAA_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
 
-                            if hjet_found_low_502:
-                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_lowTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
-                                    
-                            if hjet_found_high:
-                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    getattr(self, f'h_semi_inclusive_{ch_label}_IAA_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
+                        if 40 < jet_pt < 60:
+                            getattr(self, f'h_semi_inclusive_{ch_label}_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(trigger.delta_phi_to(jet)))
 
-                                if 40 < jet_pt < 60:
-                                    getattr(self, f'h_semi_inclusive_{ch_label}_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(hadron.delta_phi_to(jet)))
+                        getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(trigger.delta_phi_to(jet)))
 
-                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_highTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
-                                getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_highTrigger_alice_R{jetR}_502_pt{constituent_threshold}').Fill(jet_pt, np.abs(hadron.delta_phi_to(jet)))
+                    else:
 
-                            # Nsubjettiness
-                            # We use the jet pt including recoils here, since the Nsubjettiness is calculated
-                            # including recoils (but without hole subtraction).
-                            # Not ideal but not sure of an immediate better solution.
-                            if nsubjettiness_found_low:
-                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    if 40 < jet_pt < 60:
-                                        tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
-                                        tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
-                                        if tau1 > 1e-3:
-                                            getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_lowTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
+                        if np.abs(jet.delta_phi_to(trigger)) > (np.pi - 0.6):
+                            getattr(self, f'h_semi_inclusive_{ch_label}_IAA_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt)
 
-                            if nsubjettiness_found_high:
-                                if np.abs(jet.delta_phi_to(hadron)) > (np.pi - 0.6):
-                                    if 40 < jet_pt < 60:
-                                        tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
-                                        tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
-                                        if tau1 > 1e-3:
-                                            getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_highTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
+                        if 40 < jet_pt < 60:
+                            getattr(self, f'h_semi_inclusive_{ch_label}_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(np.abs(trigger.delta_phi_to(jet)))
+
+                        getattr(self, f'h_semi_inclusive_{ch_label}_IAA_dphi_lowTrigger_alice_R{jetR}_276_pt{constituent_threshold}').Fill(jet_pt, np.abs(trigger.delta_phi_to(jet)))
+
+        # Nsubjettiness
+        # We use the jet pt including recoils here, since the Nsubjettiness is calculated
+        # including recoils (but without hole subtraction).
+        # Not ideal but not sure of an immediate better solution.
+                           
+        trigger_array_nsubjettiness = []
+
+        for hadron in fj_hadrons_positive_charged:
         
+            if abs(hadron.eta()) < self.semi_inclusive_chjet_observables['hjet_alice']['hadron_eta_cut']:
+
+                # Search for hadron trigger
+                if nsubjettiness_low_trigger_range[0] < hadron.pt() < nsubjettiness_low_trigger_range[1] and not is_signal_event:
+                    trigger_array_nsubjettiness.append(hadron)
+                if nsubjettiness_high_trigger_range[0] < hadron.pt() < nsubjettiness_high_trigger_range[1] and is_signal_event:
+                    trigger_array_nsubjettiness.append(hadron)
+
+
+
+        # Search for recoil jets
+        if len(trigger_array_nsubjettiness) > 0:
+
+            # random selection of the trigger, since we may have more than one found in the event
+            trigger = trigger_array_nsubjettiness[random.randrange(len(trigger_array_nsubjettiness))]
+
+            # Record hadron pt for trigger normalization
+            getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_ntrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(trigger.pt())
+
+            for jet in jets_selected:
+                if abs(jet.eta()) < (self.inclusive_chjet_observables['eta_cut_alice_R'] - jetR):
+                                
+                    # Get the corrected jet pt: shower+recoil-holes
+                    jet_pt = jet.pt()
+                    for temp_hadron in fj_hadrons_negative_charged:
+                        if jet.delta_R(temp_hadron) < jetR:
+                            jet_pt -= temp_hadron.pt()
+
+                    if is_signal_event:
+                        if np.abs(jet.delta_phi_to(trigger)) > (np.pi - 0.6):
+                            if 40 < jet_pt < 60:
+                                tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
+                                tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
+                                if tau1 > 1e-3:
+                                    getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_highTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
+                    else:
+                        if np.abs(jet.delta_phi_to(trigger)) > (np.pi - 0.6):
+                            if 40 < jet_pt < 60:
+                                tau1 = n_subjettiness_calculator1.result(jet)/jet.pt()
+                                tau2 = n_subjettiness_calculator2.result(jet)/jet.pt()
+                                if tau1 > 1e-3:
+                                    getattr(self, f'h_semi_inclusive_{ch_label}_nsubjettiness_lowTrigger_alice_R{jetR}_pt{constituent_threshold}').Fill(tau2/tau1)
+
     #---------------------------------------------------------------
     # Return leading jet (or subjet)
     #---------------------------------------------------------------

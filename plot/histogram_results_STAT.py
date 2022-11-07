@@ -393,31 +393,70 @@ class HistogramResults(common_base.CommonBase):
                 for jet_R in block['jet_R']:
                     self.suffix = f'_R{jet_R}'
 
-                    # Construct appropriate binning
-                    bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
-                                                            centrality, centrality_index, self.suffix)
-                    if not bins.any():
-                        continue
+                    if self.sqrts == 2760 or self.sqrts == 5020:
 
-                    if self.sqrts == 2760:
+                        if 'dphi' in observable:
 
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}',
-                                                  bins=bins, centrality=centrality)
-                        self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}',
-                                                  bins=bins, centrality=centrality)
+                            # loop over pt bins for dphi observable
+                            for pt_bin in range(len(block['pt'])-1):
 
-                        if jet_collection_label in ['_shower_recoil']:
-                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}_unsubtracted',
-                                                    bins=bins, centrality=centrality)
-                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}_unsubtracted',
-                                                    bins=bins, centrality=centrality)
+                                pt_suffix = f'_pt{pt_bin}'
+
+                                # Construct appropriate binning
+                                bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
+                                                                        centrality, centrality_index,
+                                                                        # suffix=f'{self.suffix}{pt_suffix}')
+                                                                        self.suffix)
+                                if not bins.any():
+                                    continue
+
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}',
+                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}',
+                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+
+                                if jet_collection_label in ['_shower_recoil']:
+                                    self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}_unsubtracted',
+                                            bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+                                    self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}_unsubtracted',
+                                            bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+
+
+
+
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}{self.suffix}{jet_collection_label}',
+                                                          bins=bins, centrality=centrality, pt_suffix=pt_suffix, pt_bin=pt_bin, block=block)
+
+                        else:
+
+                            # Construct appropriate binning
+                            bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
+                                                                    centrality, centrality_index, self.suffix)
+    
+                            if not bins.any():
+                                continue
+    
+                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}',
+                                                      bins=bins, centrality=centrality)
+                            self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}',
+                                                      bins=bins, centrality=centrality)
+
+                            if jet_collection_label in ['_shower_recoil']:
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}_unsubtracted',
+                                        bins=bins, centrality=centrality)
+                                self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}_unsubtracted',
+                                        bins=bins, centrality=centrality)
+
 
                         if np.isclose(jet_R, block['jet_R'][0]):
-                            column_name = f'{observable_type}_alice_trigger_pt{jet_collection_label}'
+                            column_name = f'{observable_type}_{observable}_trigger_pt{jet_collection_label}'
                             bins = np.array(block['low_trigger_range'] + block['high_trigger_range']).astype(np.float)
                             self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, observable=observable)
 
                     elif self.sqrts == 200:
+                        bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
+                                                                centrality, centrality_index, self.suffix)
+
 
                         self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}{jet_collection_label}',
                                                   bins=bins, centrality=centrality)
