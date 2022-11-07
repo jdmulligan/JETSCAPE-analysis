@@ -52,6 +52,11 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.pt_hat_max = int(suffix.split('_')[1])
         self.index = suffix.split('_')[2]
         self.output_dir = os.path.join(output_dir, self.index)
+        # Check whether pp or AA
+        if 'PbPb' in self.input_file_hadrons or 'AuAu' in self.input_file_hadrons:
+            self.is_AA = True
+        else:
+            self.is_AA = False
 
         # Get pt-hat scale factor from file in same directory
         self.input_dir = os.path.dirname(input_file)
