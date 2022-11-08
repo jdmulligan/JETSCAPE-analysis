@@ -8,7 +8,9 @@
 #SUFFIX="5020_PP_Colorless"
 #SUFFIX="5020_PbPb_0-5_0.30_2.0_1"
 SUFFIX="5020_PbPb_5-10_0.30_2.0_1"
+#SUFFIX="5020_PbPb_30-40_0.30_2.0_1"
+#SUFFIX="5020_PbPb_40-50_0.30_2.0_1"
 
-OUTPUT_DIR_BASE=/rstorage/jetscape/AnalysisResults/499531/v3/$SUFFIX
+OUTPUT_DIR_BASE=/rstorage/jetscape/AnalysisResults/1010094/v3/$SUFFIX
 
 hadd -f -j 10 $OUTPUT_DIR_BASE/AnalysisResultsFinal.root $OUTPUT_DIR_BASE/Stage0/*/*.root

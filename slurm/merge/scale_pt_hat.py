@@ -9,11 +9,13 @@ from jetscape_analysis.analysis import scale_histograms
 #suffix = '2760_PP_Colorless'
 #suffix = '2760_PbPb_0-5_0.30_2.0_1'
 #suffix = '2760_PbPb_5-10_0.30_2.0_1'
-#suffix = '5020_PP_Colorless'
+suffix = '5020_PP_Colorless'
 #suffix = '5020_PbPb_0-5_0.30_2.0_1'
-suffix = '5020_PbPb_5-10_0.30_2.0_1'
+#suffix = '5020_PbPb_5-10_0.30_2.0_1'
+#suffix = '5020_PbPb_30-40_0.30_2.0_1'
+#suffix = '5020_PbPb_40-50_0.30_2.0_1'
 
-base_dir = f'/rstorage/jetscape/AnalysisResults/499531/v3/{suffix}'
+base_dir = f'/rstorage/jetscape/AnalysisResults/1010094/v3/{suffix}'
 pt_hat_dir = f'/rstorage/jetscape/JETSCAPE-AA-events/skim/497764/v3/{suffix}'
 
 config_file = '../../config/TG3.yaml'
