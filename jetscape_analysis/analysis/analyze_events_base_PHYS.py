@@ -81,6 +81,9 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         self.debug_level = config['debug_level']
         self.scale_histograms = config['scale_histograms']
 
+        if 'user_index_for_pid' in config:
+            self.user_index_for_pid = config['user_index_for_pid']
+
         # Find pt-hat bin index
         self.pt_hat_bins = config['pt_hat_bins']
         self.n_pt_hat_bins = len(self.pt_hat_bins) - 1
@@ -216,8 +219,17 @@ class AnalyzeJetscapeEvents_BasePHYS(common_base.CommonBase):
         # Create a vector of fastjet::PseudoJets from arrays of px,py,pz,e
         fj_particles = fjext.vectorize_px_py_pz_e(px, py, pz, e)
 
-        # Set pid as user_index
-        [fj_particles[i].set_user_index(int(pid[i])) for i,_ in enumerate(fj_particles)]
+        if self.user_index_for_pid:
+            # Set pid as user_index
+            [fj_particles[i].set_user_index(int(pid[i])) for i,_ in enumerate(fj_particles)]
+        else:
+            # Set positive user_index for positive status, negative user_index for negative status
+            if select_status == '-':
+                [fj_particles[i].set_user_index(-1) for i,_ in enumerate(fj_particles)]
+            elif select_status == '+':
+                [fj_particles[i].set_user_index(1) for i,_ in enumerate(fj_particles)]
+            else:
+                sys.exit('ERROR in fill_fastjet_constituents')
 
         return fj_particles
 

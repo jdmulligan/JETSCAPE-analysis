@@ -204,7 +204,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
         self.initialize_binnings()
         
         # Initialize each set of histograms
-        self.initialize_hadron_histograms()
+        if self.user_index_for_pid:
+            self.initialize_hadron_histograms()
         self.initialize_inclusive_jet_histograms()
         self.initialize_inclusive_chjet_histograms()
         self.initialize_semi_inclusive_chjet_histograms(charged=True)
@@ -325,8 +326,6 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                 hname = f'h_chjet_angularity_{label}_alice_R{jetR}_pt{pt_min}-{pt_max}_alpha{alpha}_pt{constituent_threshold}'
                                 h = ROOT.TH1F(hname, hname, len(self.inclusive_chjet_angularity_alice_bins[label][f'{pt_min}-{pt_max}'][alpha])-1, 
                                                             self.inclusive_chjet_angularity_alice_bins[label][f'{pt_min}-{pt_max}'][alpha])
-
-                                            
                                 h.Sumw2()
                                 setattr(self, hname, h)
 
@@ -525,10 +524,14 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                                                          select_charged=True)
         fj_hadrons_negative_charged_all = self.fill_fastjet_constituents(event, select_status='-',
                                                                          select_charged=True)
+
+        # TODO: To use negative recombiner as well as pid, should make two sets of particles -- one where
+        # user_index is set to status, and the other where it is set pid
         
         # Fill hadron histograms for jet shower particles
-        self.fill_hadron_histograms(fj_hadrons_positive_all, status='+')
-        self.fill_hadron_histograms(fj_hadrons_negative_all, status='-')
+        if self.user_index_for_pid:
+            self.fill_hadron_histograms(fj_hadrons_positive_all, status='+')
+            self.fill_hadron_histograms(fj_hadrons_negative_all, status='-')
 
         # Loop through several different constituent thresholds
         for constituent_threshold in self.constituent_threshold:
@@ -735,10 +738,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                             for hadron in jet.constituents():
                                 if hadron.user_index() > 0:
                                     lambda_alpha += hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
-                            for hadron in holes_in_jet:
-                                if hadron.user_index() > 0:
-                                    continue
-                                lambda_alpha -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
+                                elif hadron.user_index() < 0:
+                                    lambda_alpha -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
                             getattr(self, f'h_chjet_angularity_ungroomed_alice_R{jetR}_pt{pt_min}-{pt_max}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha)
                             
                             if jet_groomed_lund[0.2]:
@@ -747,14 +748,8 @@ class AnalyzeJetscapeEvents_TG3(analyze_events_base_PHYS.AnalyzeJetscapeEvents_B
                                     for hadron in jet_groomed_lund[0.2].pair().constituents():
                                         if hadron.user_index() > 0:
                                             lambda_alpha_g += hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
-                                    for hadron in holes_in_jet:
-                                        if hadron.user_index() > 0:
-                                            continue
-                                        for groomed_hadron in jet_groomed_lund[0.2].pair().constituents():
-                                            if np.isclose(hadron.pt(), groomed_hadron.pt()) and np.isclose(hadron.eta(), groomed_hadron.eta()) and np.isclose(hadron.phi(), groomed_hadron.phi()):
-                                                lambda_alpha_g -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
-                                                break                                            
-                                            
+                                        elif hadron.user_index() < 0:
+                                            lambda_alpha_g -= hadron.pt() / jet_pt * np.power(hadron.delta_R(jet)/jetR, alpha)
                                     getattr(self, f'h_chjet_angularity_groomed_alice_R{jetR}_pt{pt_min}-{pt_max}_alpha{alpha}_pt{constituent_threshold}').Fill(lambda_alpha_g)
 
         # Jet mass

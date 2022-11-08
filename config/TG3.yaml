@@ -7,6 +7,9 @@ pt_hat_bins:  [1, 2, 3, 4, 5, 7, 9, 11, 13, 15, 17, 20, 25, 30, 35, 40, 45, 50, 
 #------------------------------------------------------------------
 # Analysis parameters -- nothing below affects the generation stage
 
+# TODO: Currently we use the user_index EITHER for PID or for positive/negative status for subtraction
+user_index_for_pid: False
+
 # Required parameters
 scale_histograms: False
 
@@ -64,8 +67,8 @@ hadron:
 # Some general jet parameters
 jet_R: [0.2, 0.4, 0.5]
 min_jet_pt: 10.
-max_jet_y: 3.
-constituent_threshold: [0., 0.15, 0.5]
+max_jet_y: 1.
+constituent_threshold: [0.]
 
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
