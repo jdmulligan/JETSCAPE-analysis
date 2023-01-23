@@ -787,14 +787,14 @@ def main():
             print(f'(n_bins, n_design_points, n_observables_total) = {relative_uncertainty_prediction.shape}')
 
             # Group observables and make a plot for each group
-            groups = ['hadron__pt', 'jet__pt', 'Dpt', 'Dz', '']
+            groups = ['hadron__pt_', 'jet__pt_', 'Dpt', 'Dz', '']
             group_indices_total = []
             for group in groups:
                 if group: # Plot all observables containing a matching string
                     group_indices = [i for i,label in enumerate(observable_labels_ordered) if group in label]
                     group_indices_total += group_indices
                 else: # Plot everything that remains
-                    group_indices = list(set(range(len(observable_labels_ordered))) - set(group_indices_total))
+                    group_indices = [i for i,_ in enumerate(observable_labels_ordered) if i not in group_indices_total]
                     group = 'other'
                 n_observables_group = len(group_indices)
                 print(f'n_observables ({group}) = {n_observables_group}')
