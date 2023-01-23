@@ -227,11 +227,14 @@ class PlotUtils(common_base.CommonBase):
         n = len(x)
 
         if isinstance(data[key]['y'][0], list):
-            y = np.array(data[key]['y'][centrality_index])
-            if 'y_err' in data[key]:
-                y_err = np.array(data[key]['y_err'][centrality_index])
+            if len(data[key]['y']) > centrality_index:
+                y = np.array(data[key]['y'][centrality_index])
+                if 'y_err' in data[key]:
+                    y_err = np.array(data[key]['y_err'][centrality_index])
+                else:
+                    y_err = np.zeros(n)
             else:
-                y_err = np.zeros(n)
+                return None
         else:
             y = np.array(data[key]['y'])
             if 'y_err' in data[key]:

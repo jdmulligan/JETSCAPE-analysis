@@ -80,7 +80,7 @@ class PlotResults(common_base.CommonBase):
         self.pt_ref = self.config['pt_ref']
 
         # If AA, set different options for hole subtraction treatment
-        self.jet_collection_labels_AA = self.config['jet_collection_labels'] + ['shower_recoil_unsubtracted']
+        self.jet_collection_labels_AA = self.config['jet_collection_labels'] # + ['_shower_recoil_unsubtracted']
         self.jet_collection_label_pp = ''
         if self.is_AA:
             self.jet_collection_labels = self.jet_collection_labels_AA
@@ -99,7 +99,7 @@ class PlotResults(common_base.CommonBase):
 
         self.analysis = 'Analysis1'
         
-        if self.analysis == 'Analysis1':
+        if self.analysis == 'hadron_jet_RAA':
 
             self.plot_hadron_observables(observable_type='hadron')
                         
@@ -112,15 +112,10 @@ class PlotResults(common_base.CommonBase):
 
             self.plot_hadron_observables(observable_type='hadron')
 
-            self.plot_hadron_correlation_observables(observable_type='hadron_correlations')
-
             self.plot_jet_observables(observable_type='inclusive_chjet')
 
             if 'inclusive_jet' in self.config:
                 self.plot_jet_observables(observable_type='inclusive_jet')
-
-            if 'semi_inclusive_chjet' in self.config:
-                self.plot_semi_inclusive_chjet_observables(observable_type='semi_inclusive_chjet')
 
             if 'dijet' in self.config:
                 self.plot_jet_observables(observable_type='dijet')
@@ -199,7 +194,7 @@ class PlotResults(common_base.CommonBase):
         for observable, block in self.config[observable_type].items():
             for centrality_index,centrality in enumerate(block['centrality']):
 
-                if self.analysis == 'Analysis1':
+                if self.analysis == 'hadron_jet_RAA':
                     if not observable.startswith('pt_'):
                         print(f'skipping {observable}')
                         continue
@@ -307,6 +302,9 @@ class PlotResults(common_base.CommonBase):
             self.observable_settings['data_distribution'] = self.plot_utils.tgraph_from_yaml(block, self.is_AA, self.sqrts, observable_type, observable, centrality_index, suffix=self.suffix, pt_suffix=pt_suffix)
         else:
             self.observable_settings['data_distribution'] = None
+
+        # Also initialize systematic uncertainties
+        #print(block)
 
         #-----------------------------------------------------------
         # Initialize JETSCAPE distribution into self.observable_settings
@@ -918,7 +916,7 @@ class PlotResults(common_base.CommonBase):
         self.jetscape_legend_label['jetscape_distribution_constituent_subtraction'] = 'JETSCAPE (CS)'
 
         if not self.observable_settings[keys_to_plot[0]]:
-            print(f'WARNING: skipping {observable} {label} {centrality} since data is missing')
+            print(f'WARNING: skipping {label} since data is missing')
             return
 
         # Get the pp reference histogram and form the RAA ratios

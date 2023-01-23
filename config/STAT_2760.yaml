@@ -618,6 +618,7 @@ dijet:
   
   # https://inspirehep.net/literature/1607896 (no hepdata)
   # TGraphs for R=0.4 supplied by Laura/Dennis
+  # pt-dependence for 0-10%, and pt=[100,126] for other centralities
   # Fig 8 -- centrality dependence for pt1=[100,126]
   # Fig 9 -- pt1-dependence for 0-10%
   xj_atlas:

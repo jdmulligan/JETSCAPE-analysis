@@ -79,6 +79,9 @@ def main():
 
     #-----------------------------------------------------------------
     # Set which options you want to execute
+    # To edit the set of observables that are plotted, see the self.analysis variable in plot_results_STAT.py
+    # Note: all observables that are plotted are saved to hdf5, and are then written to tables
+    # Note: plotting script may have warnings about missing histograms, this is usually due to some missing centrality bins for certain design points
     download_runinfo = False
     download_histograms = False
     merge_histograms = False
@@ -90,13 +93,14 @@ def main():
     # Edit these parameters
     stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
     jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20220720'
+    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20230116'
     force_download = False
     n_cores = 20
 
     # You may need to edit these for a future analysis -- but can leave as is for now
     analysis_name = 'Analysis1'
     facilities = ['bridges2', 'expanse']
+
     #-----------------------------------------------------------------
 
     #-----------------------------------------------------------------
@@ -335,7 +339,7 @@ def main():
                 cmd += f' -o {outputdir}'
                 subprocess.run(cmd, check=True, shell=True)
 
-        # Then plot AA, using appropriate pp reference, and construct dataframe of PbPb/pp values to be used for Bayesian analysis
+        # Then plot AA, using appropriate pp reference, and construct AA/pp ratios
         process_list = []
         for design_point_tuple in design_point_dictionary.keys():
             sqrts, system, parametrization_type, design_point_index = design_point_tuple
@@ -351,7 +355,7 @@ def main():
                     cmd += f' -o {outputdir}'
 
                     # Execute in parallel
-                    # Simple & quick implementation:once max_processes have been launched, wait for them to finish before continuing
+                    # Simple & quick implementation: once max_processes have been launched, wait for them to finish before continuing
                     process = subprocess.Popen(cmd, shell=True)
                     process_list.append(process)
                     if len(process_list) > n_cores-1:
@@ -366,8 +370,6 @@ def main():
 
         # Construct table of model predictions for all design points, as input to Bayesian analysis
         # We can easily adapt this to the format v1.0 specified here, although we may want to update a bit: https://www.evernote.com/l/ACWFCWrEcPxHPJ3_P0zUT74nuasCoL_DBmY
-        print()
-        print('Write predictions to table...')
         plot_dir = os.path.join(local_base_outputdir, 'plot')
         table_base_dir = os.path.join(local_base_outputdir, 'tables')
         prediction_table_dir = os.path.join(table_base_dir, 'Prediction')
@@ -403,8 +405,12 @@ def main():
                 #   columns=[design1, design2, ...]
                 #   rows=[bin1, bin2, ...]
                 label_dir = os.path.join(plot_dir, label)
+                print(f'Constructing prediction dataframes for {label}...')
                 for design_point_index in os.listdir(label_dir):
+                    #if design_point_index != '0':
+                    #    continue
                     if not os.path.isfile(os.path.join(label_dir, design_point_index)) and design_point_index != 'Data':
+                        #print(f'  design_point_index: {design_point_index}')
 
                         final_result_h5 = os.path.join(f'{label_dir}/{design_point_index}', 'final_results.h5')
                         if not os.path.exists(final_result_h5):
@@ -444,32 +450,80 @@ def main():
                                 else:
                                     if int(design_point_index) not in design_df[parameterization].index:
                                         design_df[parameterization] = pd.concat([design_df[parameterization], parameterization_values])
+                print(f'Done constructing prediction dataframes for {label}.')
+                print()
 
                 # Write Prediction and Data dataframes to txt
-                # TODO: For now we use negative recombiner for jet observables
+                print(f'Writing prediction tables for {label}...')
                 for type in output_dict.keys():
                     if type in ['observable_label', 'bin_edges']:
                         continue
 
                     for key,df in output_dict[type].items():
-
                         key_items = key.split('_')
+                        #if 'values' in key:
+                        #    print()
+                        #    print(key_items)
+
+                        # Parse observable-specific names -- there are a few different cases depending on the observable class
+                        # We uniformize the structure as: f'{parameterization}__{sqrts}__{system}__{observable_category}__{observable}__{subobservable}__{centrality[0]}-{centrality[1]}'
+                        # For example: binomial__5020__PbPb__inclusive_chjet__pt_alice__R0.4__0-10
+                        # This will allow us to easily parse the observables in a uniform way, and also access info in the STAT observable config files
+                        # Note that the experiment can always be accessed as observable.split('_')[-1]
+                        # The subobservable can include: jet radius, grooming condition, pt bin index
+
+                        # Hadron observables -- after hole subtraction
                         if 'hadron' in key and 'unsubtracted' not in key:
-                            experiment = key_items[5]
-                            observable = f'{key_items[2]}_{key_items[3]}_{key_items[4]}'
+                            observable_category = key_items[2]
+                            observable = f'{key_items[3]}_{key_items[4]}_{key_items[5]}'
+                            subobservable = ''
                             centrality = [''.join(filter(str.isdigit, s)) for s in key_items[6].split(',')]
-                            observable_name_prediction = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
-                            observable_name_data = f'{experiment}_{system}{sqrts}_{observable}_{centrality[0]}to{centrality[1]}'
-                        elif 'negative_recombiner' in key and '_y_' not in key:
-                            experiment = key_items[7]
-                            observable = f'{key_items[4]}_{key_items[5]}_{key_items[6]}_{key_items[8]}'
-                            centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
-                            observable_name_prediction = f'{experiment}_{system}{sqrts}{parameterization}_{observable}_{centrality[0]}to{centrality[1]}'
-                            observable_name_data = f'{experiment}_{system}{sqrts}_{observable}_{centrality[0]}to{centrality[1]}'
+
+                        # Jet observables -- with negative_recombiner
+                        # There are several different subobservable patterns that we need to parse
+                        elif 'negative_recombiner' in key:
+                            if 'zcut' in key:
+                                observable_category = f'{key_items[4]}_{key_items[5]}'
+                                observable = f'{key_items[6]}_{key_items[7]}'
+                                subobservable = f'{key_items[8]}_{key_items[9]}_{key_items[10]}'
+                                centrality = [''.join(filter(str.isdigit, s)) for s in key_items[11].split(',')]
+                            elif 'charge' in key:
+                                observable_category = f'{key_items[4]}_{key_items[5]}'
+                                observable = f'{key_items[6]}_{key_items[7]}'
+                                subobservable = f'{key_items[8]}_{key_items[9]}'
+                                centrality = [''.join(filter(str.isdigit, s)) for s in key_items[10].split(',')]
+                            elif 'dijet' in key:
+                                observable_category = key_items[4]
+                                observable = f'{key_items[5]}_{key_items[6]}'
+                                subobservable = f'{key_items[7]}_{key_items[9]}'
+                                centrality = [''.join(filter(str.isdigit, s)) for s in key_items[8].split(',')]
+                            elif '_y_' in key:
+                                observable_category = f'{key_items[4]}_{key_items[5]}'
+                                observable = f'{key_items[6]}_{key_items[7]}_{key_items[8]}'
+                                subobservable = f'{key_items[9]}_{key_items[11]}'
+                                centrality = [''.join(filter(str.isdigit, s)) for s in key_items[10].split(',')]
+                            elif key_items[-2] in [f'pt{i}' for i in range(10)]:
+                                observable_category = f'{key_items[4]}_{key_items[5]}'
+                                observable = f'{key_items[6]}_{key_items[7]}'
+                                subobservable = f'{key_items[8]}_{key_items[10]}'
+                                centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
+                            else:
+                                observable_category = f'{key_items[4]}_{key_items[5]}'
+                                observable = f'{key_items[6]}_{key_items[7]}'
+                                subobservable = key_items[8]
+                                centrality = [''.join(filter(str.isdigit, s)) for s in key_items[9].split(',')]
+
+                        # Skip other observables (hadrons without subtraction, jets with other subtraction schemes)
                         else:
+                            if 'shower_recoil' not in key and 'constituent_subtraction' not in key and 'unsubtracted' not in key:
+                                print(f'Unexpected key: {key}')
                             continue
 
-                        print(f'  {key}')
+                        observable_name_data = f'{sqrts}__{system}__{observable_category}__{observable}__{subobservable}__{centrality[0]}-{centrality[1]}'
+                        observable_name_prediction = f'{parameterization}__{observable_name_data}'
+
+                        if 'values' in key:
+                            print(f'  {observable_name_prediction}')
 
                         # Sort columns
                         df_prediction = output_dict[type][key]
@@ -502,7 +556,7 @@ def main():
                             print()
 
                         # Write Prediction.dat and Data.dat files
-                        filename = os.path.join(prediction_table_dir, f'Prediction_{observable_name_prediction}_{type}.dat')
+                        filename = os.path.join(prediction_table_dir, f'Prediction__{observable_name_prediction}__{type}.dat')
                         design_point_file = f'Design_{parameterization}.dat'
                         header = f'Version 2.0\nData Data_{observable_name_prediction}.dat\nDesign {design_point_file}\n'
                         header += ' '.join(columns)
@@ -513,7 +567,11 @@ def main():
                         header += 'Label xmin xmax y y_err'
                         np.savetxt(filename, data, header=header)
 
+                print(f'Done writing prediction tables for {label}.')
+                print()
+
         # Write out the Design.dat files
+        print('Writing design point tables...')
         for parameterization in design_df.keys():
 
             # Sort according to index
@@ -570,7 +628,7 @@ def main():
         # Plot n_events 
         # Make a 2d plot from a 2d numpy array: n_generated/n_target for (sqrts_paramterization_centrality, design_point_index)
         n_design_points = 230
-        n_design_point_max = {'exponential': 230, 'binomial': 60}
+        n_design_point_max = {'exponential': 230, 'binomial': 180}
         n_systems = 12
         shape = (n_systems, n_design_points)
         n_events = np.zeros(shape)
@@ -657,14 +715,16 @@ def main():
         data_dir = os.path.join(table_dir, 'Data')
 
         parameterizations = ['exponential', 'binomial']
-        n_bins = 21
-        n_observables = int(len([x for x in os.listdir(prediction_dir) if 'Prediction' in x and 'values' in x]) / len(parameterizations))
-        shape = (n_bins, n_design_points, n_observables)
-        relative_uncertainty_prediction = np.zeros(shape)
-        relative_uncertainty_ratio_to_data = np.zeros(shape)
+        n_bins = 31
 
         # Construct 3d arrray: relative statistical uncertainty for (design_point_index, observable, bin)
         for parameterization in parameterizations:
+
+            n_observables = int(len([x for x in os.listdir(prediction_dir) if 'Prediction' in x and 'values' in x and parameterization in x]))
+            shape = (n_bins, n_design_point_max[parameterization], n_observables)
+            relative_uncertainty_prediction = np.zeros(shape)
+            relative_uncertainty_ratio_to_data = np.zeros(shape)
+
             observable_labels = []
             i_observable = 0
             for file_prediction in os.listdir(prediction_dir):
@@ -710,6 +770,8 @@ def main():
                     i_observable += 1
 
             # Order the observables by sqrts, and then alphabetically (i.e. by observable and centrality)
+            print(f'len(observable_labels): {len(observable_labels)}')
+            print(f'n_observables: {n_observables}')
             ordered_labels = np.sort(observable_labels).tolist()
             ordered_indices = np.argsort(observable_labels).tolist()
             ordered_indices_200 = [ordered_indices[i] for i in range(n_observables) if '200' in ordered_labels[i]]
@@ -781,7 +843,7 @@ def main():
             plot_each_design_point = False
             for design_point_index in range(n_design_points):
 
-                if plot_each_design_point or design_point_index == 0:
+                if plot_each_design_point or design_point_index in [0, 90, 91, 92, 93]:
 
                     # Plot relative uncertainty of prediction
                     fig = plt.figure(figsize=[12, 15])
@@ -807,7 +869,7 @@ def main():
                     fig.suptitle(f'(% statistical uncertainty on prediction) / (% total uncertainty on data) -- design point {design_point_index}', fontsize=18)
                     matrix = np.transpose(relative_uncertainty_ratio_to_data[:,design_point_index,:])
                     matrix_masked = np.ma.masked_where((matrix < 1e-8), matrix)
-                    c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=5.0, interpolation='nearest')
+                    c = ax.imshow(matrix_masked, cmap='jet', aspect='auto', vmin=0., vmax=1.0, interpolation='nearest')
                     fig.colorbar(c)
                     ax.set_xlabel('Observable bin', size=16)
                     bin_ticks = range(n_bins)

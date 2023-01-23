@@ -569,18 +569,20 @@ inclusive_chjet:
     y_min_AA: 0.
     y_max_AA: 2.
 
-  # ALICE, (no hepdata)
-  # TODO: Update binnings
+  # TODO: Calculate ATLAS theta_g 
+
+  # https://inspirehep.net/literature/2070434 
+  # TODO: Recalculate observable to use binnings in publication 
   zr_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
-    pt: [100., 150.]
+    pt: [80., 120.]
     centrality: [[0,10]]
     r: [0.1, 0.2]
-    bins: [0.6, 0.65, 0.7, 0.75, 0.77, 0.8, 0.83, 0.86, 0.89, 0.92, 0.95, 0.98, 1.0]
+    #hepdata: 'HEPData-ins2070434-v1-root.root'
 
   # ALICE, (no hepdata)
-  # TODO: Update binnings
+  # TODO: Recalculate observable to use binnings in publication
   axis_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
