@@ -11,7 +11,7 @@ launch a set of pt-hat bins and optionally scan over any additional parameter(s)
 
 ### Pre-requisites
 
-To generate JETSCAPE events, you must first build the [JETSCAPE package](https://github.com/JETSCAPE/JETSCAPE) itself. 
+To generate JETSCAPE events, you must first build the [JETSCAPE package](https://github.com/JETSCAPE/JETSCAPE) itself.
 We recommend to follow the [JETSCAPE Docker
 Instructions](https://github.com/JETSCAPE/JETSCAPE/tree/master/docker) to do so.
 
@@ -35,7 +35,7 @@ cd jetscape_analysis/generate
 python jetscape_events.py -c /home/jetscape-user/JETSCAPE-analysis/config/example.yaml -o /home/jetscape-user/JETSCAPE-analysis-output
 ```
 
-where 
+where
 - `-c` specifies a configuration file that should be edited to specify the pt-hat bins and JETSCAPE XML configuration paths,
 - `-o` specifies a location where the JETSCAPE output files will be written.
 
@@ -45,7 +45,7 @@ That's it! The script will write a separate sub-directory with JETSCAPE events f
 
 ## (2) Analyzing events
 
-We provide a simple framework to loop over the generated JETSCAPE output files, 
+We provide a simple framework to loop over the generated JETSCAPE output files,
 perform physics analysis, and produce a ROOT file.
 It also contains machinery to aggregate the results from the set of pt-hat bins, and plot the analysis results.
 
@@ -54,12 +54,12 @@ It also contains machinery to aggregate the results from the set of pt-hat bins,
 Once the JETSCAPE events are generated, we no longer rely on the JETSCAPE package,
 but rather we analyze the events (jet-finding, writing histograms, etc.) using a python environment.
 A preconfigured environment is available in the JETSCAPE docker container -- or it can be installed manually.
-For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet 
+For jet-finding, we rely on the package [heppy](https://github.com/matplo/heppy) which wraps fastjet
 and fastjet-contribs in python.
 
 #### Docker installation (recommended)
 
-Assuming you have set up Docker according to Step (1), 
+Assuming you have set up Docker according to Step (1),
 enter the container and run an initialization script:
 
 ```
@@ -71,13 +71,18 @@ That's it! Now you can proceed to analyze events.
 
 #### Manual installation
 
-We recommend to use a virtual environment such as [pipenv](https://github.com/pypa/pipenv) to
-manage your python environment:
+We recommend to use a virtual environment such as [virtualenv]() or [pipenv](https://github.com/pypa/pipenv) to
+manage your python environment, e.g.:
 
-```
-cd /home/jetscape-user/JETSCAPE-analysis
-pipenv --three
-pipenv install pyhepmc_ng pyyaml numpy tqdm
+```bash
+$ cd /home/jetscape-user/JETSCAPE-analysis
+$ # Using virtualenv
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install pyhepmc pyyaml numpy tqdm
+$ # Using pipenv
+$ pipenv --three
+$ pipenv install pyhepmc pyyaml numpy tqdm
 ```
 
 Install `heppy` wherever you desire:
@@ -113,7 +118,7 @@ cd /home/jetscape-user/JETSCAPE-analysis/jetscape_analysis/analysis
 python analyze_events_example.py -c ../../config/example.yaml -i /home/jetscape-user/JETSCAPE-analysis-output -o /my/outputdir
 ```
 
-where 
+where
 - `-c` specifies a configuration file that should be edited to specify the pt-hat bins and analysis parameters,
 - `-i` specifies  is the directory containing the generated JETSCAPE events,
 - `-o` specifies a location where the analysis output will be written.
@@ -122,44 +127,49 @@ See `config/example.yaml` for required analysis settings and further details, su
 
 ---------------------------------------------------------------------
 
-Please post an [Issue](https://github.com/jdmulligan/JETSCAPE-analysis/issues) if you encounter any problems, 
+Please post an [Issue](https://github.com/jdmulligan/JETSCAPE-analysis/issues) if you encounter any problems,
 or have suggestions for improvement!
 
 ---------------------------------------------------------------------
 
-### Setup `poetry`
+### Setup package development
 
-This section is only relevant if you want to package up the code yourself.
+This section is only relevant if you want to package up the code yourself. For most other development purposes,
+simply working on an editable copy of the repository with `pip install -e .` is sufficient.
 
-We use `poetry` to manage packaging up this code. You need to setup poetry once globally.
+To package up the code, we use the `hatchling` build backend. It complies with standards, such that it
+interacts well with `pip`, `build`, etc. In order to use a lockfile -- which isn't available via hatch
+as of March 2024 -- we use [`pdm`](https://github.com/pdm-project/pdm).
 
-You must use version 1.0 or later (currently in 1.0.0b3 as of Nov 2019). Follow the [installation
-instructions](https://poetry.eustace.io/docs/#installation). If the python version that you would like to use
-doesn't automatically show up in your path (for example, if you are a macOS user and don't use pyenv), you can
-set the default python for poetry with (python 3.7 in this example):
+To use `pdm`, you need to set it up once globally. The easiest way to do this is by first installing
+[pipx](https://github.com/pypa/pipx), which is broadly available via a package manager for your operating
+system. After installing pipx, install `pdm` globally with `pipx install pdm`.
+
+Next, create a virtual environment for this project with:
 
 ```bash
-$ poetry env use 3.7
-# Check that it worked with:
-$ poetry env info
+$ python3 -m venv .venv
 ```
 
-You can run commands within the poetry virtual environment using `poetry run <command>`. If you want to load
-the virtual environment directly, you can try `poetry shell`, which may work (it doesn't for me), or use
-`source "$(dirname $(poetry run which python))/activate"`, as suggested
-[here](https://github.com/sdispater/poetry/issues/571#issuecomment-443595960). You can also alias this command
-for convenience. As long as it is run within the repository, it will always load the right virtual
-environment.
+and you can enter it with:
 
-Install this package using `poetry install` from the repository root.
+```bash
+$ source .venv/bin/activate
+```
+
+Finally, you can install the package using the lockfile with development packages using:
+
+```bash
+$ pdm install -G dev
+```
 
 #### Pre-commit checks
 
 To setup checks that run on every commit, run
 
 ```bash
-$ poetry run pre-commit install
+$ pipx install pre-commit
+$ pre-commit install
 ```
 
 Now, each commit will be checked on the users' machine.
-
