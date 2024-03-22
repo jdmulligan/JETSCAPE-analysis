@@ -29,7 +29,6 @@ classifiers = [
   "Typing :: Typed",
 ]
 dynamic = ["version"]
-
 dependencies = [
     "pyyaml >=5.1.2",
     "numba >=0.59",
@@ -85,7 +84,7 @@ module = ["ROOT", "numba", "nox", "scipy.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
-src = ["src"]
+src = ["jetscape_analysis"]
 exclude = [
     "jetscape_analysis/_version.py",  # Automatically generated, so there's no point in linting it
     '.git',
@@ -142,8 +141,8 @@ max-complexity = 12
 
 [tool.ruff.lint.isort]
 #required-imports = ["from __future__ import annotations"]
-known_third_party = ["ROOT", "common_base", "event", "fastjet", "fjext", "pyhepmc_ng", "reader", "tqdm", "yaml"]
-known-first_party = ["heppy"]
+known-third-party = ["ROOT", "common_base", "event", "fastjet", "fjext", "pyhepmc_ng", "reader", "tqdm", "yaml"]
+known-first-party = ["heppy"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["T20"]
