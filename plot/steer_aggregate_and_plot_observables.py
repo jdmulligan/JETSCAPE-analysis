@@ -54,16 +54,18 @@
 
 # General
 import os
-import sys
-import subprocess
-import yaml
-import pickle
-from collections import defaultdict
 import pathlib
+import pickle
+import subprocess
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+import h5py
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import h5py
+import yaml
 
 try:
     import ROOT
@@ -84,6 +86,7 @@ def main():
     # Note: plotting script may have warnings about missing histograms, this is usually due to some missing centrality bins for certain design points
     download_runinfo = False
     download_histograms = False
+    list_paths_for_selected_design_points = False
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
@@ -106,7 +109,7 @@ def main():
     #-----------------------------------------------------------------
     # (1) Download info for all runs from OSN, and create a dictionary with all info needed to download and aggregate histograms
     #-----------------------------------------------------------------
-    if download_runinfo or download_histograms or merge_histograms or aggregate_histograms:
+    if download_runinfo or download_histograms or list_paths_for_selected_design_points or merge_histograms or aggregate_histograms:
 
         runs = {}
         run_dictionary = {}
@@ -245,6 +248,61 @@ def main():
                     cmd = f'hadd -j {n_cores} -f {os.path.join(outputdir, fname)} @{file_list}'
                     subprocess.run(cmd, check=True, shell=True)
                     os.remove(file_list)
+
+    #-----------------------------------------------------------------
+    # List histogram paths for selected design points.
+    # Used to extract unmerged histograms for separate studies.
+    #-----------------------------------------------------------------
+    if list_paths_for_selected_design_points:
+        # These options are only put here since they're quite niche.
+        selected_parametrization = "exponential"
+        selected_design_point_indices = list(range(40))
+        # Using a relative directory here is useful since we will want to tar these files up
+        # while keeping a directory structure
+        relative_dir = Path(local_base_outputdir)
+
+        # Setup
+        design_point_index_to_path = {}
+
+        for facility in facilities:
+            for run in runs[facility]:
+
+                filepath_base = os.path.join(local_base_outputdir, f'histograms_per_run/{facility}/{run}')
+                if not list(pathlib.Path(filepath_base).rglob('*.root')):
+                    continue
+
+                sqrts = run_dictionary[facility][run]['sqrt_s']
+                system = run_dictionary[facility][run]['system']
+                if run_dictionary[facility][run]['calculation_type'] == 'jet_energy_loss':
+                    parametrization = run_dictionary[facility][run]['parametrization']
+                    parametrization_type = parametrization['type']
+                    design_point_index = parametrization['design_point_index']
+                else:
+                    continue
+
+                if not (design_point_index in selected_design_point_indices and parametrization_type == selected_parametrization):
+                    continue
+
+                design_point_index_to_path[design_point_index] = Path(filepath_base)
+
+        # Sort the output
+        design_point_index_to_path = dict(sorted(design_point_index_to_path.items()))
+        output_files = []
+        for path in design_point_index_to_path.values():
+            # We want two outputs:
+            # 1. The merged histogram, if available.
+            output_files.extend(path.relative_to(relative_dir).glob("histograms_*.root"))
+            # 2. The unmerged histograms directory.
+            output_files.append(path.relative_to(relative_dir) / "histograms")
+
+        # And print it for the user to utilize as desired
+        print("We found the following paths for the selected design points:\n")
+        print()
+        print(design_point_index_to_path)
+        print()
+        print("  List of files:")
+        print("    " + " ".join([str(s) for s in output_files]))
+
 
     #-----------------------------------------------------------------
     # Aggregate histograms for runs with a common: (sqrts, system, parametrization_type, design_point_index)
