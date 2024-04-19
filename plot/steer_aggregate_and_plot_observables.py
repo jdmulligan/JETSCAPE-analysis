@@ -257,6 +257,7 @@ def main():
         # These options are only put here since they're quite niche.
         selected_parametrization = "exponential"
         selected_design_point_indices = list(range(40))
+        selected_centrality = [0, 10]
         # Using a relative directory here is useful since we will want to tar these files up
         # while keeping a directory structure
         relative_dir = Path(local_base_outputdir)
@@ -275,13 +276,18 @@ def main():
                 sqrts = run_dictionary[facility][run]['sqrt_s']
                 system = run_dictionary[facility][run]['system']
                 if run_dictionary[facility][run]['calculation_type'] == 'jet_energy_loss':
+                    centrality = run_dictionary[facility][run]['centrality']
                     parametrization = run_dictionary[facility][run]['parametrization']
                     parametrization_type = parametrization['type']
                     design_point_index = parametrization['design_point_index']
                 else:
                     continue
 
-                if not (design_point_index in selected_design_point_indices and parametrization_type == selected_parametrization):
+                if not (
+                    centrality == selected_centrality
+                    and design_point_index in selected_design_point_indices
+                    and parametrization_type == selected_parametrization
+                ):
                     continue
 
                 design_point_index_to_path[design_point_index].append(Path(filepath_base))
