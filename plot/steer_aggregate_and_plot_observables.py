@@ -262,7 +262,8 @@ def main():
         relative_dir = Path(local_base_outputdir)
 
         # Setup
-        design_point_index_to_path = {}
+        # NOTE: We'll store a list of paths per design index because we have multiple sqrt_s per design point
+        design_point_index_to_path = defaultdict(list)
 
         for facility in facilities:
             for run in runs[facility]:
@@ -283,18 +284,20 @@ def main():
                 if not (design_point_index in selected_design_point_indices and parametrization_type == selected_parametrization):
                     continue
 
-                design_point_index_to_path[design_point_index] = Path(filepath_base)
+                design_point_index_to_path[design_point_index].append(Path(filepath_base))
 
         # Sort the output
+        # NOTE: We don't sort by sqrt_s because we don't have that info. It's not so important in any case.
         design_point_index_to_path = dict(sorted(design_point_index_to_path.items()))
         output_files = []
-        for path in design_point_index_to_path.values():
-            # We want two outputs:
-            # 1. The merged histogram, if available.
-            # NOTE: We need to search for the histogram before we convert it to the relative path!
-            output_files.extend([p.relative_to(relative_dir) for p in path.glob("histograms_*.root")])
-            # 2. The unmerged histograms directory.
-            output_files.append(path.relative_to(relative_dir) / "histograms")
+        for paths in design_point_index_to_path.values():
+            for path in paths:
+                # We want two outputs:
+                # 1. The merged histogram, if available.
+                # NOTE: We need to search for the histogram before we convert it to the relative path!
+                output_files.extend([p.relative_to(relative_dir) for p in path.glob("histograms_*.root")])
+                # 2. The unmerged histograms directory.
+                output_files.append(path.relative_to(relative_dir) / "histograms")
 
         # And print it for the user to utilize as desired
         print("We found the following paths for the selected design points:\n")
