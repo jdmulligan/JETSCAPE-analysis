@@ -291,7 +291,8 @@ def main():
         for path in design_point_index_to_path.values():
             # We want two outputs:
             # 1. The merged histogram, if available.
-            output_files.extend(path.relative_to(relative_dir).glob("histograms_*.root"))
+            # NOTE: We need to search for the histogram before we convert it to the relative path!
+            output_files.extend([p.relative_to(relative_dir) for p in path.glob("histograms_*.root")])
             # 2. The unmerged histograms directory.
             output_files.append(path.relative_to(relative_dir) / "histograms")
 
