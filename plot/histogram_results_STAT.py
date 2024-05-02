@@ -432,10 +432,10 @@ class HistogramResults(common_base.CommonBase):
                             # Construct appropriate binning
                             bins = self.plot_utils.bins_from_config(block, self.sqrts, observable_type, observable,
                                                                     centrality, centrality_index, self.suffix)
-    
+
                             if not bins.any():
                                 continue
-    
+
                             self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_lowTrigger{jet_collection_label}',
                                                       bins=bins, centrality=centrality)
                             self.histogram_observable(column_name=f'{observable_type}_{observable}_R{jet_R}_highTrigger{jet_collection_label}',
@@ -450,7 +450,7 @@ class HistogramResults(common_base.CommonBase):
 
                         if np.isclose(jet_R, block['jet_R'][0]):
                             column_name = f'{observable_type}_{observable}_trigger_pt{jet_collection_label}'
-                            bins = np.array(block['low_trigger_range'] + block['high_trigger_range']).astype(np.float)
+                            bins = np.array(block['low_trigger_range'] + block['high_trigger_range']).astype(np.float64)
                             self.histogram_observable(column_name=column_name, bins=bins, centrality=centrality, observable=observable)
 
                     elif self.sqrts == 200:
