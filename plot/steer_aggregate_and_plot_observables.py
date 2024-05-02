@@ -276,18 +276,23 @@ def main():
                 sqrts = run_dictionary[facility][run]['sqrt_s']
                 system = run_dictionary[facility][run]['system']
                 if run_dictionary[facility][run]['calculation_type'] == 'jet_energy_loss':
+                    # AA case
                     centrality = run_dictionary[facility][run]['centrality']
                     parametrization = run_dictionary[facility][run]['parametrization']
                     parametrization_type = parametrization['type']
                     design_point_index = parametrization['design_point_index']
-                else:
-                    continue
 
-                if not (
-                    centrality == selected_centrality
-                    and design_point_index in selected_design_point_indices
-                    and parametrization_type == selected_parametrization
-                ):
+                    # Apply selection
+                    if not (
+                        centrality == selected_centrality
+                        and design_point_index in selected_design_point_indices
+                        and parametrization_type == selected_parametrization
+                    ):
+                        continue
+                else:
+                    # pp case
+                    # We define -1 as the convention
+                    design_point_index = -1
                     continue
 
                 design_point_index_to_path[design_point_index].append(Path(filepath_base))
