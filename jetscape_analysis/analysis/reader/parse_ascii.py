@@ -294,7 +294,7 @@ def _parse_header_line_format_v3(line: str) -> HeaderInfo:
         # This function was developed to parse it.
         # The header is defined as follows, with each entry separated by a `\t` character:
         #  # Event 1 weight  1 EPangle 0 N_hadrons 169 vertex_x  0.6 vertex_y  -1.2  vertex_z  0 (pt_hat  11.564096)
-        #  0 1     2 3       4 5       6 7         8   9         10  11        12    13        1415      16 
+        #  0 1     2 3       4 5       6 7         8   9         10  11        12    13        1415      16
         #
         # NOTE: pt_hat is optional
         #
@@ -489,7 +489,7 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
         # Use this if the file doesn't fit in memory (fairly likely for these type of files)
         read_lines = iter(f)
 
-        # Check for file format version indcating how we should parse it.
+        # Check for file format version indicating how we should parse it.
         file_format_version = -1
         first_line = next(read_lines)
         first_line_split = first_line.split("\t")
@@ -498,7 +498,7 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
             file_format_version = int(first_line_split[2][1:])
         else:
             # We need to move back to the beginning of the file, so we just burned through
-            # a meaningful line (which almost certianly contains an event header).
+            # a meaningful line (which almost certainly contains an event header).
             # NOTE: My initial version of two separate iterators doesn't work because it appears
             #       that you cannot do so for a file (which I suppose I can make sense of because
             #       it points to a position in a file, but still unexpected).
@@ -564,7 +564,7 @@ def _parse_with_pandas(chunk_generator: Iterator[str]) -> np.ndarray:
 
     return pd.read_csv(
         FileLikeGenerator(chunk_generator),
-        # NOTE: If the field is missing (such as eta and phi), they will exist, but they willl be filled with NaN
+        # NOTE: If the field is missing (such as eta and phi), they will exist, but they will be filled with NaN
         #       We actively take advantage of this so we don't have to change the parsing for header v1 (which
         #       includes eta and phi) vs header v2 (which does not)
         names=["particle_index", "particle_ID", "status", "E", "px", "py", "pz", "eta", "phi"],
@@ -741,10 +741,17 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
     )
 
 
-def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessary_columns: bool,
-                     input_filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas",
-                     max_chunks: int = -1, compression: str = "zstd", compression_level: Optional[int] = None) -> None:
-    """ Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
+def parse_to_parquet(
+    base_output_filename: Path | str,
+    store_only_necessary_columns: bool,
+    input_filename: Path | str,
+    events_per_chunk: int,
+    parser: str = "pandas",
+    max_chunks: int = -1,
+    compression: str = "zstd",
+    compression_level: int | None = None,
+) -> None:
+    """Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
 
     Args:
         base_output_filename: Basic output filename. Should include the entire path.
@@ -763,22 +770,17 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
     base_output_filename = Path(base_output_filename)
     # Setup the base output directory
     base_output_filename.parent.mkdir(parents=True, exist_ok=True)
-    # We will check which fields actually exist when writing.
-    possible_fields_containing_floats = ["event_plane_angle", "event_weight", "pt_hat", "cross_section", "cross_section_error", "px", "py", "pz", "E"]
 
     for i, arrays in enumerate(read(filename=input_filename, events_per_chunk=events_per_chunk, parser=parser)):
         # Reduce to the minimum required data.
         if store_only_necessary_columns:
-            arrays = full_events_to_only_necessary_columns_E_px_py_pz(arrays)
+            arrays = full_events_to_only_necessary_columns_E_px_py_pz(arrays)  # noqa: PLW2901
         else:
             # To match the steps taken when reducing the columns, we'll re-zip with the depth limited to 1.
             # As of April 2021, I'm not certainly this is truly required anymore, but it may be needed for
             # parquet writing to be successful (apparently parquet couldn't handle lists of structs sometime
             # in 2020. The status in April 2021 is unclear, but not worth digging into now).
-            arrays = ak.zip(
-                dict(zip(ak.fields(arrays), ak.unzip(arrays))),
-                depth_limit = 1
-            )
+            arrays = ak.zip(dict(zip(ak.fields(arrays), ak.unzip(arrays), strict=True)), depth_limit=1)  # noqa: PLW2901
 
         # If converting in chunks, add an index to the output file so the chunks don't overwrite each other.
         if events_per_chunk > 0:
@@ -787,28 +789,19 @@ def parse_to_parquet(base_output_filename: Union[Path, str], store_only_necessar
         else:
             output_filename = base_output_filename
 
-        # Optimize the output
-        # Additional parquet options are based on https://stackoverflow.com/a/66854439/12907985
-        # byte_stream_fields apparently only work for float fields. Other fields should be handled
-        # by use_dictionary. Apparently it can't handle this automatically, we so we have to define it
-        # ourselves. This is a bit brittle if fields change, but they don't change so often, and
-        # it's simpler than parsing field types, so it should be fine for now.
-        byte_stream_fields = [field for field in ak.fields(arrays) if field in possible_fields_containing_floats]
-        dict_fields = [field for field in ak.fields(arrays) if field not in possible_fields_containing_floats]
-        # logger.debug(f"dict_fields: {dict_fields}")
-        # logger.debug(f"byte_stream_fields: {byte_stream_fields}")
-
         # Parquet with zlib seems to do about the same as ascii tar.gz when we drop unneeded columns.
         # And it should load much faster!
         ak.to_parquet(
-            arrays, output_filename,
-            compression=compression, compression_level=compression_level,
-            explode_records=False,
-            # Additional parquet options are based on https://stackoverflow.com/a/66854439/12907985
-            #use_dictionary=True,
-            #use_byte_stream_split=True,
-            use_dictionary=dict_fields,
-            use_byte_stream_split=byte_stream_fields,
+            arrays,
+            destination=str(output_filename),
+            compression=compression,
+            compression_level=compression_level,
+            # Optimize the compression via improved encodings for floats and strings.
+            # Conveniently, awkward 2.x will now select the right columns for each if simply set to `True`
+            # Optimize for columns with anything other than floats
+            parquet_dictionary_encoding=True,
+            # Optimize for columns with floats
+            parquet_byte_stream_split=True,
         )
 
         # Break now so we don't have to read the next chunk.
