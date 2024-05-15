@@ -12,10 +12,9 @@ import typing
 from pathlib import Path
 from typing import Any, Callable, Iterator, List, Optional, Union
 
+import attrs
 import awkward as ak
-import attr
 import numpy as np
-
 
 logger = logging.getLogger(__name__)
 
@@ -34,22 +33,22 @@ class ReachedXSecAtEndOfFileException(ReachedEndOfFileException):
     ...
 
 
-@attr.s(frozen=True)
+@attrs.frozen
 class CrossSection:
-    value: float = attr.ib()
-    error: float = attr.ib()
+    value: float = attrs.field()
+    error: float = attrs.field()
 
 
-@attr.s(frozen=True)
+@attrs.frozen
 class HeaderInfo:
-    event_number: int = attr.ib()
-    event_plane_angle: float = attr.ib()
-    n_particles: int = attr.ib()
-    event_weight: float = attr.ib(default=-1)
-    pt_hat: float = attr.ib(default=-1)
-    vertex_x: float = attr.ib(default=-999)
-    vertex_y: float = attr.ib(default=-999)
-    vertex_z: float = attr.ib(default=-999)
+    event_number: int = attrs.field()
+    event_plane_angle: float = attrs.field()
+    n_particles: int = attrs.field()
+    event_weight: float = attrs.field(default=-1)
+    pt_hat: float = attrs.field(default=-1)
+    vertex_x: float = attrs.field(default=-999)
+    vertex_y: float = attrs.field(default=-999)
+    vertex_z: float = attrs.field(default=-999)
 
 
 def _retrieve_last_line_of_file(f: typing.TextIO, read_chunk_size: int = 100) -> str:
@@ -363,7 +362,7 @@ class ChunkNotReadyException(Exception):
     ...
 
 
-@attr.s
+@attrs.define
 class ChunkGenerator:
     """ Generator a chunk of the file.
 
@@ -374,12 +373,12 @@ class ChunkGenerator:
         file_format_version: File format version. Default: -1, which corresponds to before the format
             was defined, and it will try it's best to guess the format.
     """
-    g: Iterator[str] = attr.ib()
-    _events_per_chunk: int = attr.ib()
-    cross_section: Optional[CrossSection] = attr.ib(default=None)
-    _file_format_version: int = attr.ib(default=-1)
-    _headers: List[HeaderInfo] = attr.ib(factory=list)
-    _reached_end_of_file: bool = attr.ib(default=False)
+    g: Iterator[str] = attrs.field()
+    _events_per_chunk: int = attrs.field()
+    cross_section: Optional[CrossSection] = attrs.field(default=None)
+    _file_format_version: int = attrs.field(default=-1)
+    _headers: List[HeaderInfo] = attrs.field(factory=list)
+    _reached_end_of_file: bool = attrs.field(default=False)
 
     def _is_chunk_ready(self) -> bool:
         """True if the chunk is ready"""
