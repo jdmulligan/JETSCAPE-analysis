@@ -155,7 +155,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 # Fill event cross-section weight
                 self.observable_dict_event['event_weight'] = event_weight
                 self.observable_dict_event['pt_hat'] = event['pt_hat']
-                
+
                 self.output_event_list.append(self.observable_dict_event)
 
         # Get total cross-section (same for all events at this point), weight sum, and centrality
