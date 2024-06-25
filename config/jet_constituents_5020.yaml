@@ -1,0 +1,165 @@
+#------------------------------------------------------------------
+# We group observables into blocks according to type of observable
+# for convenience, e.g. {type}: {observable}_{experiment}
+#
+# For each observable, we include its specific cuts in its block
+#
+# In the analysis code, we will store observables in a dictionary,
+# labeled as: {type}_{observable}_{experiment}_{suffix}
+# For example: hadron_pt_cms
+#              jet_mass_alice_R0.2
+# where the optional suffix is only present when needed.
+#
+# We compute each observable only if it lies in the specified centrality range.
+# We include all available centralities up to 50% centrality, at present.
+#
+# We include hepdata file paths when appropriate (relative to JETSCAPE-analysis directory),
+# to be used for histogram binning (via hepdata histogram) and plotting (via hepdata tgraph).
+#   - Note that the pp hepdata files contain distributions, while the AA hepdata files contain RAA ratios.
+#   - Note that we bin pp observables according to the binning in each AA centrality;
+#     the pp hepdata tgraphs are included only for QA.
+#
+# The histogram binnings are determined from: plot_results_STAT_utils.bins_from_config()
+#   - The hepdata_AA dir/hname fields need to have either:
+#     (i) list of dirs, with single hname
+#     (ii) list of hnames, with single dir
+#     where the list corresponds to the centrality list in the config block.
+#   - The AA binnings are always used, since we ultimately want to form PbPb/pp ratios
+#
+# The data TGraphs are determined from: plot_results_STAT_utils.tgraph_from_hepdata()
+#   - For pp: The hepdata_pp dir/gname should have only a single entry for dir/gname -- not a list.
+#             Unless on rare occasion the pp data with different binnings for each centrality
+#             are available (e.g. 5.02 TeV inclusive_jet_pt_cms)
+#   - For AA: The hepdata_AA dir/gname should follow the same list convention as the dir/hname specified above.
+#
+# Note that for the inputs to the likelihood calculation, we use the Pb-Pb/pp ratios, rather
+# than the Pb-Pb and pp distributions themselves. This choice is intended to minimize dependence
+# on the pp baseline, although may be susceptible to shape effects from the distributions themselves;
+# one could consider to investigate the magnitude of these effects in the future.
+#
+# Note that when using these experimental data for the Bayesian calibration, we need to
+# revisit the treatment/breakdown of uncertainties and construct a covariance matrix
+# for each measurement (close attention was not paid during the event generation QA stage).
+#
+# Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
+#           noted otherwise with "TODO"
+#------------------------------------------------------------------
+sqrt_s: 5020
+power: 4.
+pt_ref: 10.
+
+# General jet finding parameters
+#jet_R: [0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
+jet_R: [0.4]
+min_jet_pt: 20.
+max_jet_y: 3.
+
+# General grooming parameters
+SoftDrop:
+  - {'zcut': 0.1, 'beta': 0}
+  - {'zcut': 0.2, 'beta': 0}
+  - {'zcut': 0.4, 'beta': 0}
+  - {'zcut': 0.5, 'beta': 1.5}
+
+# If AA, set different options for hole subtraction treatment
+# If pp, defaults will override this: ['']
+#jet_collection_labels: ['', '_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
+jet_collection_labels: ['', '_negative_recombiner', '_constituent_subtraction']
+
+# Constituent subtractor, for hole treatment
+constituent_subtractor:
+  R_max: 0.25
+  max_eta: 3.
+  ghost_area: 0.01
+  bge_rho_grid_size: 1.
+thermal_rejection_fraction: 0.33
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Hadron spectra
+# Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
+hadron:
+
+  ## https://www.hepdata.net/record/ins1657384
+  #pt_ch_alice:
+  #  eta_cut: 0.8
+  #  pt: [5.0, 50.]
+  #  centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
+  #  xtitle: '#it{p}_{T} (GeV/#it{c})'
+  #  logy: True
+
+  #  hepdata: 'HEPData-ins1657384-v1-root.root'
+  #  hepdata_pp_dir: 'Table 4'
+  #  hepdata_pp_gname: 'Graph1D_y1'
+  #  ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+  #  y_min_pp: 2e-8
+  #  y_max_pp: 1e4
+
+  #  hepdata_AA_dir: 'Table 8'
+  #  hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
+  #  hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
+  #  ytitle_AA: '#it{R}_{AA}'
+
+#------------------------------------------------------------------
+#------------------------------------------------------------------
+# Inclusive jet observables -- full jets
+inclusive_jet:
+
+  # https://www.hepdata.net/record/ins1755387
+  # Note: pT^{ch lead} > 5,7 GeV (for R=0.2,0.4)
+  # Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
+  # Here, we use the result where the cut is applied on PbPb and pp
+  # Note: The pp HEPData file contains no leading track requirement (only used for QA)
+  pt_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.7
+    pt: [40., 140.]
+    centrality: [[0,10]]
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
+
+    hepdata: 'HEPData-ins1755387-v1-root.root'
+    hepdata_pp_dir_R0.2: 'Table 2'
+    hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-7
+    y_max_pp: 1e-3
+
+    hepdata_AA_dir_R0.2: ['Table 30']
+    hepdata_AA_dir_R0.4: ['Table 31']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
+
+  # https://www.hepdata.net/record/ins1673184
+  # Note: Two charged tracks with pt>4 GeV are required in Pb-Pb
+  #       (they argue this is small...unclear if they correct for it...we will ignore it here).
+  #       RE 1/28/22: Laura confirmed that this should be accounted for in the reconstruction efficiency,
+  #         so we shouldn't need it here.
+  # Note: The paper also performs rapidity dependence for 0-10% -- we make a separate block for this
+  #       below, since the y-integrated RAA has different binning than the y-differential RAA
+  # Note: The PbPb binning in hepdata is different than the pp hepdata cross-section binning
+  pt_atlas:
+    jet_R: [0.4]
+    y_cut: 2.8
+    pt: [50., 1000.]
+    centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
+
+    hepdata: 'HEPData-ins1673184-v1-root.root'
+    hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
+    y_min_pp: 2e-7
+    y_max_pp: 1e4
+    skip_pp_ratio: True
+
+    hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: '#it{R}_{AA}'
+    y_min_AA: 0.
+    y_max_AA: 1.9
