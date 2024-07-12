@@ -52,19 +52,13 @@ pt_ref: 10.
 #jet_R: [0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
 jet_R: [0.4]
 min_jet_pt: 20.
-max_jet_y: 3.
-
-# General grooming parameters
-SoftDrop:
-  - {'zcut': 0.1, 'beta': 0}
-  - {'zcut': 0.2, 'beta': 0}
-  - {'zcut': 0.4, 'beta': 0}
-  - {'zcut': 0.5, 'beta': 1.5}
+max_jet_y: 1.5
 
 # If AA, set different options for hole subtraction treatment
 # If pp, defaults will override this: ['']
 #jet_collection_labels: ['', '_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
-jet_collection_labels: ['', '_negative_recombiner', '_constituent_subtraction']
+# We'll default to no special treatment.
+jet_collection_labels: ['']
 
 # Constituent subtractor, for hole treatment
 constituent_subtractor:
@@ -72,94 +66,20 @@ constituent_subtractor:
   max_eta: 3.
   ghost_area: 0.01
   bge_rho_grid_size: 1.
-thermal_rejection_fraction: 0.33
-#------------------------------------------------------------------
-#------------------------------------------------------------------
-# Hadron spectra
-# Unless otherwise noted: Primary charged particles (w/ mean proper lifetime τ larger than 1 cm/c )
-hadron:
-
-  ## https://www.hepdata.net/record/ins1657384
-  #pt_ch_alice:
-  #  eta_cut: 0.8
-  #  pt: [5.0, 50.]
-  #  centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
-  #  xtitle: '#it{p}_{T} (GeV/#it{c})'
-  #  logy: True
-
-  #  hepdata: 'HEPData-ins1657384-v1-root.root'
-  #  hepdata_pp_dir: 'Table 4'
-  #  hepdata_pp_gname: 'Graph1D_y1'
-  #  ytitle_pp: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
-  #  y_min_pp: 2e-8
-  #  y_max_pp: 1e4
-
-  #  hepdata_AA_dir: 'Table 8'
-  #  hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
-  #  hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
-  #  ytitle_AA: '#it{R}_{AA}'
-
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
 inclusive_jet:
 
-  # https://www.hepdata.net/record/ins1755387
-  # Note: pT^{ch lead} > 5,7 GeV (for R=0.2,0.4)
-  # Note that results are reported both with and without the pT,lead cut on the pp jet cross-section
-  # Here, we use the result where the cut is applied on PbPb and pp
-  # Note: The pp HEPData file contains no leading track requirement (only used for QA)
-  pt_alice:
-    jet_R: [0.2, 0.4]
-    eta_cut_R: 0.7
-    pt: [40., 140.]
-    centrality: [[0,10]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
-    logy: True
-
-    hepdata: 'HEPData-ins1755387-v1-root.root'
-    hepdata_pp_dir_R0.2: 'Table 2'
-    hepdata_pp_dir_R0.4: 'Table 4'
-    hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-7
-    y_max_pp: 1e-3
-
-    hepdata_AA_dir_R0.2: ['Table 30']
-    hepdata_AA_dir_R0.4: ['Table 31']
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
-    ytitle_AA: '#it{R}_{AA}'
-    y_min_AA: 0.
-    y_max_AA: 1.9
-
-  # https://www.hepdata.net/record/ins1673184
-  # Note: Two charged tracks with pt>4 GeV are required in Pb-Pb
-  #       (they argue this is small...unclear if they correct for it...we will ignore it here).
-  #       RE 1/28/22: Laura confirmed that this should be accounted for in the reconstruction efficiency,
-  #         so we shouldn't need it here.
-  # Note: The paper also performs rapidity dependence for 0-10% -- we make a separate block for this
-  #       below, since the y-integrated RAA has different binning than the y-differential RAA
-  # Note: The PbPb binning in hepdata is different than the pp hepdata cross-section binning
-  pt_atlas:
-    jet_R: [0.4]
-    y_cut: 2.8
-    pt: [50., 1000.]
-    centrality: [[0,10], [10,20], [20,30], [30,40], [40,50]]
-    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
-    logy: True
-
-    hepdata: 'HEPData-ins1673184-v1-root.root'
-    hepdata_pp_dir_R0.4: 'Table 4'
-    hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
-    y_min_pp: 2e-7
-    y_max_pp: 1e4
-    skip_pp_ratio: True
-
-    hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
-    hepdata_AA_gname: 'Graph1D_y1'
-    hepdata_AA_hname: 'Hist1D_y1'
-    ytitle_AA: '#it{R}_{AA}'
-    y_min_AA: 0.
-    y_max_AA: 1.9
+  # Settings that are specific to the jet constituents
+  # These can be anything you want, but you then have to implement it in the code.
+  jet_constituents:
+    # For example, you could loop over different ways to store the jet:
+    # - The hard part only
+    # - The background without subtraction
+    # - The background with subtraction
+    # Just like in the JEWEL dataset.
+    background_treatment: ["hard", "Rmax0", "Rmax0.25"]
+    # Select the centrality that we want to consider.
+    centrality: [[0, 10]]
+    eta_cut_R: 1.0
