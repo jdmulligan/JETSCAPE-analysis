@@ -248,35 +248,36 @@ class AnalyzeJetscapeEvents_Constituents(analyze_events_base_STAT.AnalyzeJetscap
         if self.centrality_accepted(self.inclusive_jet_observables['jet_constituents']['centrality']):
             if abs(jet.eta()) < (self.inclusive_jet_observables['jet_constituents']['eta_cut_R'] - jetR):
                 ...
+                # MG: Determine if the jet is accepted and store the constituents...
 
 
-        # ALICE RAA
-        #   Hole treatment:
-        #    - For RAA, all jet collections can be filled from the corrected jet pt
-        #    - In the shower_recoil case, we also fill the unsubtracted jet pt
-        if self.centrality_accepted(self.inclusive_jet_observables['pt_alice']['centrality']):
-            pt_min, pt_max = self.inclusive_jet_observables['pt_alice']['pt']
-            if jetR in self.inclusive_jet_observables['pt_alice']['jet_R']:
-                if abs(jet.eta()) < (self.inclusive_jet_observables['pt_alice']['eta_cut_R'] - jetR):
-                    if pt_min < jet_pt < pt_max:
+        ## ALICE RAA
+        ##   Hole treatment:
+        ##    - For RAA, all jet collections can be filled from the corrected jet pt
+        ##    - In the shower_recoil case, we also fill the unsubtracted jet pt
+        #if self.centrality_accepted(self.inclusive_jet_observables['pt_alice']['centrality']):
+        #    pt_min, pt_max = self.inclusive_jet_observables['pt_alice']['pt']
+        #    if jetR in self.inclusive_jet_observables['pt_alice']['jet_R']:
+        #        if abs(jet.eta()) < (self.inclusive_jet_observables['pt_alice']['eta_cut_R'] - jetR):
+        #            if pt_min < jet_pt < pt_max:
 
-                        # Check leading track requirement
-                        if jetR == 0.2:
-                            min_leading_track_pt = 5.
-                        else:
-                            min_leading_track_pt = 7.
+        #                # Check leading track requirement
+        #                if jetR == 0.2:
+        #                    min_leading_track_pt = 5.
+        #                else:
+        #                    min_leading_track_pt = 7.
 
-                        accept_jet = False
-                        acceptable_hadrons = [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]
-                        for constituent in jet.constituents():
-                            if constituent.pt() > min_leading_track_pt:
-                                # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                                if abs(pid_hadrons_positive[np.abs(constituent.user_index())-1]) in acceptable_hadrons:
-                                    accept_jet = True
-                        if accept_jet:
-                            self.observable_dict_event[f'inclusive_jet_pt_alice_R{jetR}{jet_collection_label}'].append(jet_pt)
-                            if jet_collection_label in ['_shower_recoil']:
-                                self.observable_dict_event[f'inclusive_jet_pt_alice_R{jetR}{jet_collection_label}_unsubtracted'].append(jet_pt_uncorrected)
+        #                accept_jet = False
+        #                acceptable_hadrons = [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]
+        #                for constituent in jet.constituents():
+        #                    if constituent.pt() > min_leading_track_pt:
+        #                        # (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
+        #                        if abs(pid_hadrons_positive[np.abs(constituent.user_index())-1]) in acceptable_hadrons:
+        #                            accept_jet = True
+        #                if accept_jet:
+        #                    self.observable_dict_event[f'inclusive_jet_pt_alice_R{jetR}{jet_collection_label}'].append(jet_pt)
+        #                    if jet_collection_label in ['_shower_recoil']:
+        #                        self.observable_dict_event[f'inclusive_jet_pt_alice_R{jetR}{jet_collection_label}_unsubtracted'].append(jet_pt_uncorrected)
 
         ## ATLAS RAA
         #if self.centrality_accepted(self.inclusive_jet_observables['pt_atlas']['centrality']):
