@@ -44,6 +44,9 @@
 # Jan 2022: All kinematics/settings checked by Peter Jacobs -- all are validated unless
 #           noted otherwise with "TODO"
 #------------------------------------------------------------------
+
+doGammaSystematics: false
+
 sqrt_s: 5020
 power: 4.
 pt_ref: 10.
@@ -139,6 +142,30 @@ hadron:
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0
     y_max_AA: 2.
+  
+  # https://www.hepdata.net/record/ins2601282
+  pt_ch_atlas:
+    eta_cut: 2.5
+    pt: [5.0, 300.] # measurment in p-Pb actually starts at 0.5 GeV but cutoff at 5 GeV to not simulate very soft stuff
+    centrality: [ [0,5], [5,10], [10,20], [20,30], [30,40], [40,50] ] # stopping at 50% but continues to 80%
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+
+    hepdata: 'HEPData-ins2601282-v1-root.root'
+    hepdata_pp_dir: 'Table 10'
+    hepdata_pp_gname: 'Hist1D_y1'
+    ytitle_pp: '#frac{1}{2#pip_{T}} #frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[mb GeV^{2}#right]'
+    y_min_pp: 2e-14
+    y_max_pp: 1e4
+    scale_by: '1/pt' # TODO check what that is
+
+    # RAA
+    hepdata_AA_dir: ['Table 36', 'Table 37', 'Table 38', 'Table 39', 'Table 40','Table 41']
+    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: '#it{R}_{AA}'
+
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Hadron correlations

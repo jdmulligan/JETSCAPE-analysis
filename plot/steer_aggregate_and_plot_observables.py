@@ -10,16 +10,16 @@
     - Set up environment:
         If downloading from OSN ("download_runinfo" or "download_histograms" True):
             cd STAT-XSEDE-2021/scripts
-            python -m venv venv            # only needed the first time
+            python3 -m venv venv            # only needed the first time
             source venv/bin/activate
             pip install .                  # only needed the first time
         If merging/plotting histograms ("merge_histograms", "aggregate_histograms", or "plot_histograms" True),
         need ROOT compiled with python, e.g.:
-            [enter virtual environment with needed python packages, and same python version as ROOT build]
+            [enter virtual environment with needed python3 packages, and same python3 version as ROOT build]
             export ROOTSYS=/home/software/users/james/heppy/external/root/root-current
             source $ROOTSYS/bin/thisroot.sh
 
-    - Run script: python plot/steer_aggregate_and_plot_observables.py
+    - Run script: python3 plot/steer_aggregate_and_plot_observables.py
 
 ------------------------------------------------------------------------
 
@@ -84,40 +84,63 @@ def main():
     # To edit the set of observables that are plotted, see the self.analysis variable in plot_results_STAT.py
     # Note: all observables that are plotted are saved to hdf5, and are then written to tables
     # Note: plotting script may have warnings about missing histograms, this is usually due to some missing centrality bins for certain design points
-    download_runinfo = False
+    download_runinfo = True
     download_histograms = False
     list_paths_for_selected_design_points = False
     merge_histograms = False
     aggregate_histograms = False
     plot_and_save_histograms = False
     write_tables = False
-    plot_global_QA = True
+    plot_global_QA = False
+
+    # re-analysis parameters
+    download_final_state_hadrons = True
+    analysis_final_state_hadrons = True # an
+    force_reanalysis = False # force to analyse and download again, even if histogram files are present
+    delete_final_state_hadrons_after_analysis = True
+    # debug options
+    ranomize_run_order = True  # if true, runs will be shuffled into random order. this can be useful for benchmarking
+
+
 
     # Edit these parameters
-    stat_xsede_2021_dir = '/home/james/jetscape-docker/STAT-XSEDE-2021'
-    jetscape_analysis_dir = '/home/james/jetscape-docker/JETSCAPE-analysis'
-    local_base_outputdir = '/rstorage/jetscape/STAT-Bayesian/Analysis1/20230116'
+    stat_xsede_2021_dir = '/software/flo/myJETSCAPE/STAT-XSEDE-2021'
+    jetscape_analysis_dir = '/software/flo/myJETSCAPE/JETSCAPE-analysis'
+    local_base_outputdir = '/alf/data/flo/jetscape/aggregation_data'
+    analyis_container_path = '/alf/data/flo/jetscape/containers/stat_local_gcc_v3.6.sif'
+    # analyis_container_path = '/tmp/containers/stat_local_gcc_v3.6.sif'
     force_download = False
+    download_threads = 5
     n_cores = 20
+    # TODO check skipping logic
+    skip_run_binomial = True
 
     # You may need to edit these for a future analysis -- but can leave as is for now
-    analysis_name = 'Analysis1'
+    analysis_name = 'Analysis3'
+    # facilities = ['bridges2', 'expanse'] 
+    # facilities = ['test_587cluster']
     facilities = ['bridges2', 'expanse']
+
+    local_analysis_facility = "test_587cluster" # when enabling download_final_state_hadron and subsequent local analysis, specify details about the facility where processing will happen (which is different to the facitliy where these files were downloaded from)
+
 
     #-----------------------------------------------------------------
 
     #-----------------------------------------------------------------
     # (1) Download info for all runs from OSN, and create a dictionary with all info needed to download and aggregate histograms
     #-----------------------------------------------------------------
-    if download_runinfo or download_histograms or list_paths_for_selected_design_points or merge_histograms or aggregate_histograms:
+    if download_runinfo or download_histograms or list_paths_for_selected_design_points or merge_histograms or aggregate_histograms or download_final_state_hadrons:
+
 
         runs = {}
         run_dictionary = {}
         missing_runinfo = defaultdict(list)
+        skipped_runs = defaultdict(list) # TODO check why not filled
 
         # (i) Load the runs.yaml for each facility from STAT-XSEDE-2021
         for facility in facilities.copy():
             runs_filename = os.path.join(stat_xsede_2021_dir, f'docs/DataManagement/{analysis_name}/{facility}/runs.yaml')
+            print('Searching for runs.yaml in:', runs_filename)
             if os.path.exists(runs_filename):
                 with open(runs_filename, 'r') as f:
                     runs[facility] = [name for name in list(yaml.safe_load(f).keys())]
@@ -126,13 +149,33 @@ def main():
                 facilities.remove(facility)
 
         # (ii) Using these runs.yaml, download run_info.yaml for all runs and populate dictionary with relevant info for aggregation
+        from js_stat_xsede_steer import file_management
         for facility in facilities:
 
-            run_dictionary[facility] = defaultdict(dict)
-            for run in runs[facility].copy():
+            # if requested, shuffle runs into random order
+            if ranomize_run_order:
+                import random
+                random.shuffle(runs[facility])
 
+            run_dictionary[facility] = defaultdict(dict)
+            max_parallel_downloads = 5
+            process_list = []
+
+            # create a multiprocessing pool with 30 workers
+            # from multiprocessing import Pool
+            # download_pool = Pool(processes=max_parallel_downloads)
+
+            # make a list of tuples that contain source and target
+            runinfo_pairs = []
+
+            for i,run in enumerate(runs[facility].copy()):
+                
+                # if ( i > 2): # todo remove me
+                #     break
                 run_info_download_location = os.path.join(local_base_outputdir, 'run_info')
                 run_info_file = os.path.join(run_info_download_location, f'{facility}/{run}/{run}_info.yaml')
+                # print out run_info_file path
+                print(run_info_file)
 
                 if download_runinfo:
                     if os.path.exists(run_info_file) and not force_download:
@@ -140,11 +183,39 @@ def main():
                     else:
                         if force_download:
                             print('Force download enabled -- re-download all runinfo files...')
-
+                        
                         download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
-                        cmd = f'python {download_script} -s {facility}/{run}/ -d {run_info_download_location} -f {run}_info.yaml'
-                        subprocess.run(cmd, check=True, shell=True)
+                        cmd = f'python3 {download_script} -s {facility}/{run}/ -d {run_info_download_location} -f {run}_info.yaml'
 
+                        # source = f'{facility}/{run}/{run}_info.yaml'
+                        source = pathlib.Path(facility) / run / f'{run}_info.yaml'
+                        destination = pathlib.Path(run_info_download_location) / f'{facility}/{run}/{run}_info.yaml'
+                        # destination = os.path.join(run_info_download_location, f'{facility}/{run}/{run}_info.yaml')
+                        destination.parent.mkdir(parents=True, exist_ok=True)
+
+
+                        # append a tuple with .source and .target to the list
+                        # runinfo_pairs.append as FilePair
+                        runinfo_pairs.append(file_management.FilePair(source, destination))
+
+                        # add subprocess to pool so that we can run multiple downloads in parallel as specified for number of workers
+                        # res = download_pool.apply_async(subprocess.run, args=(cmd,), kwds={'check':True, 'shell':True})
+
+            # check that all processes in pool are done before continuing
+            # download_pool.close()
+            # download_pool.join()
+            failed = file_management.download_from_OSN_pairs(runinfo_pairs, max_parallel_downloads)
+            
+            if failed:
+                print(f'Warning: failed to download run_info.yaml for the following runs: {failed}')
+            
+
+            # need to loop over the runs again after processing is finished    
+            print('Finished downloading run_info.yaml for all runs, building dictionaries ...')     
+            for i,run in enumerate(runs[facility].copy()):
+
+                # should exist now after previous download
+                run_info_file = os.path.join(run_info_download_location, f'{facility}/{run}/{run}_info.yaml')
                 # Add the run_info block to the run_dictionary
                 if os.path.exists(run_info_file):
                     with open(run_info_file, 'r') as f:
@@ -158,22 +229,28 @@ def main():
                             elif run_info['sqrt_s'] in [2760, 5020]:
                                 run_dictionary[facility][run]['system'] = 'PbPb'
                             run_dictionary[facility][run]['parametrization'] = run_info['parametrization']
+
+                            # if requested, skip runs with binomial parametrization
+                            if skip_run_binomial:
+                                if run_info['parametrization']['type'] == 'binomial':
+                                    # print(f'Skipping run {run} with binomial parametrization...')
+                                    skipped_runs[facility].append(run)
+                                    runs[facility].remove(run)
                         else:
                             run_dictionary[facility][run]['system'] = 'pp'
                 else:
-                    if download_runinfo:
-                        print(f'Warning: {run}_info.yaml not found on OSN')
+                    print(f'Warning: {run}_info.yaml not found!')
                     runs[facility].remove(run)
                     missing_runinfo[facility].append(run)
-
-                if download_runinfo:
-                    print()
+                
+                # if download_runinfo:
+                    # print()
 
         # Print what we found
         for facility in facilities:
             print(f'{facility}:')
             print()
-            print('  We found the following runs:')
+            print(f'  We found the following runs (N ={len(runs[facility])}):')
             print()
             print(f'    {list(dict(run_dictionary[facility]).keys())}')
             print()
@@ -181,6 +258,10 @@ def main():
             print(f'    {missing_runinfo[facility]}')
             print()
             print()
+            print(f'Warning: We skipped the following runs with binomial parametrization:')
+            print(f'    {skipped_runs[facility]}')
+            print()
+
 
     #-----------------------------------------------------------------
     # Download histograms for each run
@@ -200,7 +281,7 @@ def main():
                     n_histograms_local = len([h for h in os.listdir(histogram_dir) if '.root' in h])
 
                     script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/count_files_on_OSN.py')
-                    cmd = f'python {script} -s {facility}/{run}/ -f histograms'
+                    cmd = f'python3 {script} -s {facility}/{run}/ -f histograms'
                     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
                     output = proc.stdout.read()
                     n_histograms_expected = int(output.split()[-1])
@@ -216,11 +297,120 @@ def main():
                         print(f'Histogram dir already exists, but n_histograms_expected ({n_histograms_expected}) does not equal n_histograms_local ({n_histograms_local}), so we will redownload.')
 
                     download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
-                    cmd = f'python {download_script} -s {facility}/{run}/ -d {histogram_download_location} -f histograms'
+                    cmd = f'python3 {download_script} -s {facility}/{run}/ -d {histogram_download_location} -f histograms'
                     subprocess.run(cmd, check=True, shell=True)
                     print()
 
         print('Done!')
+    
+    if download_final_state_hadrons:
+        print('Downloading all final state hadrons...')
+        print()
+
+        final_state_hadrons_download_location = os.path.join(local_base_outputdir, 'final_state_hadrons_per_run')
+        reananalysis_output_location_base = os.path.join(local_base_outputdir, 'histograms_per_run')
+        
+        # things for visualization
+        total_runs = sum([len(runs[facility]) for facility in facilities])
+        run_counter = 0
+        for facility in facilities:
+            for run in runs[facility]:
+                run_counter += 1
+                run_number = int(run[3:])
+
+                print(f'Processing run {run_number} ({run_counter}/{total_runs}) ...')
+                # If directory exists locally, check number of histograms already downloaded and number on OSN
+                final_state_hadron_dir = os.path.join(final_state_hadrons_download_location, f'{facility}/{run}')
+                reananalysis_output_location = os.path.join(reananalysis_output_location_base, f'{facility}/{run}')
+                
+                # before we download any analysis output, check if we already have analysis output that we want. If it is already there then skip this run
+                if analysis_final_state_hadrons and not force_reanalysis:
+                    histpath = os.path.join(reananalysis_output_location, 'histograms')
+                    # before starting analysis check if output directory already exists
+                    if os.path.exists(histpath):
+                        # check number of output files
+                        n_histoutput = len([h for h in os.listdir(histpath) if '.root' in h])
+                        n_parquet_local = len([h for h in os.listdir(final_state_hadron_dir) if '.parquet' in h])
+
+                        if n_histoutput == n_parquet_local:
+                            print(f'Analysis already done for run {run_number}, I found {n_histoutput} histograms, will not re-analyze ...') 
+                            continue
+
+                if os.path.exists(final_state_hadron_dir):
+
+                    n_parquet_local = len([h for h in os.listdir(final_state_hadron_dir) if '.parquet' in h])
+
+                    script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/count_files_on_OSN.py')
+                    cmd = f'python3 {script} -s {facility}/{run}/ -f final_state_hadrons'
+                    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+                    output = proc.stdout.read()
+                    n_parquet_expected = int(output.split()[-1])
+
+                # Download all files we are missing (or force download, if requested)
+                if os.path.exists(final_state_hadron_dir) and n_parquet_expected == n_parquet_local and not force_download:
+                    print(f'Hadron file dir ({final_state_hadron_dir}) already exists and n_parquet_expected ({n_parquet_expected}) == n_parquet_local ({n_parquet_local}), will not re-download')
+                    print()
+                else:
+                    if force_download:
+                        print('Force download enabled -- re-download all parquet files...')
+                    if os.path.exists(final_state_hadron_dir) and n_parquet_expected != n_parquet_local:
+                        print(f'Histogram dir already exists, but n_parquet_expected ({n_parquet_expected}) does not equal n_parquet_local ({n_parquet_local}), so we will redownload.')
+
+                    download_script = os.path.join(stat_xsede_2021_dir, f'scripts/js_stat_xsede_steer/download_from_OSN.py')
+                    cmd = f'python3 {download_script} -s {facility}/{run}/ -d {final_state_hadrons_download_location} -f final_state_hadrons -c {download_threads}'
+                    subprocess.run(cmd, check=True, shell=True)
+                    print()
+                
+                # run analyis script for that run
+                # this will go here, we will also need to grab an analysis config, maybe possible rom xstat repo directly? maybe one can also just create is herej
+                # we are still in run loop, from here on onwards pseudo code since i do not know how to make the codes talk to each other
+                # from submit.py run function run_analysis_standalone
+                # def run_analysis_standalone(
+                # run_number: int, -> implemented!
+                # run_info_dir: Path, -> implemented!
+                # final_state_hadrons_dir: Path, -> implemented
+                # output_dir: Path, -> implemented
+                # facility_name: str, -> implemented
+                # container_path: Path, -> implemented
+                # facility_config: parsl_configs.Facility, ->TODO
+                # local_jetscape_analysis_override_path: Optional[Path] = None, -> implemented
+
+
+                # instead of config, just pass facility name (which should be enough to singularity binary and options)
+                # run analhysis script, do not know yet how to load
+                # make sure to install it
+
+                # run is string RunXXXXX, extract only runnumber by removing Run from string
+                if analysis_final_state_hadrons:
+                    from js_stat_xsede_steer import submit
+                    ntasks = 80
+                    max_n_slurm_jobs = 80
+
+                    submit.run_analysis_standalone(run_number,run_info_download_location, final_state_hadrons_download_location, reananalysis_output_location, local_analysis_facility,facility, analyis_container_path,ntasks, max_n_slurm_jobs, jetscape_analysis_dir)
+
+                # TODO, take care of deleting the final_state_hadrons files locally for this run after analysis is done. Maybe do this as an option, unsure what exactly I will do
+                # get parquet files for final state hadrons final_state_hadrons_dir / facility / RunXXXXX
+                # run_directory = final_state_hadrons_dir / facility_name / f"Run{run_number:04}"
+
+                if delete_final_state_hadrons_after_analysis:
+                    # safely delete final_state_hadron_dir, make sure the path contains final_state_hadrons_per_run so we don't by accident delete "/" or "/home" .... 
+
+                    if os.path.exists(final_state_hadron_dir) and "final_state_hadrons_per_run" in final_state_hadron_dir:
+                        # remove all files in the directory that contain final_state_hadrons and parquet in name
+                        # note that we don't ask for endging parquet since sometimes incomplete files have weird ending
+                        print(f'Deleting all parquet files in {final_state_hadron_dir} as requested...')
+                        for f in os.listdir(final_state_hadron_dir):
+                            if "final_state_hadrons" in f and "parquet" in f:
+                                os.remove(os.path.join(final_state_hadron_dir, f))
+                        # now we can delete the directory
+                        os.rmdir(final_state_hadron_dir)
+
+                # TODO upload analysis results / histos to OSN in the future
+                
+
+
+        print('Done!')
+    
 
     #-----------------------------------------------------------------
     # Merge for each run into a single histogram per run
@@ -228,7 +418,12 @@ def main():
     if merge_histograms:
 
         for facility in facilities:
+            run_counter = 0
             for run in runs[facility]:
+                run_counter += 1
+
+                # TODO make counter "Processing run X out of Y at facility Z"
+                print(f'Processing run {run_counter} out of {len(runs[facility])} at facility {facility}...')
 
                 outputdir = os.path.join(local_base_outputdir, f'histograms_per_run/{facility}/{run}')
                 inputdir = os.path.join(outputdir, 'histograms')
@@ -404,9 +599,9 @@ def main():
         for design_point_tuple in design_point_dictionary.keys():
             sqrts, system, parametrization_type, design_point_index = design_point_tuple
             if system == 'pp':
-                outputdir = os.path.join(local_base_outputdir, f'plot/{sqrts}_{system}')
-                inputfile = os.path.join(outputdir_base, f'{sqrts}_{system}/histograms.root')
-                cmd = f'python {jetscape_analysis_dir}/plot/plot_results_STAT.py'
+                outputdir = os.path.join(local_base_outputdir, f'plot/{sqrts}_{system}')       
+                inputfile = os.path.join(outputdir_base, f'{sqrts}_{system}/histograms.root')       
+                cmd = f'python3 {jetscape_analysis_dir}/plot/plot_results_STAT.py'
                 cmd += f' -c {jetscape_analysis_dir}/config/STAT_{sqrts}.yaml'
                 cmd += f' -i {inputfile}'
                 cmd += f' -o {outputdir}'
@@ -421,7 +616,7 @@ def main():
                 inputfile = os.path.join(outputdir_base, f'{sqrts}_{system}_{parametrization_type}/histograms_design_point_{design_point_index}.root')
                 pp_reference_filename = os.path.join(local_base_outputdir, f'plot/{sqrts}_pp/final_results.root')
                 if os.path.exists(pp_reference_filename):
-                    cmd = f'python {jetscape_analysis_dir}/plot/plot_results_STAT.py'
+                    cmd = f'python3 {jetscape_analysis_dir}/plot/plot_results_STAT.py'
                     cmd += f' -c {jetscape_analysis_dir}/config/STAT_{sqrts}.yaml'
                     cmd += f' -i {inputfile}'
                     cmd += f' -r {pp_reference_filename}'

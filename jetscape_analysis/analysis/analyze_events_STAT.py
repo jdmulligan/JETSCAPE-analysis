@@ -222,15 +222,16 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
                 # ATLAS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                if self.sqrts in [2760]:
+                if self.sqrts in [2760, 5020]:
                     if self.centrality_accepted(self.hadron_observables['pt_ch_atlas']['centrality']):
                         pt_min = self.hadron_observables['pt_ch_atlas']['pt'][0]
                         pt_max = self.hadron_observables['pt_ch_atlas']['pt'][1]
                         if pt > pt_min and pt < pt_max:
                             if abs(eta) < self.hadron_observables['pt_ch_atlas']['eta_cut']:
+                                # TODO check if this is the correct list of particles also for 5.02 TeV
                                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                     self.observable_dict_event[f'hadron_pt_ch_atlas{suffix}'].append(pt)
-
+                
                 # CMS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                 if self.centrality_accepted(self.hadron_observables['pt_ch_cms']['centrality']):
