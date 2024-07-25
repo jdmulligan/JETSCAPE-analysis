@@ -21,6 +21,7 @@ import fjcontrib
 import fjext
 import numpy as np
 import yaml
+import awkward as ak
 
 from jetscape_analysis.analysis import analyze_events_base_STAT
 
@@ -31,7 +32,7 @@ class AnalyzeJetscapeEvents_Constituents(analyze_events_base_STAT.AnalyzeJetscap
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file='', input_file='', output_dir='', **kwargs):
-        super(self).__init__(config_file=config_file,
+        super().__init__(config_file=config_file,
                              input_file=input_file,
                              output_dir=output_dir,
                              **kwargs)
@@ -61,7 +62,7 @@ class AnalyzeJetscapeEvents_Constituents(analyze_events_base_STAT.AnalyzeJetscap
             #print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
 
         # Load observable blocks
-        self.inclusive_jet_observables = {}
+        self.inclusive_jet_observables = config["inclusive_jet"]
 
         # General jet finding parameters
         self.jet_R = config['jet_R']
@@ -246,9 +247,25 @@ class AnalyzeJetscapeEvents_Constituents(analyze_events_base_STAT.AnalyzeJetscap
                                             jet_pt, jet_pt_uncorrected, jetR, jet_collection_label=''):
         # MG: This is just an example of how you could configure an analysis. You can do whatever you want!
         if self.centrality_accepted(self.inclusive_jet_observables['jet_constituents']['centrality']):
+            # MG: Determine if the jet is accepted and store the constituents...
             if abs(jet.eta()) < (self.inclusive_jet_observables['jet_constituents']['eta_cut_R'] - jetR):
-                ...
-                # MG: Determine if the jet is accepted and store the constituents...
+
+                # Store constituents
+                constituents = {}
+                constituents['px'] = []
+                constituents['py'] = []
+                constituents['pz'] = []
+                constituents['E'] = []
+                for constituent in jet.constituents():
+                    constituents['px'].append(constituent.px())
+                    constituents['py'].append(constituent.py())
+                    constituents['pz'].append(constituent.pz())
+                    constituents['E'].append(constituent.E())
+
+                constituents = ak.zip(constituents)
+
+                self.observable_dict_event[f'inclusive_jet_constituents_R{jetR}{jet_collection_label}'].append(constituents)
+
 
 
         ## ALICE RAA
