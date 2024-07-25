@@ -23,10 +23,10 @@ import numpy as np
 import yaml
 import awkward as ak
 
-from jetscape_analysis.analysis import analyze_events_base_STAT
+from jetscape_analysis.analysis import analyze_events_base_jet_constituents
 
 
-class AnalyzeJetscapeEvents_Constituents(analyze_events_base_STAT.AnalyzeJetscapeEvents_BaseSTAT):
+class AnalyzeJetscapeEvents_Constituents(analyze_events_base_jet_constituents.AnalyzeJetscapeEvents_BaseJetConstituents):
 
     # ---------------------------------------------------------------
     # Constructor
