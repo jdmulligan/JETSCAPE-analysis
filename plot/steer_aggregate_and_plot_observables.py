@@ -93,13 +93,16 @@ def main():
     write_tables = False
     plot_global_QA = False
 
+    # TODO keep processing the same run, if we have already processed it, this is useful for debugging
+    # TODO update stat-xsede to have updated parsl version?
     # re-analysis parameters
     download_final_state_hadrons = True
     analysis_final_state_hadrons = True # an
-    force_reanalysis = False # force to analyse and download again, even if histogram files are present
+    force_reanalysis = True # force to analyse and download again, even if histogram files are present
     delete_final_state_hadrons_after_analysis = True
     # debug options
     ranomize_run_order = True  # if true, runs will be shuffled into random order. this can be useful for benchmarking
+    do_debug_same_run = True # if true, only process the same run over and over, useful for debugging
 
 
 
@@ -315,6 +318,9 @@ def main():
         run_counter = 0
         for facility in facilities:
             for run in runs[facility]:
+                # use for debugging only. Continue to take the same run for testiing
+                if do_debug_same_run:
+                    run = runs[facility][0]
                 run_counter += 1
                 run_number = int(run[3:])
 
@@ -324,7 +330,7 @@ def main():
                 reananalysis_output_location = os.path.join(reananalysis_output_location_base, f'{facility}/{run}')
                 
                 # before we download any analysis output, check if we already have analysis output that we want. If it is already there then skip this run
-                if analysis_final_state_hadrons and not force_reanalysis:
+                if analysis_final_state_hadrons and not force_reanalysis and not do_debug_same_run:
                     histpath = os.path.join(reananalysis_output_location, 'histograms')
                     # before starting analysis check if output directory already exists
                     if os.path.exists(histpath):
@@ -351,7 +357,7 @@ def main():
                     print(f'Hadron file dir ({final_state_hadron_dir}) already exists and n_parquet_expected ({n_parquet_expected}) == n_parquet_local ({n_parquet_local}), will not re-download')
                     print()
                 else:
-                    if force_download:
+                    if force_download or do_debug_same_run:
                         print('Force download enabled -- re-download all parquet files...')
                     if os.path.exists(final_state_hadron_dir) and n_parquet_expected != n_parquet_local:
                         print(f'Histogram dir already exists, but n_parquet_expected ({n_parquet_expected}) does not equal n_parquet_local ({n_parquet_local}), so we will redownload.')
