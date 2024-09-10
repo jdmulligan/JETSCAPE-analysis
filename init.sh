@@ -5,4 +5,5 @@
 
 # Load heppy module
 source /usr/local/init/profile.sh
+source /software/flo/myJETSCAPE/STAT-XSEDE-2021/scripts/venv/bin/activate
 module load heppy/1.0

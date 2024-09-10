@@ -102,7 +102,7 @@ def main():
     delete_final_state_hadrons_after_analysis = True
     # debug options
     ranomize_run_order = True  # if true, runs will be shuffled into random order. this can be useful for benchmarking
-    do_debug_same_run = True # if true, only process the same run over and over, useful for debugging
+    do_debug_same_run = False # if true, only process the same run over and over, useful for debugging
 
 
 
@@ -392,7 +392,33 @@ def main():
                     ntasks = 80
                     max_n_slurm_jobs = 80
 
-                    submit.run_analysis_standalone(run_number,run_info_download_location, final_state_hadrons_download_location, reananalysis_output_location, local_analysis_facility,facility, analyis_container_path,ntasks, max_n_slurm_jobs, jetscape_analysis_dir)
+                    # submit.run_analysis_standalone(run_number,run_info_download_location, final_state_hadrons_download_location, reananalysis_output_location, local_analysis_facility,facility, analyis_container_path,ntasks, max_n_slurm_jobs, jetscape_analysis_dir)
+                    
+                    # temporary (?) fix as subprocess 
+                    arg_list = [f'python3',f'{stat_xsede_2021_dir}/scripts/js_stat_xsede_steer/submit.py',
+                                f'--run_number={run_number}', 
+                                f'--run_info_dir={run_info_download_location}', 
+                                f'--final_state_hadrons_dir={final_state_hadrons_download_location}', 
+                                f'--output_dir={reananalysis_output_location}', 
+                                f'--analysis_facility_name={local_analysis_facility}', 
+                                f'--download_facility_name={facility}',
+                                f'--container_path={analyis_container_path}', 
+                                f'--n_tasks={ntasks}', 
+                                f'--max_n_slurm_jobs={max_n_slurm_jobs}', 
+                                f'--jetscape_analysis_dir={jetscape_analysis_dir}']
+                    # TODO log output and put to stdout bla bla
+                    try:
+                        subprocess.run(arg_list, check=True, shell=False)
+                    except subprocess.CalledProcessError as e:
+                        print(f'Error in subprocess: {e}')
+                        # attempt the submission a second time
+                        print('Attempting to submit the job a second time...')
+                        try:
+                            subprocess.run(arg_list, check=True, shell=False)
+                        except subprocess.CalledProcessError as e:
+                            print(f'Error in subprocess: {e}')
+                            print('Failed to submit the job a second time. Exiting...')
+                            sys.exit(1)
 
                 # TODO, take care of deleting the final_state_hadrons files locally for this run after analysis is done. Maybe do this as an option, unsure what exactly I will do
                 # get parquet files for final state hadrons final_state_hadrons_dir / facility / RunXXXXX
