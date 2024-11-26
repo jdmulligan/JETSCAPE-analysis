@@ -50,7 +50,7 @@ pt_ref: 10.
 
 # General jet finding parameters
 #jet_R: [0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0]
-jet_R: [0.4]
+jet_R: [0.2, 0.4]
 min_jet_pt: 20.
 max_jet_y: 1.5
 centrality_range: [0, 10]
@@ -59,7 +59,7 @@ centrality_range: [0, 10]
 # If pp, defaults will override this: ['']
 #jet_collection_labels: ['', '_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
 # We'll default to no special treatment.
-jet_collection_labels: ['']
+jet_collection_labels: ['', '_constituent_subtraction']
 
 # Constituent subtractor, for hole treatment
 constituent_subtractor:

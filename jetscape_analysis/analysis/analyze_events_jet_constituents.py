@@ -266,8 +266,6 @@ class AnalyzeJetscapeEvents_Constituents(analyze_events_base_jet_constituents.An
 
                 self.observable_dict_event[f'inclusive_jet_constituents_R{jetR}{jet_collection_label}'].append(constituents)
 
-
-
         ## ALICE RAA
         ##   Hole treatment:
         ##    - For RAA, all jet collections can be filled from the corrected jet pt
