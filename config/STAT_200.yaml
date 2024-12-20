@@ -99,6 +99,13 @@ hadron:
     y_min_AA: 0.
     y_max_AA: 2.
 
+    hepdata_Ion_dir: 'Figure 5'
+    hepdata_Ion_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5']
+    hepdata_Ion_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5']
+    ytitle_Ion: '#frac{1}{2#pip_{T}} #frac{d^{2}#it{#sigma}}{d#it{p}_{T}d#it{#eta}} #left[mb GeV^{2}#right]'
+    y_min_Ion: 2e-10
+    y_max_Ion: 2e2
+
   # https://www.hepdata.net/record/ins619063
   # Summed yields of pi+-, K+-, p, anti-p
   pt_ch_star:
@@ -120,6 +127,13 @@ hadron:
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
     ytitle_AA: '#it{R}_{AA}'
+
+    hepdata_Ion_dir: 'Table 1'
+    hepdata_Ion_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_Ion_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    ytitle_Ion: 'E #frac{d^{3}#it{#sigma}_{ch}}{d^{3}#it{p}} #left[b GeV^{-2}c^{3}#right]'
+    y_min_Ion: 2e-10
+    y_max_Ion: 2e2
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -190,15 +204,29 @@ inclusive_chjet:
 
     hepdata: 'HEPData-ins1798665-v1-root.root'
     hepdata_AA_dir: 'Table 10'
+    hepdata_AA_dir_R0.2: 'Table 10'
+    hepdata_AA_dir_R0.3: 'Table 10'
+    hepdata_AA_dir_R0.4: 'Table 10'
     hepdata_AA_gname_R0.2: ['Graph1D_y1']
     hepdata_AA_hname_R0.2: ['Hist1D_y1']
-    hepdata_AA_gname_R0.3: ['Graph1D_y1']
-    hepdata_AA_hname_R0.3: ['Hist1D_y1']
-    hepdata_AA_gname_R0.4: ['Graph1D_y1']
-    hepdata_AA_hname_R0.4: ['Hist1D_y1']
+    hepdata_AA_gname_R0.3: ['Graph1D_y2']
+    hepdata_AA_hname_R0.3: ['Hist1D_y2']
+    hepdata_AA_gname_R0.4: ['Graph1D_y3']
+    hepdata_AA_hname_R0.4: ['Hist1D_y3']
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 2.
+
+    hepdata_Ion_dir: 'Table 1'
+    hepdata_Ion_gname_R0.2: ['Graph1D_y1']
+    hepdata_Ion_hname_R0.2: ['Hist1D_y1']
+    hepdata_Ion_gname_R0.3: ['Graph1D_y2']
+    hepdata_Ion_hname_R0.3: ['Hist1D_y2']
+    hepdata_Ion_gname_R0.4: ['Graph1D_y3']
+    hepdata_Ion_hname_R0.4: ['Hist1D_y3']
+    ytitle_Ion: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[b/(GeV/c)^{-1}#right]'
+    y_min_Ion: 2e-8
+    y_max_Ion: 1e-1
 #------------------------------------------------------------------
 # Jet correlation observables
 semi_inclusive_chjet:

@@ -103,6 +103,11 @@ hadron:
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
     ytitle_AA: '#it{R}_{AA}'
 
+    hepdata_Ion_dir: 'Table 2'
+    hepdata_Ion_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
+    hepdata_Ion_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
+    ytitle_Ion: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+
   # https://www.hepdata.net/record/ins1759506 -- charged pions
   pt_pi_alice:
     eta_cut: 0.8
@@ -123,6 +128,11 @@ hadron:
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y7', 'Hist1D_y8', 'Hist1D_y9']
     ytitle_AA: '#it{R}_{AA}'
 
+    hepdata_Ion_dir: 'Table 1'
+    hepdata_Ion_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y7', 'Graph1D_y8', 'Graph1D_y9']
+    hepdata_Ion_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y7', 'Hist1D_y8', 'Hist1D_y9']
+    ytitle_Ion: '#frac{1}{#it{N}_{event}} #frac{d^{2}#it{N}}{d#it{p}_{T}d#it{#eta}} #left[(GeV/c)^{-1}#right]'
+
   # https://www.hepdata.net/record/ins1496050
   pt_ch_cms:
     eta_cut: 1.0
@@ -132,19 +142,27 @@ hadron:
     logy: True
 
     hepdata: 'HEPData-ins1496050-v2-root.root'
+    scale_by: '1/pt'
+
     hepdata_pp_dir: 'Table 7'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: 'E #frac{d^{3}#it{N}_{ch}}{d^{3}#it{p}} #left[GeV^{-2}c^{3}#right]'
     y_min_pp: 2e-18
     y_max_pp: 1e4
-    scale_by: '1/pt'
 
     hepdata_AA_dir: ['Table 8', 'Table 9', 'Table 10', 'Table 11']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0
     y_max_AA: 2.
+
+    hepdata_Ion_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4']
+    hepdata_Ion_gname: 'Graph1D_y1'
+    hepdata_Ion_hname: 'Hist1D_y1'
+    ytitle_Ion: 'E #frac{d^{3}#it{N}_{ch}}{d^{3}#it{p}} #left[GeV^{-2}c^{3}#right]'
+    y_min_Ion: 2e-18
+    y_max_Ion: 1e4
 
   # https://www.hepdata.net/record/ins2601282
   pt_ch_atlas:
@@ -191,7 +209,7 @@ hadron_correlations:
     y_max_pp: 0.
 
     hepdata_AA_dir: ['Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{v}_{2}(SP)'
 
@@ -214,7 +232,7 @@ hadron_correlations:
     y_max_pp: 0.
 
     hepdata_AA_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
     ytitle_AA: '#it{v}_{2}(SP)'
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -235,20 +253,30 @@ inclusive_jet:
     logy: True
 
     hepdata: 'HEPData-ins1755387-v1-root.root'
-    hepdata_pp_dir_R0.2: 'Table 2'
-    hepdata_pp_dir_R0.4: 'Table 4'
+##     hepdata_pp_dir_R0.2: 'Table 2'
+##     hepdata_pp_dir_R0.4: 'Table 4'
+    hepdata_pp_dir_R0.2: 'Table 22'
+    hepdata_pp_dir_R0.4: 'Table 24'
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-7
     y_max_pp: 1e-3
 
-    hepdata_AA_dir_R0.2: ['Table 30']
-    hepdata_AA_dir_R0.4: ['Table 31']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_dir_R0.2: 'Table 30'
+    hepdata_AA_dir_R0.4: 'Table 31'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 1.9
+
+    hepdata_Ion_dir_R0.2: ['Table 23']
+    hepdata_Ion_dir_R0.4: ['Table 25']
+    hepdata_Ion_gname: 'Graph1D_y1'
+    hepdata_Ion_hname: 'Hist1D_y1'
+    ytitle_Ion: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_Ion: 2e-7
+    y_max_Ion: 1e-3
 
   # https://www.hepdata.net/record/ins1673184
   # Note: Two charged tracks with pt>4 GeV are required in Pb-Pb
@@ -275,11 +303,18 @@ inclusive_jet:
     skip_pp_ratio: True
 
     hepdata_AA_dir_R0.4: ['Table 19', 'Table 20', 'Table 21', 'Table 22', 'Table 23']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 1.9
+
+    hepdata: 'HEPData-ins1673184-v1-root.root'
+    hepdata_Ion_dir_R0.4: ['Table 11', 'Table 12', 'Table 13', 'Table 14', 'Table 15']
+    hepdata_Ion_gname: 'Graph1D_y1'
+    ytitle_Ion: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
+    y_min_Ion: 2e-7
+    y_max_Ion: 1e4
 
   # https://www.hepdata.net/record/ins1673184
   # Note: Same as above block, except we include rapidity dependence for 0-10%
@@ -326,6 +361,27 @@ inclusive_jet:
     y_min_AA: 0.
     y_max_AA: 1.9
 
+    hepdata_Ion_dir_R0.4_pt0: 'Table 27'
+    hepdata_Ion_gname_R0.4_pt0: ['Graph1D_y1']
+    hepdata_Ion_hname_R0.4_pt0: ['Hist1D_y1']
+
+    hepdata_Ion_dir_R0.4_pt1: 'Table 27'
+    hepdata_Ion_gname_R0.4_pt1: ['Graph1D_y2']
+    hepdata_Ion_hname_R0.4_pt1: ['Hist1D_y2']
+
+    hepdata_Ion_dir_R0.4_pt2: 'Table 27'
+    hepdata_Ion_gname_R0.4_pt2: ['Graph1D_y3']
+    hepdata_Ion_hname_R0.4_pt2: ['Hist1D_y3']
+
+    hepdata_Ion_dir_R0.4_pt3: 'Table 27'
+    hepdata_Ion_gname_R0.4_pt3: ['Graph1D_y4']
+    hepdata_Ion_hname_R0.4_pt3: ['Hist1D_y4']
+
+    ytitle_Ion: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{y}} #left[nb/(GeV/c)^{-1}#right]'
+    y_min_Ion: 2e-7
+    y_max_Ion: 1e4
+    skip_Ion: True
+
   # https://www.hepdata.net/record/ins1848440
   pt_cms:
     jet_R: [0.2, 0.3, 0.4, 0.6, 0.8, 1.0]
@@ -335,6 +391,18 @@ inclusive_jet:
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
 
+##     hepdata: 'HEPData-ins1848440-v1-root.root'
+##     hepdata_pp_dir_R0.2: 'Figure 5-1'
+##     hepdata_pp_dir_R0.3: 'Figure 5-2'
+##     hepdata_pp_dir_R0.4: 'Figure 5-3'
+##     hepdata_pp_dir_R0.6: 'Figure 5-4'
+##     hepdata_pp_dir_R0.8: 'Figure 5-5'
+##     hepdata_pp_dir_R1.0: 'Figure 5-6'
+##     hepdata_pp_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
+##     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
+##     y_min_pp: 2e-8
+##     y_max_pp: 1e2
+
     hepdata: 'HEPData-ins1848440-v1-root.root'
     hepdata_pp_dir_R0.2: 'Figure 5-1'
     hepdata_pp_dir_R0.3: 'Figure 5-2'
@@ -342,7 +410,7 @@ inclusive_jet:
     hepdata_pp_dir_R0.6: 'Figure 5-4'
     hepdata_pp_dir_R0.8: 'Figure 5-5'
     hepdata_pp_dir_R1.0: 'Figure 5-6'
-    hepdata_pp_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
+    hepdata_pp_gname: ['Graph1D_y5']
     ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
     y_min_pp: 2e-8
     y_max_pp: 1e2
@@ -358,6 +426,17 @@ inclusive_jet:
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 1.9
+
+    hepdata_Ion_dir_R0.2: 'Figure 5-1'
+    hepdata_Ion_dir_R0.3: 'Figure 5-2'
+    hepdata_Ion_dir_R0.4: 'Figure 5-3'
+    hepdata_Ion_dir_R0.6: 'Figure 5-4'
+    hepdata_Ion_dir_R0.8: 'Figure 5-5'
+    hepdata_Ion_dir_R1.0: 'Figure 5-6'
+    hepdata_Ion_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
+    ytitle_Ion: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[nb/(GeV/c)^{-1}#right]'
+    y_min_Ion: 2e-8
+    y_max_Ion: 1e2
 
   # https://www.hepdata.net/record/ins1673177
   Dz_atlas:
@@ -390,6 +469,17 @@ inclusive_jet:
     y_min_AA: 0
     y_max_AA: 2.5
 
+    hepdata: 'HEPData-ins1673177-v2-root.root'
+    hepdata_Ion_dir_R0.4_pt0: 'Table 0'
+    hepdata_Ion_dir_R0.4_pt1: 'Table 4'
+    hepdata_Ion_dir_R0.4_pt2: 'Table 8'
+    hepdata_Ion_dir_R0.4_pt3: 'Table 12'
+    hepdata_Ion_dir_R0.4_pt4: 'Table 16'
+    hepdata_Ion_gname: ['Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5']
+    ytitle_Ion: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{z}}'
+    y_min_Ion: 2e-3
+    y_max_Ion: 1e6
+
   Dpt_atlas:
     jet_R: [0.4]
     y_cut: 2.1
@@ -419,6 +509,16 @@ inclusive_jet:
     ytitle_AA: '#it{R}_{D(pt)}'
     y_min_AA: 0
     y_max_AA: 2.5
+
+    hepdata_Ion_dir_R0.4_pt0: 'Table 1'
+    hepdata_Ion_dir_R0.4_pt1: 'Table 5'
+    hepdata_Ion_dir_R0.4_pt2: 'Table 9'
+    hepdata_Ion_dir_R0.4_pt3: 'Table 13'
+    hepdata_Ion_dir_R0.4_pt4: 'Table 17'
+    hepdata_Ion_gname: ['Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5']
+    ytitle_Ion: '#frac{1}{N_{jet}} #frac{dN_{ch}}{d#it{p}_{T}} #left[(GeV/c)^{-1}#right]'
+    y_min_Ion: 2e-4
+    y_max_Ion: 1e2
 
   # https://www.hepdata.net/record/ins1789224
   # Note that the paper does not construct the PbPb/pp ratio directly,
@@ -453,6 +553,16 @@ inclusive_jet:
     y_max_AA: 2.5
     skip_AA_ratio: True
 
+    hepdata_Ion_dir_R0.4_k0.3: 'Table 8'
+    hepdata_Ion_dir_R0.4_k0.5: 'Table 1'
+    hepdata_Ion_dir_R0.4_k0.7: 'Table 9'
+    hepdata_Ion_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3']
+    hepdata_Ion_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3']
+    ytitle_Ion: '#frac{1}{#sigma} #frac{d#sigma}{d#it{Q}} #left[1/e#right]'
+    y_min_Ion: 0
+    y_max_Ion: 2.5
+    skip_Ion_ratio: True
+
   # https://www.hepdata.net/record/ins1672962
   mg_cms:
     jet_R: [0.4]
@@ -466,6 +576,7 @@ inclusive_jet:
     xtitle: '#it{m}_{g}/#it{p}_{T,jet}'
 
     hepdata: 'HEPData-ins1672962-v1-root.root'
+
     hepdata_pp_dir_R0.4_zcut0.1_beta0: 'Figure 2a'
     hepdata_pp_dir_R0.4_zcut0.5_beta1.5: 'Figure 2b'
     hepdata_pp_gname: 'Graph1D_y1'
@@ -509,8 +620,44 @@ inclusive_jet:
     y_min_AA: 0.
     y_max_AA: 7.
 
+    hepdata_Ion_dir_R0.4_zcut0.1_beta0_pt0: 'Figure 5a'
+    hepdata_Ion_gname_R0.4_zcut0.1_beta0_pt0: ['Graph1D_y1']
+    hepdata_Ion_hname_R0.4_zcut0.1_beta0_pt0: ['Hist1D_y1']
+
+    hepdata_Ion_dir_R0.4_zcut0.5_beta1.5_pt0: 'Figure 6a'
+    hepdata_Ion_gname_R0.4_zcut0.5_beta1.5_pt0: ['Graph1D_y1']
+    hepdata_Ion_hname_R0.4_zcut0.5_beta1.5_pt0: ['Hist1D_y1']
+
+    hepdata_Ion_dir_R0.4_zcut0.1_beta0_pt1: 'Figure 3a'
+    hepdata_Ion_gname_R0.4_zcut0.1_beta0_pt1: ['Graph1D_y1', 'Graph1D_y3', 'Graph1D_y5']
+    hepdata_Ion_hname_R0.4_zcut0.1_beta0_pt1: ['Hist1D_y1', 'Hist1D_y3', 'Hist1D_y5']
+
+    hepdata_Ion_dir_R0.4_zcut0.5_beta1.5_pt1: 'Figure 4a'
+    hepdata_Ion_gname_R0.4_zcut0.5_beta1.5_pt1: ['Graph1D_y1', 'Graph1D_y3', 'Graph1D_y5']
+    hepdata_Ion_hname_R0.4_zcut0.5_beta1.5_pt1: ['Hist1D_y1', 'Hist1D_y3', 'Hist1D_y5']
+
+    hepdata_Ion_dir_R0.4_zcut0.1_beta0_pt2: 'Figure 5a'
+    hepdata_Ion_gname_R0.4_zcut0.1_beta0_pt2: ['Graph1D_y5']
+    hepdata_Ion_hname_R0.4_zcut0.1_beta0_pt2: ['Hist1D_y5']
+
+    hepdata_Ion_dir_R0.4_zcut0.5_beta1.5_pt2: 'Figure 6a'
+    hepdata_Ion_gname_R0.4_zcut0.5_beta1.5_pt2: ['Graph1D_y5']
+    hepdata_Ion_hname_R0.4_zcut0.5_beta1.5_pt2: ['Hist1D_y5']
+
+    hepdata_Ion_dir_R0.4_zcut0.1_beta0_pt3: 'Figure 5a'
+    hepdata_Ion_gname_R0.4_zcut0.1_beta0_pt3: ['Graph1D_y7']
+    hepdata_Ion_hname_R0.4_zcut0.1_beta0_pt3: ['Hist1D_y7']
+
+    hepdata_Ion_dir_R0.4_zcut0.5_beta1.5_pt3: 'Figure 6a'
+    hepdata_Ion_gname_R0.4_zcut0.5_beta1.5_pt3: ['Graph1D_y7']
+    hepdata_Ion_hname_R0.4_zcut0.5_beta1.5_pt3: ['Hist1D_y7']
+    ytitle_Ion: '#frac{1}{#sigma} #frac{d#sigma}{d#it{m}_{g}} #left[GeV^{-2}#right]'
+    y_min_Ion: 0.
+    y_max_Ion: 25.
+
   # https://www.hepdata.net/record/ins1620905
   # Note that pp distributions are not reported except for 160-180 GeV
+  # Note that no PbPb distributions are not reported except for 160-180 GeV
   # (the other pt bins have only "pp smeared" reported)
   zg_cms:
     jet_R: [0.4]
@@ -530,17 +677,24 @@ inclusive_jet:
     y_max_pp: 15
     skip_pp: True
 
-    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt0: ['Table 11']
+    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt0: 'Table 11'
     hepdata_AA_dir_R0.4_zcut0.1_beta0_pt1: ['Table 10', 'Table 9', 'Table 8']
-    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt2: ['Table 13']
-    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt3: ['Table 14']
-    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt4: ['Table 15']
-    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt5: ['Table 16']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt2: 'Table 13'
+    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt3: 'Table 14'
+    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt4: 'Table 15'
+    hepdata_AA_dir_R0.4_zcut0.1_beta0_pt5: 'Table 16'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: 'PbPb / smeared pp'
     y_min_AA: 0.
     y_max_AA: 2.
+
+    hepdata_Ion_dir_R0.4_zcut0.1_beta0_pt1: ['Table 6', 'Table 5', 'Table 4']
+    hepdata_Ion_gname: 'Graph1D_y1'
+    ytitle_Ion: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
+    y_min_Ion: 0.
+    y_max_Ion: 15
+    skip_Ion: True
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -570,7 +724,7 @@ inclusive_chjet:
       " will be adjusted when analysis details are finalized "
 
   # https://inspirehep.net/literature/1893479 (no hepdata yet)
-  # TODO: update hepdata
+  # https://www.hepdata.net/record/ins1893479
   zg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
@@ -579,9 +733,9 @@ inclusive_chjet:
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
     xtitle: '#it{z}_{g}'
+    hepdata: 'HEPData-ins1893479-v1-root.root'
 
-    hepdata: 'HEPData-1627454721-v1-root.root'
-    hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 2', '']
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 1', '']
     hepdata_pp_dir_R0.4_zcut0.2_beta0: ['', 'Table 4']
     hepdata_pp_gname: 'Graph1D_y1'
     ytitle_pp: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
@@ -590,11 +744,18 @@ inclusive_chjet:
 
     hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 3', '']
     hepdata_AA_dir_R0.4_zcut0.2_beta0: ['', 'Table 6']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: 'PbPb / pp'
     y_min_AA: 0.
     y_max_AA: 2.
+
+    hepdata_Ion_dir_R0.2_zcut0.2_beta0: ['Table 2', '']
+    hepdata_Ion_dir_R0.4_zcut0.2_beta0: ['', 'Table 5']
+    hepdata_Ion_gname: 'Graph1D_y1'
+    ytitle_Ion: '#frac{1}{#sigma} #frac{d#sigma}{d#it{z}_{g}}'
+    y_min_Ion: 0.
+    y_max_Ion: 7.
 
   tg_alice:
     jet_R: [0.2, 0.4]
@@ -604,8 +765,8 @@ inclusive_chjet:
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
     xtitle: '#it{#theta}_{g}'
+    hepdata: 'HEPData-ins1893479-v1-root.root'
 
-    hepdata: 'HEPData-1627454721-v1-root.root'
     hepdata_pp_dir_R0.2_zcut0.2_beta0: ['Table 7', '']
     hepdata_pp_dir_R0.4_zcut0.2_beta0: ['', 'Table 10']
     hepdata_pp_gname: 'Graph1D_y1'
@@ -615,11 +776,18 @@ inclusive_chjet:
 
     hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 9', '']
     hepdata_AA_dir_R0.4_zcut0.2_beta0: ['', 'Table 12']
-    hepdata_AA_gname: 'Graph1D_y1'
+    hepdata_AA_gname: ['Graph1D_y1']
     hepdata_AA_hname: 'Hist1D_y1'
     ytitle_AA: 'PbPb / pp'
     y_min_AA: 0.
     y_max_AA: 2.
+
+    hepdata_Ion_dir_R0.2_zcut0.2_beta0: ['Table 8', '']
+    hepdata_Ion_dir_R0.4_zcut0.2_beta0: ['', 'Table 11']
+    hepdata_Ion_gname: 'Graph1D_y1'
+    ytitle_Ion: '#frac{1}{#sigma} #frac{d#sigma}{d#it{#theta}_{g}}'
+    y_min_Ion: 0.
+    y_max_Ion: 5.
 
   # TODO: Calculate ATLAS theta_g
 
