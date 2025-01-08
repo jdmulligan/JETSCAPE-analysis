@@ -11,6 +11,11 @@ jetscape_analysis/_version.py
 env/
 venv/
 ENV/
+**/*.log
+**/*.stderr
+**/*.stdout
+**/*HTEX.block*
+
 
 .vscode/
 
