@@ -382,6 +382,10 @@ def main():
                                     skipped_runs[facility].append(run)
                                     runs[facility].remove(run)
                                     continue
+                                if run_dictionary[facility][run]['sqrt_s'] not in debug_sqrts:
+                                    skipped_runs[facility].append(run)
+                                    runs[facility].remove(run)
+                                    continue
                 else:
                     print(f'Warning: {run}_info.yaml not found!')
                     runs[facility].remove(run)
