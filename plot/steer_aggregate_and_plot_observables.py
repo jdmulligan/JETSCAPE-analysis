@@ -111,8 +111,8 @@ delete_final_state_hadrons_after_analysis = True # delete final state hadron fil
 #-----------------------------------------------------------------
 force_download = False
 download_threads = 5
-n_cores = 20
-ntasks = 80
+n_cores = 20 # only used for merging with hadd
+ntasks = 80 # number of analysis tasks to be submitted to local_analysis_facility
 max_n_slurm_jobs = 80
 skip_run_binomial = True
 
@@ -382,6 +382,7 @@ def main():
                                     skipped_runs[facility].append(run)
                                     runs[facility].remove(run)
                                     continue
+                            if len(debug_sqrts) > 0:
                                 if run_dictionary[facility][run]['sqrt_s'] not in debug_sqrts:
                                     skipped_runs[facility].append(run)
                                     runs[facility].remove(run)
