@@ -85,7 +85,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             #print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
 
         # Load outlier rejection settings
-        self.doEventOutlierRejection = config['doEventOutlierRejection']
+        self.do_event_outlier_rejection = config['do_event_outlier_rejection']
         self.outlier_jet_R = config['outlier_jet_R']
         self.outlier_pt_hat_cut = config['outlier_pt_hat_cut']
 
@@ -138,9 +138,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                                      select_charged=True)
         # call event selection function, run jet finder R=0.4, take highest pt jet, require ptjet <= 3 * pthat, otherwise return false
         pt_hat = event['pt_hat']
-        if self.doEventOutlierRejection:
-            jet_def_outlier = fj.JetDefinition(fj.antikt_algorithm, self.outlier_jet_R)
-            if self.is_event_outlier(fj_hadrons_positive,pt_hat,jet_def_outlier,self.outlier_pt_hat_cut):
+        if self.do_event_outlier_rejection:
+            if self.is_event_outlier(fj_hadrons_positive, pt_hat, self.outlier_pt_hat_cut):
                 return
         # Fill hadron observables for jet shower particles
         self.fill_hadron_observables(fj_hadrons_positive, pid_hadrons_positive, status='+')
@@ -183,8 +182,9 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Do  jet outlier rejection based on highest pt jet and pthat
     #
     # ---------------------------------------------------------------
-    def is_event_outlier(self, hadrons_for_jet_finding,pt_hat,jet_def,outlier_pt_hat_cut) -> bool:
+    def is_event_outlier(self, hadrons_for_jet_finding,pt_hat,outlier_pt_hat_cut) -> bool:
         # Find inclusive charged jets
+        jet_def = fj.JetDefinition(fj.antikt_algorithm, self.outlier_jet_R)
         cs = fj.ClusterSequence(hadrons_for_jet_finding, jet_def)
         jets = fj.sorted_by_pt(cs.inclusive_jets())
         if len(jets) == 0:
@@ -257,7 +257,6 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                 # TODO check if this is the correct list of particles also for 5.02 TeV
                                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                     self.observable_dict_event[f'hadron_pt_ch_atlas{suffix}'].append(pt)
-                
                 # CMS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                 if self.centrality_accepted(self.hadron_observables['pt_ch_cms']['centrality']):

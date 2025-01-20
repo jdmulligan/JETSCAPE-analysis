@@ -46,7 +46,7 @@
 #------------------------------------------------------------------
 
 # Settings for outlier rejection
-doEventOutlierRejection: false
+do_event_outlier_rejection: false
 outlier_jet_R: 0.4
 outlier_pt_hat_cut: 3. # pt_jet > outlier_pt_hat_cut * pt_hat is an outlier
 
