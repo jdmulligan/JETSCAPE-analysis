@@ -225,9 +225,9 @@ semi_inclusive_chjet:
     hepdata_AA_hname: ['Hist1D_y1']
     ytitle_AA: '#it{R}_{AA}'
 
-  # HEPData does not contain histogram bins -- appears to be 25 bins from [pi/2,3pi/2]
-  # TODO: Confirm binning
   # The bin width is constant at 0.1256.  For the most left two data points, there are really missing in HEP
+  # PMJ 1/21/25: data points not recoverable without some effort. 
+  # Since this dataset has been superceded in quality by a more recent STAR publication I judge this not to worth the trouble.
   dphi_star:
     jet_R: [0.3]
     eta_cut_R: 1.
