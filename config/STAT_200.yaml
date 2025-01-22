@@ -194,7 +194,6 @@ inclusive_chjet:
     y_min_AA: 0.
     y_max_AA: 2.
 #------------------------------------------------------------------
-#------------------------------------------------------------------
 # Jet correlation observables
 semi_inclusive_chjet:
 
@@ -258,3 +257,78 @@ semi_inclusive_chjet:
     y_min_AA: 0.
     y_max_AA: 2.
 #------------------------------------------------------------------
+# Jet correlation observables
+semi_inclusive_pizerojet:
+
+  # pmj 1/21/25: in journal review, HEPData tables not yet available
+  # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if this is difficult to implement
+  
+  IAA_star:
+    jet_R: [0.2, 0.5]
+    eta_cut_R: [0.8, 0.5] # equivalent to 1-R
+    pt: [5., 25.]
+    centrality: [[0,15]]
+    pizero_eta_cut: 1.0
+    trigger_range: [11., 15.]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+
+    ytitle_pp: 'I_{AA}'
+    y_min_pp: 0.1
+    y_max_pp: 1.2
+    skip_pp: True
+
+    hepdata: not yet available
+
+# pmj 1/21/25: this observable is the ratio of two spectra with different R, so "jet_R:" has a different meaning.
+# maybe define a different field?
+  R25_star:
+    jet_R: [0.2, 0.5]
+    eta_cut_R: [0.8, 0.5] # equivalent to 1-R
+    pt: [11., 15.]
+    centrality: [[0,15]]
+    pizero_eta_cut: 1.0
+    trigger_range: [11., 15.]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+
+    hepdata: not yet available
+
+#------------------------------------------------------------------
+# Jet correlation observables
+semi_inclusive_gammajet:
+
+  # pmj 1/21/25: in journal review, HEPData tables not yet available
+  # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if this is difficult to implement
+  
+  IAA_star:
+    jet_R: [0.2, 0.5]
+    eta_cut_R: 1.0
+    pt: [5., 20.]
+    centrality: [[0,15]]
+    gamma_eta_cut: 1.0
+    trigger_range: [15., 20.]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+
+    ytitle_pp: 'I_{AA}'
+    y_min_pp: 0.1
+    y_max_pp: 1.2
+    skip_pp: True
+
+    hepdata: not yet available
+
+# pmj 1/21/25: this observable is the ratio of two spectra with different R, so "jet_R:" has a different meaning.
+# maybe define a different field?
+  R25_star:
+    jet_R: [0.2, 0.5]
+    eta_cut_R: 1.0
+    pt: [5., 20.]
+    centrality: [[0,15]]
+    gamma_eta_cut: 1.0
+    trigger_range: [15., 20.]
+    xtitle: '#it{p}_{T} (GeV/#it{c})'
+    logy: True
+
+    hepdata: not yet available
+    
