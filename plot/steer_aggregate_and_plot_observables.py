@@ -241,7 +241,7 @@ def download_server(facilities, runs, buffer_size=5):
                 cmd = f'python3 {download_script} -s {facility}/{run}/ -d {final_state_hadrons_download_location} -f final_state_hadrons -c {download_threads}'
                 subprocess.run(cmd, check=True, shell=True)
                 # create a file DONE in the directory to signal that the download is finished
-                Path(final_state_hadron_dir / 'DONE').touch()
+                Path(os.path.join(final_state_hadron_dir, 'DONE')).touch()
                 print()
             
 def main():
