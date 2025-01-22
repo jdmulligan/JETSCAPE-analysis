@@ -84,6 +84,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
             self.output_file = _input_filename.replace("final_state_hadrons", self.output_file)
             #print(f'Updated output_file name to "{self.output_file}" in order to add identifying indices.')
 
+        # Load outlier rejection settings
+        self.do_event_outlier_rejection = config['do_event_outlier_rejection']
+        self.outlier_jet_R = config['outlier_jet_R']
+        self.outlier_pt_hat_cut = config['outlier_pt_hat_cut']
+
         # Load observable blocks
         self.hadron_observables = config['hadron']
         self.hadron_correlation_observables = config['hadron_correlations']
@@ -131,7 +136,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                                                      select_charged=True)
         fj_hadrons_negative_charged, pid_hadrons_negative_charged = self.fill_fastjet_constituents(event, select_status='-',
                                                                      select_charged=True)
-
+        # call event selection function, run jet finder R=0.4, take highest pt jet, require ptjet <= 3 * pthat, otherwise return false
+        pt_hat = event['pt_hat']
+        if self.do_event_outlier_rejection:
+            if self.is_event_outlier(fj_hadrons_positive, pt_hat, self.outlier_pt_hat_cut):
+                return
         # Fill hadron observables for jet shower particles
         self.fill_hadron_observables(fj_hadrons_positive, pid_hadrons_positive, status='+')
         if self.is_AA:
@@ -169,6 +178,23 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
                                       pid_hadrons_positive, pid_hadrons_negative,
                                       pid_hadrons_positive_charged, pid_hadrons_negative_charged,
                                       jet_collection_label=jet_collection_label)
+    # ---------------------------------------------------------------
+    # Do  jet outlier rejection based on highest pt jet and pthat
+    #
+    # ---------------------------------------------------------------
+    def is_event_outlier(self, hadrons_for_jet_finding,pt_hat,outlier_pt_hat_cut) -> bool:
+        # Find inclusive charged jets
+        jet_def = fj.JetDefinition(fj.antikt_algorithm, self.outlier_jet_R)
+        cs = fj.ClusterSequence(hadrons_for_jet_finding, jet_def)
+        jets = fj.sorted_by_pt(cs.inclusive_jets())
+        if len(jets) == 0:
+            return False
+        jet = jets[0]
+        pt_jet = jet.pt()
+        if pt_jet > outlier_pt_hat_cut * pt_hat:
+            return True
+        else:
+            return False
 
     # ---------------------------------------------------------------
     # Fill hadron observables
@@ -222,15 +248,15 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
 
                 # ATLAS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
-                if self.sqrts in [2760]:
+                if self.sqrts in [2760, 5020]:
                     if self.centrality_accepted(self.hadron_observables['pt_ch_atlas']['centrality']):
                         pt_min = self.hadron_observables['pt_ch_atlas']['pt'][0]
                         pt_max = self.hadron_observables['pt_ch_atlas']['pt'][1]
                         if pt > pt_min and pt < pt_max:
                             if abs(eta) < self.hadron_observables['pt_ch_atlas']['eta_cut']:
+                                # TODO check if this is the correct list of particles also for 5.02 TeV
                                 if abs(pid) in [11, 13, 211, 321, 2212, 3222, 3112, 3312, 3334]:
                                     self.observable_dict_event[f'hadron_pt_ch_atlas{suffix}'].append(pt)
-
                 # CMS
                 # Charged hadrons (e-, mu-, pi+, K+, p+, Sigma+, Sigma-, Xi-, Omega-)
                 if self.centrality_accepted(self.hadron_observables['pt_ch_cms']['centrality']):
