@@ -266,8 +266,10 @@ semi_inclusive_chjet:
 # Jet correlation observables
 semi_inclusive_pizerojet:
 
-  # pmj 1/21/25: in journal review, HEPData tables not yet available
-  # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if this is difficult to implement
+  # pmj 1/21/25: HEPData tables not yet available
+  # pmj 1/23/25 PRL (accepted): https://inspirehep.net/literature/2693040
+  # pmj 1/23/25 PRC (in journal review): https://inspirehep.net/literature/2693062
+  # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if [0,15] is difficult to accomodate
   
   IAA_star:
     jet_R: [0.2, 0.5]
@@ -294,7 +296,12 @@ semi_inclusive_pizerojet:
     pt: [11., 15.]
     centrality: [[0,15]]
     pizero_eta_cut: 1.0
-    trigger_range: [11., 15.]
+    # pmj 1/23/25: per discussionn at today's STAT meeting, the experimental trigger selection is based on ET at the detector level, whereas
+    # the simulation is based on ET at the particle level. The PRC Section 9 gives a matrix which maps between the two, effectively providing a weight
+    # as a function of ET_part. Here I specify both the experimental window ("det" level) and the larger simulation window ("part" level) needed to cover 
+    # it with the experimentally specified weighting
+    trigger_range_det: [11., 15.]
+    trigger_range_part: [9., 22.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
 
@@ -304,8 +311,10 @@ semi_inclusive_pizerojet:
 # Jet correlation observables
 semi_inclusive_gammajet:
 
-  # pmj 1/21/25: in journal review, HEPData tables not yet available
-  # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if this is difficult to implement
+  # pmj 1/21/25: HEPData tables not yet available
+  # pmj 1/23/25 PRL (accepted): https://inspirehep.net/literature/2693040
+  # pmj 1/23/25 PRC (in journal review): https://inspirehep.net/literature/2693062
+  # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if [0,15] is difficult to accomodate
   
   IAA_star:
     jet_R: [0.2, 0.5]
@@ -332,7 +341,12 @@ semi_inclusive_gammajet:
     pt: [5., 20.]
     centrality: [[0,15]]
     gamma_eta_cut: 1.0
-    trigger_range: [15., 20.]
+    # pmj 1/23/25: per discussionn at today's STAT meeting, the experimental trigger selection is based on ET at the detector level, whereas
+    # the simulation is based on ET at the particle level. The PRC Section 9 gives a matrix which maps between the two, effectively providing a weight
+    # as a function of ET_part. Here I specify both the experimental window ("det" level) and the larger simulation window ("part" level) needed to cover 
+    # it with the experimentally specified weighting
+    trigger_range_det: [15., 20.]
+    trigger_range_part: [12., 23.]
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
 
