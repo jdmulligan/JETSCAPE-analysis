@@ -189,8 +189,6 @@ hadron_correlations:
     logy: True
 
     ytitle_pp: 'I_{AA}'
-    y_min_pp: 2e-5
-    y_max_pp: 2.
     skip_pp: True
 
     hepdata: 'HEPData-ins1512115-v1-root.root'

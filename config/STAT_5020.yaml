@@ -784,7 +784,7 @@ inclusive_chjet:
 
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
-  # mininum track eta: 9
+  # maximum track eta: 9
   # this Pb/pp WTA-standard
   # pp data not available
   axis_alice_1:
@@ -801,7 +801,7 @@ inclusive_chjet:
 
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
-  # mininum track eta: 9
+  # maximum track eta: 9
   # this R0.4/R0.2 WTA-standard
   axis_alice_2:
     jet_R: [0.2, 0.4]
@@ -815,7 +815,7 @@ inclusive_chjet:
 
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
-  # mininum track eta: 9
+  # maximum track eta: 9
   # this R0.4/R0.2 WTA - SD
   axis_alice_3:
     jet_R: [0.2, 0.4]
