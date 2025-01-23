@@ -786,7 +786,6 @@ inclusive_chjet:
   # mininum track pt: 0.15
   # maximum track eta: 9
   # this Pb/pp WTA-standard
-  # pp data not available
   axis_alice_1:
     jet_R: [0.2]
     pt: [40, 60, 80]
