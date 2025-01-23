@@ -1,0 +1,86 @@
+dependent_variables:
+- header:
+    name: Pb$\textendash$Pb/pp
+  qualifiers:
+  - name: RE
+    value: Pb Pb --> jet+X
+  - name: SQRT(SNN)
+    units: TeV
+    value: 5.02
+  - name: CENTRALITY
+    value: 0-10%
+  - name: ABS(ETARAP)
+    value: '0.7'
+  - name: jet radius
+    value: 0.2
+  - name: jet method
+    value: Anti-$k_{T}$
+  values:
+  - errors:
+    - label: stat
+      symerror: 0.15
+    - label: syst
+      symerror: 0.17
+    value: 1.18
+  - errors:
+    - label: stat
+      symerror: 0.12
+    - label: syst
+      symerror: 0.083
+    value: 1.28
+  - errors:
+    - label: stat
+      symerror: 0.12
+    - label: syst
+      symerror: 0.049
+    value: 1.23
+  - errors:
+    - label: stat
+      symerror: 0.065
+    - label: syst
+      symerror: 0.039
+    value: 1.01
+  - errors:
+    - label: stat
+      symerror: 0.087
+    - label: syst
+      symerror: 0.037
+    value: 0.959
+  - errors:
+    - label: stat
+      symerror: 0.06
+    - label: syst
+      symerror: 0.055
+    value: 0.896
+  - errors:
+    - label: stat
+      symerror: 0.069
+    - label: syst
+      symerror: 0.066
+    value: 0.673
+  - errors:
+    - label: stat
+      symerror: 0.076
+    - label: syst
+      symerror: 0.12
+    value: 0.575
+independent_variables:
+- header:
+    name: $\Delta R_{\rm axis}$
+  values:
+  - high: 0.005
+    low: 0.0
+  - high: 0.01
+    low: 0.005
+  - high: 0.015
+    low: 0.01
+  - high: 0.02
+    low: 0.015
+  - high: 0.025
+    low: 0.02
+  - high: 0.04
+    low: 0.025
+  - high: 0.06
+    low: 0.04
+  - high: 0.1
+    low: 0.06

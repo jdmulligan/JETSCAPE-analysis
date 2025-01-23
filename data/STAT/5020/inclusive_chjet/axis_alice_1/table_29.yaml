@@ -1,0 +1,165 @@
+dependent_variables:
+- header:
+    name: $\frac{1}{\sigma_{\rm inc}} \frac{d\sigma}{d\Delta R_{\rm axis}}$
+  qualifiers:
+  - name: RE
+    value: Pb Pb --> jet+X
+  - name: SQRT(SNN)
+    units: TeV
+    value: 5.02
+  - name: CENTRALITY
+    value: 0-10%
+  - name: ABS(ETARAP)
+    value: 0.9-R
+  - name: jet radius
+    value: 0.4
+  - name: jet method
+    value: Anti-$k_{T}$
+  values:
+  - errors:
+    - label: stat
+      symerror: 0.56
+    - label: syst
+      symerror: 1.1
+    value: 13.6
+  - errors:
+    - label: stat
+      symerror: 0.37
+    - label: syst
+      symerror: 0.98
+    value: 9.73
+  - errors:
+    - label: stat
+      symerror: 0.21
+    - label: syst
+      symerror: 0.45
+    value: 4.84
+  - errors:
+    - label: stat
+      symerror: 0.14
+    - label: syst
+      symerror: 0.6
+    value: 3.03
+  - errors:
+    - label: stat
+      symerror: 0.11
+    - label: syst
+      symerror: 0.57
+    value: 2.1
+  - errors:
+    - label: stat
+      symerror: 0.086
+    - label: syst
+      symerror: 0.52
+    value: 1.52
+  - errors:
+    - label: stat
+      symerror: 0.042
+    - label: syst
+      symerror: 0.13
+    value: 0.744
+  - errors:
+    - label: stat
+      symerror: 0.014
+    - label: syst
+      symerror: 0.1
+    value: 0.183
+  - errors:
+    - label: stat
+      symerror: 0.008
+    - label: syst
+      symerror: 0.032
+    value: 0.0541
+- header:
+    name: $\frac{1}{\sigma_{\rm inc}} \frac{d\sigma}{d\Delta R_{\rm axis}}$
+  qualifiers:
+  - name: RE
+    value: Pb Pb --> jet+X
+  - name: SQRT(SNN)
+    units: TeV
+    value: 5.02
+  - name: CENTRALITY
+    value: 0-10%
+  - name: ABS(ETARAP)
+    value: 0.9-R
+  - name: jet radius
+    value: 0.2
+  - name: jet method
+    value: Anti-$k_{T}$
+  values:
+  - errors:
+    - label: stat
+      symerror: 0.23
+    - label: syst
+      symerror: 1.2
+    value: 6.49
+  - errors:
+    - label: stat
+      symerror: 0.32
+    - label: syst
+      symerror: 1.1
+    value: 11.3
+  - errors:
+    - label: stat
+      symerror: 0.2
+    - label: syst
+      symerror: 0.31
+    value: 7.18
+  - errors:
+    - label: stat
+      symerror: 0.16
+    - label: syst
+      symerror: 0.32
+    value: 4.35
+  - errors:
+    - label: stat
+      symerror: 0.11
+    - label: syst
+      symerror: 0.21
+    value: 2.97
+  - errors:
+    - label: stat
+      symerror: 0.075
+    - label: syst
+      symerror: 0.17
+    value: 1.88
+  - errors:
+    - label: stat
+      symerror: 0.035
+    - label: syst
+      symerror: 0.068
+    value: 0.844
+  - errors:
+    - label: stat
+      symerror: 0.018
+    - label: syst
+      symerror: 0.034
+    value: 0.237
+  - errors:
+    - label: stat
+      symerror: 0.0071
+    - label: syst
+      symerror: 0.0055
+    value: 0.0685
+independent_variables:
+- header:
+    name: $\Delta R_{\rm axis}/R$
+  values:
+  - high: 0.025
+    low: 0.0
+  - high: 0.05
+    low: 0.025
+  - high: 0.075
+    low: 0.05
+  - high: 0.1
+    low: 0.075
+  - high: 0.125
+    low: 0.1
+  - high: 0.15
+    low: 0.125
+  - high: 0.25
+    low: 0.15
+  - high: 0.35
+    low: 0.25
+  - high: 0.5
+    low: 0.35

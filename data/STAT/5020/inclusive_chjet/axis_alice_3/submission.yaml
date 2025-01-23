@@ -1,0 +1,443 @@
+---
+comment: ''
+data_license:
+  description: The content can be shared and adapted but you must             give
+    appropriate credit and cannot restrict access to others.
+  name: cc-by-4.0
+  url: https://creativecommons.org/licenses/by/4.0/
+---
+data_file: table_1.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$Standard for
+  jets of $R=0.2$, in the interval $40<p_{\rm T}^{\rm ch \ jet}<60 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (left)
+name: Table 1
+---
+data_file: table_2.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$Standard
+  for jets of $R=0.2$, in the interval $40<p_{\rm T}^{\rm ch \ jet}<60 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (left)
+name: Table 2
+---
+data_file: table_3.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$Standard for
+  jets of $R=0.2$, in the interval $60<p_{\rm T}^{\rm ch \ jet}<80 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (right)
+name: Table 3
+---
+data_file: table_4.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$Standard
+  for jets of $R=0.2$, in the interval $60<p_{\rm T}^{\rm ch \ jet}<80 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (right)
+name: Table 4
+---
+data_file: table_5.yaml
+description: Pb$\textendash$Pb $\Delta R_{\rm axis}/R$ distribution for WTA$\textendash$Standard
+  for jets of $R=0.4$ and $0.2$, in the interval $100<p_{\rm T}^{\rm ch \ jet}<140
+  \ {\rm GeV}/c$.
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (left)
+name: Table 5
+---
+data_file: table_6.yaml
+description: Pb$\textendash$Pb ($R=0.4$)/ Pb$\textendash$Pb ($R=0.2$) ratio distribution
+  for WTA$\textendash$Standard in the interval $100<p_{\rm T}^{\rm ch \ jet}<140 \
+  {\rm GeV}/c$.
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (left)
+name: Table 6
+---
+data_file: table_7.yaml
+description: Pb$\textendash$Pb $\Delta R_{\rm axis}/R$ distribution for WTA$\textendash$SD
+  with grooming setting ($z_{{\rm cut}}=0.2,\beta=0$) for jets of $R=0.4$ and $0.2$,
+  in the interval $100<p_{\rm T}^{\rm ch \ jet}<140 \ {\rm GeV}/c$.
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (right)
+name: Table 7
+---
+data_file: table_8.yaml
+description: Pb$\textendash$Pb ($R=0.4$)/ Pb$\textendash$Pb ($R=0.2$) ratio distribution
+  for WTA$\textendash$SD with grooming setting ($z_{{\rm cut}}=0.2,\beta=0$) in the
+  interval $100<p_{\rm T}^{\rm ch \ jet}<140 \ {\rm GeV}/c$.
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (right)
+name: Table 8
+---
+data_file: table_9.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.2$, in the interval $40<p_{\rm
+  T}^{\rm ch \ jet}<60 \ {\rm GeV}/c$. The corresponding pp baseline can be found in:
+  https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (left), supplemental file
+name: Table 9
+---
+data_file: table_10.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.2$, in the interval
+  $40<p_{\rm T}^{\rm ch \ jet}<60 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (left), supplemental file
+name: Table 10
+---
+data_file: table_11.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.2$, in the interval $60<p_{\rm
+  T}^{\rm ch \ jet}<80 \ {\rm GeV}/c$. The corresponding pp baseline can be found in:
+  https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (right), supplemental file
+name: Table 11
+---
+data_file: table_12.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.2$, in the interval
+  $60<p_{\rm T}^{\rm ch \ jet}<80 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 2 (right), supplemental file
+name: Table 12
+---
+data_file: table_13.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.2$, in the interval $40<p_{\rm
+  T}^{\rm ch \ jet}<60 \ {\rm GeV}/c$. The corresponding pp baseline can be found in:
+  https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (left), supplemental file
+name: Table 13
+---
+data_file: table_14.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.2$, in the interval
+  $40<p_{\rm T}^{\rm ch \ jet}<60 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (left), supplemental file
+name: Table 14
+---
+data_file: table_15.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.2$, in the interval $60<p_{\rm
+  T}^{\rm ch \ jet}<80 \ {\rm GeV}/c$. The corresponding pp baseline can be found in:
+  https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (right), supplemental file
+name: Table 15
+---
+data_file: table_16.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.2$, in the interval
+  $60<p_{\rm T}^{\rm ch \ jet}<80 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 3 (right), supplemental file
+name: Table 16
+---
+data_file: table_17.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$Standard for
+  jets of $R=0.2$, in the interval $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 4 (left), supplemental file
+name: Table 17
+---
+data_file: table_18.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$Standard
+  for jets of $R=0.2$, in the interval $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 4 (left), supplemental file
+name: Table 18
+---
+data_file: table_19.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$Standard for
+  jets of $R=0.4$, in the interval $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 4 (right), supplemental file
+name: Table 19
+---
+data_file: table_20.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$Standard
+  for jets of $R=0.4$, in the interval $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The
+  corresponding pp baseline can be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 4 (right), supplemental file
+name: Table 20
+---
+data_file: table_21.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.2$, in the interval $80<p_{\rm
+  T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can be found
+  in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 5 (left), supplemental file
+name: Table 21
+---
+data_file: table_22.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.2$, in the interval
+  $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 5 (left), supplemental file
+name: Table 22
+---
+data_file: table_23.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.4$, in the interval $80<p_{\rm
+  T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can be found
+  in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 5 (right), supplemental file
+name: Table 23
+---
+data_file: table_24.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.1,\beta = 0$) for jets of $R=0.4$, in the interval
+  $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 5 (right), supplemental file
+name: Table 24
+---
+data_file: table_25.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.2$, in the interval $80<p_{\rm
+  T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can be found
+  in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 6 (left), supplemental file
+name: Table 25
+---
+data_file: table_26.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.2$, in the interval
+  $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 6 (left), supplemental file
+name: Table 26
+---
+data_file: table_27.yaml
+description: '$\Delta R_{\rm axis}$ distribution for WTA$\textendash$SD with grooming
+  setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.4$, in the interval $80<p_{\rm
+  T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can be found
+  in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 6 (right), supplemental file
+name: Table 27
+---
+data_file: table_28.yaml
+description: 'Pb$\textendash$Pb/pp ratio distribution for WTA$\textendash$SD with
+  grooming setting ($z_{{\rm cut}} = 0.2,\beta = 0$) for jets of $R=0.4$, in the interval
+  $80<p_{\rm T}^{\rm ch \ jet}<100 \ {\rm GeV}/c$. The corresponding pp baseline can
+  be found in: https://www.hepdata.net/record/ins2182727?version=1.'
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 6 (right), supplemental file
+name: Table 28
+---
+data_file: table_29.yaml
+description: Pb$\textendash$Pb $\Delta R_{\rm axis}/R$ distribution for WTA$\textendash$SD
+  with grooming setting ($z_{{\rm cut}}=0.1,\beta=0$) for jets of $R=0.4$ and $0.2$,
+  in the interval $100<p_{\rm T}^{\rm ch \ jet}<140 \ {\rm GeV}/c$.
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 7, supplemental file
+name: Table 29
+---
+data_file: table_30.yaml
+description: Pb$\textendash$Pb ($R=0.4$)/ Pb$\textendash$Pb ($R=0.2$) ratio distribution
+  for WTA$\textendash$SD with grooming setting ($z_{{\rm cut}}=0.1,\beta=0$) in the
+  interval $100<p_{\rm T}^{\rm ch \ jet}<140 \ {\rm GeV}/c$.
+keywords:
+- name: reactions
+  values:
+  - Pb Pb --> jet+X
+- name: cmenergies
+  values:
+  - '5020'
+location: Figure 7, supplemental file
+name: Table 30

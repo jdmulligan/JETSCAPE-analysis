@@ -1,0 +1,118 @@
+dependent_variables:
+- header:
+    name: Pb$\textendash$Pb/pp
+  qualifiers:
+  - name: RE
+    value: Pb Pb --> jet+X
+  - name: SQRT(SNN)
+    units: TeV
+    value: 5.02
+  - name: CENTRALITY
+    value: 0-10%
+  - name: ABS(ETARAP)
+    value: '0.7'
+  - name: jet radius
+    value: 0.2
+  - name: jet method
+    value: Anti-$k_{T}$
+  values:
+  - errors:
+    - label: stat
+      symerror: 0.095
+    - label: syst
+      symerror: 0.26
+    value: 1.48
+  - errors:
+    - label: stat
+      symerror: 0.063
+    - label: syst
+      symerror: 0.14
+    value: 1.33
+  - errors:
+    - label: stat
+      symerror: 0.037
+    - label: syst
+      symerror: 0.12
+    value: 1.23
+  - errors:
+    - label: stat
+      symerror: 0.046
+    - label: syst
+      symerror: 0.097
+    value: 1.15
+  - errors:
+    - label: stat
+      symerror: 0.048
+    - label: syst
+      symerror: 0.056
+    value: 1.05
+  - errors:
+    - label: stat
+      symerror: 0.035
+    - label: syst
+      symerror: 0.039
+    value: 0.937
+  - errors:
+    - label: stat
+      symerror: 0.03
+    - label: syst
+      symerror: 0.056
+    value: 0.889
+  - errors:
+    - label: stat
+      symerror: 0.034
+    - label: syst
+      symerror: 0.12
+    value: 0.756
+  - errors:
+    - label: stat
+      symerror: 0.03
+    - label: syst
+      symerror: 0.15
+    value: 0.615
+  - errors:
+    - label: stat
+      symerror: 0.044
+    - label: syst
+      symerror: 0.23
+    value: 0.673
+  - errors:
+    - label: stat
+      symerror: 0.05
+    - label: syst
+      symerror: 0.26
+    value: 0.604
+  - errors:
+    - label: stat
+      symerror: 0.055
+    - label: syst
+      symerror: 0.32
+    value: 0.599
+independent_variables:
+- header:
+    name: $\Delta R_{\rm axis}$
+  values:
+  - high: 0.005
+    low: 0.0
+  - high: 0.01
+    low: 0.005
+  - high: 0.015
+    low: 0.01
+  - high: 0.02
+    low: 0.015
+  - high: 0.025
+    low: 0.02
+  - high: 0.03
+    low: 0.025
+  - high: 0.04
+    low: 0.03
+  - high: 0.05
+    low: 0.04
+  - high: 0.06
+    low: 0.05
+  - high: 0.07
+    low: 0.06
+  - high: 0.08
+    low: 0.07
+  - high: 0.1
+    low: 0.08
