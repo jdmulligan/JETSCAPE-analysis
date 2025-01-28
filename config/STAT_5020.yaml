@@ -727,7 +727,7 @@ semi_inclusive_chjet:
 ATLAS_Gamma_jet:
 
 # paper: https://inspirehep.net/literature/2648097
-# HEPData: 
+# HEPData: https://www.hepdata.net/record/ins2648097
 
 # pp: sqrt(sNN) =5.02 TeV
 # PbPb: sqrt(sNN) =5.02 TeV
