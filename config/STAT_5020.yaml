@@ -843,6 +843,66 @@ ATLAS_Gamma_jet:
     y_max_pp: 2
     bins: [0.20, 0.25, 0.32, 0.40, 0.50, 0.63, 0.79, 1.00, 1.26, 1.58, 2.00]
 
+    #------------------------------------------------------------------
+# concidence observables – gamma+jet
+CMS_Gamma_jet:
+
+# paper: https://inspirehep.net/literature/1638996
+# HEPData: https://www.hepdata.net/record/ins1638996
+
+# observables not unfolded; need to smear calculation with function defined in paper Eq (2)
+# smearing parameters given in Table 1 but do not have uncertainties
+# pmj comment:  absence of uncertainty in smearing parameters is a significant issue I think – 
+# resulting likelihood not very meaningful imho
+
+# pp: sqrt(sNN) =5.02 TeV
+# PbPb: sqrt(sNN) =5.02 TeV
+
+  xJgamma:
+   gamma_eta: [-1.48, 1.48]
+   gamma_pT: [40.,100.]	
+   isolation_R: [0.4]
+   isolation_E: [0,1.] # after UE subtraction in PbPb
+   jet_R: [0.3]
+   jet_eta: [-1.6, 1.6]
+   jet_pT: [30., 1000.]
+     
+# Fig 2; dphi_Jgamma
+   xtitle: '#Delta#varphi_{J,#gamma}'
+   logy: True
+   https://www.hepdata.net/record/ins1638996?version=1&table=Table%202
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 5.e-3
+    y_max_pp: 5.0
+    bins: [0.00, 0.94, 1.57, 1.89, 2.04, 2.20, 2.36, 2.51, 2.67, 2.83, 2.99, 3.14]
+
+   # Fig 3; pTgamma; pTgamma dependence
+   xtitle: '#it{x}_{J,#gamma}'
+   Centrality: [0,30]
+   jet_deltaphi: [7pi/8, pi]
+   logy: False
+   https://www.hepdata.net/record/ins1638996?version=1&table=Table%203           
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 0.0
+    y_max_pp: 2.0
+    bins: [0.000, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000, 1.125, 1.250, 1.375, 1.500, 1.625, 1.750, 1.875, 2.000]
+
+   # Fig 6; pTgamma; centrality dependence
+   xtitle: '#it{x}_{J,#gamma}'
+   jet_deltaphi: [7pi/8, pi]
+   logy: False
+   https://www.hepdata.net/record/ins1638996?version=1&table=Table%206
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 0
+    y_max_pp: 1.4
+    bins: [0.000, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000, 1.125, 1.250, 1.375, 1.500, 1.625, 1.750, 1.875, 2.000]
+
+
+
+
 
 
 
