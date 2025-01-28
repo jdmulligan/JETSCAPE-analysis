@@ -722,3 +722,67 @@ semi_inclusive_chjet:
     # 
     bins: [7.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0, 60.0, 80.0, 110.0, 140.0]
 
+#------------------------------------------------------------------
+# concidence observables – gamma+jet
+ATLAS_Gamma_jet:
+
+# paper: https://inspirehep.net/literature/2648097
+# HEPData: 
+
+# pp: sqrt(sNN) =5.02 TeV
+# PbPb: sqrt(sNN) =5.02 TeV
+
+  pt_pp_gamma+jet:
+   gamma_eta: [-2.37, 2.37]
+   gamma_pT: [50.,1000.]	
+   isolation_R: [0.3]
+   isolation_E: [0,3.]
+   jet_R: [0.4]
+   jet_eta: [-2.8,2.8]
+   jet_pT: [50., 320.]
+   jet_deltaphi: [7pi/8, pi]
+   xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+   logy: True
+
+   # Fig 3
+   https://www.hepdata.net/record/ins2648097?version=1&table=Figure%203
+   hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 3e-4
+    y_max_pp: 2e-2
+
+    bins: [50., 56., 63., 70.,, 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
+
+  pt_PbPb_gamma+jet:
+
+  # Isolation in PbPb (text from paper): “Thus, in Pb+Pb collisions, the isolation energy requirement depends 
+  #continuously on the centrality of the event and is chosen so that its efficiency for prompt 
+  #photons is 90%, as determined from simulations of photon+jet events overlaid with Pb+Pb
+  #minimum-bias data (described in Section 4 below). This upper limit on the isolation energy is 
+  #approximately 10 GeV in 0–10% Pb+Pb events, but quickly decreases in more peripheral 
+  #events and converges to the pp value.
+
+   Centrality: [[0,10], [10,30], [30,80]]
+   gamma_eta: [-2.37, 2.37]
+   gamma_pT: [50.,1000.]	
+   isolation_R: [0.3]
+   isolation_E: [0,10.] # see text quotation above
+   jet_R: [0.4]
+   jet_eta: [-2.8,2.8]
+   jet_pT: [50., 320.]
+   jet_deltaphi: [7pi/8, pi]
+   xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+   logy: True
+
+   # Fig 4
+   https://www.hepdata.net/record/ins2648097?version=1&table=Figure%204
+   hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+    y_min_pp: 3e-6
+    y_max_pp: 10.
+
+    bins: [50., 56., 63., 70.,, 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
+
+
+    
+
