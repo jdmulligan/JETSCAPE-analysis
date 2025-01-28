@@ -783,6 +783,68 @@ ATLAS_Gamma_jet:
 
     bins: [50., 56., 63., 70.,, 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
 
+    #------------------------------------------------------------------
+# concidence observables – gamma+jet
+ATLAS_Gamma_jet:
+
+# paper: https://inspirehep.net/literature/1694678
+# HEPData: https://www.hepdata.net/record/ins1694678
+
+# pp: sqrt(sNN) =5.02 TeV
+# PbPb: sqrt(sNN) =5.02 TeV
+
+  xJgamma:
+   gamma_eta: [-2.37, 2.37]
+   gamma_pT: [63.1.,200.]	
+   isolation_R: [0.3]
+   isolation_E: [0,3.]
+   jet_R: [0.4]
+   jet_eta: [-2.8,2.8]
+   jet_pT: [31.6., 1000.]
+   jet_deltaphi: [7pi/8, pi]
+  
+   # Fig 4; pTgamma=63-80 GeV, both pp and PbPb
+   xtitle: '#it{x}_{J,#gamma}'
+   logy: False
+   https://www.hepdata.net/record/ins1694678?version=1&table=Table%201
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 0
+    y_max_pp: 2
+    bins: [.50, .56, .63, .71, .79, .89, 1.00, 1.12, 1.26, 1.41, 1.58, 1.78, 2.00]
+
+   # Fig 5; pTgamma=80-100 GeV, both pp and PbPb
+   xtitle: '#it{x}_{J,#gamma}'
+   logy: False
+   https://www.hepdata.net/record/ins1694678?version=1&table=Table%202
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 0
+    y_max_pp: 2
+    bins: [0.40, 0.45, .50, .56, .63, .71, .79, .89, 1.00, 1.12, 1.26, 1.41, 1.58, 1.78, 2.00]
+
+   # Fig 6; pTgamma=100-158 GeV, both pp and PbPb
+   xtitle: '#it{x}_{J,#gamma}'
+   logy: False
+   https://www.hepdata.net/record/ins1694678?version=1&table=Table%203
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 0
+    y_max_pp: 2
+    bins: [0.32, 0.35, 0.40, 0.45, .50, .56, .63, .71, .79, .89, 1.00, 1.12, 1.26, 1.41, 1.58, 1.78, 2.00]
+
+   # Fig 7; pTgamma=158-200 GeV, both pp and PbPb
+   xtitle: '#it{x}_{J,#gamma}'
+   logy: False
+   https://www.hepdata.net/record/ins1694678?version=1&table=Table%204
+   hepdata_pp_gname: 'Graph1D_y1'
+   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    y_min_pp: 0
+    y_max_pp: 2
+    bins: [0.20, 0.25, 0.32, 0.40, 0.50, 0.63, 0.79, 1.00, 1.26, 1.58, 2.00]
+
+
+
 
     
 
