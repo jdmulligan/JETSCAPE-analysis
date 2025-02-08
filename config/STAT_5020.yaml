@@ -159,14 +159,14 @@ hadron:
     y_max_Ion: 1e4
 
 #------------------------------------------------------------------
+# The v2 observables include an additional layer for various methods, such as event-plane, 
+# scalar-product, and four-particle cumulants. These are the only observables with this extra layer.
 #------------------------------------------------------------------
 # Hadron correlations
 hadron_correlations:
 
-  # https://www.hepdata.net/record/ins1686834
-  # Fig 5 (scalar product method)
-  # TODO: Implement this observable
   v2_atlas:
+    # https://www.hepdata.net/record/ins1686834
     sp: # scalar product
       eta_cut: 2.5
       pt: [0.5, 60.]
@@ -184,15 +184,35 @@ hadron_correlations:
       y_max_pp: 0.3
 
       hepdata_AA_dir: ['Table 3', 'Table 4', 'Table 5', 'Table 6', 'Table 7', 'Table 8']
-      hepdata_AA_gname: ['Graph1D_y1']
+      hepdata_AA_gname: 'Graph1D_y1'
       hepdata_AA_hname: 'Hist1D_y1'
       ytitle_AA: '#it{v}_{2}(SP)'
 
-  # https://www.hepdata.net/record/ins1511868
-  # Fig 1 (scalar product method)
+    # https://www.hepdata.net/record/ins1686834
+    ep: # event plane
+      eta_cut: 2.5
+      pt: [0.5, 60.]
+      centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
+      xtitle: '#it{p}_{T} (GeV/#it{c})'
+
+      eta_min_ref: 3.2
+      eta_max_ref: 4.9
+
+      hepdata: 'HEPData-ins1686834-v1-root.root'
+      hepdata_pp_dir: 'Table 298'
+      hepdata_pp_gname: 'Graph1D_y1'
+      ytitle_pp: '#it{v}_{2}(SP)'
+      y_min_pp: 0.
+      y_max_pp: 0.3
+
+      hepdata_AA_dir: ['Table 290', 'Table 291', 'Table 292', 'Table 293', 'Table 294', 'Table 295']
+      hepdata_AA_gname: 'Graph1D_y1'
+      hepdata_AA_hname: 'Hist1D_y1'
+      ytitle_AA: '#it{v}_{2}(EP)'
+
   # Note: histogram binnings are not provided
-  # TODO: Implement this observable
   v2_cms:
+    # https://www.hepdata.net/record/ins1511868
     sp: # scalar product
       eta_cut: 1.
       pt: [1., 100.]
@@ -210,28 +230,32 @@ hadron_correlations:
       y_max_pp: 0.3
 
       hepdata_AA_dir: ['Table 1', 'Table 2', 'Table 3', 'Table 4', 'Table 5', 'Table 6']
-      hepdata_AA_gname: ['Graph1D_y1']
+      hepdata_AA_gname: 'Graph1D_y1'
       ytitle_AA: '#it{v}_{2}(SP)'
 
+    # https://www.hepdata.net/record/ins1511868
     four: # four-particle cumulants
       eta_cut: 1.
       pt: [1., 100.]
       centrality: [[5,10], [10,20], [20,30], [30,40], [40,50]]
       xtitle: '#it{p}_{T} (GeV/#it{c})'
 
+      eta_min_ref: 3.0
+      eta_max_ref: 5.0
+
       hepdata: 'HEPData-ins1511868-v1-root.root'
       hepdata_pp_dir: 'Table 20'
       hepdata_pp_gname: 'Graph1D_y1'
-      ytitle_pp: '#it{v}_{2}\{4\}'
+      ytitle_pp: '#it{v}_{2}{4}'
       y_min_pp: 0.
       y_max_pp: 0.3
 
       hepdata_AA_dir: ['Table 15', 'Table 16', 'Table 17', 'Table 18', 'Table 19']
-      hepdata_AA_gname: ['Graph1D_y1']
-      ytitle_AA: '#it{v}_{2}\{4\}'
+      hepdata_AA_gname: 'Graph1D_y1'
+      ytitle_AA: '#it{v}_{2}{4}'
 
-  # https://www.hepdata.net/record/ins1666817
   v2_alice:
+    # https://www.hepdata.net/record/ins1666817
     sp: # scalar product
       eta_cut: 0.8
       pt: [0.2, 50.]
@@ -253,23 +277,27 @@ hadron_correlations:
       hepdata_AA_hname: 'Hist1D_y1'
       ytitle_AA: '#it{v}_{2}(SP)'
 
+    # https://www.hepdata.net/record/ins1666817
     four: # four-particle cumulants
       eta_cut: 0.8
       pt: [0.2, 50.]
       centrality: [[5,10], [10,20], [20,30], [30,40], [40,50]]
       xtitle: '#it{p}_{T} (GeV/#it{c})'
 
+      eta_min_ref: 2.8
+      eta_max_ref: 5.1
+
       hepdata: 'HEPData-ins1666817-v1-root.root'
       hepdata_pp_dir: 'Table 87'
       hepdata_pp_gname: 'Graph1D_y1'
-      ytitle_pp: '#it{v}_{2}\{4\}'
+      ytitle_pp: '#it{v}_{2}{4}'
       y_min_pp: 0.
       y_max_pp: 0.3
 
-      hepdata_AA_dir: ['Table 31', 'Table 41', 'Table 51', '61', '71']
+      hepdata_AA_dir: ['Table 31', 'Table 41', 'Table 51', 'Table 61', 'Table 71']
       hepdata_AA_gname: 'Graph1D_y1'
       hepdata_AA_hname: 'Hist1D_y1'
-      ytitle_AA: '#it{v}_{2}\{4\}'
+      ytitle_AA: '#it{v}_{2}{4}'
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
