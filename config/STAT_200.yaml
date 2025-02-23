@@ -179,6 +179,30 @@ hadron_correlations:
     y_max_AA: 0.6
     logy: True
 
+  # https://inspirehep.net/literature/1798493
+  # https://www.hepdata.net/record/ins1798493
+  # The observable is calculated as a function of zeta
+  # Multiple choice of the integration over d_phi are provided, the one with |d_phi| between pi/2 and pi is implemented in yaml
+  # Direct photon selected by subtracting pi_zero from total
+  # Not sure if it is unfolded or not
+  IAA_phenix:
+    eta_cut_R: 1.
+    pt: [5., 7.]
+    centrality: [[0,40]]
+    hadron_eta_cut: 0.35
+    trigger_range: [5., 9.]
+    xtitle: '#zeta'
+    logy: True
+
+    ytitle_pp: 'I_{AA}'
+    skip_pp: True
+
+    hepdata: 'HEPData-ins1512115-v1-root.root'
+    hepdata_AA_dir: 'Figure 4b'
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: ['Hist1D_y1']
+    ytitle_AA: 'I_{AA}'
+
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
@@ -197,7 +221,7 @@ inclusive_chjet:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
 
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[b/(GeV/c)^{-1}#right]'
+    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[b/(GeV/c)^{-1}#right'
     y_min_pp: 2e-8
     y_max_pp: 1e-1
     skip_pp: True
@@ -235,7 +259,6 @@ semi_inclusive_chjet:
   # Note: no pp reference -- RCP and R02/R05 -- we include only R02/R05 for now
   # pmj 13/1/22: QA OK other than issues with hepdata that you identify.
   # pmj 13/1/22: Please formulate your questions about the hepdata entries and I will send them to Alex (I thought they had been fixed ;-( )
-
   IAA_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: 1.
