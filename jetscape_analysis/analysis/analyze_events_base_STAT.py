@@ -11,7 +11,7 @@ See README for pre-requisites.
 .. codeauthor:: James Mulligan <james.mulligan@berkeley.edu>, UC Berkeley
 """
 
-from __future__ import print_function
+from __future__ import annotations
 
 # General
 import os
@@ -58,7 +58,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             else:
                 self.n_event_max = -1
 
-            self.thermal_rejection_fraction = config['thermal_rejection_fraction']
+            self.thermal_rejection_fraction = config.get('thermal_rejection_fraction', 0.)
 
         # Check whether pp or AA
         if 'PbPb' in self.input_file_hadrons or 'AuAu' in self.input_file_hadrons:
@@ -155,7 +155,7 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 # Fill event cross-section weight
                 self.observable_dict_event['event_weight'] = event_weight
                 self.observable_dict_event['pt_hat'] = event['pt_hat']
-                
+
                 self.output_event_list.append(self.observable_dict_event)
 
         # Get total cross-section (same for all events at this point), weight sum, and centrality
