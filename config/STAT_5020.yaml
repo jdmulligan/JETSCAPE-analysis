@@ -693,7 +693,7 @@ inclusive_jet:
     hepdata_AA_hname_R0.4_pt3: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     ytitle_AA: '$\frac{1}{N} \frac{dN}{d\Delta j}$'
 
-    ## same as above as this paper doesn't use pp
+    ## same as above as this paper doesn't measure pp
     hepdata_Ion_dir_R0.4_pt0: 'Table 1'
     hepdata_Ion_gname_R0.4_pt0: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
     hepdata_Ion_hname_R0.4_pt0: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
@@ -707,7 +707,6 @@ inclusive_jet:
     hepdata_Ion_gname_R0.4_pt3: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
     hepdata_Ion_hname_R0.4_pt3: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
     ytitle_Ion: '$\frac{1}{N} \frac{dN}{d\Delta j}$'
-
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
