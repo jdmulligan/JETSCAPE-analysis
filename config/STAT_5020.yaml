@@ -696,6 +696,47 @@ inclusive_jet:
     y_max_Ion: 15
     skip_Ion: True
 
+  # https://www.hepdata.net/record/ins2890802
+  # Note that pp distribution is not reported
+  axis_cms:
+    jet_R: [0.4]
+    eta_cut: 1.6
+    pt_min: 120.
+    pt: [120., 150., 190, 230., 300]
+    centrality: [[0,10], [10,30], [30,50], [50, 80]]
+    hepdata: 'HEPData-ins2890802-v1-root.root'
+
+    skip_pp: True
+
+    hepdata_AA_dir_R0.4_pt0: 'Table 1'
+    hepdata_AA_gname_R0.4_pt0: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_AA_hname_R0.4_pt0: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_AA_dir_R0.4_pt1: 'Table 2'
+    hepdata_AA_gname_R0.4_pt1: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_AA_hname_R0.4_pt1: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_AA_dir_R0.4_pt2: 'Table 3'        
+    hepdata_AA_gname_R0.4_pt2: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_AA_hname_R0.4_pt2: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_AA_dir_R0.4_pt3: 'Table 4'        
+    hepdata_AA_gname_R0.4_pt3: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_AA_hname_R0.4_pt3: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    ytitle_AA: '$\frac{1}{N} \frac{dN}{d\Delta j}$'
+
+    ## same as above as this paper doesn't measure pp
+    hepdata_Ion_dir_R0.4_pt0: 'Table 1'
+    hepdata_Ion_gname_R0.4_pt0: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_Ion_hname_R0.4_pt0: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_Ion_dir_R0.4_pt1: 'Table 2'
+    hepdata_Ion_gname_R0.4_pt1: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_Ion_hname_R0.4_pt1: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_Ion_dir_R0.4_pt2: 'Table 3'        
+    hepdata_Ion_gname_R0.4_pt2: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_Ion_hname_R0.4_pt2: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    hepdata_Ion_dir_R0.4_pt3: 'Table 4'        
+    hepdata_Ion_gname_R0.4_pt3: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4']
+    hepdata_Ion_hname_R0.4_pt3: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4']
+    ytitle_Ion: '$\frac{1}{N} \frac{dN}{d\Delta j}$'
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- charged jets
@@ -836,7 +877,7 @@ inclusive_chjet:
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
   # maximum track eta: 9
-  # this Pb/pp WTA-standard
+  # this is Pb/pp WTA-standard
   axis_alice_1:
     jet_R: [0.2]
     pt: [40, 60, 80]
@@ -852,7 +893,7 @@ inclusive_chjet:
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
   # maximum track eta: 9
-  # this R0.4/R0.2 WTA-standard
+  # this is R0.4/R0.2 WTA-standard
   axis_alice_2:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
@@ -866,7 +907,7 @@ inclusive_chjet:
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
   # maximum track eta: 9
-  # this R0.4/R0.2 WTA - SD
+  # this is R0.4/R0.2 WTA - SD
   axis_alice_3:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
