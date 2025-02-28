@@ -547,6 +547,27 @@ inclusive_jet:
 # Inclusive jet observables -- charged jets
 inclusive_chjet:
 
+# PMJ 2/28/25: new analysis charged jet RAA with ME background correction
+  
+  pt_alice:
+    jet_R: [0.2, 0.3, 0.4, 0.5]
+    eta_cut_R: 0.9-R
+    pt: [10., 200.]
+    centrality: [[0,10]]
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
+
+    xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+    logy: True
+    
+    ytitle_pp: 'R_{AA}(#it{p}_{T,jet})'
+    y_min_pp: 0.1
+    y_max_pp: 1.5
+    skip_pp: True
+
+    bins: PMJ 2/28/25 for now use bins of width 1 GeV over the full pT range, 
+    will be adjusted when analysis details are finalized
+
   # https://inspirehep.net/literature/1893479 (no hepdata yet)
   # TODO: update hepdata
   zg_alice:
