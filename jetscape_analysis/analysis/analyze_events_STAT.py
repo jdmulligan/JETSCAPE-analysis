@@ -55,7 +55,7 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file='', input_file='', output_dir='', **kwargs):
-        super(AnalyzeJetscapeEvents_STAT, self).__init__(config_file=config_file,
+        super().__init__(config_file=config_file,
                                                          input_file=input_file,
                                                          output_dir=output_dir,
                                                          **kwargs)
@@ -70,11 +70,11 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
     def initialize_user_config(self):
 
         # Read config file
-        with open(self.config_file, 'r') as stream:
+        with Path(self.config_file).open() as stream:
             config = yaml.safe_load(stream)
 
         self.sqrts = config['sqrt_s']
-        self.output_file = f'observables'
+        self.output_file = 'observables'
         # Update the output_file to contain the labeling in the final_state_hadrons file.
         # We use this naming convention as the flag for whether we should attempt to rename it.
         if "final_state_hadrons" in self.input_file_hadrons:
@@ -1396,7 +1396,8 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         elif pid in [22, 111, 2112]:
             return 0.
         else:
-            sys.exit(f'failed to compute charge of pid {pid}')
+            msg = f'failed to compute charge of pid {pid}'
+            raise ValueError(msg)
 
 ##################################################################
 if __name__ == "__main__":
@@ -1434,14 +1435,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # If invalid configFile is given, exit
-    if not os.path.exists(args.configFile):
-        print('File "{0}" does not exist! Exiting!'.format(args.configFile))
-        sys.exit(0)
+    if not Path(args.configFile).exists():
+        msg = f'File "{args.configFile}" does not exist! Exiting!'
+        raise ValueError(msg)
 
     # If invalid inputDir is given, exit
-    if not os.path.exists(args.inputFile):
-        print('File "{0}" does not exist! Exiting!'.format(args.inputFile))
-        sys.exit(0)
+    if not Path(args.inputFile).exists():
+        msg = f'File "{args.inputFile}" does not exist! Exiting!'
+        raise ValueError(msg)
 
     analysis = AnalyzeJetscapeEvents_STAT(config_file=args.configFile, input_file=args.inputFile, output_dir=args.outputDir)
     analysis.analyze_jetscape_events()
