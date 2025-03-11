@@ -226,14 +226,70 @@ hadron_correlations:
   pi0_hadron_alice:
     pt_trig: [8., 16.]
     centrality: [[0,10]]
+
+  v2_atlas:
+    four: # four-particle cumulants
+      eta_cut: 0.8
+      pt: [0.2, 20.]
+      centrality: [[2,5], [5,10], [10,15], [15,20], [20,25], [25,30], [30,35], [35,40], [40,45], [45,50]]
+      xtitle: '#it{p}_{T} (GeV/#it{c})'
+
+      hepdata: 'HEPData-ins1686834-v1-root.root'
+      hepdata_pp_dir: 'Table 41'
+      hepdata_pp_gname: 'Graph1D_y1'
+      ytitle_pp: '#it{v}_{2}\{4\}'
+      y_min_pp: 0.
+      y_max_pp: 0.3
+
+      hepdata_AA_dir: ['Table 29', 'Table 30', 'Table 31', 'Table 32', 'Table 33', 'Table 34', 'Table 35', 'Table 36', 'Table 37', 'Table 38']
+      hepdata_AA_gname: ['Graph1D_y1']
+      hepdata_AA_hname: 'Hist1D_y1'
+      ytitle_AA: '#it{v}_{2}\{4\}'
     
   # https://www.hepdata.net/record/ins1116150
   # v2
-  # TODO: Implement this observable
+  # More recent data in 2018
+  # https://www.hepdata.net/record/ins1666817
   v2_alice:
-    eta_cut: 0.8
-    pt: [5., 20.]
-    centrality: [[0,10]]
+    sp: # scalar product
+      eta_cut: 0.8
+      pt: [0.2, 50.]
+      centrality: [[0,5], [5,10], [10,20], [20,30], [30,40], [40,50]]
+      xtitle: '#it{p}_{T} (GeV/#it{c})'
+
+      eta_min_ref: 2.8
+      eta_max_ref: 5.1
+
+      hepdata: 'HEPData-ins1666817-v1-root.root'
+      hepdata_pp_dir: 'Table 132'
+      hepdata_pp_gname: 'Graph1D_y1'
+      ytitle_pp: '#it{v}_{2}(SP)'
+      y_min_pp: 0.
+      y_max_pp: 0.3
+
+      hepdata_AA_dir: ['Table 90', 'Table 96', 'Table 102', 'Table 108', 'Table 114', 'Table 120']
+      hepdata_AA_gname: 'Graph1D_y1'
+      hepdata_AA_hname: 'Hist1D_y1'
+      ytitle_AA: '#it{v}_{2}(SP)'
+
+    four: # four-particle cumulants
+      eta_cut: 0.8
+      pt: [0.2, 50.]
+      centrality: [[5,10], [10,20], [20,30], [30,40], [40,50]]
+      xtitle: '#it{p}_{T} (GeV/#it{c})'
+
+      hepdata: 'HEPData-ins1666817-v1-root.root'
+      hepdata_pp_dir: 'Table 88'
+      hepdata_pp_gname: 'Graph1D_y1'
+      ytitle_pp: '#it{v}_{2}\{4\}'
+      y_min_pp: 0.
+      y_max_pp: 0.3
+
+      hepdata_AA_dir: ['Table 32', 'Table 42', 'Table 52', '62', '72']
+      hepdata_AA_gname: 'Graph1D_y1'
+      hepdata_AA_hname: 'Hist1D_y1'
+      ytitle_AA: '#it{v}_{2}\{4\}'
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Inclusive jet observables -- full jets
