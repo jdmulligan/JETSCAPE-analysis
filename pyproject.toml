@@ -11,7 +11,7 @@ authors = [
 description = "Basic JETSCAPE analysis code"
 readme = "README.md"
 license.file = "LICENSE"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
@@ -31,7 +31,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "pyyaml >=5.1.2",
-    "numba >=0.59",
+    "numba >=0.5",
     "h5py >=3.6.0",
     "tqdm >=4.37.0",
     "attrs >=20.3.0",

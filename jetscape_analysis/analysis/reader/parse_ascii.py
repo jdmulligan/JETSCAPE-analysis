@@ -741,14 +741,14 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
 
 
 def parse_to_parquet(
-    base_output_filename: Path | str,
+    base_output_filename: Union[Path, str],
     store_only_necessary_columns: bool,
-    input_filename: Path | str,
+    input_filename: Union[Path, str],
     events_per_chunk: int,
     parser: str = "pandas",
     max_chunks: int = -1,
     compression: str = "zstd",
-    compression_level: int | None = None,
+    compression_level: Optional[int] = None,
 ) -> None:
     """Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
 
