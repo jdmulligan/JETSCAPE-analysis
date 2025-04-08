@@ -262,6 +262,7 @@ semi_inclusive_chjet:
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 2.
+
 #------------------------------------------------------------------
 # Jet correlation observables
 semi_inclusive_pizerojet:
@@ -271,8 +272,7 @@ semi_inclusive_pizerojet:
   # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if [0,15] is difficult to accomodate
 
   # pmj 2/28/25: HEPData tables not yet available. Data for Fig 1 and 2 in PRL can be found here: 
-  https://www.dropbox.com/scl/fo/pw7kr4hb883a61zzsfbxf/ABjRhjM0X3Yae4bH7Hu6tww?rlkey=0d0b9asqhg3w1ru5you9tqcbn&dl=0
-  
+  # https://www.dropbox.com/scl/fo/pw7kr4hb883a61zzsfbxf/ABjRhjM0X3Yae4bH7Hu6tww?rlkey=0d0b9asqhg3w1ru5you9tqcbn&dl=0
   IAA_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: [0.8, 0.5] # equivalent to 1-R
@@ -288,10 +288,10 @@ semi_inclusive_pizerojet:
     y_max_pp: 1.2
     skip_pp: True
 
-    hepdata: see above link
+    hepdata: "TODO: see above link"
 
-# pmj 1/21/25: this observable is the ratio of two spectra with different R, so "jet_R:" has a different meaning.
-# maybe define a different field?
+  # pmj 1/21/25: this observable is the ratio of two spectra with different R, so "jet_R:" has a different meaning.
+  # maybe define a different field?
   R25_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: [0.8, 0.5] # equivalent to 1-R
@@ -307,7 +307,7 @@ semi_inclusive_pizerojet:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
 
-   hepdata: see above link
+    hepdata: "TODO: see above link"
 
 #------------------------------------------------------------------
 # Jet correlation observables
@@ -317,9 +317,8 @@ semi_inclusive_gammajet:
   # pmj 1/23/25 PRC (in journal review): https://inspirehep.net/literature/2693062
   # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if [0,15] is difficult to accomodate
 
-  # pmj 2/28/25: HEPData tables not yet available. Data for Fig 1 and 2 in PRL can be found here: 
-  https://www.dropbox.com/scl/fo/pw7kr4hb883a61zzsfbxf/ABjRhjM0X3Yae4bH7Hu6tww?rlkey=0d0b9asqhg3w1ru5you9tqcbn&dl=0
-  
+  # pmj 2/28/25: HEPData tables not yet available. Data for Fig 1 and 2 in PRL can be found here:
+  # https://www.dropbox.com/scl/fo/pw7kr4hb883a61zzsfbxf/ABjRhjM0X3Yae4bH7Hu6tww?rlkey=0d0b9asqhg3w1ru5you9tqcbn&dl=0
   IAA_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: 1.0
@@ -335,10 +334,10 @@ semi_inclusive_gammajet:
     y_max_pp: 1.2
     skip_pp: True
 
-   hepdata: see above link
+    hepdata: "TODO: see above link"
 
-# pmj 1/21/25: this observable is the ratio of two spectra with different R, so "jet_R:" has a different meaning.
-# maybe define a different field?
+  # pmj 1/21/25: this observable is the ratio of two spectra with different R, so "jet_R:" has a different meaning.
+  # maybe define a different field?
   R25_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: 1.0
@@ -354,17 +353,16 @@ semi_inclusive_gammajet:
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
 
-   hepdata: see above link
+    hepdata: "TODO: see above link"
 
 #------------------------------------------------------------------
-# Jet correlation observables  
-semi_inclusive_pizero/gamma+jet_acoplanarity:
+# Jet correlation observables
+semi_inclusive_pizero__gamma+jet_acoplanarity:
 
   # pmj 2/28/25 same analysis framework as above PRL (https://inspirehep.net/literature/2693040) and PRC (https://inspirehep.net/literature/2693062)
   # Note unusual centrality bin [0,15]; can use [0,10] for this simulation if [0,15] is difficult to accomodate
 
   # pmj 2/28/25: WIP, paper not yet posted to arXiv
-  
   IAA_star:
     jet_R: [0.2, 0.5]
     eta_cut_R: [0.8, 0.5] # equivalent to 1-R

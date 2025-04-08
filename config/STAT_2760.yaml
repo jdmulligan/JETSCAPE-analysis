@@ -265,14 +265,14 @@ inclusive_jet:
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0.
     y_max_AA: 2.
-    
+
   # https://www.hepdata.net/record/ins1126965
   # We omit this for now, since we don't consider peripheral events
   #pt_rcp_atlas:
   #  jet_R: [0.2, 0.3, 0.4, 0.5]
   #  eta_cut: 2.1
   #  pt: [38., 210.]
-  
+
   # https://www.hepdata.net/record/ins1487278
   # Figs 4,8
   pt_cms:
