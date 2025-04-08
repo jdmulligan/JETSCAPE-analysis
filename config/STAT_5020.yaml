@@ -679,13 +679,14 @@ semi_inclusive_chjet:
   # PRL Fig 1
   # IAA vs pT
   # recoil jet acceptance |$\delta\varphi-\pi$|<0.6
-  IAA_alice_pT:
+  IAA_pt_alice:
     centrality: [[0,10]]
-    eta_cut_trig: 0.9
+    hadron_eta_cut: 0.9
     low_trigger_range: [5, 7]
     high_trigger_range: [20, 50]
     jet_R: [0.2, 0.4, 0.5]
-    jet_pt: [5., 140.]
+    pt: [5., 140.]
+    # RJE 2025/04/07: Note that in production, we had c_ref: [0.99, 0.96, 0.93]
     c_ref: [0.90, 0.82, 0.82]
 
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
@@ -702,12 +703,12 @@ semi_inclusive_chjet:
   # IAA vs delta_phi
   dphi_alice:
     centrality: [[0,10]]
-    eta_cut_trig: 0.9
+    hadron_eta_cut: 0.9
     low_trigger_range: [5, 7]
     high_trigger_range: [20, 50]
     jet_R: [0.2, 0.4, 0.5]
-    jet_pt: [10., 50.]
-    c_ref: see Fig 5 of PRC
+    pt: [10., 50.]
+    c_ref: "TODO: see Fig 5 of PRC"
 
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
@@ -718,20 +719,20 @@ semi_inclusive_chjet:
     skip_pp: True
 
     #
-    bins: [1.57, 2.07, 2.42. 2.61, 2.76, 2.89, 3.02, 3.14]
+    bins: [1.57, 2.07, 2.42, 2.61, 2.76, 2.89, 3.02, 3.14]
 
   # PRC Fig 18
   # R(0.2/0.4) and R(0.2/0.5)
-  dphi_alice:
+  dphi_ratio_alice:
     centrality: [[0,10]]
-    eta_cut_trig: 0.9
+    hadron_eta_cut: 0.9
     low_trigger_range: [5, 7]
     high_trigger_range: [20, 50]
     jet_R: [0.2, 0.4, 0.5]
-    jet_pt: [5., 140.]
+    pt: [5., 140.]
     c_ref: [0.90, 0.82, 0.82]
 
-    xtitle: 'R(0.2/0.40 or R(0.2/0.5)'
+    xtitle: 'R(0.2/0.4) or R(0.2/0.5)'
     logy: True
 
     ytitle_pp: 'I_{AA}(#Delta#varphi)'

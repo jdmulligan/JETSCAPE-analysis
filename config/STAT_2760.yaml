@@ -523,7 +523,7 @@ semi_inclusive_chjet:
   #       - |eta_jet| < 0.9 - R
   #       - Track pt > 0.15 (not corrected)
   # Fig 9,10
-  IAA_alice:
+  IAA_pt_alice:
     jet_R: [0.2, 0.4, 0.5]
     eta_cut_R: 0.9
     pt: [20., 100.]
@@ -585,7 +585,9 @@ semi_inclusive_chjet:
   # We consider only tau2/tau1 w/CA reclustering for now
   nsubjettiness_alice:
     jet_R: [0.4]
+    eta_cut_R: 0.9
     pt: [40., 60.]
+    hadron_eta_cut: 0.9
     centrality: [[0,10]]
     low_trigger_range: [8, 9]
     high_trigger_range: [15, 45]

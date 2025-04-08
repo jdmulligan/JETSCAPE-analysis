@@ -659,7 +659,7 @@ class PlotResults(common_base.CommonBase):
                     h.Scale(1./(2*self.eta_cut))
             elif observable_type == 'semi_inclusive_chjet':
                 # Note that n_trig histograms should also be scaled by xsec/n_events
-                if observable in ['IAA_alice', 'dphi_alice']:
+                if observable in ['IAA_pt_alice', 'dphi_alice']:
                     h.Scale(1./(xsec/weight_sum))
 
         if self.sqrts == 5020:
