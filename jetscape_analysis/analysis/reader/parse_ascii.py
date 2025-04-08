@@ -7,9 +7,9 @@ import itertools
 import logging
 import os
 import typing
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 import attrs
 import awkward as ak
@@ -125,7 +125,7 @@ def _parse_cross_section(line: str) -> CrossSection:
     return info
 
 
-def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> Optional[CrossSection]:
+def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> CrossSection | None:
     """ Extract cross section and error from the end of the file.
 
     Args:
@@ -203,7 +203,7 @@ def _parse_header_line_format_unspecified(line: str) -> HeaderInfo:
     values = line.split("\t")
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
-    info: Union[HeaderInfo, CrossSection]
+    info: HeaderInfo | CrossSection
     if (len(values) == 19 and values[1] == "Event") or (len(values) == 17 and values[1] == "Event"):
         ##########################
         # Header v2 specification:
@@ -273,7 +273,7 @@ def _parse_header_line_format_v2(line: str) -> HeaderInfo:
     values = line.split("\t")
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
-    info: Union[HeaderInfo, CrossSection]
+    info: HeaderInfo | CrossSection
     if (len(values) == 9 or len(values) == 11 or len(values) == 13) and values[1] == "Event":
         ##########################
         # Header v2 specification:
@@ -330,7 +330,7 @@ def _parse_header_line_format_v3(line: str) -> HeaderInfo:
     values = line.split("\t")
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
-    info: Union[HeaderInfo, CrossSection]
+    info: HeaderInfo | CrossSection
     if (len(values) == 15 or len(values) == 17) and values[1] == "Event":
         ##########################
         # Header v3 specification:
@@ -384,7 +384,7 @@ _file_format_version_to_header_parser = {
 }
 
 
-def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo]) -> Iterator[Union[HeaderInfo, str]]:
+def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo]) -> Iterator[HeaderInfo | str]:
     """Parse a single event in a FinalState* file.
 
     Raises:
@@ -428,7 +428,7 @@ class ChunkGenerator:
     """
     g: Iterator[str] = attrs.field()
     _events_per_chunk: int = attrs.field()
-    cross_section: Optional[CrossSection] = attrs.field(default=None)
+    cross_section: CrossSection | None = attrs.field(default=None)
     _file_format_version: int = attrs.field(default=-1)
     _headers: list[HeaderInfo] = attrs.field(factory=list)
     _reached_end_of_file: bool = attrs.field(default=False)
@@ -614,7 +614,7 @@ def _parse_with_pandas(chunk_generator: Iterator[str]) -> npt.NDArray[Any]:
     # Delayed import so we only take the import time if necessary.
     import pandas as pd
 
-    return pd.read_csv(  # type: ignore[call-overload]
+    return pd.read_csv(  # type: ignore[call-overload,no-any-return]
         FileLikeGenerator(chunk_generator),
         # NOTE: If the field is missing (such as eta and phi), they will exist, but they will be filled with NaN.
         #       We actively take advantage of this so we don't have to change the parsing for header v1 (which
@@ -671,7 +671,7 @@ def _parse_with_numpy(chunk_generator: Iterator[str]) -> npt.NDArray[Any]:
     return np.loadtxt(chunk_generator)
 
 
-def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas") -> Iterator[ak.Array]:
+def read(filename: Path | str, events_per_chunk: int, parser: str = "pandas") -> Iterator[ak.Array]:
     """ Read a JETSCAPE FinalState{Hadrons,Partons} ASCII output file in chunks.
 
     This is the primary user function. We read in chunks to keep the memory usage manageable.
@@ -796,14 +796,14 @@ def full_events_to_only_necessary_columns_E_px_py_pz(arrays: ak.Array) -> ak.Arr
 
 
 def parse_to_parquet(
-    base_output_filename: Union[Path, str],
+    base_output_filename: Path | str,
     store_only_necessary_columns: bool,
-    input_filename: Union[Path, str],
+    input_filename: Path | str,
     events_per_chunk: int,
     parser: str = "pandas",
     max_chunks: int = -1,
     compression: str = "zstd",
-    compression_level: Optional[int] = None,
+    compression_level: int | None = None,
 ) -> None:
     """Parse the JETSCAPE ASCII and convert it to parquet, (potentially) storing only the minimum necessary columns.
 
