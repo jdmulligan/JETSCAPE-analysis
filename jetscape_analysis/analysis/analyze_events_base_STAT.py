@@ -67,19 +67,26 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
             self.is_AA = False
 
         # If AA, get centrality bin
+        self.use_event_based_centrality = False
         if self.is_AA:
             _final_state_hadrons_path = Path(self.input_file_hadrons)
             # For an example filename of "jetscape_PbPb_Run0005_5020_0001_final_state_hadrons_00.parquet",
             # - the run number is index 2
-            _run_number = _final_state_hadrons_path.stem.split("_")[2]
-            # - the file index is at index 4 (in the example, it extracts `1` as an int)
-            _file_index = int(_final_state_hadrons_path.name.split('_')[4])
-            run_info_path = _final_state_hadrons_path.parent / f"{_run_number}_info.yaml"
-            with open(run_info_path, 'r') as f:
-                _run_info = yaml.safe_load(f)
-                centrality_string = _run_info["index_to_hydro_event"][_file_index].split('/')[0].split('_')
-                # index of 1 and 2 based on an example entry of "cent_00_01"
-                self.centrality = [int(centrality_string[1]), int(centrality_string[2])]
+            _job_identifier = _final_state_hadrons_path.stem.split("_")[2]
+            if "Run" in _job_identifier:
+                # We're using a standard production with a run number - look for the run info file.
+                _run_number = _job_identifier
+                # - the file index is at index 4 (in the example, it extracts `1` as an int)
+                _file_index = int(_final_state_hadrons_path.name.split('_')[4])
+                run_info_path = _final_state_hadrons_path.parent / f"{_run_number}_info.yaml"
+                with open(run_info_path, 'r') as f:
+                    _run_info = yaml.safe_load(f)
+                    centrality_string = _run_info["index_to_hydro_event"][_file_index].split('/')[0].split('_')
+                    # index of 1 and 2 based on an example entry of "cent_00_01"
+                    self.centrality = [int(centrality_string[1]), int(centrality_string[2])]
+            else:
+                # No run info available - need to retrieve the centrality event-by-event
+                self.use_event_based_centrality = True
 
         # If AA, initialize constituent subtractor
         self.constituent_subtractor = None
@@ -133,7 +140,9 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         # Loop through events
         start = time.time()
         weight_sum = 0.
-        for i,event in df_event_chunk.iterrows():
+        # Track the overall centrality range
+        centrality_range_min, centrality_range_max = 100, 0
+        for i, event in df_event_chunk.iterrows():
 
             if i % 1000 == 0:
                 print(f'event: {i}    (time elapsed: {time.time() - start} s)')
@@ -143,6 +152,17 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
 
             # Store dictionary of all observables for the event
             self.observable_dict_event = {}
+
+            # Update self.centrality dynamically per event
+            if self.is_AA:
+                if self.use_event_based_centrality:
+                    # Double check that the centrality is available in the event dictionary. If not, need to raise the issue early.
+                    if i == 0 and "centrality" not in event:
+                        msg = "Running AA, there is no run info file, and event-by-event centrality is not available, so we are unable to proceed. Please check configuration"
+                        raise ValueError(msg)
+                    self.centrality = [int(np.floor(event['centrality'])), int(np.ceil(event['centrality']))]  # Dynamically set centrality; values are passed from the parquet file
+                else:
+                    self.centrality = self.default_centrality  # Use fixed centrality; values are passed from the Run_info.yaml file
 
             # Call user-defined function to analyze event
             self.analyze_event(event)
@@ -156,6 +176,15 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
                 self.observable_dict_event['event_weight'] = event_weight
                 self.observable_dict_event['pt_hat'] = event['pt_hat']
 
+                # Add event-wise centrality (same for all events in pre-computed hydro; varies event-by-event for real_time_hydro)
+                if self.is_AA:
+                    self.observable_dict_event['centrality_min'] = self.centrality[0]
+                    self.observable_dict_event['centrality_max'] = self.centrality[1]
+                    # This is trivially the same for each event for the pre-computed hydro,
+                    # but it varies for the on-the-fly case.
+                    centrality_range_min = min(self.centrality[0], centrality_range_min)
+                    centrality_range_max = max(self.centrality[1], centrality_range_max)
+
                 self.output_event_list.append(self.observable_dict_event)
 
         # Get total cross-section (same for all events at this point), weight sum, and centrality
@@ -164,8 +193,8 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         self.cross_section_dict['n_events'] = self.n_event_max
         self.cross_section_dict['weight_sum'] = weight_sum
         if self.is_AA:
-            self.cross_section_dict['centrality_min'] = self.centrality[0]
-            self.cross_section_dict['centrality_max'] = self.centrality[1]
+            self.cross_section_dict['centrality_range_min'] = int(np.floor(centrality_range_min))
+            self.cross_section_dict['centrality_range_max'] = int(np.ceil(centrality_range_max))
 
     # ---------------------------------------------------------------
     # Initialize output objects
