@@ -11,7 +11,7 @@ authors = [
 description = "Basic JETSCAPE analysis code"
 readme = "README.md"
 license.file = "LICENSE"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
@@ -21,7 +21,6 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -80,7 +79,7 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
 [[tool.mypy.overrides]]
-module = ["ROOT", "numba", "nox", "scipy.*"]
+module = ["ROOT", "numba", "nox", "scipy.*", "awkward"]
 ignore_missing_imports = true
 
 [tool.ruff]

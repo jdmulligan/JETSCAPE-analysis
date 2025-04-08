@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """ Parse JETSCAPE ascii input files in chunks.
 
 .. codeauthor:: Raymond Ehlers
@@ -9,12 +7,14 @@ import itertools
 import logging
 import os
 import typing
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any, Callable, Iterator, List, Optional, Union
+from typing import Any
 
 import attrs
 import awkward as ak
 import numpy as np
+import numpy.typing as npt
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +25,10 @@ class ReachedEndOfFileException(Exception):
     We have a separate exception so we can pass additional information
     about the context if desired.
     """
-    ...
 
 
 class ReachedXSecAtEndOfFileException(ReachedEndOfFileException):
     """Indicates that we've hit the cross section in the last line of the file."""
-    ...
 
 
 @attrs.frozen
@@ -121,12 +119,13 @@ def _parse_cross_section(line: str) -> CrossSection:
             error=float(values[4]),     # Cross section error
         )
     else:
-        raise ValueError(f"Parsing of comment line failed: {values}")
+        msg = f"Parsing of comment line failed: {values}"
+        raise ValueError(msg)
 
     return info
 
 
-def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> Optional[CrossSection]:
+def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> CrossSection | None:
     """ Extract cross section and error from the end of the file.
 
     Args:
@@ -149,6 +148,43 @@ def _extract_x_sec_and_error(f: typing.TextIO, read_chunk_size: int = 100) -> Op
     return None
 
 
+def _parse_optional_header_values(optional_values: list[str]) -> tuple[float, float]:
+    """ Parse optional header values.
+
+    As of April 2025, the centrality and pt_hat are optionally included in the output.
+    The centrality will always be
+
+    Args:
+        optional_values: Optional values parsed from splitting the lines. It is expected
+            to contain both the name of the arguments *AND* the values themselves. So if
+            the file contains one optional values, it will translate to `len(optional_values) == 2`
+
+    Returns:
+        The optional values: (centrality, pt_hat). If they weren't provided in the values,
+            they will be their default values.
+    """
+    pt_hat = -1.0
+    centrality = -1.0
+
+    n_optional_values = len(optional_values)
+
+    if n_optional_values == 4:
+        # Both centrality and pt_hat are present
+        if optional_values[-4] == "centrality":
+            centrality = float(optional_values[-3])
+        if optional_values[-2] == "pt_hat":
+            pt_hat = float(optional_values[-1])
+    elif n_optional_values == 2:
+        # Only one of centrality or pt_hat is present
+        if optional_values[-2] == "centrality":
+            centrality = float(optional_values[-1])
+        elif optional_values[-2] == "pt_hat":
+            pt_hat = float(optional_values[-1])
+    # If there are no optional values, then there's nothing to be done!
+
+    return centrality, pt_hat
+
+
 def _parse_header_line_format_unspecified(line: str) -> HeaderInfo:
     """Parse line that is expected to be a header.
 
@@ -167,7 +203,7 @@ def _parse_header_line_format_unspecified(line: str) -> HeaderInfo:
     values = line.split("\t")
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
-    info: Union[HeaderInfo, CrossSection]
+    info: HeaderInfo | CrossSection
     if (len(values) == 19 and values[1] == "Event") or (len(values) == 17 and values[1] == "Event"):
         ##########################
         # Header v2 specification:
@@ -213,7 +249,8 @@ def _parse_header_line_format_unspecified(line: str) -> HeaderInfo:
         #       we've raised an exception here.
         raise ReachedXSecAtEndOfFileException(_parse_cross_section(line))
     else:
-        raise ValueError(f"Parsing of comment line failed: {values}")
+        msg = f"Parsing of comment line failed: {values}"
+        raise ValueError(msg)
 
     return info
 
@@ -236,7 +273,7 @@ def _parse_header_line_format_v2(line: str) -> HeaderInfo:
     values = line.split("\t")
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
-    info: Union[HeaderInfo, CrossSection]
+    info: HeaderInfo | CrossSection
     if (len(values) == 9 or len(values) == 11 or len(values) == 13) and values[1] == "Event":
         ##########################
         # Header v2 specification:
@@ -245,29 +282,18 @@ def _parse_header_line_format_v2(line: str) -> HeaderInfo:
         # This function was developed to parse it.
         # The header is defined as follows, with each entry separated by a `\t` character:
         # `# Event 1 weight 0.129547 EPangle 0.0116446 N_hadrons 236 (centrality 12.5) (pt_hat 47)`
-        #  0 1     2 3      4        5       6         7         8         9         10
+        #  0 1     2 3      4        5       6         7         8    9          10     11     12
         # NOTE: pt_hat and centrality are optional (centrality added in Jan. 2025)
         #
-        pt_hat = -1.
-        centrality = -1.
-        
-        # Check for the presence of pt_hat and centrality
-        if len(values) == 13:
-            # Both centrality and pt_hat are present
-            if values[-4] == "centrality":
-                centrality = float(values[-3])
-            if values[-2] == "pt_hat":
-                pt_hat = float(values[-1])
-        elif len(values) == 11:
-            # Only one of centrality or pt_hat is present
-            if values[-2] == "centrality":
-                centrality = float(values[-1])
-            elif values[-2] == "pt_hat":
-                pt_hat = float(values[-1])
-        elif len(values) == 9:
-            # Neither centrality nor pt_hat is present
-            pass
-        
+        # The base length (i.e. with no optional values) is 9
+        _base_line_length = 9
+
+        # Extract optional values. They will be any beyond the base line length
+        centrality, pt_hat = _parse_optional_header_values(
+            optional_values=values[_base_line_length:],
+        )
+
+        # And store...
         info = HeaderInfo(
             event_number=int(values[2]),            # Event number
             event_plane_angle=float(values[6]),     # EP angle
@@ -283,7 +309,8 @@ def _parse_header_line_format_v2(line: str) -> HeaderInfo:
         #       we've raised an exception here.
         raise ReachedXSecAtEndOfFileException(_parse_cross_section(line))
     else:
-        raise ValueError(f"Parsing of comment line failed: {values}")
+        msg = f"Parsing of comment line failed: {values}"
+        raise ValueError(msg)
 
     return info
 
@@ -303,7 +330,7 @@ def _parse_header_line_format_v3(line: str) -> HeaderInfo:
     values = line.split("\t")
     # Compare by length first so we can short circuit immediately if it doesn't match, which should
     # save some string comparisons.
-    info: Union[HeaderInfo, CrossSection]
+    info: HeaderInfo | CrossSection
     if (len(values) == 15 or len(values) == 17) and values[1] == "Event":
         ##########################
         # Header v3 specification:
@@ -311,14 +338,20 @@ def _parse_header_line_format_v3(line: str) -> HeaderInfo:
         # format including the vertex position and pt_hat
         # This function was developed to parse it.
         # The header is defined as follows, with each entry separated by a `\t` character:
-        #  # Event 1 weight  1 EPangle 0 N_hadrons 169 vertex_x  0.6 vertex_y  -1.2  vertex_z  0 (pt_hat  11.564096)
-        #  0 1     2 3       4 5       6 7         8   9         10  11        12    13        1415      16
+        #  # Event 1 weight  1 EPangle 0 N_hadrons 169 vertex_x  0.6 vertex_y  -1.2  vertex_z  0 (centrality 12.5) (pt_hat  11.564096)
+        #  0 1     2 3       4 5       6 7         8   9         10  11        12    13        14 15         16     17      18
         #
-        # NOTE: pt_hat is optional
+        # NOTE: pt_hat and centrality are optional (centrality added in Jan. 2025)
         #
-        pt_hat = -1.
-        if values[-2] == "pt_hat":
-            pt_hat = float(values[-1])
+        # The base length (i.e. with no optional values) is 15
+        _base_line_length = 15
+
+        # Extract optional values. They will be any beyond the base line length
+        centrality, pt_hat = _parse_optional_header_values(
+            optional_values=values[_base_line_length:],
+        )
+
+        # And store...
         info = HeaderInfo(
             event_number=int(values[2]),            # Event number
             event_plane_angle=float(values[6]),     # EP angle
@@ -327,7 +360,8 @@ def _parse_header_line_format_v3(line: str) -> HeaderInfo:
             vertex_x=float(values[10]),             # x vertex
             vertex_y=float(values[12]),             # y vertex
             vertex_z=float(values[14]),             # z vertex
-            pt_hat=pt_hat                           # pt hat
+            centrality=centrality,                  # centrality
+            pt_hat=pt_hat,                          # pt hat
         )
     elif len(values) == 5 and values[1] == "sigmaGen":
         # If we've hit the cross section, and we're not doing the initial extraction of the cross
@@ -336,7 +370,8 @@ def _parse_header_line_format_v3(line: str) -> HeaderInfo:
         #       we've raised an exception here.
         raise ReachedXSecAtEndOfFileException(_parse_cross_section(line))
     else:
-        raise ValueError(f"Parsing of comment line failed: {values}")
+        msg = f"Parsing of comment line failed: {values}"
+        raise ValueError(msg)
 
     return info
 
@@ -349,7 +384,7 @@ _file_format_version_to_header_parser = {
 }
 
 
-def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo]) -> Iterator[Union[HeaderInfo, str]]:
+def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo]) -> Iterator[HeaderInfo | str]:
     """Parse a single event in a FinalState* file.
 
     Raises:
@@ -367,7 +402,7 @@ def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo
         yield header
     except StopIteration:
         # logger.debug("Hit end of file exception!")
-        raise ReachedEndOfFileException()
+        raise ReachedEndOfFileException() from None
 
     # From the header, we know how many particles we have in the event, so we can
     # immediately yield the next n_particles lines. And this will leave the generator
@@ -378,12 +413,11 @@ def _parse_event(f: Iterator[str], parse_header_line: Callable[[str], HeaderInfo
 
 class ChunkNotReadyException(Exception):
     """Indicate that the chunk hasn't been parsed yet, and therefore is not ready."""
-    ...
 
 
 @attrs.define
 class ChunkGenerator:
-    """ Generator a chunk of the file.
+    """ Generate a chunk of the file.
 
     Args:
         g: Iterator over the input file.
@@ -394,9 +428,9 @@ class ChunkGenerator:
     """
     g: Iterator[str] = attrs.field()
     _events_per_chunk: int = attrs.field()
-    cross_section: Optional[CrossSection] = attrs.field(default=None)
+    cross_section: CrossSection | None = attrs.field(default=None)
     _file_format_version: int = attrs.field(default=-1)
-    _headers: List[HeaderInfo] = attrs.field(factory=list)
+    _headers: list[HeaderInfo] = attrs.field(factory=list)
     _reached_end_of_file: bool = attrs.field(default=False)
 
     def _is_chunk_ready(self) -> bool:
@@ -427,17 +461,17 @@ class ChunkGenerator:
         return len(self._headers)
 
     @property
-    def headers(self) -> List[HeaderInfo]:
+    def headers(self) -> list[HeaderInfo]:
         self._require_chunk_ready()
         return self._headers
 
-    def n_particles_per_event(self) -> np.ndarray:
+    def n_particles_per_event(self) -> npt.NDArray[np.int64]:
         self._require_chunk_ready()
         return np.array([
             header.n_particles for header in self._headers
         ])
 
-    def event_split_index(self) -> np.ndarray:
+    def event_split_index(self) -> npt.NDArray[np.int64]:
         self._require_chunk_ready()
         # NOTE: We skip the last header due to the way that np.split works.
         #       It will go from the last index to the end of the array.
@@ -466,10 +500,10 @@ class ChunkGenerator:
                 #       to be more straightforward from a user perspective.
                 # First, get the header. We know this first line must be a header
                 self._headers.append(
-                    next(event_iter)  # type: ignore
+                    next(event_iter)  # type: ignore[arg-type]
                 )
                 # Then we yield the rest of the particles in the event
-                yield from event_iter  # type: ignore
+                yield from event_iter  # type: ignore[misc]
             except (ReachedEndOfFileException, ReachedXSecAtEndOfFileException):
                 # If we're reached the end of file, we should note that inside the chunk
                 # because it may not have reached the full set of events per chunk.
@@ -497,7 +531,7 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
     # Validation
     filename = Path(filename)
 
-    with open(filename, "r") as f:
+    with filename.open() as f:
         # First step, extract the final cross section and header.
         cross_section = _extract_x_sec_and_error(f)
 
@@ -515,7 +549,7 @@ def read_events_in_chunks(filename: Path, events_per_chunk: int = int(1e5)) -> I
             # 1: is to remove the "v" in the version
             file_format_version = int(first_line_split[2][1:])
         else:
-            # We need to move back to the beginning of the file, so we just burned through
+            # We need to move back to the beginning of the file, since we just burned through
             # a meaningful line (which almost certainly contains an event header).
             # NOTE: My initial version of two separate iterators doesn't work because it appears
             #       that you cannot do so for a file (which I suppose I can make sense of because
@@ -555,7 +589,7 @@ class FileLikeGenerator:
     def __init__(self, g: Iterator[str]):
         self.g = g
 
-    def read(self, n: int = 0) -> Any:
+    def read(self, n: int = 0) -> Any:  # noqa: ARG002
         """ Read method is required by pandas. """
         try:
             return next(self.g)
@@ -567,7 +601,7 @@ class FileLikeGenerator:
         return self.g
 
 
-def _parse_with_pandas(chunk_generator: Iterator[str]) -> np.ndarray:
+def _parse_with_pandas(chunk_generator: Iterator[str]) -> npt.NDArray[Any]:
     """ Parse the lines with `pandas.read_csv`
 
     `read_csv` uses a compiled c parser. As of 6 October 2020, it is tested to be the fastest option.
@@ -580,9 +614,9 @@ def _parse_with_pandas(chunk_generator: Iterator[str]) -> np.ndarray:
     # Delayed import so we only take the import time if necessary.
     import pandas as pd
 
-    return pd.read_csv(
+    return pd.read_csv(  # type: ignore[call-overload,no-any-return]
         FileLikeGenerator(chunk_generator),
-        # NOTE: If the field is missing (such as eta and phi), they will exist, but they will be filled with NaN
+        # NOTE: If the field is missing (such as eta and phi), they will exist, but they will be filled with NaN.
         #       We actively take advantage of this so we don't have to change the parsing for header v1 (which
         #       includes eta and phi) vs header v2 (which does not)
         names=["particle_index", "particle_ID", "status", "E", "px", "py", "pz", "eta", "phi"],
@@ -605,7 +639,7 @@ def _parse_with_pandas(chunk_generator: Iterator[str]) -> np.ndarray:
     ).to_numpy()
 
 
-def _parse_with_python(chunk_generator: Iterator[str]) -> np.ndarray:
+def _parse_with_python(chunk_generator: Iterator[str]) -> npt.NDArray[Any]:
     """ Parse the lines with python.
 
     We have this as an option because np.loadtxt is surprisingly slow.
@@ -622,7 +656,7 @@ def _parse_with_python(chunk_generator: Iterator[str]) -> np.ndarray:
     return np.stack(particles)
 
 
-def _parse_with_numpy(chunk_generator: Iterator[str]) -> np.ndarray:
+def _parse_with_numpy(chunk_generator: Iterator[str]) -> npt.NDArray[Any]:
     """ Parse the lines with numpy.
 
     Unfortunately, this option is surprisingly, presumably because it has so many options.
@@ -637,7 +671,7 @@ def _parse_with_numpy(chunk_generator: Iterator[str]) -> np.ndarray:
     return np.loadtxt(chunk_generator)
 
 
-def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "pandas") -> Iterator[ak.Array]:
+def read(filename: Path | str, events_per_chunk: int, parser: str = "pandas") -> Iterator[ak.Array]:
     """ Read a JETSCAPE FinalState{Hadrons,Partons} ASCII output file in chunks.
 
     This is the primary user function. We read in chunks to keep the memory usage manageable.
@@ -743,7 +777,7 @@ def read(filename: Union[Path, str], events_per_chunk: int, parser: str = "panda
                 "py": ak.values_astype(array_with_events[:, :, 5], np.float32),
                 "pz": ak.values_astype(array_with_events[:, :, 6], np.float32),
                 # We could skip eta and phi since we can always recalculate them. However, since we've already parsed
-                # them, we may as well pass them along.:w
+                # them, we may as well pass them along.
                 "eta": ak.values_astype(array_with_events[:, :, 7], np.float32),
                 "phi": ak.values_astype(array_with_events[:, :, 8], np.float32),
             },
@@ -832,7 +866,7 @@ def parse_to_parquet(
 if __name__ == "__main__":
     #read(filename="final_state_hadrons.dat", events_per_chunk=-1, base_output_filename="skim/jetscape.parquet")
     for pt_hat_range in ["7_9", "20_25", "50_55", "100_110", "250_260", "500_550", "900_1000"]:
-        print(f"Processing pt hat range: {pt_hat_range}")
+        print(f"Processing pt hat range: {pt_hat_range}")  # noqa: T201
         directory_name = "OutputFile_Type5_qhatA10_B0_5020_PbPb_0-10_0.30_2.0_1"
         filename = f"JetscapeHadronListBin{pt_hat_range}"
         parse_to_parquet(
