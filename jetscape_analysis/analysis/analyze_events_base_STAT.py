@@ -303,6 +303,10 @@ class AnalyzeJetscapeEvents_BaseSTAT(common_base.CommonBase):
         # Define status_factor -- either +1 (positive status) or -1 (negative status)
         status_selected = event['status'][full_mask] # Either 0 (positive) or -1 (negative)
         status_factor = 2*status_selected + 1 # Change to +1 (positive) or -1 (negative)
+        # NOTE: Need to explicitly convert to np.int8 -> np.int32 so that the status factor can be
+        #       set properly below. Otherwise, it will overflow when setting the user index if there
+        #       are too many particles.
+        status_factor = status_factor.astype(np.int32)
         for status in np.unique(status_selected): # Check that we only encounter expected statuses
             if status not in [0,-1]:
                 sys.exit(f'ERROR: fill_fastjet_constituents -- unexpected particle status -- {status}')
