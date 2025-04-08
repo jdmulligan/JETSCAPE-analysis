@@ -66,7 +66,7 @@ SoftDrop:
   - {'zcut': 0.4, 'beta': 0}
   - {'zcut': 0.5, 'beta': 1.5}
 
-# If AA, set different options for hole subtraction treatment 
+# If AA, set different options for hole subtraction treatment
 # If pp, defaults will override this: ['']
 jet_collection_labels: ['_shower_recoil', '_negative_recombiner', '_constituent_subtraction']
 
@@ -102,8 +102,8 @@ hadron:
     hepdata_AA_gname: ['Graph1D_y1', 'Graph1D_y2', 'Graph1D_y3', 'Graph1D_y4', 'Graph1D_y5', 'Graph1D_y6']
     hepdata_AA_hname: ['Hist1D_y1', 'Hist1D_y2', 'Hist1D_y3', 'Hist1D_y4', 'Hist1D_y5', 'Hist1D_y6']
     ytitle_AA: '#it{R}_{AA}'
-  
-  # https://www.hepdata.net/record/ins1759506 -- charged pions 
+
+  # https://www.hepdata.net/record/ins1759506 -- charged pions
   pt_pi_alice:
     eta_cut: 0.8
     pt: [5.0, 20.]
@@ -145,7 +145,7 @@ hadron:
     ytitle_AA: '#it{R}_{AA}'
     y_min_AA: 0
     y_max_AA: 2.
-  
+
   # https://www.hepdata.net/record/ins2601282
   pt_ch_atlas:
     eta_cut: 2.5
@@ -307,7 +307,7 @@ inclusive_jet:
 
     # Note: the y binnings are identical for each pt bin
     hepdata_AA_dir_R0.4_pt0: 'Table 27'
-    hepdata_AA_gname_R0.4_pt0: ['Graph1D_y1'] 
+    hepdata_AA_gname_R0.4_pt0: ['Graph1D_y1']
     hepdata_AA_hname_R0.4_pt0: ['Hist1D_y1']
 
     hepdata_AA_dir_R0.4_pt1: 'Table 27'
@@ -320,7 +320,7 @@ inclusive_jet:
 
     hepdata_AA_dir_R0.4_pt3: 'Table 27'
     hepdata_AA_gname_R0.4_pt3: ['Graph1D_y4']
-    hepdata_AA_hname_R0.4_pt3: ['Hist1D_y4'] 
+    hepdata_AA_hname_R0.4_pt3: ['Hist1D_y4']
 
     ytitle_AA: '#it{R}_{AA}(y) / #it{R}_{AA}(y=0.3)'
     y_min_AA: 0.
@@ -547,8 +547,8 @@ inclusive_jet:
 # Inclusive jet observables -- charged jets
 inclusive_chjet:
 
-# PMJ 2/28/25: new analysis charged jet RAA with ME background correction
-  
+  # PMJ 2/28/25: new analysis charged jet RAA with ME background correction
+  # RJE 2025/04/07: Need to somehow disambiguate from the ML jet measurement.
   pt_alice:
     jet_R: [0.2, 0.3, 0.4, 0.5]
     eta_cut_R: 0.9-R
@@ -559,14 +559,15 @@ inclusive_chjet:
 
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
-    
+
     ytitle_pp: 'R_{AA}(#it{p}_{T,jet})'
     y_min_pp: 0.1
     y_max_pp: 1.5
     skip_pp: True
 
-    bins: PMJ 2/28/25 for now use bins of width 1 GeV over the full pT range, 
-    will be adjusted when analysis details are finalized
+    bins: |
+      "PMJ 2/28/25 for now use bins of width 1 GeV over the full pT range,"
+      " will be adjusted when analysis details are finalized "
 
   # https://inspirehep.net/literature/1893479 (no hepdata yet)
   # TODO: update hepdata
@@ -620,10 +621,10 @@ inclusive_chjet:
     y_min_AA: 0.
     y_max_AA: 2.
 
-  # TODO: Calculate ATLAS theta_g 
+  # TODO: Calculate ATLAS theta_g
 
-  # https://inspirehep.net/literature/2070434 
-  # TODO: Recalculate observable to use binnings in publication 
+  # https://inspirehep.net/literature/2070434
+  # TODO: Recalculate observable to use binnings in publication
   zr_alice:
     jet_R: [0.4]
     eta_cut_R: 0.9
@@ -674,8 +675,8 @@ semi_inclusive_chjet:
   #  HEPdata: https://www.hepdata.net/record/ins2693247
   #   Cuts / Notes:
   #       - |eta_jet| < 0.9 - R
-  #       - Track pt > 0.15 
-  # PRL Fig 1 
+  #       - Track pt > 0.15
+  # PRL Fig 1
   # IAA vs pT
   # recoil jet acceptance |$\delta\varphi-\pi$|<0.6
   IAA_alice_pT:
@@ -686,21 +687,19 @@ semi_inclusive_chjet:
     jet_R: [0.2, 0.4, 0.5]
     jet_pt: [5., 140.]
     c_ref: [0.90, 0.82, 0.82]
-    
+
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
-    
+
     ytitle_pp: 'I_{AA}(#it{p}_{T,jet})'
     y_min_pp: 0.3
     y_max_pp: 3.0
     skip_pp: True
 
-  #
-  bins: [7.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0, 60.0, 80.0, 110.0, 140.0]
-
+    bins: [7.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0, 60.0, 80.0, 110.0, 140.0]
 
   # PRL Fig 3 [Fig 2 contains these data for R=0.4 only]
-  # IAA vs delta_phi 
+  # IAA vs delta_phi
   dphi_alice:
     centrality: [[0,10]]
     eta_cut_trig: 0.9
@@ -709,20 +708,20 @@ semi_inclusive_chjet:
     jet_R: [0.2, 0.4, 0.5]
     jet_pt: [10., 50.]
     c_ref: see Fig 5 of PRC
-    
+
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
     logy: True
-    
+
     ytitle_pp: 'I_{AA}(#Delta#varphi)'
     y_min_pp: 0.1
     y_max_pp: 9.0
     skip_pp: True
 
-    # 
+    #
     bins: [1.57, 2.07, 2.42. 2.61, 2.76, 2.89, 3.02, 3.14]
 
-    # PRC Fig 18 
-  # R(0.2/0.4) and R(0.2/0.5)  
+  # PRC Fig 18
+  # R(0.2/0.4) and R(0.2/0.5)
   dphi_alice:
     centrality: [[0,10]]
     eta_cut_trig: 0.9
@@ -731,192 +730,180 @@ semi_inclusive_chjet:
     jet_R: [0.2, 0.4, 0.5]
     jet_pt: [5., 140.]
     c_ref: [0.90, 0.82, 0.82]
-    
+
     xtitle: 'R(0.2/0.40 or R(0.2/0.5)'
     logy: True
-    
+
     ytitle_pp: 'I_{AA}(#Delta#varphi)'
     y_min_pp: 0.3
     y_max_pp: 3.5
     skip_pp: True
 
-    # 
+    #
     bins: [7.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0, 60.0, 80.0, 110.0, 140.0]
 
 #------------------------------------------------------------------
 # concidence observables – gamma+jet
-ATLAS_Gamma_jet:
+gamma_jet:
 
-# paper: https://inspirehep.net/literature/2648097
-# HEPData: https://www.hepdata.net/record/ins2648097
+  # ATLAS gamma-tagged RAA
+  # paper: https://inspirehep.net/literature/2648097
+  # HEPData: https://www.hepdata.net/record/ins2648097
+  # pp: sqrt(sNN) =5.02 TeV
+  # PbPb: sqrt(sNN) =5.02 TeV
+  pt_atlas:
+    pp:
+      gamma_eta: [-2.37, 2.37]
+      gamma_pT: [50.,1000.]
+      isolation_R: [0.3]
+      isolation_E: [0,3.]
+      jet_R: [0.4]
+      jet_eta: [-2.8,2.8]
+      jet_pT: [50., 320.]
+      jet_deltaphi: [7pi/8, pi]
+      xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+      logy: True
 
-# pp: sqrt(sNN) =5.02 TeV
-# PbPb: sqrt(sNN) =5.02 TeV
+      # Fig 3
+      # https://www.hepdata.net/record/ins2648097?version=1&table=Figure%203
+      hepdata_pp_gname: 'Graph1D_y1'
+      ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+      y_min_pp: 3e-4
+      y_max_pp: 2e-2
 
-  pt_pp_gamma+jet:
-   gamma_eta: [-2.37, 2.37]
-   gamma_pT: [50.,1000.]	
-   isolation_R: [0.3]
-   isolation_E: [0,3.]
-   jet_R: [0.4]
-   jet_eta: [-2.8,2.8]
-   jet_pT: [50., 320.]
-   jet_deltaphi: [7pi/8, pi]
-   xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
-   logy: True
+      bins: [50., 56., 63., 70., 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
 
-   # Fig 3
-   https://www.hepdata.net/record/ins2648097?version=1&table=Figure%203
-   hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 3e-4
-    y_max_pp: 2e-2
+    # Isolation in PbPb (text from paper): “Thus, in Pb+Pb collisions, the isolation energy requirement depends
+    # continuously on the centrality of the event and is chosen so that its efficiency for prompt
+    # photons is 90%, as determined from simulations of photon+jet events overlaid with Pb+Pb
+    # minimum-bias data (described in Section 4 below). This upper limit on the isolation energy is
+    # approximately 10 GeV in 0–10% Pb+Pb events, but quickly decreases in more peripheral
+    # events and converges to the pp value.
+    PbPb:
+      centrality: [[0,10], [10,30], [30,80]]
+      gamma_eta: [-2.37, 2.37]
+      gamma_pT: [50.,1000.]
+      isolation_R: [0.3]
+      isolation_E: [0,10.] # see text quotation above
+      jet_R: [0.4]
+      jet_eta: [-2.8,2.8]
+      jet_pT: [50., 320.]
+      jet_deltaphi: [7pi/8, pi]
+      xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
+      logy: True
 
-    bins: [50., 56., 63., 70.,, 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
+      # Fig 4
+      # https://www.hepdata.net/record/ins2648097?version=1&table=Figure%204
+      hepdata_pp_gname: 'Graph1D_y1'
+      ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
+      y_min_pp: 3e-6
+      y_max_pp: 10.
 
-  pt_PbPb_gamma+jet:
+      bins: [50., 56., 63., 70., 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
 
-  # Isolation in PbPb (text from paper): “Thus, in Pb+Pb collisions, the isolation energy requirement depends 
-  #continuously on the centrality of the event and is chosen so that its efficiency for prompt 
-  #photons is 90%, as determined from simulations of photon+jet events overlaid with Pb+Pb
-  #minimum-bias data (described in Section 4 below). This upper limit on the isolation energy is 
-  #approximately 10 GeV in 0–10% Pb+Pb events, but quickly decreases in more peripheral 
-  #events and converges to the pp value.
+  # paper: https://inspirehep.net/literature/1694678
+  # HEPData: https://www.hepdata.net/record/ins1694678
+  # pp: sqrt(sNN) =5.02 TeV
+  # PbPb: sqrt(sNN) =5.02 TeV
+  xj_gamma_atlas:
+    gamma_eta: [-2.37, 2.37]
+    gamma_pT: [63.1.,200.]
+    isolation_R: [0.3]
+    isolation_E: [0,3.]
+    jet_R: [0.4]
+    jet_eta: [-2.8,2.8]
+    jet_pT: [31.6., 1000.]
+    jet_deltaphi: [7pi/8, pi]
 
-   Centrality: [[0,10], [10,30], [30,80]]
-   gamma_eta: [-2.37, 2.37]
-   gamma_pT: [50.,1000.]	
-   isolation_R: [0.3]
-   isolation_E: [0,10.] # see text quotation above
-   jet_R: [0.4]
-   jet_eta: [-2.8,2.8]
-   jet_pT: [50., 320.]
-   jet_deltaphi: [7pi/8, pi]
-   xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
-   logy: True
-
-   # Fig 4
-   https://www.hepdata.net/record/ins2648097?version=1&table=Figure%204
-   hepdata_pp_gname: 'Graph1D_y1'
-    ytitle_pp: '#frac{d^{2}#sigma}{d#it{p}_{T}d#it{#eta}} #left[mb/(GeV/c)^{-1}#right]'
-    y_min_pp: 3e-6
-    y_max_pp: 10.
-
-    bins: [50., 56., 63., 70.,, 79., 89., 100., 112., 125., 141., 158., 177., 199., 223., 251., 281., 360.]
-
-    #------------------------------------------------------------------
-# concidence observables – gamma+jet
-ATLAS_Gamma_jet:
-
-# paper: https://inspirehep.net/literature/1694678
-# HEPData: https://www.hepdata.net/record/ins1694678
-
-# pp: sqrt(sNN) =5.02 TeV
-# PbPb: sqrt(sNN) =5.02 TeV
-
-  xJgamma:
-   gamma_eta: [-2.37, 2.37]
-   gamma_pT: [63.1.,200.]	
-   isolation_R: [0.3]
-   isolation_E: [0,3.]
-   jet_R: [0.4]
-   jet_eta: [-2.8,2.8]
-   jet_pT: [31.6., 1000.]
-   jet_deltaphi: [7pi/8, pi]
-  
-   # Fig 4; pTgamma=63-80 GeV, both pp and PbPb
-   xtitle: '#it{x}_{J,#gamma}'
-   logy: False
-   https://www.hepdata.net/record/ins1694678?version=1&table=Table%201
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 4; pTgamma=63-80 GeV, both pp and PbPb
+    # https://www.hepdata.net/record/ins1694678?version=1&table=Table%201
+    xtitle: '#it{x}_{J,#gamma}'
+    logy: False
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 0
     y_max_pp: 2
     bins: [.50, .56, .63, .71, .79, .89, 1.00, 1.12, 1.26, 1.41, 1.58, 1.78, 2.00]
 
-   # Fig 5; pTgamma=80-100 GeV, both pp and PbPb
-   xtitle: '#it{x}_{J,#gamma}'
-   logy: False
-   https://www.hepdata.net/record/ins1694678?version=1&table=Table%202
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 5; pTgamma=80-100 GeV, both pp and PbPb
+    # https://www.hepdata.net/record/ins1694678?version=1&table=Table%202
+    xtitle: '#it{x}_{J,#gamma}'
+    logy: False
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 0
     y_max_pp: 2
     bins: [0.40, 0.45, .50, .56, .63, .71, .79, .89, 1.00, 1.12, 1.26, 1.41, 1.58, 1.78, 2.00]
 
-   # Fig 6; pTgamma=100-158 GeV, both pp and PbPb
-   xtitle: '#it{x}_{J,#gamma}'
-   logy: False
-   https://www.hepdata.net/record/ins1694678?version=1&table=Table%203
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 6; pTgamma=100-158 GeV, both pp and PbPb
+    # https://www.hepdata.net/record/ins1694678?version=1&table=Table%203
+    xtitle: '#it{x}_{J,#gamma}'
+    logy: False
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 0
     y_max_pp: 2
     bins: [0.32, 0.35, 0.40, 0.45, .50, .56, .63, .71, .79, .89, 1.00, 1.12, 1.26, 1.41, 1.58, 1.78, 2.00]
 
-   # Fig 7; pTgamma=158-200 GeV, both pp and PbPb
-   xtitle: '#it{x}_{J,#gamma}'
-   logy: False
-   https://www.hepdata.net/record/ins1694678?version=1&table=Table%204
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 7; pTgamma=158-200 GeV, both pp and PbPb
+    # https://www.hepdata.net/record/ins1694678?version=1&table=Table%204
+    xtitle: '#it{x}_{J,#gamma}'
+    logy: False
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 0
     y_max_pp: 2
     bins: [0.20, 0.25, 0.32, 0.40, 0.50, 0.63, 0.79, 1.00, 1.26, 1.58, 2.00]
 
-    #------------------------------------------------------------------
-# concidence observables – gamma+jet
-CMS_Gamma_jet:
+  # CMS xj_gamma
+  # paper: https://inspirehep.net/literature/1638996
+  # HEPData: https://www.hepdata.net/record/ins1638996
 
-# paper: https://inspirehep.net/literature/1638996
-# HEPData: https://www.hepdata.net/record/ins1638996
+  # observables not unfolded; need to smear calculation with function defined in paper Eq (2)
+  # smearing parameters given in Table 1 but do not have uncertainties
+  # pmj comment:  absence of uncertainty in smearing parameters is a significant issue I think –
+  # resulting likelihood not very meaningful imho
 
-# observables not unfolded; need to smear calculation with function defined in paper Eq (2)
-# smearing parameters given in Table 1 but do not have uncertainties
-# pmj comment:  absence of uncertainty in smearing parameters is a significant issue I think – 
-# resulting likelihood not very meaningful imho
+  # pp: sqrt(sNN) =5.02 TeV
+  # PbPb: sqrt(sNN) =5.02 TeV
+  xj_gamma_cms:
+    gamma_eta: [-1.48, 1.48]
+    gamma_pT: [40.,100.]
+    isolation_R: [0.4]
+    isolation_E: [0,1.] # after UE subtraction in PbPb
+    jet_R: [0.3]
+    jet_eta: [-1.6, 1.6]
+    jet_pT: [30., 1000.]
 
-# pp: sqrt(sNN) =5.02 TeV
-# PbPb: sqrt(sNN) =5.02 TeV
-
-  xJgamma:
-   gamma_eta: [-1.48, 1.48]
-   gamma_pT: [40.,100.]	
-   isolation_R: [0.4]
-   isolation_E: [0,1.] # after UE subtraction in PbPb
-   jet_R: [0.3]
-   jet_eta: [-1.6, 1.6]
-   jet_pT: [30., 1000.]
-     
-# Fig 2; dphi_Jgamma
-   xtitle: '#Delta#varphi_{J,#gamma}'
-   logy: True
-   https://www.hepdata.net/record/ins1638996?version=1&table=Table%202
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 2; dphi_Jgamma
+    # https://www.hepdata.net/record/ins1638996?version=1&table=Table%202
+    xtitle: '#Delta#varphi_{J,#gamma}'
+    logy: True
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 5.e-3
     y_max_pp: 5.0
     bins: [0.00, 0.94, 1.57, 1.89, 2.04, 2.20, 2.36, 2.51, 2.67, 2.83, 2.99, 3.14]
 
-   # Fig 3; pTgamma; pTgamma dependence
-   xtitle: '#it{x}_{J,#gamma}'
-   Centrality: [0,30]
-   jet_deltaphi: [7pi/8, pi]
-   logy: False
-   https://www.hepdata.net/record/ins1638996?version=1&table=Table%203           
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 3; pTgamma; pTgamma dependence
+    # https://www.hepdata.net/record/ins1638996?version=1&table=Table%203
+    xtitle: '#it{x}_{J,#gamma}'
+    centrality: [0,30]
+    jet_deltaphi: [7pi/8, pi]
+    logy: False
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 0.0
     y_max_pp: 2.0
     bins: [0.000, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000, 1.125, 1.250, 1.375, 1.500, 1.625, 1.750, 1.875, 2.000]
 
-   # Fig 6; pTgamma; centrality dependence
-   xtitle: '#it{x}_{J,#gamma}'
-   jet_deltaphi: [7pi/8, pi]
-   logy: False
-   https://www.hepdata.net/record/ins1638996?version=1&table=Table%206
-   hepdata_pp_gname: 'Graph1D_y1'
-   ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}’
+    # Fig 6; pTgamma; centrality dependence
+    # https://www.hepdata.net/record/ins1638996?version=1&table=Table%206
+    xtitle: '#it{x}_{J,#gamma}'
+    jet_deltaphi: [7pi/8, pi]
+    logy: False
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_#gamma}#frac{dN}{dx_{J#gamma}}'
     y_min_pp: 0
     y_max_pp: 1.4
     bins: [0.000, 0.125, 0.250, 0.375, 0.500, 0.625, 0.750, 0.875, 1.000, 1.125, 1.250, 1.375, 1.500, 1.625, 1.750, 1.875, 2.000]
@@ -927,5 +914,5 @@ CMS_Gamma_jet:
 
 
 
-    
+
 
