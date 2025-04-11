@@ -551,7 +551,7 @@ inclusive_chjet:
   # RJE 2025/04/07: Need to somehow disambiguate from the ML jet measurement.
   pt_alice:
     jet_R: [0.2, 0.3, 0.4, 0.5]
-    eta_cut_R: 0.9-R
+    eta_cut_R: 0.9  # 0.9 - R
     pt: [10., 200.]
     centrality: [[0,10]]
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
@@ -686,6 +686,7 @@ semi_inclusive_chjet:
     high_trigger_range: [20, 50]
     jet_R: [0.2, 0.4, 0.5]
     pt: [5., 140.]
+    eta_cut_R: 0.9
     # RJE 2025/04/07: Note that in production, we had c_ref: [0.99, 0.96, 0.93]
     c_ref: [0.90, 0.82, 0.82]
 
@@ -708,6 +709,7 @@ semi_inclusive_chjet:
     high_trigger_range: [20, 50]
     jet_R: [0.2, 0.4, 0.5]
     pt: [10., 50.]
+    eta_cut_R: 0.9
     c_ref: "TODO: see Fig 5 of PRC"
 
     xtitle: '#it{p}_{T,jet} (GeV/#it{c})'
