@@ -832,7 +832,7 @@ inclusive_chjet:
     y_min_Ion: 0.
     y_max_Ion: 5.
 
-  # TODO: Recalculate observable to use binnings in publication
+  # https://inspirehep.net/literature/2512925
   rg_atlas:
     jet_R: [0.4]
     eta_cut_R: 2.0
@@ -858,12 +858,30 @@ inclusive_chjet:
     hepdata: 'HEPData-ins2070434-v1-root.root'
 
   # ALICE, jet-axis difference
-  # TODO: Recalculate observable to use binnings in publication
-  #  axis_alice:
-  #    jet_R: [0.2, 0.4]
-  #    eta_cut_R: 0.9
-  #    pt: [40., 60., 80., 100., 150.]
-  #    centrality: [[0,10]]
+  # https://inspirehep.net/literature/2648610
+  # HEPdata is private
+  # Two sets of figures:
+  # - Figure 1: WTA-standard, pp vs 0-10% PbPb, R=0.2, [40-60, 60-80] GeV
+  # - Figure 2: 0-10% PbPb R ratio (0.4/0.2), 100-140 GeV
+  #     - Left: WTA-standard
+  #     - Right: WTA-SD
+  axis_alice:
+    jet_R: [0.2, 0.4]
+    eta_cut_R: 0.9
+    pt: [40., 140.]
+    centrality: [[0,10]]
+    SoftDrop:
+      - {'zcut': 0.2, 'beta': 0}
+    xtitle: '#Delta R_{axis}'
+
+    # RJE: TODO: Need to work out the convention here..
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: "TBD"
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{#sigma_{inc}} #frac{d#sigma}{d#Delta R_{axis}}'
+    y_min_pp: 0
+    y_max_pp: 35
+
+    # RJE: TODO: Finish implementing this...
 
   # ALICE, generalized angularities
   # RJE: TODO

@@ -1010,14 +1010,44 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         beta = grooming_setting['beta']
         jet_groomed_lund = gshop.soft_drop(beta, zcut, jetR)
 
-        # ALICE hardest kt
-        #   Hole treatment:
-        #    - For shower_recoil case, correct the pt only
-        #    - For negative_recombiner case, no subtraction is needed
-        #    - For constituent_subtraction, no subtraction is needed
-        # For DyG, we need to record regardless of whether it passes SD, so we look at that observable first,
-        # and then proceed with the rest afterwards.
         if self.sqrts == 5020:
+            # ALICE jet-axis difference
+            #   Hole treatment:
+            #    - For shower_recoil case, ?
+            #    - For negative_recombiner case, ?
+            #    - For constituent_subtraction, ?
+            # Recluster with WTA (with larger jet R)
+            if self.centrality_accepted(self.inclusive_chjet_observables['axis_alice']['centrality']):
+                # We put both DyG and SD after this setting to avoid filling DyG multiple times
+                # (since DyG isn't included in the set of grooming settings)
+                if grooming_setting in self.inclusive_chjet_observables['axis_alice']['SoftDrop']:
+                    pt_min = self.inclusive_chjet_observables['axis_alice']['pt'][0]
+                    pt_max = self.inclusive_chjet_observables['axis_alice']['pt'][-1]
+                    if abs(jet.eta()) < (self.inclusive_chjet_observables['axis_alice']['eta_cut_R'] - jetR):
+                        if jetR in self.inclusive_chjet_observables['axis_alice']['jet_R']:
+                            if pt_min < jet_pt < pt_max:
+                                # Recluster with WTA (with larger jet R)
+                                jet_def_wta = fj.JetDefinition(fj.cambridge_algorithm, 2*jetR)
+                                if self.is_AA:
+                                    recombiner = fjext.NegativeEnergyRecombiner()
+                                    jet_def_wta.set_recombiner(recombiner)
+                                jet_def_wta.set_recombination_scheme(fj.WTA_pt_scheme)
+                                reclusterer_wta = fjcontrib.Recluster(jet_def_wta)
+                                jet_wta = reclusterer_wta.result(jet)
+
+                                # Standard-WTA
+                                deltaR = jet.delta_R(jet_wta)
+                                self.observable_dict_event[f'inclusive_chjet_axis_alice_R{jetR}_standard_WTA_{jet_collection_label}'].append([jet_pt, deltaR])
+
+                                # RJE: TODO: WTA-SD is only R ratios, so skip for now...?
+
+            # ALICE hardest kt
+            #   Hole treatment:
+            #    - For shower_recoil case, correct the pt only
+            #    - For negative_recombiner case, no subtraction is needed
+            #    - For constituent_subtraction, no subtraction is needed
+            # For DyG, we need to record regardless of whether it passes SD, so we look at that observable first,
+            # and then proceed with the rest afterwards.
             if self.centrality_accepted(self.inclusive_chjet_observables['ktg_alice']['centrality']):
                 # We put both DyG and SD after this setting to avoid filling DyG multiple times
                 # (since DyG isn't included in the set of grooming settings)
