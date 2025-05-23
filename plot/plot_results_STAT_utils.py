@@ -29,7 +29,7 @@ class PlotUtils(common_base.CommonBase):
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, **kwargs):
-        super(PlotUtils, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # ---------------------------------------------------------------
     # Get bin array specified in config block
@@ -105,7 +105,7 @@ class PlotUtils(common_base.CommonBase):
         bins = np.array(h.GetXaxis().GetXbins())
 
         # For certain Soft Drop observables, we need to exclude the "untagged" bin so that it will become underflow
-        if observable == 'zg_alice' or observable == 'tg_alice':
+        if observable in ["zg_alice", "tg_alice"]:
             bins = bins[1:]
         # For ATLAS RAA y-dependence, add a bin at 0<abs(y)<0.3 (it is not included in the hepdata since they take a ratio to that bin)
         if observable == 'pt_y_atlas':

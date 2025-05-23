@@ -32,7 +32,7 @@ class HistogramResults(common_base.CommonBase):
     # Constructor
     # ---------------------------------------------------------------
     def __init__(self, config_file='', input_file='', output_dir='', **kwargs):
-        super(HistogramResults, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.input_file = input_file
         self.output_dir = output_dir
 
@@ -325,7 +325,7 @@ class HistogramResults(common_base.CommonBase):
                 for jet_R in block['jet_R']:
 
                     # Custom skip
-                    if observable == 'zg_alice' or observable == 'tg_alice':
+                    if observable in ["zg_alice", "tg_alice"]:
                         if np.isclose(jet_R, 0.4) and centrality_index == 0:
                             continue
                         if np.isclose(jet_R, 0.2) and centrality_index == 1:
@@ -335,7 +335,7 @@ class HistogramResults(common_base.CommonBase):
                     for pt_bin in range(len(block['pt'])-1):
 
                         # Custom skip
-                        if observable == 'xj_atlas':
+                        if observable in ['xj_atlas']:
                             if centrality_index > 0 and pt_bin !=0:
                                 continue
 
