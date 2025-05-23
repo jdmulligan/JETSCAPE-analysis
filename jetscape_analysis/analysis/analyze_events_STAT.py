@@ -1018,24 +1018,24 @@ class AnalyzeJetscapeEvents_STAT(analyze_events_base_STAT.AnalyzeJetscapeEvents_
         # For DyG, we need to record regardless of whether it passes SD, so we look at that observable first,
         # and then proceed with the rest afterwards.
         if self.sqrts == 5020:
-            if self.centrality_accepted(self.inclusive_chjet_observables['kt_alice']['centrality']):
+            if self.centrality_accepted(self.inclusive_chjet_observables['ktg_alice']['centrality']):
                 # We put both DyG and SD after this setting to avoid filling DyG multiple times
                 # (since DyG isn't included in the set of grooming settings)
-                if grooming_setting in self.inclusive_chjet_observables['kt_alice']['SoftDrop']:
-                    pt_min = self.inclusive_chjet_observables['kt_alice']['pt'][0]
-                    pt_max = self.inclusive_chjet_observables['kt_alice']['pt'][-1]
-                    if abs(jet.eta()) < (self.inclusive_chjet_observables['kt_alice']['eta_cut_R'] - jetR):
-                        if jetR in self.inclusive_chjet_observables['kt_alice']['jet_R']:
+                if grooming_setting in self.inclusive_chjet_observables['ktg_alice']['SoftDrop']:
+                    pt_min = self.inclusive_chjet_observables['ktg_alice']['pt'][0]
+                    pt_max = self.inclusive_chjet_observables['ktg_alice']['pt'][-1]
+                    if abs(jet.eta()) < (self.inclusive_chjet_observables['ktg_alice']['eta_cut_R'] - jetR):
+                        if jetR in self.inclusive_chjet_observables['ktg_alice']['jet_R']:
                             if pt_min < jet_pt < pt_max:
-                                for a in self.inclusive_chjet_observables['kt_alice']['dynamical_grooming_a']:
+                                for a in self.inclusive_chjet_observables['ktg_alice']['dynamical_grooming_a']:
                                     jet_dyg_lund = gshop.dynamical(a)
                                     ktg = jet_dyg_lund.kt()
-                                    self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_a{a}{jet_collection_label}'].append([jet_pt, ktg])
+                                    self.observable_dict_event[f'inclusive_chjet_ktg_alice_R{jetR}_a{a}{jet_collection_label}'].append([jet_pt, ktg])
 
                                 # Only fill if SD identified a splitting
                                 if jet_groomed_lund:
                                     ktg = jet_groomed_lund.kt()
-                                    self.observable_dict_event[f'inclusive_chjet_kt_alice_R{jetR}_zcut{zcut}_beta{beta}{jet_collection_label}'].append([jet_pt, ktg])
+                                    self.observable_dict_event[f'inclusive_chjet_ktg_alice_R{jetR}_zcut{zcut}_beta{beta}{jet_collection_label}'].append([jet_pt, ktg])
 
         if not jet_groomed_lund:
             return

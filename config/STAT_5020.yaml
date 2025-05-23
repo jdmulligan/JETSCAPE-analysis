@@ -167,7 +167,7 @@ hadron:
   # https://www.hepdata.net/record/ins2601282
   pt_ch_atlas:
     eta_cut: 2.5
-    pt: [5.0, 300.] # measurment in p-Pb actually starts at 0.5 GeV but cutoff at 5 GeV to not simulate very soft stuff
+    pt: [5.0, 300.] # measurement in p-Pb actually starts at 0.5 GeV but cutoff at 5 GeV to not simulate very soft stuff
     centrality: [ [0,5], [5,10], [10,20], [20,30], [30,40], [40,50] ] # we stop at 50% centrality, but the measurement continues to 80%
     xtitle: '#it{p}_{T} (GeV/#it{c})'
     logy: True
@@ -253,8 +253,8 @@ inclusive_jet:
     logy: True
 
     hepdata: 'HEPData-ins1755387-v1-root.root'
-##     hepdata_pp_dir_R0.2: 'Table 2'
-##     hepdata_pp_dir_R0.4: 'Table 4'
+    ## hepdata_pp_dir_R0.2: 'Table 2'
+    ## hepdata_pp_dir_R0.4: 'Table 4'
     hepdata_pp_dir_R0.2: 'Table 22'
     hepdata_pp_dir_R0.4: 'Table 24'
     hepdata_pp_gname: 'Graph1D_y1'
@@ -764,7 +764,7 @@ inclusive_chjet:
       "PMJ 2/28/25 for now use bins of width 1 GeV over the full pT range,"
       " will be adjusted when analysis details are finalized "
 
-  # https://inspirehep.net/literature/1893479 (no hepdata yet)
+  # ALICE, zg
   # https://www.hepdata.net/record/ins1893479
   zg_alice:
     jet_R: [0.2, 0.4]
@@ -798,8 +798,8 @@ inclusive_chjet:
     y_min_Ion: 0.
     y_max_Ion: 7.
 
-  # https://inspirehep.net/literature/1893479 (no hepdata yet)
-  # RJE: TODO: update hepdata
+  # ALICE, theta_g
+  # https://www.hepdata.net/record/ins1893479
   tg_alice:
     jet_R: [0.2, 0.4]
     eta_cut_R: 0.9
@@ -893,17 +893,47 @@ inclusive_chjet:
       - {'zcut': 0.2, 'beta': 0}
 
   # ALICE, ktg
-  # RJE: TODO
-  kt_alice:
+  # https://www.hepdata.net/record/ins2831271
+  ktg_alice:
     jet_R: [0.2]
     eta_cut_R: 0.9
     pt: [60., 80.]
     centrality: [[0,10], [30, 50]]
     SoftDrop:
       - {'zcut': 0.2, 'beta': 0}
-    dynamical_grooming_a: [0.5, 1, 2]
-    bins_R02: [-0.001, 0.001, 0.25, 0.5, 1, 1.5, 2, 3, 4, 6, 8]
-    bins_R04: [-0.001, 0.001, 0.25, 0.5, 1, 2, 4, 6, 8, 10, 15]
+    dynamical_grooming_a: [1.0]
+    hepdata: "HEPData-ins2831271-v1-root.root"
+
+    # Soft Drop
+    hepdata_pp_dir_R0.2_zcut0.2_beta0: 'Table 4'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_{jets}} #frac{dN}{d#it{k}_{T,g}}'
+    y_min_pp: 1e-3
+    y_max_pp: 0.8
+    logy_pp: True
+
+    # The list corresponds to the centrality dependence
+    hepdata_AA_dir_R0.2_zcut0.2_beta0: ['Table 10', 'Table 9']
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
+
+    # Dynamical grooming
+    hepdata_pp_dir_R0.2_a1.0: 'Table 1'
+    hepdata_pp_gname: 'Graph1D_y1'
+    ytitle_pp: '#frac{1}{N_{jets}} #frac{dN}{d#it{k}_{T,g}}'
+    y_min_pp: 1e-3
+    y_max_pp: 0.8
+    logy_pp: True
+
+    hepdata_AA_dir_R0.2_a1.0: ['Table 8', 'Table 7']
+    hepdata_AA_gname: ['Graph1D_y1']
+    hepdata_AA_hname: 'Hist1D_y1'
+    ytitle_AA: 'PbPb / pp'
+    y_min_AA: 0.
+    y_max_AA: 2.
 
   # https://inspirehep.net/literature/2648610
   # mininum track pt: 0.15
